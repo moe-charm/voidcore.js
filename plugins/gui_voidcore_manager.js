@@ -1,18 +1,18 @@
 // plugins/gui_voidcore_manager.js
-import { AutonomousPlugin } from '../src/autonomous_plugin.js';
-import { board } from '../src/core.js'; // Need board for logging and setting log element
+import { AutonomousPlugin } from '/voidcore.js/src/autonomous_plugin.js';
+import { board } from '/voidcore.js/src/core.js'; // Need board for logging and setting log element
 
 export class GUIVoidCoreManager extends AutonomousPlugin {
   constructor() {
     super("GUIVoidCoreManagerService"); // Provide this plugin as a service
 
     this.demos = {
-      'voidcore-quickstart': './demos/voidcore_quickstart_demo.js',
-      'message-city': './demos/message_city_demo.js',
-      'markdown-editor': './demos/markdown_editor_demo.js',
-      'cogito-observer': './demos/cogito_observer_demo.js',
-      'galaxy-viewer': './demos/galaxy_viewer_demo.js',
-      'system-monitor': './demos/system_monitor_demo.js',
+      'voidcore-quickstart': '/voidcore.js/examples/demos/voidcore_quickstart_demo.js',
+      'message-city': '/voidcore.js/examples/demos/message_city_demo.js',
+      'markdown-editor': '/voidcore.js/examples/demos/markdown_editor_demo.js',
+      'cogito-observer': '/voidcore.js/examples/demos/cogito_observer_demo.js',
+      'galaxy-viewer': '/voidcore.js/examples/demos/galaxy_viewer_demo.js',
+      'system-monitor': '/voidcore.js/examples/demos/system_monitor_demo.js',
     };
 
     this.currentDemoInstance = null; // To keep track of the currently running demo
