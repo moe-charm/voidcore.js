@@ -1,7 +1,7 @@
 // examples/demos/cogito_observer_demo.js
-import { board } from '../../src/core.js';
-import { CogitoPlugin } from '../../plugins/cogito.js';
-import { ObserverPlugin } from '../../plugins/observer.js';
+import { board } from '/voidcore.js/src/core.js';
+import { CogitoPlugin } from '/voidcore.js/plugins/cogito.js';
+import { ObserverPlugin } from '/voidcore.js/plugins/observer.js';
 
 let cogitoPluginInstance = null;
 let observerPluginInstance = null;
@@ -172,7 +172,7 @@ export async function runDemo(container) {
     window[`cogitoChar_${instanceId}`] = newCogitoChar;
     
     // Initialize new Cogito instance only (Observer is shared)
-    import('../../plugins/cogito.js').then(({ init: initCogito }) => {
+    import('/voidcore.js/plugins/cogito.js').then(({ init: initCogito }) => {
       const newCogito = initCogito(instanceId);
       
       // Store instance
@@ -212,10 +212,10 @@ export async function runDemo(container) {
   window.observerChar = observerChar;
 
   // Initialize ObserverPlugin and then CogitoPlugin
-  const { init: initObserver } = await import('../../plugins/observer.js');
+  const { init: initObserver } = await import('/voidcore.js/plugins/observer.js');
   observerPluginInstance = initObserver();
 
-  const { init: initCogito } = await import('../../plugins/cogito.js');
+  const { init: initCogito } = await import('/voidcore.js/plugins/cogito.js');
   cogitoPluginInstance = initCogito();
 
   // Return an object with a cleanup method

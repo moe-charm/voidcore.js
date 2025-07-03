@@ -1,5 +1,5 @@
 // examples/demos/voidcore_quickstart_demo.js
-import { board } from '../../src/core.js';
+import { board } from '/voidcore.js/src/core.js';
 
 export async function runDemo(container) {
   board.log('--- Loading VoidCore Quick Start demo ---');

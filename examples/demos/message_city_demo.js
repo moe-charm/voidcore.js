@@ -1,5 +1,5 @@
 // examples/demos/message_city_demo.js
-import { board } from '../../src/core.js';
+import { board } from '/voidcore.js/src/core.js';
 
 let trafficLightPluginInstance = null;
 let vehiclePluginInstances = [];
@@ -129,21 +129,21 @@ export async function runDemo(container) {
   window.messageCityContainer = cityDiv;
 
   // Initialize Traffic Light Plugin
-  const { init: initTrafficLight } = await import('../../plugins/traffic_light.js');
+  const { init: initTrafficLight } = await import('/voidcore.js/plugins/traffic_light.js');
   trafficLightPluginInstance = initTrafficLight();
 
   // Initialize Vehicle Plugins
-  const { init: initVehicle } = await import('../../plugins/city_vehicle.js');
+  const { init: initVehicle } = await import('/voidcore.js/plugins/city_vehicle.js');
   vehiclePluginInstances.push(initVehicle('vehicle1', 'horizontal'));
   vehiclePluginInstances.push(initVehicle('vehicle2', 'horizontal'));
 
   // Initialize Pedestrian Plugins  
-  const { init: initPedestrian } = await import('../../plugins/city_pedestrian.js');
+  const { init: initPedestrian } = await import('/voidcore.js/plugins/city_pedestrian.js');
   pedestrianPluginInstances.push(initPedestrian('pedestrian1'));
   pedestrianPluginInstances.push(initPedestrian('pedestrian2'));
 
   // Initialize Emergency Vehicle Plugin
-  const { init: initEmergencyVehicle } = await import('../../plugins/emergency_vehicle.js');
+  const { init: initEmergencyVehicle } = await import('/voidcore.js/plugins/emergency_vehicle.js');
   emergencyVehiclePluginInstance = initEmergencyVehicle();
 
   // Return cleanup function
