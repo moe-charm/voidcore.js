@@ -183,6 +183,14 @@ class CoreBulletinBoard {
 
 ---
 
+## 🎮 Live Demo
+
+**Experience VoidCore in action:** https://moe-charm.github.io/voidcore.js/
+
+Try all 6 interactive demos showcasing autonomous plugins, message-driven architecture, and real-time collaboration!
+
+---
+
 ## ⚙️ Setup and Running the Demo
 
 This repository is designed to run entirely in the browser. While no server environment is strictly required for the core logic, you'll need a local HTTP server to test the examples due to browser security restrictions on ES module imports from `file://` URLs.
