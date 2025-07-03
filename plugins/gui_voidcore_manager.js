@@ -7,12 +7,12 @@ export class GUIVoidCoreManager extends AutonomousPlugin {
     super("GUIVoidCoreManagerService"); // Provide this plugin as a service
 
     this.demos = {
-      'voidcore-quickstart': '/examples/demos/voidcore_quickstart_demo.js',
-      'message-city': '/examples/demos/message_city_demo.js',
-      'markdown-editor': '/examples/demos/markdown_editor_demo.js',
-      'cogito-observer': '/examples/demos/cogito_observer_demo.js',
-      'galaxy-viewer': '/examples/demos/galaxy_viewer_demo.js',
-      'system-monitor': '/examples/demos/system_monitor_demo.js',
+      'voidcore-quickstart': './demos/voidcore_quickstart_demo.js',
+      'message-city': './demos/message_city_demo.js',
+      'markdown-editor': './demos/markdown_editor_demo.js',
+      'cogito-observer': './demos/cogito_observer_demo.js',
+      'galaxy-viewer': './demos/galaxy_viewer_demo.js',
+      'system-monitor': './demos/system_monitor_demo.js',
     };
 
     this.currentDemoInstance = null; // To keep track of the currently running demo
