@@ -100,5 +100,7 @@ export class DrawingToolPlugin extends AutonomousPlugin {
 }
 
 export function init(containerElement) {
-  return new DrawingToolPlugin(containerElement);
+  const instance = new DrawingToolPlugin(containerElement);
+  instance._prepare(); // Explicitly call _prepare
+  return instance;
 }

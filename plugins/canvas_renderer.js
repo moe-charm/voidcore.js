@@ -61,5 +61,7 @@ export class CanvasRendererPlugin extends AutonomousPlugin {
 }
 
 export function init(containerElement) {
-  return new CanvasRendererPlugin(containerElement);
+  const instance = new CanvasRendererPlugin(containerElement);
+  instance._prepare(); // Explicitly call _prepare
+  return instance;
 }

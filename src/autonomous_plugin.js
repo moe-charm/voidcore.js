@@ -6,13 +6,6 @@ export class AutonomousPlugin {
     this.board = board;
     this.capabilityName = capabilityName;
     this.isActivated = false; // Represents the 'active' state
-
-    // Responsibility ①: Preparation (internal, not exposed to core)
-    this._prepare();
-
-    // Responsibility ②: Debut (self-declaration to the board)
-    // This is called when the plugin is ready to interact with the world.
-    this._debut();
   }
 
   // Internal preparation logic (can be overridden by subclasses)
@@ -20,6 +13,10 @@ export class AutonomousPlugin {
     // Default preparation: log that preparation is starting
     this.board.log(`🛠️ ${this.capabilityName}: Preparing...`);
     // Subclasses can add their own specific preparation here
+
+    // Responsibility ②: Debut (self-declaration to the board)
+    // This is called when the plugin is ready to interact with the world.
+    this._debut();
   }
 
   // Internal debut logic (self-declaration)

@@ -41,5 +41,7 @@ export class SystemMetricsPlugin extends AutonomousPlugin {
 }
 
 export function init() {
-  return new SystemMetricsPlugin();
+  const instance = new SystemMetricsPlugin();
+  instance._prepare(); // Explicitly call _prepare
+  return instance;
 }

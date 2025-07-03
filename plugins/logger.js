@@ -12,6 +12,8 @@ export class LoggerPlugin extends AutonomousPlugin {
 }
 
 export function init() {
-  new LoggerPlugin();
+  const instance = new LoggerPlugin();
+  instance._prepare(); // Explicitly call _prepare
+  return instance;
 }
 

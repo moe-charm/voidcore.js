@@ -22,6 +22,8 @@ export class DemoPlugin extends AutonomousPlugin {
 }
 
 export function init() {
-  return new DemoPlugin();
+  const instance = new DemoPlugin();
+  instance._prepare(); // Explicitly call _prepare
+  return instance;
 }
 

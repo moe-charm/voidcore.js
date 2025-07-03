@@ -38,5 +38,7 @@ export class TextInputPlugin extends AutonomousPlugin {
 }
 
 export function init() {
-  new TextInputPlugin();
+  const instance = new TextInputPlugin();
+  instance._prepare(); // Explicitly call _prepare
+  return instance;
 }

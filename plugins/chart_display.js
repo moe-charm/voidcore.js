@@ -122,5 +122,7 @@ export class ChartDisplayPlugin extends AutonomousPlugin {
 }
 
 export function init(containerElement) {
-  return new ChartDisplayPlugin(containerElement);
+  const instance = new ChartDisplayPlugin(containerElement);
+  instance._prepare(); // Explicitly call _prepare
+  return instance;
 }

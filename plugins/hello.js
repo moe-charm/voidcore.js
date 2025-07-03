@@ -28,5 +28,7 @@ export class HelloPlugin extends AutonomousPlugin {
 }
 
 export function init(displayElement) {
-  new HelloPlugin(displayElement);
+  const instance = new HelloPlugin(displayElement);
+  instance._prepare(); // Explicitly call _prepare
+  return instance;
 }

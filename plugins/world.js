@@ -26,5 +26,7 @@ export class WorldPlugin extends AutonomousPlugin {
 }
 
 export function init(displayElement) {
-  new WorldPlugin(displayElement);
+  const instance = new WorldPlugin(displayElement);
+  instance._prepare(); // Explicitly call _prepare
+  return instance;
 }

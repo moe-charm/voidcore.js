@@ -39,5 +39,7 @@ export class MarkdownRendererPlugin extends AutonomousPlugin {
 }
 
 export function init() {
-  new MarkdownRendererPlugin();
+  const instance = new MarkdownRendererPlugin();
+  instance._prepare(); // Explicitly call _prepare
+  return instance;
 }
