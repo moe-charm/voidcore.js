@@ -1,0 +1,85 @@
+// core/CoreBulletinBoard.js
+export class CoreBulletinBoard {
+  constructor() {
+    this.board = new Map();
+    this.subscribers = [];
+  }
+
+  provide(key, value) {
+    this.board.set(key, value);
+    this._notify();
+  }
+
+  retract(key) {
+    this.board.delete(key);
+    this._notify();
+  }
+
+  observe(key) {
+    return this.board.get(key);
+  }
+
+  _notify() {
+    for (const fn of this.subscribers) fn();
+  }
+
+  onChange(fn) {
+    this.subscribers.push(fn);
+  }
+}
+
+
+
+
+
+// core/AutonomousPlugin.js
+export class AutonomousPlugin {
+  constructor(board, capabilityName) {
+    this.board = board;
+    this.capabilityName = capabilityName;
+    this.alive = true;
+
+    // 自己掲示（デビュー）
+    this.board.provide(this.capabilityName, this);
+    console.log(`${capabilityName}: 提供開始`);
+  }
+
+  // 自己観測ヘルパー
+  observe(name) {
+    return this.board.observe(name);
+  }
+
+  // 自己消滅（引退）
+  retire() {
+    if (this.alive) {
+      this.board.retract(this.capabilityName);
+      this.alive = false;
+      console.log(`${this.capabilityName}: 引退しました`);
+    }
+  }
+}
+
+✅ 継承して使う側（プラグイン側）はこうにゃ：
+
+// plugins/LoggerPlugin.js
+import { AutonomousPlugin } from "../core/AutonomousPlugin.js";
+
+export class LoggerPlugin extends AutonomousPlugin {
+  constructor(board) {
+    super(board, "log.write"); // 自動で provide
+
+    // 例えば誰かのログ出力を観測する
+    const timePlugin = this.observe("time.now");
+    if (timePlugin) {
+      console.log(`Logger: 現在時刻は ${timePlugin.getTime()}`);
+    }
+
+    // 数秒後に引退するデモ
+    setTimeout(() => this.retire(), 3000);
+  }
+
+  log(message) {
+    console.log(`📝 ${message}`);
+  }
+}
+

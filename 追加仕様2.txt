@@ -1,0 +1,76 @@
+やるべきことまとめにゃ：
+1. Intent/Notice/Proposal のメッセージ分類をJS版に実装する
+
+    これらはメッセージの「種類」みたいなものにゃ。
+
+    たとえば Intent は「何かやりたいという意思表明」
+
+    Notice は「知らせたいこと」
+
+    Proposal は「提案や要求」
+
+    CoreBulletinBoard の publish/subscribe でイベント名をこの分類で使う感じにするにゃ。
+
+2. その分類に基づいたメッセージハンドリングを統合する
+
+    onChangeやsubscribeを使って、分類ごとに適切にハンドリング・フィルタリングできるようにする
+
+    どのプラグインもこれを使って自律的に反応できるように
+
+具体的イメージ（JS版でのサンプルコード案）
+
+class CoreBulletinBoard {
+  constructor() {
+    this.board = new Map();
+    this.subscribers = {
+      Intent: [],
+      Notice: [],
+      Proposal: [],
+    };
+  }
+
+  provide(capability, provider) {
+    this.board.set(capability, provider);
+    this._notifyChange();
+  }
+
+  retract(capability) {
+    this.board.delete(capability);
+    this._notifyChange();
+  }
+
+  observe(capability) {
+    return this.board.get(capability);
+  }
+
+  publish(eventType, message) {
+    if (this.subscribers[eventType]) {
+      this.subscribers[eventType].forEach(cb => cb(message));
+    }
+  }
+
+  subscribe(eventType, callback) {
+    if (this.subscribers[eventType]) {
+      this.subscribers[eventType].push(callback);
+    }
+  }
+
+  _notifyChange() {
+    // 例えば全体変更通知もここでできる
+  }
+}
+
+プラグインはこう使うイメージにゃ：
+
+board.subscribe('Intent', (msg) => {
+  console.log("Intent received:", msg);
+  // ここで自律的に反応するにゃ
+});
+
+次のアクション
+
+    既存JS版CoreBulletinBoardにこの分類機能を追加してもらう
+
+    それを動かす簡単なプラグインのデモを用意する
+
+    READMEにもこの仕組みの説明を追記する

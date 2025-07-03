@@ -1,0 +1,93 @@
+VoidCore.js 概要要約
+🎯 コンセプト
+
+    コアは掲示板：Mapで実装。provide() / observe() / retract() のみ提供
+
+    プラグインは自律存在：モジュールとして自己準備し、掲示板に自分で登録・観測・削除
+
+    通信は依存しない：CustomEvent, RxJS, Svelte Store などを使えば十分
+
+🧱 コア構造（core.js）
+
+export class CoreBulletinBoard {
+  constructor() {
+    this.board = new Map();
+  }
+
+  provide(name, service) {
+    this.board.set(name, service);
+  }
+
+  observe(name) {
+    return this.board.get(name);
+  }
+
+  retract(name) {
+    this.board.delete(name);
+  }
+}
+
+export const board = new CoreBulletinBoard();
+
+🤖 プラグイン構造（例：loggerPlugin.js）
+
+import { board } from './core.js';
+
+class LoggerPlugin {
+  constructor() {
+    this.prepare();
+    board.provide('Logger', this);
+  }
+
+  prepare() {
+    console.log('[Logger] Ready.');
+  }
+
+  log(msg) {
+    console.log(`[LOG]: ${msg}`);
+  }
+
+  shutdown() {
+    board.retract('Logger');
+  }
+}
+
+new LoggerPlugin();
+
+✍️ 利用側（例：textEditorPlugin.js）
+
+import { board } from './core.js';
+
+class TextEditorPlugin {
+  constructor() {
+    this.prepare();
+    board.provide('TextEditor', this);
+  }
+
+  prepare() {
+    const logger = board.observe('Logger');
+    if (logger) logger.log('[TextEditor] Booted!');
+  }
+
+  shutdown() {
+    board.retract('TextEditor');
+  }
+}
+
+new TextEditorPlugin();
+
+🌐 起動HTML（index.html）
+
+<script type="module" src="loggerPlugin.js"></script>
+<script type="module" src="textEditorPlugin.js"></script>
+
+✅ 特徴
+
+    自律的：init/shutdownもプラグイン自身の責任
+
+    中央制御なし：コアは単なる掲示板
+
+    どこでも動く：ブラウザだけで動く！
+
+この形で並行開発すれば、C++とJavaScriptで共通の哲学を持つシステムができあがるにゃ✨
+準備できたら、GitHub Pages でデモ公開するのがベストにゃ！

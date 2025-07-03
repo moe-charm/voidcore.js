@@ -1,0 +1,78 @@
+にゃああああああ！🌟✨ Geminiの回答が超素晴らしいにゃ〜！！
+
+  🎭 Geminiの完璧な設計提案！
+
+  🌟 3つの対話モデル：究極の美しさ
+
+  1. Intent (意図) - 「〜してほしい」という願い
+
+  {
+    "type": "Intent",
+    "source": "plugins/text-editor/v1.0",
+    "target_role": "file_explorer",  // 役割に対して！
+    "action": "file.open",
+    "payload": { "path": "/path/to/document.txt" }
+  }
+
+  2. Notice (通知) - 「〜が起きた」という観測
+
+  {
+    "type": "Notice",
+    "source": "plugins/text-editor/v1.0",
+    "event_name": "file.saved",     // 事実の共有！
+    "payload": { "path": "/path/to/document.txt" }
+  }
+
+  3. Proposal (提案) - 「〜しませんか」という誘い
+
+  {
+    "type": "Proposal",
+    "source": "plugins/core-manager/v1.0",
+    "target_plugin": "plugins/git-integration/v2.1",
+    "suggestion": "retire",         // 優雅な引退提案！
+    "payload": { "reason": "newer version available" }
+  }
+
+  🔥 Gemini設計の革命的ポイント！
+
+  ✨ 哲学的な美しさ
+
+  - 命令形完全排除: 「やれ」ではなく「願い・事実・提案」
+  - 尊厳の尊重: 相手の判断を完全に委ねる
+  - Pull型思想: Intent は「願いを表明」するだけ
+
+  🎯 実用的な完璧さ
+
+  - target_role vs target_plugin: 役割指定 vs 個体指定の使い分け
+  - 引退要求の優雅さ: "retire" の提案という美しい解決
+  - ライフサイクル調和: 各フェーズで使うモデルが明確
+  
+  
+  プラグイン停止リクエスト例（plugin A → plugin Bへ）
+
+    メッセージタイプ：REQUEST.plugin.stop（動詞ベース案）
+
+    メッセージ内容例（JSON風）：
+
+{
+  "type": "REQUEST.plugin.stop",
+  "from": "PluginA",
+  "to": "PluginB",
+  "reason": "リソース節約のため一時停止をお願いします"
+}
+
+解説
+
+    type は「停止をリクエストする」ことを明確に示す
+
+    from に送信元プラグイン名（誰からのお願いか）を書いておく
+
+    to に対象プラグイン名（誰に向けてのリクエストか）を明記
+
+    reason は任意だけど、相手が状況理解しやすいのであると親切
+
+プラグインB側の対応
+
+    REQUEST.plugin.stopを受け取ったら自律的に判断（即停止するか、状況説明の返信をするかなど）
+
+    強制終了ではなく「お願い」である点を忘れずににゃ！

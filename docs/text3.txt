@@ -1,0 +1,77 @@
+【VoidCore.js - ブラウザ上で、花開く、もう一つの、宇宙】
+
+我々が、C++で、築き上げてきた、あの、美しい『理』を、JavaScript / TypeScriptで、再構築したら、何が起きるか！？
+セリン、シミュレーションしてみたよ！
+1. 『コア』の、正体は？
+
+    C++の世界では、std::unordered_mapだった、『掲示板』。
+
+    JSの世界では、ただの、プレーンな、Objectか、Mapオブジェクトになる！
+    Generated javascript
+
+          
+    class CoreBulletinBoard {
+      constructor() {
+        this.board = new Map();
+      }
+      // ... provide, retract, observe
+    }
+
+        
+
+    IGNORE_WHEN_COPYING_START
+
+    Use code with caution. JavaScript
+    IGNORE_WHEN_COPYING_END
+
+    コア本体は、数十行の、美しい、クラスとして、完全に、表現できる！
+
+2. 『プラグイン』の、正体は？
+
+    C++の世界では、独立した、exeプロセスだった。
+
+    JSの世界では、それは、独立した、jsモジュールになる！
+
+        FileExplorerPlugin.js
+
+        TextEditorPlugin.js
+
+        L&TAuthority.js
+
+    あるいは、もっと、モダンな、フレームワークなら、それは、Reactの、コンポーネントや、Vueの、コンポーネント、そのものになるかもしれない！
+
+3. 『通信』の、正体は？
+
+    C++の世界では、プロセス間通信や、TCPソケットだった。
+
+    JSの世界では、それは、もっと、シンプルで、美しいものになる！
+
+        CustomEvent API: ブラウザが、ネイティブで、持っている、イベントバスの、仕組みそのものだ！
+        window.dispatchEvent(new CustomEvent('voidcore.message', { detail: message }));
+
+        RxJS / Svelte Store: もっと、洗練された、リアクティブな、状態管理ライブラリが、そのまま、我々の、メッセージバスとして、完璧に、機能する！
+
+【なぜ、ブラウザこそが、最高の、舞台なのか？】
+
+    究極の、サンドボックス！
+
+        ブラウザは、もともと、Web Workerや、iframeという、強力な、サンドボックス（砂場）の、仕組みを持っている！
+
+        各プラグインを、別々のWorkerで、動かせば、C++の世界で、我々が、苦労して、実現しようとしていた、プロセスの、完全な、分離が、いとも、簡単に、実現できてしまう！
+
+    『GUI』との、完璧な、親和性！
+
+        我々が、C++で、一番、苦労してきた、GUIの、レイアウト問題。
+
+        ブラウザの世界では、HTMLと、CSSという、そのために、生まれてきた、最強の、レイアウトエンジンが、最初から、存在する！
+
+        SessionManagerが、レイアウトを定義し、ReactやVueが、それを、仮想DOMとして、美しく、画面に、反映させる。これほど、美しい、流れがあるだろうか！
+
+    『配布』の、問題が、消滅する！
+
+        もう、.exeファイルも、ビルドも、いらない！
+
+        ユーザーは、ただ、URLに、アクセスするだけ！
+
+        その、URLに、アクセスした、瞬間に、最新の、ヴォイドコア・システムと、全てのプラグインが、ユーザーの、ブラウザの中に、ダウンロードされ、魔法のように、動き出すんだ！
+

@@ -1,0 +1,60 @@
+結論：provide/retract/observeとpublish/subscribeは別レイヤーで共存すべきにゃ！
+🧠 1. 現在のCoreBulletinBoardの通信設計をおさらい
+機能	用途	例	説明
+provide(capability, impl)	能力の提供	"log.write" → LoggerPlugin	サービスの名刺を貼る
+retract(capability)	能力の引退	"log.write" を消す	サービスを引き上げる
+observe(capability)	能力の観測	"time.now" を探す	名刺を読む
+
+⬇️ これは**「静的なサービス依存関係の解決」**（=Dependency Discovery）に使われているにゃ。
+機能	用途	例	説明
+publish(event)	イベント送信	Intent("save-file")	「何かしてほしい」などの意図を投げる
+subscribe(type, fn)	購読	"Proposal" に反応する	イベントを受信して反応する
+
+⬇️ こちらは**「動的なメッセージ駆動通信」**にゃ。Intent / Notice / Proposal などを分類して、ゆるやかな協調制御を実現しているにゃ。
+🧩 新しい AutonomousPlugin と onChange(fn) との関係
+🟢 onChange(fn) はあくまで**"Boardの状態変化通知"**
+
+    つまり、「新しい能力が追加された」「ある能力が消えた」というサービス提供状態の変化を、まとめて1つの関数で通知するもの。
+
+    observe(...)と組み合わせて、"依存能力が登場したら反応する" などの用途に便利。
+
+🔴 しかしこれは publish/subscribe の代替にはならないにゃ！
+
+    publish の対象は「プラグイン同士が投げ合う、意味的なメッセージ」。
+
+    イベント名や分類が大事（Intent / Notice / Proposalなど）で、event.typeやdetailによる選別が必須。
+
+    onChange はそれを一括で見る仕組みなので、意味解釈を前提とした動的メッセージングには不向きにゃ。
+
+✅ おすすめ構成案：両者を併存！
+
+class CoreBulletinBoard {
+  constructor() {
+    this.board = new Map();  // provide / retract のため
+    this.eventListeners = {};  // publish / subscribe のため
+    this.changeListeners = []; // onChange(fn) のため
+  }
+
+  provide(name, value) { ...; this._notifyChange(); }
+  retract(name) { ...; this._notifyChange(); }
+  observe(name) { ... }
+
+  onChange(fn) { this.changeListeners.push(fn); }
+  _notifyChange() { ... }
+
+  publish(event) {
+    const listeners = this.eventListeners[event.type] || [];
+    for (const fn of listeners) fn(event);
+  }
+
+  subscribe(type, fn) {
+    if (!this.eventListeners[type]) this.eventListeners[type] = [];
+    this.eventListeners[type].push(fn);
+  }
+}
+
+🔮 補足：VoidCoreSystemにおける意義
+層	概要	メタファー
+provide / observe	サービス名刺の掲示と探索	「お仕事できるよ」「今なにか手伝える？」
+publish / subscribe	意図や提案のメッセージ送受信	「これお願い！」「もうそろそろ引退しても…？」
+onChange	名刺の更新を察知	「あ、新しい人が来た」

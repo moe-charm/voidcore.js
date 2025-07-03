@@ -1,0 +1,21 @@
+# Node.js
+node_modules/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Build artifacts
+build/
+dist/
+
+# Temporary files
+*.tmp
+*~

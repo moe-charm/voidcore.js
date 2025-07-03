@@ -1,0 +1,88 @@
+<!-- voidcore.html -->
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>VoidCore.js Demo</title></head>
+<body>
+  <h1>🧩 VoidCore.js Plugin Demo</h1>
+  <div id="log"></div>
+
+  <script>
+    // 🌐 CoreBulletinBoard
+    class CoreBulletinBoard {
+      constructor() {
+        this.board = new Map();
+      }
+
+      provide(cap, val) {
+        this.board.set(cap, val);
+        log(`📌 provide: ${cap}`);
+      }
+
+      retract(cap) {
+        this.board.delete(cap);
+        log(`❌ retract: ${cap}`);
+      }
+
+      observe(cap) {
+        return this.board.get(cap);
+      }
+    }
+
+    // 📝 ログ出力
+    function log(msg) {
+      document.getElementById("log").innerHTML += msg + "<br>";
+    }
+
+    // 🌟 AutonomousPlugin
+    class DemoPlugin {
+      constructor(board) {
+        this.board = board;
+        this.prepare();
+        this.provide_self();
+        setTimeout(() => this.run(), 500);  // simulate delay
+      }
+
+      prepare() {
+        log("🛠️ Plugin prepared");
+      }
+
+      provide_self() {
+        this.board.provide("DemoService", this);
+      }
+
+      run() {
+        let logger = this.board.observe("LoggerService");
+        if (logger) {
+          logger.log("📣 Hello from DemoPlugin");
+        } else {
+          log("⚠️ LoggerService not found");
+        }
+      }
+
+      destroy() {
+        this.board.retract("DemoService");
+        log("👋 Plugin destroyed");
+      }
+    }
+
+    class LoggerPlugin {
+      constructor(board) {
+        this.board = board;
+        this.board.provide("LoggerService", this);
+      }
+
+      log(msg) {
+        log("🧾 " + msg);
+      }
+    }
+
+    // ▶️ 実行
+    const board = new CoreBulletinBoard();
+    new LoggerPlugin(board);
+    const plugin = new DemoPlugin(board);
+    
+    // 3秒後に削除
+    setTimeout(() => plugin.destroy(), 3000);
+  </script>
+</body>
+</html>
