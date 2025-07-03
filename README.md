@@ -1,7 +1,14 @@
 # 🧠 VoidCore.js - The Autonomous Plugin System
 
 > **"What if plugins could think for themselves?"**  
-> _VoidCore.js is a minimalist and powerful system where each plugin is a self-aware actor, discovering, interacting, and retiring autonomously._
+> _They communicate quietly, and when their purpose is fulfilled, they retire on their own._
+> 
+> _UI, AI, file operations — everything is unified through message paths._
+> 
+> **VoidCore v1 – The Quiet Beginning of a Universe**  
+> _(We've only just reached the first galaxy.)_
+>
+> _It may sound philosophical, but it is the result of a thorough pursuit of practicality!_
 
 ---
 
@@ -220,6 +227,12 @@ Beyond the current implementation, VoidCore envisions an AI residing within the 
 -   **Enable self-evolution**: Allow the system to adapt and evolve based on user context and plugin interactions, transforming into a new kind of self-evolving life form.
 
 This perfect balance of **"Freedom"** (for plugins to create protocols) and **"Control"** (for the AI to bring order to chaos) is the essence of the VoidCore architecture.
+
+---
+
+## ☕ Support This Project
+
+If VoidCore helps bring your ideas to life, consider [☕ buying me a coffee](https://coff.ee/moecharmde6) to fuel more autonomous adventures!
 
 ---
 

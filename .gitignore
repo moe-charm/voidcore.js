@@ -19,3 +19,6 @@ dist/
 # Temporary files
 *.tmp
 *~
+
+# Claude Code session files
+.claude/

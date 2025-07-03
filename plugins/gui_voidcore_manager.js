@@ -7,12 +7,11 @@ export class GUIVoidCoreManager extends AutonomousPlugin {
     super("GUIVoidCoreManagerService"); // Provide this plugin as a service
 
     this.demos = {
+      'voidcore-quickstart': '/examples/demos/voidcore_quickstart_demo.js',
       'message-city': '/examples/demos/message_city_demo.js',
-      'galaxy-viewer': '/examples/demos/galaxy_viewer_demo.js',
       'markdown-editor': '/examples/demos/markdown_editor_demo.js',
-      'hello-world': '/examples/demos/hello_world_demo.js',
       'cogito-observer': '/examples/demos/cogito_observer_demo.js',
-      'collaborative-whiteboard': '/examples/demos/collaborative_whiteboard_demo.js',
+      'galaxy-viewer': '/examples/demos/galaxy_viewer_demo.js',
       'system-monitor': '/examples/demos/system_monitor_demo.js',
     };
 
@@ -35,7 +34,7 @@ export class GUIVoidCoreManager extends AutonomousPlugin {
 
     // 1. Header
     const header = document.createElement('h1');
-    header.textContent = 'This screen also runs on VoidCore!';
+    header.innerHTML = 'This screen also runs on VoidCore! • <a href="https://coff.ee/moecharmde6" target="_blank" style="color: #666; text-decoration: none; font-size: 16px;">☕ Support this project</a>';
     header.style.textAlign = 'center';
     header.style.color = '#333';
     appRoot.appendChild(header);
