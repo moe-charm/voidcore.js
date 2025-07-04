@@ -1,7 +1,7 @@
 // examples/demos/system_monitor_demo.js
-import { board } from '/voidcore.js/src/core.js';
-import { SystemMetricsPlugin } from '/voidcore.js/plugins/system_metrics.js';
-import { ChartDisplayPlugin } from '/voidcore.js/plugins/chart_display.js';
+import { board } from '../../src/core.js';
+import { SystemMetricsPlugin } from '../../plugins/system_metrics.js';
+import { ChartDisplayPlugin } from '../../plugins/chart_display.js';
 
 let systemMetricsPluginInstance = null;
 let chartDisplayPluginInstance = null;
@@ -15,10 +15,10 @@ export async function runDemo(container) {
   }
 
   // Initialize plugins
-  const { init: initSystemMetrics } = await import('/voidcore.js/plugins/system_metrics.js');
+  const { init: initSystemMetrics } = await import('../../plugins/system_metrics.js');
   systemMetricsPluginInstance = initSystemMetrics();
 
-  const { init: initChartDisplay } = await import('/voidcore.js/plugins/chart_display.js');
+  const { init: initChartDisplay } = await import('../../plugins/chart_display.js');
   chartDisplayPluginInstance = initChartDisplay(container);
 
   // Return an object with a cleanup method

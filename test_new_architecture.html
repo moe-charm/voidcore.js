@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoidCore Network v11.0 - 新アーキテクチャテスト</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #f0f0f0;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #00d4ff;
+            text-shadow: 0 0 20px #00d4ff;
+            margin: 0;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            height: 600px;
+        }
+
+        .panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            color: #00d4ff;
+            border-bottom: 2px solid #00d4ff;
+            padding-bottom: 10px;
+        }
+
+        #editor-container {
+            height: 80%;
+            position: relative;
+        }
+
+        #markdown-input {
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            color: #f0f0f0;
+            border: 2px solid #4682b4;
+            border-radius: 8px;
+            padding: 15px;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+        }
+
+        #log-output {
+            height: 100%;
+            overflow-y: auto;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4682b4, #5a9fd4);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(70, 130, 180, 0.4);
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 4px solid #00d4ff;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .cogito-demo {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .cogito-character {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #4169e1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+
+        #cogito-log {
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        #cogito-log::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #cogito-log::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        #cogito-log::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌟 VoidCore Network v11.0</h1>
+        <div class="subtitle">静寂の器 - 完全自律プラグインシステム</div>
+        <div class="subtitle">Intent（願い）/ Notice（事実）/ Proposal（提案）</div>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <h3>📝 TextInput Plugin</h3>
+            <div id="editor-container"></div>
+        </div>
+
+        <div class="panel">
+            <h3>📜 System Log</h3>
+            <div id="log-output"></div>
+        </div>
+    </div>
+
+    <div class="status">
+        <h3>🎭 Plugin Status</h3>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="plugin-count">0</div>
+                <div>Active Plugins</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="message-count">0</div>
+                <div>Messages Sent</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="subscription-count">0</div>
+                <div>Subscriptions</div>
+            </div>
+        </div>
+
+        <div class="cogito-demo">
+            <h4>🤖 Cogito Plugin Demo</h4>
+            <div class="cogito-character" id="cogito-char">🤔</div>
+            <div id="cogito-log"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="startTextPlugin()">🚀 Start TextInput Plugin</button>
+            <button class="btn" onclick="startCogitoPlugin()">🧠 Start Cogito Plugin</button>
+            <button class="btn" onclick="sendTestIntent()">📨 Send Test Intent</button>
+            <button class="btn" onclick="sendTestProposal()">💡 Send Test Proposal</button>
+            <button class="btn" onclick="showStats()">📊 Show Stats</button>
+            <button class="btn" onclick="debugSubscriptions()">🔍 Debug Subscriptions</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { board } from './src/core.js';
+        import { voidCore } from './src/voidcore.js';
+        import { Message } from './src/message.js';
+        import { TextInputPlugin } from './plugins/textinput.js';
+        import { CogitoPlugin } from './plugins/cogito.js';
+
+        // Global variables
+        window.board = board;
+        window.voidCore = voidCore;
+        window.Message = Message;
+        window.textPlugin = null;
+        window.cogitoPlugin = null;
+        window.messageCount = 0;
+        window.cogitoChar = document.getElementById('cogito-char');
+        window.cogitoLogDiv = document.getElementById('cogito-log');
+
+        // Setup logging
+        const logOutput = document.getElementById('log-output');
+        board.setLogElement(logOutput);
+
+        // Statistics tracking
+        function updateStats() {
+            const stats = voidCore.getStats();
+            document.getElementById('subscription-count').textContent = stats.totalSubscribers;
+            document.getElementById('message-count').textContent = window.messageCount;
+            
+            // Count active plugins
+            let activePlugins = 0;
+            if (window.textPlugin?.isActive) activePlugins++;
+            if (window.cogitoPlugin?.isActive) activePlugins++;
+            document.getElementById('plugin-count').textContent = activePlugins;
+        }
+
+        // Intercept VoidCore publish to count messages
+        const originalPublish = voidCore.publish.bind(voidCore);
+        voidCore.publish = async function(message) {
+            window.messageCount++;
+            updateStats();
+            return originalPublish(message);
+        };
+
+        // Plugin management functions
+        window.startTextPlugin = async function() {
+            if (!window.textPlugin) {
+                window.textPlugin = new TextInputPlugin();
+                await window.textPlugin.start();
+                board.log('🚀 TextInputPlugin started with new architecture');
+            } else {
+                board.log('⚠️ TextInputPlugin already running');
+            }
+            updateStats();
+        };
+
+        window.startCogitoPlugin = async function() {
+            if (!window.cogitoPlugin) {
+                window.cogitoPlugin = new CogitoPlugin();
+                await window.cogitoPlugin.start();
+                board.log('🧠 CogitoPlugin started with new architecture');
+            } else {
+                board.log('⚠️ CogitoPlugin already running');
+            }
+            updateStats();
+        };
+
+        window.sendTestIntent = async function() {
+            // TextInputPluginが起動してなかったら自動起動
+            if (!window.textPlugin) {
+                board.log('⚡ TextInputPlugin not running, starting automatically...');
+                await window.startTextPlugin();
+                // 少し待って確実に起動させる
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            const intent = Message.intent('text_input', 'text.focus', {
+                reason: 'user_request'
+            }).withSource('TestController');
+            
+            await voidCore.publish(intent);
+            board.log('📨 Test Intent sent: focus text input');
+        };
+
+        window.sendTestProposal = async function() {
+            if (window.cogitoPlugin) {
+                const proposal = Message.proposal(window.cogitoPlugin.pluginId, 'retire', {
+                    reason: 'test_retirement'
+                }).withSource('TestController');
+                
+                await voidCore.publish(proposal);
+                board.log('💡 Test Proposal sent: retire cogito');
+            } else {
+                board.log('⚠️ No Cogito plugin to send proposal to');
+            }
+        };
+
+        window.showStats = function() {
+            const stats = voidCore.getStats();
+            board.log('📊 VoidCore Statistics:');
+            board.log(`  - Message Types: ${stats.messageTypes}`);
+            board.log(`  - Total Subscribers: ${stats.totalSubscribers}`);
+            board.log(`  - Messages Sent: ${window.messageCount}`);
+            
+            stats.subscriptions.forEach(sub => {
+                board.log(`  - ${sub.type}: ${sub.subscriberCount} subscribers`);
+            });
+        };
+
+        window.debugSubscriptions = function() {
+            board.log('🔍 Debug: Subscription Analysis');
+            
+            // VoidCore購読状況
+            const stats = voidCore.getStats();
+            board.log(`📊 VoidCore has ${stats.messageTypes} message types`);
+            stats.subscriptions.forEach(sub => {
+                board.log(`  📥 ${sub.type}: ${sub.subscriberCount} subscribers`);
+            });
+            
+            // プラグイン状況
+            if (window.textPlugin) {
+                board.log(`🔌 TextInputPlugin: role="${window.textPlugin.role}", id="${window.textPlugin.pluginId}"`);
+                board.log(`   Subscribed types: ${Array.from(window.textPlugin.subscribedTypes || []).join(', ')}`);
+            }
+            
+            if (window.cogitoPlugin) {
+                board.log(`🤖 CogitoPlugin: role="${window.cogitoPlugin.role}", id="${window.cogitoPlugin.pluginId}"`);
+                board.log(`   Subscribed types: ${Array.from(window.cogitoPlugin.subscribedTypes || []).join(', ')}`);
+            }
+            
+            // テストメッセージ
+            board.log('🧪 Testing message types:');
+            board.log(`  📨 text.focus subscribers: ${voidCore.getSubscriberCount('text.focus')}`);
+            board.log(`  💡 retire subscribers: ${voidCore.getSubscriberCount('retire')}`);
+        };
+
+        // Auto-update stats every second
+        setInterval(updateStats, 1000);
+
+        // Welcome message
+        board.log('🌟 VoidCore Network v11.0 - 静寂の器');
+        board.log('📚 New Architecture Features:');
+        board.log('  - 5-phase autonomous plugin lifecycle');
+        board.log('  - Pure message routing (type-only)');
+        board.log('  - Intent/Notice/Proposal classification');
+        board.log('  - Non-imperative communication');
+        board.log('🚀 Ready to test new architecture!');
+    </script>
+</body>
+</html>

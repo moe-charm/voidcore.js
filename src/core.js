@@ -1,13 +1,19 @@
+// VoidCoreとの統合
+import { voidCore } from './voidcore.js';
+
 class CoreBulletinBoard {
   constructor() {
     this.board = new Map();
     this.subscribers = new Map(); // Map<messageType, Map<eventName, Set<callback>>>
     this.changeListeners = new Set(); // For board change notifications
     this.logElement = null;
+    this.voidCore = voidCore; // VoidCoreとの統合
   }
 
   setLogElement(element) {
     this.logElement = element;
+    // VoidCoreにも同じログ要素を設定
+    this.voidCore.setLogElement(element);
   }
 
   log(msg) {

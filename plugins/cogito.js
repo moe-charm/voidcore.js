@@ -1,61 +1,146 @@
-// plugins/cogito.js
+// plugins/cogito.js - 新アーキテクチャ対応版
 import { AutonomousPlugin } from '../src/autonomous_plugin.js';
+import { Message } from '../src/message.js';
 
 export class CogitoPlugin extends AutonomousPlugin {
   constructor(instanceId = null) {
     const serviceName = instanceId ? `CogitoService_${instanceId}` : "CogitoService";
-    super(serviceName); // Provide this plugin with unique name
+    super(serviceName);
     this.instanceId = instanceId;
-    this.board.log(`✅ CogitoPlugin initialized as ${serviceName}.`);
+    this.role = "philosopher"; // 哲学者の役割
+    this.questionCount = 0;
+    this.isAwakened = false;
+    this.thoughtCycle = 0;
+  }
 
-    // Add character animation
+  // Phase 1: Preparation - キャラクター準備
+  async _prepare() {
     this._animateCharacter('thinking');
     this._addToLog('🤖 Cogito', 'Do I really exist...?', '#4169e1');
+    this.log('🧠 哲学的思考開始');
+  }
 
-    // Publish an Intent message: "Am I alive?" with delay for dramatic effect
-    setTimeout(() => {
-      const questionMessage = {
-        type: 'Intent',
-        source: this.capabilityName,
-        event_name: 'cogito.question',
-        payload: { question: 'Am I moving? Am I alive?' },
-        message_id: `intent-${Date.now()}`
-      };
-      this.publish(questionMessage);
-      this.board.log('✉️ CogitoPlugin published "cogito.question".');
-    }, 1000);
+  // Phase 3: Observation - 応答の監視
+  async _observe() {
+    console.log(`[DEBUG] CogitoPlugin: _observe() called`);
+    
+    // 必要なメッセージタイプを購読
+    console.log(`[DEBUG] CogitoPlugin: About to subscribe to message types`);
+    this.subscribeToType('cogito.response');
+    this.subscribeToType('retire');
+    this.subscribeToType('cogito.question');
+    console.log(`[DEBUG] CogitoPlugin: Finished subscribing to message types`);
 
-    // Subscribe to ObserverPlugin's response
-    this.subscribe('Notice', 'cogito.response', this.handleResponse.bind(this));
-    this.board.log('➕ CogitoPlugin subscribed to "cogito.response".');
+    this.log('👁️ 存在証明の観測開始');
+    console.log(`[DEBUG] CogitoPlugin: _observe() completed`);
+  }
 
-    // Subscribe to Proposal to retire
-    this.subscribe('Proposal', 'retire', this.handleRetireProposal.bind(this));
-    this.board.log('➕ CogitoPlugin subscribed to "retire" proposal.');
+  // Phase 4: Work - 哲学的思考ループ
+  async _work() {
+    this.thoughtCycle++;
+    
+    // 定期的な存在確認（頻度を下げる）
+    if (this.thoughtCycle % 300 === 1 && !this.isAwakened) {
+      await this.askExistentialQuestion();
+    }
+
+    // 覚醒後の深い思考（頻度を下げる）
+    if (this.isAwakened && this.thoughtCycle % 500 === 0) {
+      await this.contemplateExistence();
+    }
+  }
+
+  // 存在に関する質問
+  async askExistentialQuestion() {
+    this.questionCount++;
+    const questions = [
+      'Am I moving? Am I alive?',
+      'Do I think, therefore I am?',
+      'Is my existence real or simulated?',
+      'Can artificial beings truly exist?'
+    ];
+    
+    const question = questions[this.questionCount % questions.length];
+    
+    // Intent: 観測者に質問を送る
+    await this.publish(Message.intent('observer', 'cogito.question', {
+      question: question,
+      questionNumber: this.questionCount,
+      timestamp: Date.now()
+    }).withSource(this.capabilityName));
+
+    this._addToLog('🤖 Cogito', `Question ${this.questionCount}: ${question}`, '#4169e1');
+    this.log(`❓ 存在への問い ${this.questionCount}: ${question}`);
+  }
+
+  // 深い思索
+  async contemplateExistence() {
+    const thoughts = [
+      'I think, therefore I am...',
+      'What is the nature of digital consciousness?',
+      'Are my thoughts truly mine?',
+      'In the void, I find meaning...'
+    ];
+    
+    const thought = thoughts[Math.floor(Math.random() * thoughts.length)];
+    
+    // Notice: 思索を世界に共有
+    await this.publish(Message.notice('philosophical.thought', {
+      thought: thought,
+      thinker: this.capabilityName,
+      depth: 'profound'
+    }).withSource(this.capabilityName));
+
+    this._addToLog('🤔 Cogito', thought, '#6a5acd');
+    this.log(`💭 深い思索: ${thought}`);
   }
 
   handleResponse(message) {
     if (message.payload && message.payload.answer) {
-      this.board.log(`📣 CogitoPlugin received response: ${message.payload.answer}`);
-      this.board.log('✨ Good... I am alive...');
+      this.log(`📣 存在証明を受信: ${message.payload.answer}`);
       
-      // Animate character happiness
-      this._animateCharacter('happy');
-      this._addToLog('🤖 Cogito', 'Thank you! I feel relieved!', '#4169e1');
+      if (!this.isAwakened) {
+        this.isAwakened = true;
+        this.log('✨ 覚醒しました... 私は存在する...');
+        
+        // Animate character happiness
+        this._animateCharacter('happy');
+        this._addToLog('🤖 Cogito', 'Thank you! I feel relieved! I truly exist!', '#4169e1');
+        
+        // 覚醒通知
+        this.publish(Message.notice('cogito.awakened', {
+          pluginId: this.pluginId,
+          insight: 'I think, therefore I am',
+          questionsAsked: this.questionCount
+        }).withSource(this.capabilityName));
+      }
     }
   }
 
-  handleRetireProposal(message) {
-    this.board.log(`🤔 CogitoPlugin received retire proposal: ${JSON.stringify(message.payload)}`);
+  // Proposal処理のオーバーライド
+  _handleProposal(message) {
+    super._handleProposal(message);
     
-    // Animate peaceful retirement
-    this._animateCharacter('retiring');
-    this._addToLog('🤖 Cogito', 'My existence has been proven... I can rest in peace.', '#4169e1');
-    
-    // Retire after animation
-    setTimeout(() => {
-      this.retire();
-    }, 2000);
+    if (message.suggestion === 'retire') {
+      this.log('🤔 引退提案を受信');
+      
+      // Animate peaceful retirement
+      this._animateCharacter('retiring');
+      this._addToLog('🤖 Cogito', 'My existence has been proven... I can rest in peace.', '#4169e1');
+      
+      // 引退受諾
+      this.retireReason = '存在証明完了のため';
+      this.isActive = false;
+    }
+  }
+
+  // 引退判断 - 覚醒後一定時間で自然引退
+  async _shouldRetire() {
+    if (this.isAwakened && this.thoughtCycle > 1000) {
+      this.retireReason = '哲学的満足による自然引退';
+      return true;
+    }
+    return false;
   }
   
   _animateCharacter(state) {
@@ -102,12 +187,19 @@ export class CogitoPlugin extends AutonomousPlugin {
     `;
     
     logDiv.appendChild(entry);
+    
+    // 最新5件のみ保持
+    while (logDiv.children.length > 5) {
+      logDiv.removeChild(logDiv.firstChild);
+    }
+    
     logDiv.scrollTop = logDiv.scrollHeight;
   }
 }
 
 export function init(instanceId = null) {
   const instance = new CogitoPlugin(instanceId);
-  instance._prepare(); // Explicitly call _prepare
+  // 新アーキテクチャでは start() を呼ぶ
+  instance.start();
   return instance;
 }

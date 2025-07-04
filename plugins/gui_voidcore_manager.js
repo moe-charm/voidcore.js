@@ -1,18 +1,18 @@
 // plugins/gui_voidcore_manager.js
-import { AutonomousPlugin } from '/voidcore.js/src/autonomous_plugin.js';
-import { board } from '/voidcore.js/src/core.js'; // Need board for logging and setting log element
+import { AutonomousPlugin } from '../src/autonomous_plugin.js';
+import { board } from '../src/core.js'; // Need board for logging and setting log element
 
 export class GUIVoidCoreManager extends AutonomousPlugin {
   constructor() {
     super("GUIVoidCoreManagerService"); // Provide this plugin as a service
 
     this.demos = {
-      'voidcore-quickstart': '/voidcore.js/examples/demos/voidcore_quickstart_demo.js',
-      'message-city': '/voidcore.js/examples/demos/message_city_demo.js',
-      'markdown-editor': '/voidcore.js/examples/demos/markdown_editor_demo.js',
-      'cogito-observer': '/voidcore.js/examples/demos/cogito_observer_demo.js',
-      'galaxy-viewer': '/voidcore.js/examples/demos/galaxy_viewer_demo.js',
-      'system-monitor': '/voidcore.js/examples/demos/system_monitor_demo.js',
+      'voidcore-quickstart': '../examples/demos/voidcore_quickstart_demo.js',
+      'message-city': '../examples/demos/message_city_demo.js',
+      'markdown-editor': '../examples/demos/markdown_editor_demo.js',
+      'cogito-observer': '../examples/demos/cogito_observer_demo.js',
+      'galaxy-viewer': '../examples/demos/galaxy_viewer_demo.js',
+      'system-monitor': '../examples/demos/system_monitor_demo.js',
     };
 
     this.currentDemoInstance = null; // To keep track of the currently running demo
@@ -34,7 +34,7 @@ export class GUIVoidCoreManager extends AutonomousPlugin {
 
     // 1. Header
     const header = document.createElement('h1');
-    header.innerHTML = 'This screen also runs on VoidCore! • <a href="https://coff.ee/moecharmde6" target="_blank" style="color: #666; text-decoration: none; font-size: 16px;">☕ Support this project</a>';
+    header.innerHTML = 'This screen also runs on VoidCore Network! • <a href="https://coff.ee/moecharmde6" target="_blank" style="color: #666; text-decoration: none; font-size: 16px;">☕ Support this project</a>';
     header.style.textAlign = 'center';
     header.style.color = '#333';
     appRoot.appendChild(header);

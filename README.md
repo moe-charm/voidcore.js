@@ -1,26 +1,24 @@
-# 🧠 VoidCore.js - The Autonomous Plugin System
+# 🌟 VoidCore Network - 静寂の器 (The Vessel of Silence)
 
-> **"What if plugins could think for themselves?"**  
-> _They communicate quietly, and when their purpose is fulfilled, they retire on their own._
+> **"メッセージをtypeだけ見てルーティングする純粋な配達員"**  
+> _中身は一切知らない。ただ確実に届ける。_
 > 
-> _UI, AI, file operations — everything is unified through message paths._
+> _Intent（願い）、Notice（事実）、Proposal（提案）—— すべては3つのパターンに集約される。_
 > 
-> **VoidCore v1 – The Quiet Beginning of a Universe**  
-> _(We've only just reached the first galaxy.)_
->
-> _It may sound philosophical, but it is the result of a thorough pursuit of practicality!_
+> **VoidCore Network v11.0 – 完全自律プラグインの世界**  
+> _(5段階ライフサイクルで生き、自ら引退する)_
 
 ---
 
-## 🌌 The Core Philosophy: Beyond an "App", a New "Life Form"
+## 🌟 核心哲学: VoidCore = 静寂の器
 
-VoidCore is a new information infrastructure (platform) that transcends the traditional concept of an "application." It has no fixed form; it can operate as a desktop app, a background service, or anything else, as long as it's connected to the message path.
+**VoidCore**は、メッセージをtypeだけ見てルーティングする純粋な配達員です。中身は一切知りません。
 
-### Three Fundamental Principles:
+### 三つの根幹原則
 
-1.  **『Silence (静寂)』**: The core itself is a pure medium, devoid of any inherent meaning.
-2.  **『Demand-Driven (要求駆動)』**: It operates only when necessary, and only to the extent required.
-3.  **『Void (虚無)』**: Its emptiness allows for infinite possibilities.
+1. **静寂 (Silence)** - コア自身は一切の意味を知らない純粋な媒体
+2. **非命令型 (Non-Imperative)** - 強制しない、提案のみ
+3. **尊厳尊重 (Dignity)** - プラグインが自律判断
 
 ---
 
@@ -34,33 +32,85 @@ VoidCore is a new information infrastructure (platform) that transcends the trad
 
 ---
 
-## 💬 Message Classification: Intent, Notice, Proposal
+## 🎯 3つのメッセージ分類
 
-VoidCore.js introduces a revolutionary communication model for autonomous plugins, moving beyond traditional command-and-control. All inter-plugin communication is categorized into three elegant models, respecting the dignity and autonomy of each plugin:
+すべてのコミュニケーションは、たった3つのパターンに集約されます。
 
-1.  **Intent (意図) - "I wish for..." (Pull-based)**
-    *   **Purpose**: A plugin expresses a desire for a specific role to accomplish something. It doesn't command, but rather states a wish to the world.
-    *   **Example**: A text editor `Intent`s to `file.open`. Any file explorer plugin can choose to fulfill this wish.
+### 1. Intent (意図) - 「〜してほしい」
 
-2.  **Notice (通知) - "Something happened..." (Push-based)**
-    *   **Purpose**: A plugin broadcasts a fact or an observed event to the entire world. It's not about commanding, but sharing information.
-    *   **Example**: A file plugin `Notice`s that a `file.saved` event occurred. Any interested plugin can react to this fact.
+**特徴**: 特定の役割に願いを送る (1対1通信)
 
-3.  **Proposal (提案) - "Would you consider...?" (Respectful Suggestion)**
-    *   **Purpose**: A plugin gently suggests a state change or action to another specific plugin. This is used for critical communications like plugin termination requests.
-    *   **Example**: A system manager `Proposal`s to a plugin to `retire` due to a newer version being available. The plugin retains the autonomy to accept or reject.
+```javascript
+{
+  type: "Intent",
+  target_role: "file_explorer",  // 特定の役割を指定
+  action: "file.open",
+  payload: { path: "/doc.txt" }
+}
+```
 
-This three-model system ensures clarity, scalability (O(1) complexity regardless of plugin count!), and philosophical alignment with the autonomous existence model.
+### 2. Notice (通知) - 「〜が起きた」
+
+**特徴**: 事実を世界に放送 (1対多通信)
+
+```javascript
+{
+  type: "Notice",
+  event_name: "file.saved",
+  payload: { path: "/doc.txt", size: 2048 }
+}
+```
+
+### 3. Proposal (提案) - 「〜しませんか」
+
+**特徴**: 特定プラグインに提案 (1対1通信、非強制)
+
+```javascript
+{
+  type: "Proposal",
+  target_plugin: "VideoProcessor",
+  suggestion: "pause",
+  payload: { reason: "メモリ不足" }
+}
+```
 
 ---
 
-## 💡 Plugin Development Guidelines
+## 🚀 完全自律プラグイン 5段階ライフサイクル
 
-To maintain the philosophy of the Autonomous Existence Model, plugins should adhere to the following structure and communication vocabulary:
+すべてのプラグインは、この5つの段階を経て、自律的に生き、そして引退します。
 
-### The AutonomousPlugin Base Class
+### Phase 1: Preparation (準備)
+- 内部リソースの初期化
+- 設定の読み込み
+- UIコンポーネントの準備
 
-To streamline plugin development and enforce the "Complete Autonomous Existence Model," VoidCore.js provides the `AutonomousPlugin` base class. This class abstracts away the common boilerplate for plugin lifecycle management, allowing developers to focus on their plugin's unique functionality.
+### Phase 2: Debut (登場)
+- 自己紹介: `provide(capability)` で能力を世界に宣言
+- 他のプラグインから発見可能になる
+
+### Phase 3: Observation (観測)
+- 依存する能力を監視: `observe(capability)`
+- 必要なメッセージを購読: `subscribe(type, event)`
+- 世界の状態を把握
+
+### Phase 4: Work (活動)
+- 自律的な動作ループ
+- メッセージの送受信
+- 本来の機能を実行
+
+### Phase 5: Retirement (引退)
+- 自己判断による引退決定
+- `retract(capability)` で能力を撤回
+- リソースのクリーンアップ
+
+---
+
+## 💡 プラグイン開発ガイド
+
+### AutonomousPlugin 基底クラス
+
+VoidCore.jsでは、完全自律存在モデルを実現するための`AutonomousPlugin`基底クラスを提供しています。
 
 **Key Features of `AutonomousPlugin`:**
 

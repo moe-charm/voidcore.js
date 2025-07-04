@@ -1,7 +1,7 @@
 // examples/demos/markdown_editor_demo.js
-import { board } from '/voidcore.js/src/core.js';
-import { TextInputPlugin } from '/voidcore.js/plugins/textinput.js';
-import { MarkdownRendererPlugin } from '/voidcore.js/plugins/markdownrenderer.js';
+import { board } from '../../src/core.js';
+import { TextInputPlugin } from '../../plugins/textinput.js';
+import { MarkdownRendererPlugin } from '../../plugins/markdownrenderer.js';
 
 let textInputPluginInstance = null;
 let markdownRendererPluginInstance = null;
@@ -46,7 +46,7 @@ export async function runDemo(container) {
       • Plugin autonomy<br>
       • No direct coupling<br><br>
       
-      <strong>💫 This screen also runs on VoidCore!</strong>
+      <strong>💫 This screen also runs on VoidCore Network!</strong>
     </div>
   `;
   container.appendChild(infoPanel);
@@ -210,10 +210,10 @@ export async function runDemo(container) {
   document.head.appendChild(style);
 
   // Initialize Markdown Editor plugins
-  const { init: initTextInput } = await import('/voidcore.js/plugins/textinput.js');
+  const { init: initTextInput } = await import('../../plugins/textinput.js');
   textInputPluginInstance = initTextInput(); // Store instance if needed for cleanup
 
-  const { init: initMarkdownRenderer } = await import('/voidcore.js/plugins/markdownrenderer.js');
+  const { init: initMarkdownRenderer } = await import('../../plugins/markdownrenderer.js');
   markdownRendererPluginInstance = initMarkdownRenderer(); // Store instance if needed for cleanup
 
   // Return an object with a cleanup method

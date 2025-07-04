@@ -1,5 +1,5 @@
 // examples/demos/voidcore_quickstart_demo.js
-import { board } from '/voidcore.js/src/core.js';
+import { board } from '../../src/core.js';
 
 export async function runDemo(container) {
   board.log('--- Loading VoidCore Quick Start demo ---');
@@ -43,7 +43,7 @@ export async function runDemo(container) {
   title.style.fontSize = '36px';
   title.style.marginBottom = '10px';
   title.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
-  title.innerHTML = '🌟 Welcome to VoidCore! 🌟';
+  title.innerHTML = '🌟 Welcome to VoidCore Network! 🌟';
   titleDiv.appendChild(title);
 
   // Subtitle
@@ -211,7 +211,7 @@ export async function runDemo(container) {
   footer.style.opacity = '0.7';
   footer.innerHTML = `
     💡 Click any card above to explore the demo!<br>
-    💫 This screen also runs on VoidCore!
+    💫 This screen also runs on VoidCore Network!
   `;
   container.appendChild(footer);
 

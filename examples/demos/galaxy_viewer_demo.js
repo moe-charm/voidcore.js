@@ -1,5 +1,5 @@
 // examples/demos/galaxy_viewer_demo.js
-import { board } from '/voidcore.js/src/core.js';
+import { board } from '../../src/core.js';
 
 let galaxyViewerPluginInstance = null;
 let collisionDetectorPluginInstance = null;
@@ -19,11 +19,11 @@ export async function runDemo(container) {
   }
 
   // Initialize CollisionDetectorPlugin first
-  const { init: initCollisionDetector } = await import('/voidcore.js/plugins/collision_detector.js');
+  const { init: initCollisionDetector } = await import('../../plugins/collision_detector.js');
   collisionDetectorPluginInstance = initCollisionDetector();
   
   // Initialize GalaxyViewerPlugin
-  const { init: initGalaxyViewer } = await import('/voidcore.js/plugins/galaxy_viewer.js');
+  const { init: initGalaxyViewer } = await import('../../plugins/galaxy_viewer.js');
   galaxyViewerPluginInstance = initGalaxyViewer(container);
 
   // Return an object with a cleanup method

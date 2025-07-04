@@ -1,52 +1,198 @@
-// plugins/textinput.js
+// plugins/textinput.js - 新アーキテクチャ対応版
 import { AutonomousPlugin } from '../src/autonomous_plugin.js';
+import { Message } from '../src/message.js';
 
 export class TextInputPlugin extends AutonomousPlugin {
   constructor() {
-    super("TextInputService"); // Provide this plugin as 'TextInputService'
-    this.board.log('✅ TextInputPlugin initialized.');
+    super("TextInputService");
+    this.role = "text_input"; // 役割を設定
+    this.textarea = null;
+    this.lastContent = '';
+    this.lastActivity = Date.now();
+    this.changeCount = 0;
   }
 
-  // Override _prepare from AutonomousPlugin to set up UI
-  _prepare() {
-    super._prepare(); // Call parent's _prepare
-    const textarea = document.createElement('textarea');
-    textarea.id = 'markdown-input';
-    textarea.placeholder = 'Type your Markdown here...';
-    textarea.style.width = '48%';
-    textarea.style.height = '100%';
-    textarea.style.backgroundColor = '#2d2d2d';
-    textarea.style.color = '#f0f0f0';
-    textarea.style.border = '2px solid #4682b4';
-    textarea.style.borderRadius = '8px';
-    textarea.style.padding = '15px';
-    textarea.style.boxSizing = 'border-box';
-    textarea.style.fontFamily = 'monospace';
-    textarea.style.fontSize = '14px';
-    textarea.style.resize = 'none';
-    textarea.style.outline = 'none';
+  // Phase 1: Preparation - UI要素の準備
+  async _prepare() {
+    const container = document.getElementById('editor-container');
+    if (!container) {
+      this.log('⚠️ editor-container not found');
+      return;
+    }
 
-    document.getElementById('editor-container').appendChild(textarea);
+    this.textarea = document.createElement('textarea');
+    this.textarea.id = 'markdown-input';
+    this.textarea.placeholder = 'Type your Markdown here...';
+    this.textarea.style.width = '48%';
+    this.textarea.style.height = '100%';
+    this.textarea.style.backgroundColor = '#2d2d2d';
+    this.textarea.style.color = '#f0f0f0';
+    this.textarea.style.border = '2px solid #4682b4';
+    this.textarea.style.borderRadius = '8px';
+    this.textarea.style.padding = '15px';
+    this.textarea.style.boxSizing = 'border-box';
+    this.textarea.style.fontFamily = 'monospace';
+    this.textarea.style.fontSize = '14px';
+    this.textarea.style.resize = 'none';
+    this.textarea.style.outline = 'none';
 
-    textarea.addEventListener('input', () => {
-      const message = {
-        type: 'Notice',
-        source: 'TextInputService',
-        event_name: 'text.input.changed',
-        payload: {
-          text: textarea.value,
-          length: textarea.value.length
-        },
-        message_id: `notice-${Date.now()}`
-      };
-      this.publish(message); // Use this.publish from AutonomousPlugin
-      
-      // Log message details
-      this.board.log(`📝 Publishing: text.input.changed | Length: ${textarea.value.length} | Last char: "${textarea.value.slice(-1) || ''}" | Preview: "${textarea.value.slice(-20).replace(/\n/g, '\\n')}..."`);
-      
-      // Animate message flow
-      this._animateMessage(textarea.value);
+    container.appendChild(this.textarea);
+    this.log('🎨 UI準備完了');
+  }
+
+  // Phase 3: Observation - イベント監視設定
+  async _observe() {
+    console.log(`[DEBUG] TextInputPlugin: _observe() called, textarea exists:`, !!this.textarea);
+    
+    if (!this.textarea) {
+      console.log(`[DEBUG] TextInputPlugin: No textarea, returning early`);
+      return;
+    }
+
+    // 必要なメッセージタイプを購読
+    console.log(`[DEBUG] TextInputPlugin: About to subscribe to message types`);
+    this.subscribeToType('text.focus');
+    this.subscribeToType('text.clear');
+    this.subscribeToType('text.insert');
+    this.subscribeToType('file.loaded');
+    console.log(`[DEBUG] TextInputPlugin: Finished subscribing to message types`);
+
+    // テキスト変更の監視
+    this.textarea.addEventListener('input', () => {
+      this.lastActivity = Date.now();
+      this.changeCount++;
+      this._onTextChange();
     });
+
+    this.log('👁️ イベント監視開始');
+    console.log(`[DEBUG] TextInputPlugin: _observe() completed`);
+  }
+
+  // Phase 4: Work - メインループ
+  async _work() {
+    // テキスト変更の確認
+    if (this.textarea && this.textarea.value !== this.lastContent) {
+      this.lastContent = this.textarea.value;
+      
+      // テキスト変更通知
+      await this.publish(Message.notice('text.changed', {
+        content: this.textarea.value,
+        length: this.textarea.value.length,
+        changeCount: this.changeCount
+      }).withSource(this.capabilityName));
+
+      this._animateMessage(this.textarea.value);
+    }
+  }
+
+  // Intent処理 - 他のプラグインからの要求
+  _handleIntent(message) {
+    super._handleIntent(message);
+    
+    switch (message.action) {
+      case 'text.focus':
+        if (this.textarea) {
+          this.textarea.focus();
+          
+          // 視覚的なフォーカス効果を追加
+          this.textarea.style.borderColor = '#00ff00';
+          this.textarea.style.boxShadow = '0 0 10px #00ff00';
+          
+          // 短時間点滅させる
+          setTimeout(() => {
+            this.textarea.style.borderColor = '#4682b4';
+            this.textarea.style.boxShadow = 'none';
+          }, 1000);
+          
+          this.log('🎯 フォーカス設定（視覚効果付き）');
+        } else {
+          this.log('⚠️ テキストエリアが見つかりません');
+        }
+        break;
+      case 'text.clear':
+        if (this.textarea) {
+          this.textarea.value = '';
+          this.lastContent = '';
+          this.log('🧹 テキストクリア');
+        }
+        break;
+      case 'text.insert':
+        if (this.textarea && message.payload.text) {
+          const pos = this.textarea.selectionStart;
+          const newText = this.textarea.value.substring(0, pos) + 
+                         message.payload.text + 
+                         this.textarea.value.substring(pos);
+          this.textarea.value = newText;
+          this.log(`✏️ テキスト挿入: "${message.payload.text}"`);
+        }
+        break;
+    }
+  }
+
+  // Proposal処理 - 提案への対応
+  _handleProposal(message) {
+    super._handleProposal(message);
+    
+    switch (message.suggestion) {
+      case 'save_content':
+        this.log('💾 保存提案を受信');
+        // 保存を他のプラグインに依頼
+        this.publish(Message.intent('file_manager', 'file.save', {
+          content: this.textarea?.value || '',
+          format: 'markdown'
+        }).withSource(this.capabilityName));
+        break;
+      case 'clear_content':
+        if (confirm('テキストをクリアしますか？')) {
+          this.textarea.value = '';
+          this.lastContent = '';
+          this.log('🧹 提案によりテキストクリア');
+        }
+        break;
+    }
+  }
+
+  // 引退判断
+  async _shouldRetire() {
+    // 30分間未使用の場合は引退
+    const inactiveTime = Date.now() - this.lastActivity;
+    if (inactiveTime > 30 * 60 * 1000) {
+      this.retireReason = '長時間未使用のため';
+      return true;
+    }
+    return false;
+  }
+
+  // クリーンアップ
+  async _cleanup() {
+    if (this.textarea) {
+      this.textarea.remove();
+      this.textarea = null;
+    }
+    this.log('🧹 UI要素を削除');
+  }
+
+  // テキスト変更時の処理
+  _onTextChange() {
+    if (!this.textarea) return;
+
+    const message = Message.notice('text.input.changed', {
+      text: this.textarea.value,
+      length: this.textarea.value.length,
+      lastChar: this.textarea.value.slice(-1) || '',
+      changeCount: this.changeCount
+    }).withSource(this.capabilityName);
+
+    // 旧形式での発行（後方互換性）
+    this.publishLegacy({
+      type: 'Notice',
+      source: 'TextInputService',
+      event_name: 'text.input.changed',
+      payload: message.payload,
+      message_id: message.id
+    });
+
+    this.log(`📝 テキスト変更: ${this.textarea.value.length}文字`);
   }
   
   _animateMessage(text) {
@@ -108,6 +254,7 @@ export class TextInputPlugin extends AutonomousPlugin {
 
 export function init() {
   const instance = new TextInputPlugin();
-  instance._prepare(); // Explicitly call _prepare
+  // 新アーキテクチャでは start() を呼ぶ
+  instance.start();
   return instance;
 }
