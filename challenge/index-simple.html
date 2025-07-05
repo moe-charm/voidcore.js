@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 Nexus Corporation - Dream Intranet</title>
+    <link rel="stylesheet" href="./css/office-intranet.css">
+    <style>
+        /* Living Command Bar */
+        .command-bar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            display: none;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .command-bar {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            max-width: 90vw;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .command-input {
+            width: 100%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 18px;
+            outline: none;
+        }
+
+        .command-input::placeholder {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .command-suggestions {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .suggestion-item {
+            background: rgba(255,255,255,0.1);
+            margin: 8px 0;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .suggestion-item:hover,
+        .suggestion-item.selected {
+            background: rgba(255,255,255,0.2);
+            border-left-color: #fff;
+        }
+
+        .suggestion-icon {
+            display: inline-block;
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        /* Intent Cards */
+        .intent-cards-container {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 300px;
+            z-index: 1000;
+        }
+
+        .intent-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            animation: slideInRight 0.5s ease-out;
+            position: relative;
+        }
+
+        .intent-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .intent-card-title {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .intent-card-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        /* AI Status Indicator */
+        .ai-status-indicator {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            animation: pulse 2s infinite;
+            z-index: 1000;
+        }
+
+        .ai-status-indicator.has-suggestion {
+            animation: glow 2s infinite;
+        }
+
+        /* Enhanced Message Flow */
+        .enhanced-message-flow {
+            background: #000;
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 300px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .message-particle {
+            display: inline-block;
+            background: #00ff00;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: pulse 1s ease-out;
+            margin-right: 5px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); }
+            50% { box-shadow: 0 8px 40px rgba(102, 126, 234, 0.6); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Dream Enhancements */
+        .dream-header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .ai-badge {
+            background: #4a90e2;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Living Command Bar -->
+    <div id="command-bar-overlay" class="command-bar-overlay">
+        <div class="command-bar">
+            <input type="text" id="command-input" class="command-input" placeholder="何でも聞いて... (例：'プロジェクトフェニックスって何？')" autocomplete="off">
+            <div id="command-suggestions" class="command-suggestions"></div>
+        </div>
+    </div>
+
+    <!-- Intent Cards Container -->
+    <div id="intent-cards" class="intent-cards-container"></div>
+
+    <!-- AI Status Indicator -->
+    <div id="ai-status" class="ai-status-indicator">
+        🤖 AIアシスタント待機中
+    </div>
+
+    <div class="office-container">
+        <!-- Header -->
+        <header class="office-header">
+            <div class="company-logo">
+                <span class="logo-icon">🌟</span>
+                <h1>Nexus Corporation</h1>
+                <span class="powered-by">Dream Intranet • VoidCore Network v11.0</span>
+            </div>
+            <div class="welcome-user">
+                <span class="user-icon">👋</span>
+                <span>Welcome, Alex Chen (New Employee)</span>
+                <span style="color: #666; font-size: 0.9em;">Press Ctrl+K for AI Assistant</span>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="office-layout">
+            <!-- Left Sidebar: Intent Launcher -->
+            <aside class="intent-launcher-panel">
+                <h3>🎯 Quick Actions</h3>
+                <div id="intent-launcher-container">
+                    <button id="phoenix-btn" class="intent-button">
+                        <span class="intent-icon">🔍</span>
+                        <div class="intent-content">
+                            <div class="intent-title">Get Project Phoenix Info</div>
+                            <div class="intent-description">Gather all information about our flagship project</div>
+                        </div>
+                    </button>
+                    <button id="team-btn" class="intent-button">
+                        <span class="intent-icon">👥</span>
+                        <div class="intent-content">
+                            <div class="intent-title">Check Team Status</div>
+                            <div class="intent-description">See what everyone is working on</div>
+                        </div>
+                    </button>
+                    <button id="docs-btn" class="intent-button">
+                        <span class="intent-icon">📋</span>
+                        <div class="intent-content">
+                            <div class="intent-title">Find Urgent Documents</div>
+                            <div class="intent-description">Locate high-priority documents needing attention</div>
+                        </div>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Center Content Area -->
+            <main class="main-content">
+                <!-- Document Feed -->
+                <section class="doc-feed-section">
+                    <h3>📄 Recent Documents</h3>
+                    <div id="doc-feed-container">
+                        <div class="doc-item" data-id="phoenix-spec">
+                            <div class="doc-header">
+                                <h4 class="doc-title">🚀 Project Phoenix - Technical Specifications v2.3</h4>
+                                <div class="doc-badges">
+                                    <span class="doc-priority medium">MEDIUM</span>
+                                    <span class="doc-type">specification</span>
+                                </div>
+                            </div>
+                            <div class="doc-description">Comprehensive technical specifications for Project Phoenix Phase 2</div>
+                            <div class="doc-meta">
+                                <div class="doc-info">
+                                    <span class="doc-author">👤 Tech Lead Sarah Kim</span>
+                                    <span class="doc-modified">🕒 30 min ago</span>
+                                    <span class="doc-size">📦 2.4 MB</span>
+                                    <span class="doc-version">🏷️ v2.3</span>
+                                </div>
+                                <div class="doc-actions">
+                                    <button class="doc-action-btn view-btn">👁️ View</button>
+                                    <button class="doc-action-btn download-btn">⬇️ Download</button>
+                                    <span class="view-count">👀 45</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="doc-item" data-id="onboarding-guide">
+                            <div class="doc-header">
+                                <h4 class="doc-title">📚 New Employee VoidCore Network Guide</h4>
+                                <div class="doc-badges">
+                                    <span class="doc-priority high">HIGH</span>
+                                    <span class="doc-type">guide</span>
+                                </div>
+                            </div>
+                            <div class="doc-description">Complete guide to understanding and using VoidCore Network systems</div>
+                            <div class="doc-meta">
+                                <div class="doc-info">
+                                    <span class="doc-author">👤 HR Department</span>
+                                    <span class="doc-modified">🕒 1 day ago</span>
+                                    <span class="doc-size">📦 1.2 MB</span>
+                                    <span class="doc-version">🏷️ v1.5</span>
+                                </div>
+                                <div class="doc-actions">
+                                    <button class="doc-action-btn view-btn">👁️ View</button>
+                                    <button class="doc-action-btn download-btn">⬇️ Download</button>
+                                    <span class="view-count">👀 128</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="doc-item" data-id="api-docs">
+                            <div class="doc-header">
+                                <h4 class="doc-title">⚙️ VoidCore Network API Documentation</h4>
+                                <div class="doc-badges">
+                                    <span class="doc-priority medium">MEDIUM</span>
+                                    <span class="doc-type">documentation</span>
+                                </div>
+                            </div>
+                            <div class="doc-description">Complete API reference for VoidCore Network v11.0</div>
+                            <div class="doc-meta">
+                                <div class="doc-info">
+                                    <span class="doc-author">👤 Development Team</span>
+                                    <span class="doc-modified">🕒 1 hour ago</span>
+                                    <span class="doc-size">📦 5.1 MB</span>
+                                    <span class="doc-version">🏷️ v11.0</span>
+                                </div>
+                                <div class="doc-actions">
+                                    <button class="doc-action-btn view-btn">👁️ View</button>
+                                    <button class="doc-action-btn download-btn">⬇️ Download</button>
+                                    <span class="view-count">👀 89</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- System Activity -->
+                <section class="chat-section">
+                    <h3>📊 System Activity</h3>
+                    <div id="activity-feed"></div>
+                </section>
+            </main>
+
+            <!-- Right Sidebar: System Observer -->
+            <aside class="system-observer-panel">
+                <h3>🔍 Message Flow Visualization</h3>
+                <div class="observer-description">
+                    <p><strong>Watch the magic happen:</strong> Plugins don't know about each other!</p>
+                </div>
+                
+                <div id="message-flow" class="enhanced-message-flow"></div>
+                
+                <div id="system-status" style="margin-top: 15px; font-size: 14px;">
+                    <div>📡 Message Types: <span id="msg-types">0</span></div>
+                    <div>👥 Active Subscribers: <span id="subscribers">0</span></div>
+                    <div>🔄 Status: <span id="network-status">Initializing...</span></div>
+                </div>
+                
+                <div style="margin-top: 15px; padding: 10px; background: rgba(74, 144, 226, 0.1); border-radius: 8px; font-size: 13px;">
+                    <strong>🧠 The Secret:</strong><br>
+                    • Button doesn't know which document will light up<br>
+                    • Document manager doesn't know which button was pressed<br>
+                    • VoidCore routes messages based on type only<br>
+                    • Each plugin acts autonomously!
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="office-footer">
+            <div class="demo-info">
+                <h4>🌟 ドリームイントラネット - デモ体験ガイド</h4>
+                <p><strong>Ctrl+K</strong>を押してAIコマンドバーを開き、以下のコマンドを入力してみてください：</p>
+            </div>
+            <div class="scenario-guide">
+                <h4>💬 試してみてください（そのままコピー&ペースト）：</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <div style="font-family: monospace; background: white; padding: 8px; margin: 5px 0; border-radius: 4px; border-left: 4px solid #4a90e2; cursor: pointer;" onclick="navigator.clipboard.writeText('プロジェクトフェニックスって何？')">
+                        📋 プロジェクトフェニックスって何？
+                    </div>
+                    <div style="font-family: monospace; background: white; padding: 8px; margin: 5px 0; border-radius: 4px; border-left: 4px solid #28a745; cursor: pointer;" onclick="navigator.clipboard.writeText('チームに接続')">
+                        📋 チームに接続
+                    </div>
+                    <div style="font-family: monospace; background: white; padding: 8px; margin: 5px 0; border-radius: 4px; border-left: 4px solid #dc3545; cursor: pointer;" onclick="navigator.clipboard.writeText('緊急文書を検索')">
+                        📋 緊急文書を検索
+                    </div>
+                </div>
+                <p style="font-size: 0.9em; color: #666;">💡 上のボックスをクリックでコピー | 左のボタンでも自律的なプラグイン連携を確認可能</p>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        // Simple & Reliable VoidCore Network Office
+        import { voidCore } from '../src/voidcore.js';
+        import { Message } from '../src/message.js';
+
+        console.log('🚀 VoidCore Network Office - Simple Version Starting...');
+
+        // メッセージフロー可視化
+        const messageFlow = document.getElementById('message-flow');
+        let messageCount = 0;
+
+        function addToMessageFlow(message, color = '#00ff00') {
+            messageCount++;
+            const timestamp = new Date().toLocaleTimeString();
+            const flowEntry = document.createElement('div');
+            flowEntry.innerHTML = `
+                <span style="color: #666;">[${timestamp}]</span> 
+                <span style="color: ${color};">${message}</span>
+            `;
+            messageFlow.appendChild(flowEntry);
+            messageFlow.scrollTop = messageFlow.scrollHeight;
+            
+            // Keep only last 20 messages
+            if (messageFlow.children.length > 20) {
+                messageFlow.removeChild(messageFlow.firstChild);
+            }
+        }
+
+        // VoidCore メッセージ監視をハック
+        const originalPublish = voidCore.publish;
+        voidCore.publish = async function(message) {
+            addToMessageFlow(`📤 INTENT: "${message.type}" from ${message.source}`, '#ffff00');
+            addToMessageFlow(`📡 VoidCore routing to subscribers...`, '#00ffff');
+            
+            const result = await originalPublish.call(this, message);
+            
+            const stats = voidCore.getStats();
+            const subscriberCount = voidCore.getSubscriberCount(message.type);
+            addToMessageFlow(`✅ Delivered to ${subscriberCount} plugin(s)`, '#00ff00');
+            
+            return result;
+        };
+
+        // Simple Document Manager
+        class SimpleDocManager {
+            constructor() {
+                this.role = 'document_manager';
+                this.setupSubscriptions();
+                this.activityLog = [];
+            }
+
+            setupSubscriptions() {
+                voidCore.subscribe('project.query', (msg) => this.handleProjectQuery(msg));
+                voidCore.subscribe('team.status_check', (msg) => this.handleTeamStatus(msg));
+                voidCore.subscribe('document.urgent_search', (msg) => this.handleUrgentSearch(msg));
+                console.log('📄 SimpleDocManager subscriptions ready');
+            }
+
+            handleProjectQuery(message) {
+                addToMessageFlow(`📥 DocManager: Received project.query for ${message.payload.project}`, '#ff6b6b');
+                console.log('📥 Project query received:', message.payload);
+                
+                if (message.payload.project === 'Phoenix') {
+                    addToMessageFlow(`🎯 DocManager: Promoting Phoenix document autonomously!`, '#ff6b6b');
+                    this.promoteDocument('phoenix-spec', 'Project Phoenix query');
+                    this.addActivity('📋 Project Phoenix specs promoted to high priority');
+                }
+            }
+
+            handleTeamStatus(message) {
+                addToMessageFlow(`📥 DocManager: Received team.status_check`, '#4ecdc4');
+                console.log('👥 Team status check received');
+                this.addActivity('👥 Team status check initiated');
+                
+                addToMessageFlow(`🎯 DocManager: Promoting onboarding guide for team focus!`, '#4ecdc4');
+                // Onboarding Guide をハイライト（新しいチームメンバー向け）
+                this.promoteDocument('onboarding-guide', 'Team status check');
+            }
+
+            handleUrgentSearch(message) {
+                addToMessageFlow(`📥 DocManager: Received document.urgent_search`, '#f9ca24');
+                console.log('🚨 Urgent document search received');
+                this.addActivity('🚨 Urgent document search performed');
+                
+                addToMessageFlow(`🎯 DocManager: Marking API docs as urgent!`, '#f9ca24');
+                // API Documentation を緊急として昇格
+                this.promoteDocument('api-docs', 'Urgent document search');
+            }
+
+            promoteDocument(docId, reason) {
+                const doc = document.querySelector(`[data-id="${docId}"]`);
+                if (doc) {
+                    // Change priority
+                    const priority = doc.querySelector('.doc-priority');
+                    if (priority) {
+                        priority.textContent = 'HIGH';
+                        priority.className = 'doc-priority high';
+                    }
+
+                    // Different visual effects based on reason
+                    if (reason.includes('Phoenix')) {
+                        // Phoenix: Blue highlight
+                        doc.style.animation = 'docHighlight 3s ease-out';
+                        doc.style.border = '3px solid #4a90e2';
+                        doc.style.backgroundColor = 'rgba(74, 144, 226, 0.1)';
+                        this.addBadge(doc, '🚀 Phoenix Priority', 'background: #4a90e2; color: white;');
+                    } else if (reason.includes('Team')) {
+                        // Team: Green highlight
+                        doc.style.animation = 'docHighlight 3s ease-out';
+                        doc.style.border = '3px solid #28a745';
+                        doc.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                        this.addBadge(doc, '👥 Team Focus', 'background: #28a745; color: white;');
+                    } else if (reason.includes('Urgent')) {
+                        // Urgent: Red highlight
+                        doc.style.animation = 'docHighlight 3s ease-out';
+                        doc.style.border = '3px solid #dc3545';
+                        doc.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+                        this.addBadge(doc, '🚨 Urgent', 'background: #dc3545; color: white;');
+                    }
+
+                    // Update view count
+                    const viewCount = doc.querySelector('.view-count');
+                    if (viewCount) {
+                        const currentCount = parseInt(viewCount.textContent.match(/\d+/)[0]) + 1;
+                        viewCount.textContent = `👀 ${currentCount}`;
+                    }
+
+                    console.log('✨ Document promoted:', docId, 'Reason:', reason);
+                }
+            }
+
+            addBadge(doc, text, style) {
+                // Remove existing badges of this type
+                const existingBadges = doc.querySelectorAll('.featured-badge');
+                existingBadges.forEach(badge => badge.remove());
+
+                // Add new badge
+                const badge = document.createElement('span');
+                badge.className = 'featured-badge';
+                badge.textContent = text;
+                badge.style.cssText = style + '; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 10px;';
+                doc.querySelector('.doc-title').appendChild(badge);
+            }
+
+            addActivity(message) {
+                this.activityLog.unshift({
+                    time: new Date().toLocaleTimeString(),
+                    message: message
+                });
+
+                // Keep only last 10 activities
+                if (this.activityLog.length > 10) {
+                    this.activityLog = this.activityLog.slice(0, 10);
+                }
+
+                this.updateActivityFeed();
+            }
+
+            updateActivityFeed() {
+                const feed = document.getElementById('activity-feed');
+                if (feed) {
+                    feed.innerHTML = this.activityLog.map(activity => 
+                        `<div style="padding: 5px; border-bottom: 1px solid #eee;">
+                            <span style="color: #666; font-size: 0.8em;">${activity.time}</span> - ${activity.message}
+                        </div>`
+                    ).join('');
+                }
+            }
+        }
+
+        // Initialize System
+        const docManager = new SimpleDocManager();
+
+        // Button Event Handlers
+        document.getElementById('phoenix-btn').addEventListener('click', async () => {
+            console.log('🎯 Phoenix button clicked');
+            
+            const intent = Message.intent('system', 'project.query', {
+                project: 'Phoenix',
+                priority: 'high',
+                requester: 'Alex Chen'
+            }).withSource('SimpleIntentLauncher');
+
+            await voidCore.publish(intent);
+            console.log('✅ Phoenix intent published');
+        });
+
+        document.getElementById('team-btn').addEventListener('click', async () => {
+            console.log('👥 Team button clicked');
+            
+            const intent = Message.intent('system', 'team.status_check', {
+                department: 'Engineering',
+                scope: 'all'
+            }).withSource('SimpleIntentLauncher');
+
+            await voidCore.publish(intent);
+            console.log('✅ Team status intent published');
+        });
+
+        document.getElementById('docs-btn').addEventListener('click', async () => {
+            console.log('📋 Urgent docs button clicked');
+            
+            const intent = Message.intent('system', 'document.urgent_search', {
+                priority: 'urgent',
+                days: 7
+            }).withSource('SimpleIntentLauncher');
+
+            await voidCore.publish(intent);
+            console.log('✅ Urgent docs intent published');
+        });
+
+        // Update system status
+        function updateSystemStatus() {
+            const stats = voidCore.getStats();
+            document.getElementById('msg-types').textContent = stats.messageTypes;
+            document.getElementById('subscribers').textContent = stats.totalSubscribers;
+            document.getElementById('network-status').textContent = 'ACTIVE';
+        }
+
+        // Initialize status
+        setTimeout(updateSystemStatus, 1000);
+
+        console.log('🌟 VoidCore Network Office - Simple Version Ready!');
+        console.log('💡 Click any button to see autonomous plugin collaboration');
+
+        // ===== DREAM INTRANET FEATURES =====
+        console.log('🌟 Adding Dream Intranet features...');
+
+        // Living Command Bar System
+        class LivingCommandBar {
+            constructor() {
+                this.isOpen = false;
+                this.suggestions = [];
+                this.selectedIndex = 0;
+                this.setupEventListeners();
+                this.setupProactiveSuggestions();
+            }
+
+            setupEventListeners() {
+                // Global shortcut: Ctrl+K
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'k') {
+                        e.preventDefault();
+                        this.toggle();
+                    }
+                    
+                    if (this.isOpen) {
+                        if (e.key === 'Escape') {
+                            this.close();
+                        } else if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            this.selectNext();
+                        } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            this.selectPrevious();
+                        } else if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.executeSelected();
+                        }
+                    }
+                });
+
+                // Click outside to close
+                document.getElementById('command-bar-overlay').addEventListener('click', (e) => {
+                    if (e.target.id === 'command-bar-overlay') {
+                        this.close();
+                    }
+                });
+
+                // Input handling
+                document.getElementById('command-input').addEventListener('input', (e) => {
+                    this.updateSuggestions(e.target.value);
+                });
+            }
+
+            setupProactiveSuggestions() {
+                // Simulate proactive suggestions
+                setTimeout(() => {
+                    this.showAISuggestion("今日はまだプロジェクトフェニックスの更新をチェックしてないみたいですが、要約が必要ですか？", () => {
+                        this.executeCommand("project phoenix summary");
+                    });
+                }, 15000);
+
+                setTimeout(() => {
+                    this.showAISuggestion("チームリーダーのサラさんが今利用可能です。クイック同期をスケジュールしますか？", () => {
+                        this.executeCommand("schedule meeting sarah");
+                    });
+                }, 30000);
+            }
+
+            toggle() {
+                if (this.isOpen) {
+                    this.close();
+                } else {
+                    this.open();
+                }
+            }
+
+            open() {
+                this.isOpen = true;
+                document.getElementById('command-bar-overlay').style.display = 'block';
+                document.getElementById('command-input').focus();
+                this.updateSuggestions('');
+                
+                // Add visual feedback to message flow
+                addToMessageFlow('🎯 ユーザーがコマンドバーを開きました', '#ffff00');
+            }
+
+            close() {
+                this.isOpen = false;
+                document.getElementById('command-bar-overlay').style.display = 'none';
+                document.getElementById('command-input').value = '';
+            }
+
+            updateSuggestions(query) {
+                const baseSuggestions = [
+                    { icon: '🚀', text: 'プロジェクトフェニックスって何？', command: 'project phoenix info' },
+                    { icon: '👥', text: '認証に取り組んでいるのは誰？', command: 'team auth' },
+                    { icon: '📊', text: 'ダッシュボードを表示', command: 'dashboard' },
+                    { icon: '📅', text: '今日のスケジュールは？', command: 'schedule today' },
+                    { icon: '🔍', text: '緊急文書を検索', command: 'docs urgent' },
+                    { icon: '💬', text: 'チームに接続', command: 'team connect' },
+                    { icon: '📈', text: 'システムパフォーマンス', command: 'metrics system' },
+                    { icon: '🎯', text: '今日は何に集中すべき？', command: 'focus today' }
+                ];
+
+                if (query.length === 0) {
+                    this.suggestions = baseSuggestions.slice(0, 6);
+                } else {
+                    this.suggestions = baseSuggestions.filter(s => 
+                        s.text.toLowerCase().includes(query.toLowerCase()) ||
+                        s.command.toLowerCase().includes(query.toLowerCase())
+                    );
+                }
+
+                this.selectedIndex = 0;
+                this.renderSuggestions();
+            }
+
+            renderSuggestions() {
+                const container = document.getElementById('command-suggestions');
+                container.innerHTML = this.suggestions.map((suggestion, index) => `
+                    <div class="suggestion-item ${index === this.selectedIndex ? 'selected' : ''}" 
+                         data-index="${index}">
+                        <span class="suggestion-icon">${suggestion.icon}</span>
+                        ${suggestion.text}
+                    </div>
+                `).join('');
+
+                // Add click handlers
+                container.querySelectorAll('.suggestion-item').forEach((item, index) => {
+                    item.addEventListener('click', () => {
+                        this.selectedIndex = index;
+                        this.executeSelected();
+                    });
+                });
+            }
+
+            selectNext() {
+                this.selectedIndex = (this.selectedIndex + 1) % this.suggestions.length;
+                this.renderSuggestions();
+            }
+
+            selectPrevious() {
+                this.selectedIndex = (this.selectedIndex - 1 + this.suggestions.length) % this.suggestions.length;
+                this.renderSuggestions();
+            }
+
+            executeSelected() {
+                if (this.suggestions[this.selectedIndex]) {
+                    this.executeCommand(this.suggestions[this.selectedIndex].command);
+                }
+            }
+
+            async executeCommand(command) {
+                console.log('🎯 コマンド実行:', command);
+                this.close();
+
+                addToMessageFlow(`🎯 AIコマンド実行: "${command}"`, '#ffff00');
+
+                // Map commands to VoidCore messages
+                if (command.includes('project phoenix')) {
+                    await this.handleProjectPhoenixQuery();
+                } else if (command.includes('team')) {
+                    await this.handleTeamQuery();
+                } else if (command.includes('docs')) {
+                    await this.handleDocumentQuery();
+                } else {
+                    // Default response
+                    this.showAISuggestion(`処理中: "${command}". これで適切なVoidCoreエージェントがトリガーされます。`, null, 3000);
+                }
+            }
+
+            async handleProjectPhoenixQuery() {
+                const intent = Message.intent('system', 'project.query', {
+                    project: 'Phoenix',
+                    priority: 'high',
+                    requester: 'Living Command Bar'
+                }).withSource('LivingCommandBar');
+
+                await voidCore.publish(intent);
+                this.showAISuggestion("🚀 プロジェクトフェニックスの情報を見つけました！ハイライトされた文書をチェックしてください。", null, 4000);
+            }
+
+            async handleTeamQuery() {
+                const intent = Message.intent('system', 'team.status_check', {
+                    department: 'Engineering',
+                    scope: 'current_activity'
+                }).withSource('LivingCommandBar');
+
+                await voidCore.publish(intent);
+                this.showAISuggestion("👥 チームステータスが更新されました！サラさんが質問に対応可能です。", null, 4000);
+            }
+
+            async handleDocumentQuery() {
+                const intent = Message.intent('system', 'document.urgent_search', {
+                    priority: 'urgent',
+                    days: 7
+                }).withSource('LivingCommandBar');
+
+                await voidCore.publish(intent);
+                this.showAISuggestion("📚 注意が必要な緊急文書を見つけました！", null, 4000);
+            }
+
+            showAISuggestion(message, action, duration = 8000) {
+                intentCards.addCard({
+                    title: "🤖 AIアシスタント",
+                    message: message,
+                    action: action,
+                    duration: duration
+                });
+            }
+        }
+
+        // Intent Cards Manager
+        class IntentCardsManager {
+            constructor() {
+                this.cards = [];
+                this.container = document.getElementById('intent-cards');
+            }
+
+            addCard({ title, message, action, duration = 8000 }) {
+                const cardId = Date.now();
+                const card = {
+                    id: cardId,
+                    title,
+                    message,
+                    action,
+                    duration
+                };
+
+                this.cards.push(card);
+                this.renderCard(card);
+
+                // Auto-remove after duration
+                setTimeout(() => {
+                    this.removeCard(cardId);
+                }, duration);
+            }
+
+            renderCard(card) {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'intent-card';
+                cardElement.dataset.cardId = card.id;
+                
+                cardElement.innerHTML = `
+                    <div class="intent-card-header">
+                        <div class="intent-card-title">${card.title}</div>
+                        <button class="intent-card-close">✕</button>
+                    </div>
+                    <div class="intent-card-message">${card.message}</div>
+                    ${card.action ? `
+                        <div class="intent-card-actions">
+                            <button class="intent-action-btn primary-action">はい、実行</button>
+                            <button class="intent-action-btn secondary-action">今は結構</button>
+                        </div>
+                    ` : ''}
+                `;
+
+                // Event listeners
+                cardElement.querySelector('.intent-card-close').addEventListener('click', () => {
+                    this.removeCard(card.id);
+                });
+
+                if (card.action) {
+                    cardElement.querySelector('.primary-action').addEventListener('click', () => {
+                        card.action();
+                        this.removeCard(card.id);
+                    });
+
+                    cardElement.querySelector('.secondary-action').addEventListener('click', () => {
+                        this.removeCard(card.id);
+                    });
+                }
+
+                this.container.appendChild(cardElement);
+                addToMessageFlow(`💬 AIから提案カードを表示: ${card.title}`, '#00ffff');
+            }
+
+            removeCard(cardId) {
+                const cardElement = this.container.querySelector(`[data-card-id="${cardId}"]`);
+                if (cardElement) {
+                    cardElement.style.animation = 'slideInRight 0.3s ease-out reverse';
+                    setTimeout(() => {
+                        cardElement.remove();
+                    }, 300);
+                }
+
+                this.cards = this.cards.filter(card => card.id !== cardId);
+            }
+        }
+
+        // Enhanced Message Flow with Particles
+        function addMessageParticle(message, color) {
+            const particle = document.createElement('span');
+            particle.className = 'message-particle';
+            particle.style.backgroundColor = color;
+            
+            const flowEntry = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString();
+            flowEntry.innerHTML = `
+                ${particle.outerHTML}
+                <span style="color: #666;">[${timestamp}]</span> 
+                <span style="color: ${color};">${message}</span>
+            `;
+            messageFlow.appendChild(flowEntry);
+            messageFlow.scrollTop = messageFlow.scrollHeight;
+        }
+
+        // Initialize Dream Features
+        const commandBar = new LivingCommandBar();
+        const intentCards = new IntentCardsManager();
+
+        // Set up AI status indicator
+        document.getElementById('ai-status').addEventListener('click', () => {
+            commandBar.open();
+        });
+
+        // Enhanced message flow function
+        const originalAddToMessageFlow = addToMessageFlow;
+        addToMessageFlow = function(message, color = '#00ff00') {
+            addMessageParticle(message, color);
+            
+            // Keep only last 15 messages for better performance
+            if (messageFlow.children.length > 15) {
+                messageFlow.removeChild(messageFlow.firstChild);
+            }
+        };
+
+        // Simulate AI suggestions after delay
+        setTimeout(() => {
+            document.getElementById('ai-status').classList.add('has-suggestion');
+            document.getElementById('ai-status').textContent = '🤖 AIが提案を用意しました';
+        }, 12000);
+
+        // Welcome message for new Dream Intranet
+        setTimeout(() => {
+            intentCards.addCard({
+                title: "🎉 未来へようこそ",
+                message: "これがVoidCore Network - 学習・適応する知的イントラネットです。Ctrl+Kを押してAIコマンドインターfaceを体験してみてください！",
+                duration: 12000
+            });
+        }, 3000);
+
+        // Enhanced document promotion with AI feedback
+        const originalPromoteDocument = docManager.promoteDocument;
+        docManager.promoteDocument = function(docId, reason) {
+            originalPromoteDocument.call(this, docId, reason);
+            
+            // Add AI badge enhancement
+            setTimeout(() => {
+                const doc = document.querySelector(`[data-id="${docId}"]`);
+                if (doc && !doc.querySelector('.ai-badge')) {
+                    const aiBadge = document.createElement('span');
+                    aiBadge.className = 'ai-badge';
+                    aiBadge.textContent = '🤖 AI推奨';
+                    doc.querySelector('.doc-title').appendChild(aiBadge);
+                }
+            }, 500);
+            
+            addToMessageFlow(`🤖 AI: 文書"${docId}"を知的に昇格させました - ${reason}`, '#ff00ff');
+        };
+
+        console.log('🌟 Dream Intranet features loaded!');
+        console.log('💡 Press Ctrl+K to experience the future of work!');
+    </script>
+</body>
+</html>

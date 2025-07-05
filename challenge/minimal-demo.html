@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoidCore Network - Minimal Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .demo-section { border: 2px solid #4a90e2; margin: 20px 0; padding: 20px; border-radius: 10px; }
+        .intent-button { 
+            background: #4a90e2; color: white; border: none; padding: 15px 30px; 
+            border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px;
+        }
+        .intent-button:hover { background: #357abd; }
+        .doc-item { 
+            border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .doc-item.featured { 
+            border: 3px solid #4a90e2; background: rgba(74, 144, 226, 0.1);
+            animation: highlight 3s ease-out;
+        }
+        @keyframes highlight {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        .doc-title { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .doc-meta { font-size: 0.9em; color: #666; }
+        .featured-badge { background: gold; color: black; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <h1>🚀 VoidCore Network - Minimal Demo</h1>
+    
+    <div class="demo-section">
+        <h2>🎯 Intent Launcher</h2>
+        <button id="phoenix-btn" class="intent-button">🔍 Get Project Phoenix Info</button>
+        <p>Status: <span id="intent-status">Ready</span></p>
+    </div>
+
+    <div class="demo-section">
+        <h2>📄 Document Feed</h2>
+        <div id="doc-list">
+            <div class="doc-item" data-id="phoenix-spec">
+                <div class="doc-title">🚀 Project Phoenix - Technical Specifications v2.3</div>
+                <div class="doc-meta">by Tech Lead Sarah Kim • 30 min ago • 2.4 MB</div>
+            </div>
+            <div class="doc-item" data-id="onboarding-guide">
+                <div class="doc-title">📚 New Employee VoidCore Network Guide</div>
+                <div class="doc-meta">by HR Department • 1 day ago • 1.2 MB</div>
+            </div>
+            <div class="doc-item" data-id="api-docs">
+                <div class="doc-title">⚙️ VoidCore Network API Documentation</div>
+                <div class="doc-meta">by Development Team • 1 hour ago • 5.1 MB</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>📊 System Monitor</h2>
+        <div id="system-log"></div>
+    </div>
+
+    <script type="module">
+        // 最小のVoidCoreシステム
+        import { voidCore } from '../src/voidcore.js';
+        import { Message } from '../src/message.js';
+
+        // ログ設定
+        voidCore.logElement = null; // コンソールにログ出力
+
+        // 最小DocFeedプラグイン
+        class MinimalDocFeed {
+            constructor() {
+                this.role = 'document_manager';
+                this.setupSubscription();
+            }
+
+            setupSubscription() {
+                voidCore.subscribe('project.query', (message) => {
+                    console.log('📥 DocFeed received:', message);
+                    this.handleProjectQuery(message);
+                });
+                console.log('✅ DocFeed subscribed to project.query');
+            }
+
+            handleProjectQuery(message) {
+                if (message.payload.project === 'Phoenix') {
+                    console.log('🚀 Processing Phoenix query!');
+                    
+                    // Phoenix ドキュメントをハイライト
+                    const phoenixDoc = document.querySelector('[data-id="phoenix-spec"]');
+                    if (phoenixDoc) {
+                        phoenixDoc.classList.add('featured');
+                        
+                        // Featured バッジを追加
+                        if (!phoenixDoc.querySelector('.featured-badge')) {
+                            const badge = document.createElement('span');
+                            badge.className = 'featured-badge';
+                            badge.textContent = '⭐ Featured';
+                            phoenixDoc.querySelector('.doc-title').appendChild(badge);
+                        }
+                        
+                        console.log('✨ Phoenix document highlighted!');
+                        document.getElementById('intent-status').textContent = 'Success! Phoenix doc featured ⭐';
+                    }
+                }
+            }
+        }
+
+        // 初期化
+        console.log('🚀 Starting minimal demo...');
+        const docFeed = new MinimalDocFeed();
+
+        // ボタンイベント
+        document.getElementById('phoenix-btn').addEventListener('click', async () => {
+            console.log('🎯 Button clicked, publishing intent...');
+            document.getElementById('intent-status').textContent = 'Launching intent...';
+            
+            const intent = Message.intent('system', 'project.query', {
+                project: 'Phoenix',
+                priority: 'high',
+                requester: 'Minimal Demo'
+            }).withSource('MinimalIntentLauncher');
+
+            await voidCore.publish(intent);
+            console.log('✅ Intent published!');
+        });
+
+        console.log('🌟 Minimal demo ready!');
+    </script>
+</body>
+</html>

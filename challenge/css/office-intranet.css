@@ -1,0 +1,635 @@
+/* VoidCore Network Office Intranet CSS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.office-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.office-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-bottom: 3px solid #4a90e2;
+}
+
+.company-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo-icon {
+    font-size: 2rem;
+    animation: pulse 2s infinite;
+}
+
+.company-logo h1 {
+    color: #4a90e2;
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.powered-by {
+    font-size: 0.9rem;
+    color: #666;
+    font-style: italic;
+}
+
+.welcome-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(74, 144, 226, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    border: 2px solid rgba(74, 144, 226, 0.3);
+}
+
+.user-icon {
+    font-size: 1.2rem;
+}
+
+/* Main Layout */
+.office-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 300px 1fr 350px;
+    gap: 1rem;
+    padding: 1rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Panels */
+.intent-launcher-panel,
+.system-observer-panel {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 15px !important;
+    padding: 1.5rem !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    border: 3px solid red !important; /* Debug: 赤いボーダー */
+    min-height: 400px !important;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.bulletin-section,
+.doc-feed-section,
+.chat-section {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 2px solid rgba(74, 144, 226, 0.2);
+}
+
+/* Section Headers */
+h3 {
+    color: #4a90e2;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* System Observer Specific */
+.observer-description {
+    background: rgba(74, 144, 226, 0.05);
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #4a90e2;
+}
+
+.observer-description p {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+#system-observer-container {
+    height: 400px;
+    background: #000;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #333;
+}
+
+/* Content Containers */
+.bulletin-item,
+.doc-item,
+.chat-item {
+    background: rgba(74, 144, 226, 0.05);
+    border: 1px solid rgba(74, 144, 226, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.bulletin-item:hover,
+.doc-item:hover,
+.chat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+    border-color: #4a90e2;
+}
+
+/* Intent Launcher Buttons */
+.intent-button {
+    background: linear-gradient(45deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.intent-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(74, 144, 226, 0.4);
+    background: linear-gradient(45deg, #357abd, #2e6da4);
+}
+
+.intent-button:active {
+    transform: translateY(-1px);
+}
+
+/* Footer */
+.office-footer {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    border-top: 3px solid #4a90e2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.demo-info h4,
+.scenario-guide h4 {
+    color: #4a90e2;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.scenario-guide ol {
+    padding-left: 1.5rem;
+}
+
+.scenario-guide li {
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes messageFlow {
+    0% { opacity: 0; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0; transform: scale(0.8); }
+}
+
+/* Message Flow Animation */
+.message-flow {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, #4a90e2, #357abd);
+    border-radius: 50%;
+    animation: messageFlow 2s ease-in-out;
+    box-shadow: 0 0 15px rgba(74, 144, 226, 0.8);
+}
+
+/* Plugin Status Indicators */
+.plugin-status {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.plugin-status.active {
+    background: #28a745;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
+}
+
+.plugin-status.inactive {
+    background: #6c757d;
+}
+
+/* Intent Launcher Specific Styles */
+.intent-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+  min-height: 200px !important;
+  background: rgba(255, 0, 0, 0.1) !important; /* Debug: 薄い赤背景 */
+}
+
+.intent-button {
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 1rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.intent-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.intent-button:hover::before {
+  left: 100%;
+}
+
+.intent-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(74, 144, 226, 0.4);
+  background: linear-gradient(135deg, #357abd 0%, #2e6da4 100%);
+}
+
+.intent-button:active {
+  transform: translateY(-1px);
+}
+
+.intent-icon {
+  font-size: 1.5rem;
+  min-width: 30px;
+  text-align: center;
+}
+
+.intent-content {
+  flex: 1;
+}
+
+.intent-title {
+  font-weight: bold;
+  font-size: 0.95rem;
+  margin-bottom: 0.3rem;
+}
+
+.intent-description {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  line-height: 1.3;
+}
+
+/* Action History */
+.action-history {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 2px solid rgba(74, 144, 226, 0.2);
+}
+
+.action-history h4 {
+  color: #4a90e2;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.history-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.history-item {
+  background: rgba(74, 144, 226, 0.05);
+  border: 1px solid rgba(74, 144, 226, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.history-time {
+  color: #666;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.history-action {
+  color: #333;
+  font-weight: 500;
+}
+
+.history-status {
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.history-status.launched {
+  background: #ffc107;
+  color: #856404;
+}
+
+.history-status.completed {
+  background: #28a745;
+  color: white;
+}
+
+.history-status.failed {
+  background: #dc3545;
+  color: white;
+}
+
+/* Bulletin Board Specific Styles */
+.bulletin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.bulletin-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filter-btn {
+  padding: 0.5rem 1rem;
+  border: 2px solid rgba(74, 144, 226, 0.3);
+  background: transparent;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.8rem;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+  background: #4a90e2;
+  color: white;
+}
+
+.bulletin-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.bulletin-item {
+  border-left: 4px solid #4a90e2;
+  transition: all 0.3s ease;
+}
+
+.bulletin-item.high {
+  border-left-color: #dc3545;
+}
+
+.bulletin-item.medium {
+  border-left-color: #ffc107;
+}
+
+.bulletin-item.low {
+  border-left-color: #28a745;
+}
+
+.bulletin-header-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.bulletin-title {
+  font-size: 1rem;
+  margin: 0;
+  color: #333;
+}
+
+.bulletin-priority {
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.bulletin-priority.high {
+  background: #dc3545;
+  color: white;
+}
+
+.bulletin-priority.medium {
+  background: #ffc107;
+  color: #856404;
+}
+
+.bulletin-priority.low {
+  background: #28a745;
+  color: white;
+}
+
+.bulletin-content {
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.bulletin-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.bulletin-tags {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.tag {
+  background: rgba(74, 144, 226, 0.1);
+  color: #4a90e2;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+}
+
+/* System Notifications */
+.system-notifications {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid rgba(74, 144, 226, 0.2);
+}
+
+.notification-stream {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+  padding: 0.5rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notification-time {
+  color: #666;
+  font-family: monospace;
+  font-size: 0.7rem;
+}
+
+/* Additional Animations */
+@keyframes newBulletinPulse {
+  0% { 
+    background: rgba(74, 144, 226, 0.1);
+    transform: scale(1);
+  }
+  50% { 
+    background: rgba(74, 144, 226, 0.3);
+    transform: scale(1.02);
+  }
+  100% { 
+    background: rgba(74, 144, 226, 0.1);
+    transform: scale(1);
+  }
+}
+
+@keyframes docHighlight {
+  0% { 
+    background: rgba(74, 144, 226, 0.1);
+    transform: scale(1);
+  }
+  50% { 
+    background: rgba(74, 144, 226, 0.2);
+    transform: scale(1.01);
+  }
+  100% { 
+    background: rgba(74, 144, 226, 0.1);
+    transform: scale(1);
+  }
+}
+
+@keyframes chatHighlight {
+  0% { 
+    background: rgba(74, 144, 226, 0.1);
+  }
+  50% { 
+    background: rgba(74, 144, 226, 0.25);
+  }
+  100% { 
+    background: rgba(74, 144, 226, 0.1);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .office-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+    
+    .system-observer-panel {
+        order: -1;
+    }
+    
+    #system-observer-container {
+        height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .office-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .company-logo {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .office-footer {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .intent-launcher-panel,
+    .system-observer-panel,
+    .bulletin-section,
+    .doc-feed-section,
+    .chat-section {
+        padding: 1rem;
+    }
+}

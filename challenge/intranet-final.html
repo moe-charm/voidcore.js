@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Corporation - Employee Portal</title>
+    <link rel="stylesheet" href="./css/office-intranet.css">
+    <style>
+        .smart-assistant {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .notification-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 2px solid #4a90e2;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .weather-widget {
+            background: rgba(255,255,255,0.9);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .quick-link {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: background 0.3s ease;
+        }
+        .quick-link:hover {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="office-container">
+        <!-- Header -->
+        <header class="office-header">
+            <div class="company-logo">
+                <span class="logo-icon">🌟</span>
+                <h1>Nexus Corporation</h1>
+                <span class="powered-by">Employee Portal</span>
+            </div>
+            <div class="welcome-user">
+                <span class="user-icon">👋</span>
+                <span>Welcome back, Alex Chen!</span>
+                <span style="color: #666; font-size: 0.9em;">Engineering • New Employee</span>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="office-layout">
+            <!-- Left Sidebar: Smart Assistant -->
+            <aside class="intent-launcher-panel">
+                <div class="smart-assistant">
+                    <h3>🤖 AI Assistant</h3>
+                    <p style="font-size: 0.9em; opacity: 0.9; margin-bottom: 15px;">
+                        I'll help you find what you need and keep you updated on important information.
+                    </p>
+                    
+                    <button id="phoenix-btn" class="intent-button">
+                        <span class="intent-icon">🚀</span>
+                        <div class="intent-content">
+                            <div class="intent-title">What's Project Phoenix?</div>
+                            <div class="intent-description">Get me up to speed on our main project</div>
+                        </div>
+                    </button>
+                    
+                    <button id="team-btn" class="intent-button">
+                        <span class="intent-icon">👥</span>
+                        <div class="intent-content">
+                            <div class="intent-title">Help me connect with my team</div>
+                            <div class="intent-description">Show me important onboarding resources</div>
+                        </div>
+                    </button>
+                    
+                    <button id="docs-btn" class="intent-button">
+                        <span class="intent-icon">📚</span>
+                        <div class="intent-content">
+                            <div class="intent-title">I need technical documentation</div>
+                            <div class="intent-description">Find relevant docs for development work</div>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="weather-widget">
+                    <h4>🌤 Today in San Francisco</h4>
+                    <div style="font-size: 1.5em; margin: 10px 0;">22°C Sunny</div>
+                    <div style="font-size: 0.9em; color: #666;">Perfect day for innovation!</div>
+                </div>
+            </aside>
+
+            <!-- Center Content Area -->
+            <main class="main-content">
+                <!-- My Documents -->
+                <section class="doc-feed-section">
+                    <h3>📄 My Important Documents</h3>
+                    <div id="doc-feed-container">
+                        <div class="doc-item" data-id="phoenix-spec">
+                            <div class="doc-header">
+                                <h4 class="doc-title">🚀 Project Phoenix - What You Need to Know</h4>
+                                <div class="doc-badges">
+                                    <span class="doc-priority medium">RELEVANT</span>
+                                    <span class="doc-type">Project Info</span>
+                                </div>
+                            </div>
+                            <div class="doc-description">Everything a new engineer needs to know about our flagship product launch</div>
+                            <div class="doc-meta">
+                                <div class="doc-info">
+                                    <span class="doc-author">👤 Sarah Kim, Tech Lead</span>
+                                    <span class="doc-modified">🕒 Updated 30 min ago</span>
+                                    <span class="doc-size">📖 5 min read</span>
+                                </div>
+                                <div class="doc-actions">
+                                    <button class="doc-action-btn view-btn">📖 Read Now</button>
+                                    <button class="doc-action-btn download-btn">📱 Save Offline</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="doc-item" data-id="onboarding-guide">
+                            <div class="doc-header">
+                                <h4 class="doc-title">📚 Your First Week at Nexus - Onboarding Guide</h4>
+                                <div class="doc-badges">
+                                    <span class="doc-priority high">ESSENTIAL</span>
+                                    <span class="doc-type">Onboarding</span>
+                                </div>
+                            </div>
+                            <div class="doc-description">Complete guide to getting started, meeting your team, and understanding our culture</div>
+                            <div class="doc-meta">
+                                <div class="doc-info">
+                                    <span class="doc-author">👤 HR Team</span>
+                                    <span class="doc-modified">🕒 Personalized for you</span>
+                                    <span class="doc-size">📖 10 min read</span>
+                                </div>
+                                <div class="doc-actions">
+                                    <button class="doc-action-btn view-btn">👋 Start Here</button>
+                                    <button class="doc-action-btn download-btn">📱 Keep Handy</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="doc-item" data-id="api-docs">
+                            <div class="doc-header">
+                                <h4 class="doc-title">⚙️ Developer Resources & API Reference</h4>
+                                <div class="doc-badges">
+                                    <span class="doc-priority medium">USEFUL</span>
+                                    <span class="doc-type">Technical</span>
+                                </div>
+                            </div>
+                            <div class="doc-description">All the technical documentation you'll need for development work</div>
+                            <div class="doc-meta">
+                                <div class="doc-info">
+                                    <span class="doc-author">👤 Dev Team</span>
+                                    <span class="doc-modified">🕒 Always up-to-date</span>
+                                    <span class="doc-size">📖 Reference guide</span>
+                                </div>
+                                <div class="doc-actions">
+                                    <button class="doc-action-btn view-btn">🔧 Browse Docs</button>
+                                    <button class="doc-action-btn download-btn">📱 Quick Reference</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recent Activity -->
+                <section class="chat-section">
+                    <h3>🔔 What's Happening</h3>
+                    <div id="activity-feed">
+                        <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                            <span style="color: #666; font-size: 0.9em;">9:15 AM</span> - 
+                            Welcome to Nexus Corporation! Your desk is ready in Engineering (Floor 3, Desk 15)
+                        </div>
+                        <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                            <span style="color: #666; font-size: 0.9em;">8:30 AM</span> - 
+                            Sarah Kim sent you a Slack message: "Looking forward to working with you!"
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Right Sidebar: Quick Access -->
+            <aside class="system-observer-panel">
+                <h3>⚡ Quick Access</h3>
+                
+                <div class="quick-links">
+                    <a href="#" class="quick-link">
+                        📧 Email
+                    </a>
+                    <a href="#" class="quick-link">
+                        💬 Slack
+                    </a>
+                    <a href="#" class="quick-link">
+                        📅 Calendar
+                    </a>
+                    <a href="#" class="quick-link">
+                        🎫 Support
+                    </a>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.9); border-radius: 10px;">
+                    <h4>👥 Your Team</h4>
+                    <div style="margin: 10px 0;">
+                        <div>👩‍💼 Sarah Kim - Tech Lead</div>
+                        <div style="font-size: 0.8em; color: #666;">Online • Available for questions</div>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <div>👨‍💻 Mike Rodriguez - Senior Dev</div>
+                        <div style="font-size: 0.8em; color: #666;">In meeting until 10:30</div>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <div>👩‍🎨 Lisa Park - UX Designer</div>
+                        <div style="font-size: 0.8em; color: #666;">Free for coffee chat</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; text-align: center;">
+                    <h4>🎉 Did you know?</h4>
+                    <p style="font-size: 0.9em;">Nexus has won "Best Tech Workplace" 3 years running!</p>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="office-footer">
+            <div class="demo-info">
+                <h4>🌟 Dream Intranet Features</h4>
+                <p>This intelligent portal learns your role and adapts content accordingly. The AI assistant proactively suggests relevant information based on your current needs and priorities.</p>
+            </div>
+            <div class="scenario-guide">
+                <h4>💡 Try the AI Assistant:</h4>
+                <ol>
+                    <li>Ask about Project Phoenix - watch relevant docs get highlighted</li>
+                    <li>Request team connection help - see onboarding resources surface</li>
+                    <li>Ask for technical docs - development resources become prominent</li>
+                </ol>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        // Intelligent Intranet System
+        import { voidCore } from '../src/voidcore.js';
+        import { Message } from '../src/message.js';
+
+        console.log('🌟 Nexus Corporation Intranet - AI-Powered Employee Portal');
+
+        // Smart Content Manager
+        class SmartContentManager {
+            constructor() {
+                this.setupAI();
+            }
+
+            setupAI() {
+                voidCore.subscribe('project.query', (msg) => this.surfaceProjectInfo(msg));
+                voidCore.subscribe('team.status_check', (msg) => this.highlightTeamResources(msg));
+                voidCore.subscribe('document.urgent_search', (msg) => this.prioritizeTechnicalDocs(msg));
+            }
+
+            surfaceProjectInfo(message) {
+                this.showNotification("🤖 Found relevant Project Phoenix information for you!");
+                this.prioritizeDocument('phoenix-spec', 'Suggested by AI: Essential for your role', '#4a90e2');
+                this.updateActivity('🚀 AI suggested Project Phoenix resources based on your question');
+            }
+
+            highlightTeamResources(message) {
+                this.showNotification("🤖 Here are the best resources for connecting with your team!");
+                this.prioritizeDocument('onboarding-guide', 'Suggested by AI: Perfect for team integration', '#28a745');
+                this.updateActivity('👥 AI highlighted onboarding resources to help you connect');
+            }
+
+            prioritizeTechnicalDocs(message) {
+                this.showNotification("🤖 Found technical documentation that matches your needs!");
+                this.prioritizeDocument('api-docs', 'Suggested by AI: Technical resources for development', '#dc3545');
+                this.updateActivity('📚 AI surfaced technical documentation for your development work');
+            }
+
+            prioritizeDocument(docId, reason, color) {
+                const doc = document.querySelector(`[data-id="${docId}"]`);
+                if (doc) {
+                    // Visual enhancement
+                    doc.style.animation = 'docHighlight 3s ease-out';
+                    doc.style.border = `3px solid ${color}`;
+                    doc.style.backgroundColor = `${color}15`;
+
+                    // Update priority
+                    const priority = doc.querySelector('.doc-priority');
+                    if (priority) {
+                        priority.textContent = 'AI SUGGESTED';
+                        priority.style.background = color;
+                        priority.style.color = 'white';
+                    }
+
+                    // Add AI badge
+                    this.addAIBadge(doc, reason, color);
+                }
+            }
+
+            addAIBadge(doc, text, color) {
+                const existingBadge = doc.querySelector('.ai-badge');
+                if (existingBadge) existingBadge.remove();
+
+                const badge = document.createElement('div');
+                badge.className = 'ai-badge';
+                badge.innerHTML = `🤖 ${text}`;
+                badge.style.cssText = `
+                    background: ${color}; color: white; padding: 8px 12px; 
+                    border-radius: 8px; font-size: 0.85em; margin-top: 10px;
+                    border-left: 4px solid rgba(255,255,255,0.3);
+                `;
+                doc.appendChild(badge);
+            }
+
+            showNotification(message) {
+                const notification = document.createElement('div');
+                notification.className = 'notification-popup';
+                notification.innerHTML = `
+                    <div style="font-weight: bold; color: #4a90e2;">AI Assistant</div>
+                    <div style="margin: 5px 0;">${message}</div>
+                    <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; cursor: pointer;">✕</button>
+                `;
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+
+            updateActivity(message) {
+                const feed = document.getElementById('activity-feed');
+                const timestamp = new Date().toLocaleTimeString();
+                const entry = document.createElement('div');
+                entry.style.cssText = 'padding: 10px; border-bottom: 1px solid #eee; background: rgba(74, 144, 226, 0.05);';
+                entry.innerHTML = `
+                    <span style="color: #666; font-size: 0.9em;">${timestamp}</span> - ${message}
+                `;
+                feed.insertBefore(entry, feed.firstChild);
+            }
+        }
+
+        // Initialize
+        const contentManager = new SmartContentManager();
+
+        // AI Assistant Buttons
+        document.getElementById('phoenix-btn').addEventListener('click', async () => {
+            const intent = Message.intent('employee', 'project.query', {
+                project: 'Phoenix',
+                employee_role: 'new_engineer',
+                question: 'What is Project Phoenix and how can I contribute?'
+            }).withSource('AIAssistant');
+
+            await voidCore.publish(intent);
+        });
+
+        document.getElementById('team-btn').addEventListener('click', async () => {
+            const intent = Message.intent('employee', 'team.status_check', {
+                department: 'Engineering',
+                employee_status: 'new',
+                goal: 'team_integration'
+            }).withSource('AIAssistant');
+
+            await voidCore.publish(intent);
+        });
+
+        document.getElementById('docs-btn').addEventListener('click', async () => {
+            const intent = Message.intent('employee', 'document.urgent_search', {
+                category: 'technical',
+                role: 'developer',
+                urgency: 'learning'
+            }).withSource('AIAssistant');
+
+            await voidCore.publish(intent);
+        });
+
+        console.log('🎉 Smart intranet ready! AI assistant is standing by.');
+    </script>
+</body>
+</html>

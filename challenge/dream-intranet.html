@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 Nexus Corporation - Dream Intranet</title>
+    <link rel="stylesheet" href="./css/office-intranet.css">
+    <style>
+        /* Living Command Bar */
+        .command-bar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            display: none;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .command-bar {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            max-width: 90vw;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .command-input {
+            width: 100%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 18px;
+            outline: none;
+        }
+
+        .command-input::placeholder {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .command-suggestions {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .suggestion-item {
+            background: rgba(255,255,255,0.1);
+            margin: 8px 0;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .suggestion-item:hover,
+        .suggestion-item.selected {
+            background: rgba(255,255,255,0.2);
+            border-left-color: #fff;
+        }
+
+        .suggestion-icon {
+            display: inline-block;
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        /* Project Constellation */
+        .constellation-container {
+            position: relative;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+            min-height: 400px;
+        }
+
+        #constellation-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        .constellation-overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 100;
+        }
+
+        /* Intent Cards */
+        .intent-cards-container {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 300px;
+            z-index: 1000;
+        }
+
+        .intent-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            animation: slideInRight 0.5s ease-out;
+            position: relative;
+        }
+
+        .intent-card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .intent-card-title {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .intent-card-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            margin-left: auto;
+        }
+
+        .intent-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .intent-action-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s ease;
+        }
+
+        .intent-action-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Proactive Assistant Indicator */
+        .ai-status-indicator {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            animation: pulse 2s infinite;
+            z-index: 1000;
+        }
+
+        .ai-status-indicator.has-suggestion {
+            animation: glow 2s infinite;
+        }
+
+        /* Smart Dashboard Updates */
+        .smart-dashboard {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .dashboard-metric {
+            display: inline-block;
+            background: rgba(255,255,255,0.9);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 10px;
+            text-align: center;
+            min-width: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-metric:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a90e2;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); }
+            50% { box-shadow: 0 8px 40px rgba(102, 126, 234, 0.6); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .command-bar {
+                width: 90vw;
+                top: 10%;
+            }
+            
+            .intent-cards-container {
+                width: 250px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Living Command Bar -->
+    <div id="command-bar-overlay" class="command-bar-overlay">
+        <div class="command-bar">
+            <input type="text" id="command-input" class="command-input" placeholder="Ask anything... (e.g., 'What's Project Phoenix?')" autocomplete="off">
+            <div id="command-suggestions" class="command-suggestions"></div>
+        </div>
+    </div>
+
+    <!-- Intent Cards Container -->
+    <div id="intent-cards" class="intent-cards-container"></div>
+
+    <!-- AI Status Indicator -->
+    <div id="ai-status" class="ai-status-indicator">
+        🤖 AI Assistant Ready
+    </div>
+
+    <div class="office-container">
+        <!-- Header -->
+        <header class="office-header">
+            <div class="company-logo">
+                <span class="logo-icon">🌟</span>
+                <h1>Nexus Corporation</h1>
+                <span class="powered-by">Dream Intranet • VoidCore Network v11.0</span>
+            </div>
+            <div class="welcome-user">
+                <span class="user-icon">👋</span>
+                <span>Welcome back, Alex Chen!</span>
+                <span style="color: #666; font-size: 0.9em;">Engineering • Press Ctrl+K for AI Assistant</span>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="office-layout">
+            <!-- Left: Smart Dashboard -->
+            <aside class="intent-launcher-panel">
+                <div class="smart-dashboard">
+                    <h3>📊 Your Focus Today</h3>
+                    <div class="dashboard-metric">
+                        <div class="metric-value">3</div>
+                        <div class="metric-label">Urgent Tasks</div>
+                    </div>
+                    <div class="dashboard-metric">
+                        <div class="metric-value">12</div>
+                        <div class="metric-label">Unread Messages</div>
+                    </div>
+                    <div class="dashboard-metric">
+                        <div class="metric-value">85%</div>
+                        <div class="metric-label">Sprint Progress</div>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px;">🎯 Quick Actions</h4>
+                    <button id="phoenix-btn" class="intent-button">
+                        <span class="intent-icon">🚀</span>
+                        <div class="intent-content">
+                            <div class="intent-title">What's Project Phoenix?</div>
+                            <div class="intent-description">Get up to speed on our main project</div>
+                        </div>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Center: Project Constellation & Documents -->
+            <main class="main-content">
+                <!-- Project Constellation Visualization -->
+                <section class="constellation-section">
+                    <h3>🌌 Project Constellation - Live System View</h3>
+                    <div class="constellation-container">
+                        <canvas id="constellation-canvas"></canvas>
+                        <div class="constellation-overlay">
+                            <div>🔴 User Node</div>
+                            <div>🟢 AI Assistant</div>
+                            <div>🔵 Document Manager</div>
+                            <div>🟡 System Observer</div>
+                            <div style="margin-top: 10px;">
+                                <span id="message-count">0</span> messages flowing
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Documents with Smart Highlighting -->
+                <section class="doc-feed-section">
+                    <h3>📄 Intelligent Document Feed</h3>
+                    <div id="doc-feed-container">
+                        <div class="doc-item" data-id="phoenix-spec">
+                            <div class="doc-header">
+                                <h4 class="doc-title">🚀 Project Phoenix - What You Need to Know</h4>
+                                <div class="doc-badges">
+                                    <span class="doc-priority medium">RELEVANT</span>
+                                    <span class="doc-type">Project Info</span>
+                                </div>
+                            </div>
+                            <div class="doc-description">Everything a new engineer needs to know about our flagship product launch</div>
+                            <div class="doc-meta">
+                                <div class="doc-info">
+                                    <span class="doc-author">👤 Sarah Kim, Tech Lead</span>
+                                    <span class="doc-modified">🕒 Updated 30 min ago</span>
+                                    <span class="doc-size">📖 5 min read</span>
+                                </div>
+                                <div class="doc-actions">
+                                    <button class="doc-action-btn view-btn">📖 Read Now</button>
+                                    <button class="doc-action-btn download-btn">📱 Save Offline</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="doc-item" data-id="onboarding-guide">
+                            <div class="doc-header">
+                                <h4 class="doc-title">📚 Your First Week at Nexus</h4>
+                                <div class="doc-badges">
+                                    <span class="doc-priority high">ESSENTIAL</span>
+                                    <span class="doc-type">Onboarding</span>
+                                </div>
+                            </div>
+                            <div class="doc-description">Complete guide to getting started and understanding our culture</div>
+                            <div class="doc-meta">
+                                <div class="doc-info">
+                                    <span class="doc-author">👤 HR Team</span>
+                                    <span class="doc-modified">🕒 Personalized for you</span>
+                                    <span class="doc-size">📖 10 min read</span>
+                                </div>
+                                <div class="doc-actions">
+                                    <button class="doc-action-btn view-btn">👋 Start Here</button>
+                                    <button class="doc-action-btn download-btn">📱 Keep Handy</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Right: Team Status & System Info -->
+            <aside class="system-observer-panel">
+                <h3>👥 Team Presence</h3>
+                <div style="margin: 15px 0;">
+                    <div style="margin: 10px 0; padding: 10px; background: rgba(40, 167, 69, 0.1); border-radius: 8px;">
+                        <div>👩‍💼 Sarah Kim - Tech Lead</div>
+                        <div style="font-size: 0.8em; color: #28a745;">🟢 Available • Working on Phoenix</div>
+                    </div>
+                    <div style="margin: 10px 0; padding: 10px; background: rgba(255, 193, 7, 0.1); border-radius: 8px;">
+                        <div>👨‍💻 Mike Rodriguez - Senior Dev</div>
+                        <div style="font-size: 0.8em; color: #ffc107;">🟡 In meeting until 10:30</div>
+                    </div>
+                    <div style="margin: 10px 0; padding: 10px; background: rgba(40, 167, 69, 0.1); border-radius: 8px;">
+                        <div>👩‍🎨 Lisa Park - UX Designer</div>
+                        <div style="font-size: 0.8em; color: #28a745;">🟢 Free for coffee chat</div>
+                    </div>
+                </div>
+
+                <h4>📡 System Intelligence</h4>
+                <div style="background: rgba(255,255,255,0.9); padding: 15px; border-radius: 10px; margin-top: 10px;">
+                    <div style="font-size: 0.9em; margin: 5px 0;">
+                        🧠 AI Confidence: <span id="ai-confidence">94%</span>
+                    </div>
+                    <div style="font-size: 0.9em; margin: 5px 0;">
+                        ⚡ System Load: <span id="system-load">23%</span>
+                    </div>
+                    <div style="font-size: 0.9em; margin: 5px 0;">
+                        🔄 Active Plugins: <span id="active-plugins">4</span>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer with Instructions -->
+        <footer class="office-footer">
+            <div class="demo-info">
+                <h4>🌟 Welcome to the Future of Intranets</h4>
+                <p><strong>Press Ctrl+K</strong> to experience the AI-powered command interface. Watch the Project Constellation show real-time autonomous communication between intelligent agents.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { voidCore } from '../src/voidcore.js';
+        import { Message } from '../src/message.js';
+
+        console.log('🌟 Dream Intranet - Next Generation AI-Powered Workspace');
+
+        // Command Bar System
+        class LivingCommandBar {
+            constructor() {
+                this.isOpen = false;
+                this.suggestions = [];
+                this.selectedIndex = 0;
+                this.setupEventListeners();
+                this.setupProactiveSuggestions();
+            }
+
+            setupEventListeners() {
+                // Global shortcut: Ctrl+K
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'k') {
+                        e.preventDefault();
+                        this.toggle();
+                    }
+                    
+                    if (this.isOpen) {
+                        if (e.key === 'Escape') {
+                            this.close();
+                        } else if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            this.selectNext();
+                        } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            this.selectPrevious();
+                        } else if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.executeSelected();
+                        }
+                    }
+                });
+
+                // Click outside to close
+                document.getElementById('command-bar-overlay').addEventListener('click', (e) => {
+                    if (e.target.id === 'command-bar-overlay') {
+                        this.close();
+                    }
+                });
+
+                // Input handling
+                document.getElementById('command-input').addEventListener('input', (e) => {
+                    this.updateSuggestions(e.target.value);
+                });
+            }
+
+            setupProactiveSuggestions() {
+                // Simulate proactive suggestions
+                setTimeout(() => {
+                    this.showAISuggestion("I noticed you haven't checked Project Phoenix updates today. Would you like a summary?", () => {
+                        this.executeCommand("summarize project phoenix");
+                    });
+                }, 10000);
+
+                setTimeout(() => {
+                    this.showAISuggestion("Your team lead Sarah is available now. Want to schedule a quick sync?", () => {
+                        this.executeCommand("schedule meeting sarah");
+                    });
+                }, 25000);
+            }
+
+            toggle() {
+                if (this.isOpen) {
+                    this.close();
+                } else {
+                    this.open();
+                }
+            }
+
+            open() {
+                this.isOpen = true;
+                document.getElementById('command-bar-overlay').style.display = 'block';
+                document.getElementById('command-input').focus();
+                this.updateSuggestions('');
+                
+                // Add message echo effect
+                constellation.addUserPulse();
+            }
+
+            close() {
+                this.isOpen = false;
+                document.getElementById('command-bar-overlay').style.display = 'none';
+                document.getElementById('command-input').value = '';
+            }
+
+            updateSuggestions(query) {
+                const baseSuggestions = [
+                    { icon: '🚀', text: 'What\'s Project Phoenix?', command: 'project phoenix info' },
+                    { icon: '👥', text: 'Who\'s working on authentication?', command: 'team auth' },
+                    { icon: '📊', text: 'Show my dashboard', command: 'dashboard' },
+                    { icon: '📅', text: 'What\'s my schedule today?', command: 'schedule today' },
+                    { icon: '🔍', text: 'Find urgent documents', command: 'docs urgent' },
+                    { icon: '💬', text: 'Connect me with my team', command: 'team connect' },
+                    { icon: '📈', text: 'System performance metrics', command: 'metrics system' },
+                    { icon: '🎯', text: 'What should I focus on?', command: 'focus today' }
+                ];
+
+                if (query.length === 0) {
+                    this.suggestions = baseSuggestions.slice(0, 6);
+                } else {
+                    this.suggestions = baseSuggestions.filter(s => 
+                        s.text.toLowerCase().includes(query.toLowerCase()) ||
+                        s.command.toLowerCase().includes(query.toLowerCase())
+                    );
+                }
+
+                this.selectedIndex = 0;
+                this.renderSuggestions();
+            }
+
+            renderSuggestions() {
+                const container = document.getElementById('command-suggestions');
+                container.innerHTML = this.suggestions.map((suggestion, index) => `
+                    <div class="suggestion-item ${index === this.selectedIndex ? 'selected' : ''}" 
+                         data-index="${index}">
+                        <span class="suggestion-icon">${suggestion.icon}</span>
+                        ${suggestion.text}
+                    </div>
+                `).join('');
+
+                // Add click handlers
+                container.querySelectorAll('.suggestion-item').forEach((item, index) => {
+                    item.addEventListener('click', () => {
+                        this.selectedIndex = index;
+                        this.executeSelected();
+                    });
+                });
+            }
+
+            selectNext() {
+                this.selectedIndex = (this.selectedIndex + 1) % this.suggestions.length;
+                this.renderSuggestions();
+            }
+
+            selectPrevious() {
+                this.selectedIndex = (this.selectedIndex - 1 + this.suggestions.length) % this.suggestions.length;
+                this.renderSuggestions();
+            }
+
+            executeSelected() {
+                if (this.suggestions[this.selectedIndex]) {
+                    this.executeCommand(this.suggestions[this.selectedIndex].command);
+                }
+            }
+
+            async executeCommand(command) {
+                console.log('🎯 Executing command:', command);
+                this.close();
+
+                // Show processing in constellation
+                constellation.addCommandPulse();
+
+                // Map commands to VoidCore messages
+                if (command.includes('project phoenix')) {
+                    await this.handleProjectPhoenixQuery();
+                } else if (command.includes('team')) {
+                    await this.handleTeamQuery();
+                } else if (command.includes('docs')) {
+                    await this.handleDocumentQuery();
+                } else {
+                    // Default response
+                    this.showAISuggestion(`Processing: "${command}". This would trigger the appropriate VoidCore agents.`, null, 3000);
+                }
+            }
+
+            async handleProjectPhoenixQuery() {
+                // Trigger VoidCore message
+                const intent = Message.intent('system', 'project.query', {
+                    project: 'Phoenix',
+                    priority: 'high',
+                    requester: 'Command Bar'
+                }).withSource('LivingCommandBar');
+
+                await voidCore.publish(intent);
+                
+                // Show immediate response
+                this.showAISuggestion("🚀 Found Project Phoenix information! Check the highlighted documents.", null, 4000);
+            }
+
+            async handleTeamQuery() {
+                const intent = Message.intent('system', 'team.status_check', {
+                    department: 'Engineering',
+                    scope: 'current_activity'
+                }).withSource('LivingCommandBar');
+
+                await voidCore.publish(intent);
+                this.showAISuggestion("👥 Your team status is updated! Sarah is available for questions.", null, 4000);
+            }
+
+            async handleDocumentQuery() {
+                const intent = Message.intent('system', 'document.urgent_search', {
+                    priority: 'urgent',
+                    days: 7
+                }).withSource('LivingCommandBar');
+
+                await voidCore.publish(intent);
+                this.showAISuggestion("📚 Found urgent documents that need your attention!", null, 4000);
+            }
+
+            showAISuggestion(message, action, duration = 8000) {
+                intentCards.addCard({
+                    title: "🤖 AI Assistant",
+                    message: message,
+                    action: action,
+                    duration: duration
+                });
+            }
+        }
+
+        // Project Constellation Visualization
+        class ProjectConstellation {
+            constructor() {
+                this.canvas = document.getElementById('constellation-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.nodes = [];
+                this.connections = [];
+                this.particles = [];
+                this.messageCount = 0;
+                
+                this.setupCanvas();
+                this.createNodes();
+                this.startAnimation();
+            }
+
+            setupCanvas() {
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+
+            resizeCanvas() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+            }
+
+            createNodes() {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                const radius = Math.min(this.canvas.width, this.canvas.height) * 0.3;
+
+                this.nodes = [
+                    { id: 'user', x: centerX, y: centerY - radius, color: '#ff4757', label: 'You', pulsing: false },
+                    { id: 'ai', x: centerX + radius * 0.8, y: centerY - radius * 0.3, color: '#2ed573', label: 'AI Assistant', pulsing: false },
+                    { id: 'docs', x: centerX + radius * 0.3, y: centerY + radius * 0.8, color: '#3742fa', label: 'Doc Manager', pulsing: false },
+                    { id: 'system', x: centerX - radius * 0.8, y: centerY + radius * 0.2, color: '#ffa502', label: 'System Observer', pulsing: false }
+                ];
+
+                this.connections = [
+                    { from: 'user', to: 'ai' },
+                    { from: 'ai', to: 'docs' },
+                    { from: 'ai', to: 'system' },
+                    { from: 'docs', to: 'system' }
+                ];
+            }
+
+            startAnimation() {
+                const animate = () => {
+                    this.update();
+                    this.render();
+                    requestAnimationFrame(animate);
+                };
+                animate();
+            }
+
+            update() {
+                // Update particles
+                this.particles = this.particles.filter(particle => {
+                    particle.progress += particle.speed;
+                    return particle.progress <= 1;
+                });
+
+                // Update node pulsing
+                this.nodes.forEach(node => {
+                    if (node.pulsing) {
+                        node.pulseTime = (node.pulseTime || 0) + 0.1;
+                        if (node.pulseTime > Math.PI * 2) {
+                            node.pulsing = false;
+                            node.pulseTime = 0;
+                        }
+                    }
+                });
+            }
+
+            render() {
+                // Clear canvas
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw connections
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = 2;
+                this.connections.forEach(conn => {
+                    const fromNode = this.nodes.find(n => n.id === conn.from);
+                    const toNode = this.nodes.find(n => n.id === conn.to);
+                    
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(fromNode.x, fromNode.y);
+                    this.ctx.lineTo(toNode.x, toNode.y);
+                    this.ctx.stroke();
+                });
+
+                // Draw particles
+                this.particles.forEach(particle => {
+                    const fromNode = this.nodes.find(n => n.id === particle.from);
+                    const toNode = this.nodes.find(n => n.id === particle.to);
+                    
+                    const x = fromNode.x + (toNode.x - fromNode.x) * particle.progress;
+                    const y = fromNode.y + (toNode.y - fromNode.y) * particle.progress;
+                    
+                    this.ctx.fillStyle = particle.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Trail effect
+                    this.ctx.shadowBlur = 10;
+                    this.ctx.shadowColor = particle.color;
+                });
+
+                // Draw nodes
+                this.nodes.forEach(node => {
+                    const pulseScale = node.pulsing ? 1 + Math.sin(node.pulseTime) * 0.3 : 1;
+                    const radius = 25 * pulseScale;
+                    
+                    this.ctx.fillStyle = node.color;
+                    this.ctx.shadowBlur = node.pulsing ? 20 : 10;
+                    this.ctx.shadowColor = node.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    // Label
+                    this.ctx.fillStyle = '#fff';
+                    this.ctx.font = '12px monospace';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.shadowBlur = 0;
+                    this.ctx.fillText(node.label, node.x, node.y + radius + 20);
+                });
+            }
+
+            addUserPulse() {
+                const userNode = this.nodes.find(n => n.id === 'user');
+                userNode.pulsing = true;
+                userNode.pulseTime = 0;
+            }
+
+            addCommandPulse() {
+                this.messageCount++;
+                document.getElementById('message-count').textContent = this.messageCount;
+
+                // User -> AI
+                this.addParticle('user', 'ai', '#00ff00');
+                
+                setTimeout(() => {
+                    // AI -> Docs
+                    this.addParticle('ai', 'docs', '#00ffff');
+                    this.pulseNode('ai');
+                }, 500);
+                
+                setTimeout(() => {
+                    // AI -> System
+                    this.addParticle('ai', 'system', '#ffff00');
+                    this.pulseNode('docs');
+                }, 800);
+                
+                setTimeout(() => {
+                    // System -> AI (response)
+                    this.addParticle('system', 'ai', '#ff00ff');
+                    this.pulseNode('system');
+                }, 1200);
+                
+                setTimeout(() => {
+                    // AI -> User (final response)
+                    this.addParticle('ai', 'user', '#00ff00');
+                    this.pulseNode('ai');
+                }, 1500);
+            }
+
+            addParticle(from, to, color) {
+                this.particles.push({
+                    from: from,
+                    to: to,
+                    color: color,
+                    progress: 0,
+                    speed: 0.02
+                });
+            }
+
+            pulseNode(nodeId) {
+                const node = this.nodes.find(n => n.id === nodeId);
+                if (node) {
+                    node.pulsing = true;
+                    node.pulseTime = 0;
+                }
+            }
+        }
+
+        // Intent Cards System
+        class IntentCardsManager {
+            constructor() {
+                this.cards = [];
+                this.container = document.getElementById('intent-cards');
+            }
+
+            addCard({ title, message, action, duration = 8000 }) {
+                const cardId = Date.now();
+                const card = {
+                    id: cardId,
+                    title,
+                    message,
+                    action,
+                    duration
+                };
+
+                this.cards.push(card);
+                this.renderCard(card);
+
+                // Auto-remove after duration
+                setTimeout(() => {
+                    this.removeCard(cardId);
+                }, duration);
+            }
+
+            renderCard(card) {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'intent-card';
+                cardElement.dataset.cardId = card.id;
+                
+                cardElement.innerHTML = `
+                    <div class="intent-card-header">
+                        <div class="intent-card-title">${card.title}</div>
+                        <button class="intent-card-close">✕</button>
+                    </div>
+                    <div class="intent-card-message">${card.message}</div>
+                    ${card.action ? `
+                        <div class="intent-card-actions">
+                            <button class="intent-action-btn primary-action">Yes, do it</button>
+                            <button class="intent-action-btn secondary-action">Not now</button>
+                        </div>
+                    ` : ''}
+                `;
+
+                // Event listeners
+                cardElement.querySelector('.intent-card-close').addEventListener('click', () => {
+                    this.removeCard(card.id);
+                });
+
+                if (card.action) {
+                    cardElement.querySelector('.primary-action').addEventListener('click', () => {
+                        card.action();
+                        this.removeCard(card.id);
+                    });
+
+                    cardElement.querySelector('.secondary-action').addEventListener('click', () => {
+                        this.removeCard(card.id);
+                    });
+                }
+
+                this.container.appendChild(cardElement);
+            }
+
+            removeCard(cardId) {
+                const cardElement = this.container.querySelector(`[data-card-id="${cardId}"]`);
+                if (cardElement) {
+                    cardElement.style.animation = 'slideInRight 0.3s ease-out reverse';
+                    setTimeout(() => {
+                        cardElement.remove();
+                    }, 300);
+                }
+
+                this.cards = this.cards.filter(card => card.id !== cardId);
+            }
+        }
+
+        // Document Intelligence System
+        class SmartDocumentManager {
+            constructor() {
+                this.setupSubscriptions();
+            }
+
+            setupSubscriptions() {
+                voidCore.subscribe('project.query', (msg) => this.handleProjectQuery(msg));
+                voidCore.subscribe('team.status_check', (msg) => this.handleTeamCheck(msg));
+                voidCore.subscribe('document.urgent_search', (msg) => this.handleUrgentSearch(msg));
+            }
+
+            handleProjectQuery(message) {
+                console.log('📥 Smart Doc Manager: Received project query');
+                
+                // Highlight Phoenix document
+                const phoenixDoc = document.querySelector('[data-id="phoenix-spec"]');
+                if (phoenixDoc) {
+                    this.highlightDocument(phoenixDoc, '#4a90e2', '🚀 AI Recommended');
+                }
+
+                // Update system metrics
+                this.updateMetric('ai-confidence', '97%');
+                
+                // Show constellation activity
+                constellation.addCommandPulse();
+            }
+
+            handleTeamCheck(message) {
+                console.log('📥 Smart Doc Manager: Received team check');
+                
+                // Highlight onboarding guide
+                const onboardingDoc = document.querySelector('[data-id="onboarding-guide"]');
+                if (onboardingDoc) {
+                    this.highlightDocument(onboardingDoc, '#28a745', '👥 Team Focused');
+                }
+            }
+
+            handleUrgentSearch(message) {
+                console.log('📥 Smart Doc Manager: Received urgent search');
+                
+                // Highlight all high priority documents
+                document.querySelectorAll('.doc-item').forEach(doc => {
+                    const priority = doc.querySelector('.doc-priority');
+                    if (priority && priority.textContent.includes('ESSENTIAL')) {
+                        this.highlightDocument(doc, '#dc3545', '🚨 Urgent');
+                    }
+                });
+            }
+
+            highlightDocument(docElement, color, badge) {
+                // Visual highlight
+                docElement.style.animation = 'pulse 2s ease-out';
+                docElement.style.border = `3px solid ${color}`;
+                docElement.style.backgroundColor = `${color}15`;
+                
+                // Add AI badge
+                const title = docElement.querySelector('.doc-title');
+                if (!title.querySelector('.ai-badge')) {
+                    const badgeElement = document.createElement('span');
+                    badgeElement.className = 'ai-badge';
+                    badgeElement.style.cssText = `
+                        background: ${color}; color: white; padding: 4px 8px; 
+                        border-radius: 12px; font-size: 0.8em; margin-left: 10px;
+                    `;
+                    badgeElement.textContent = badge;
+                    title.appendChild(badgeElement);
+                }
+
+                // Remove highlight after animation
+                setTimeout(() => {
+                    docElement.style.animation = '';
+                    docElement.style.border = '';
+                    docElement.style.backgroundColor = '';
+                }, 3000);
+            }
+
+            updateMetric(id, value) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                    element.parentElement.style.animation = 'pulse 1s ease-out';
+                }
+            }
+        }
+
+        // Initialize all systems
+        const commandBar = new LivingCommandBar();
+        const constellation = new ProjectConstellation();
+        const intentCards = new IntentCardsManager();
+        const smartDocs = new SmartDocumentManager();
+
+        // Set up AI status indicator
+        document.getElementById('ai-status').addEventListener('click', () => {
+            commandBar.open();
+        });
+
+        // Simulate AI suggestions
+        setTimeout(() => {
+            document.getElementById('ai-status').classList.add('has-suggestion');
+            document.getElementById('ai-status').textContent = '🤖 AI has suggestions';
+        }, 8000);
+
+        // Quick action button
+        document.getElementById('phoenix-btn').addEventListener('click', async () => {
+            const intent = Message.intent('system', 'project.query', {
+                project: 'Phoenix',
+                priority: 'high',
+                requester: 'Quick Action'
+            }).withSource('DreamIntranet');
+
+            await voidCore.publish(intent);
+        });
+
+        // Welcome message
+        setTimeout(() => {
+            intentCards.addCard({
+                title: "🎉 Welcome to the Future",
+                message: "This is VoidCore Network - an intelligent intranet that learns and adapts. Try pressing Ctrl+K to experience the AI command interface!",
+                duration: 10000
+            });
+        }, 2000);
+
+        console.log('🌟 Dream Intranet fully loaded! Press Ctrl+K to begin.');
+    </script>
+</body>
+</html>

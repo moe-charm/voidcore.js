@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoidCore Network Office - Revolutionary Intranet</title>
+    <link rel="stylesheet" href="./css/office-intranet.css">
+</head>
+<body>
+    <div class="office-container">
+        <!-- Header -->
+        <header class="office-header">
+            <div class="company-logo">
+                <span class="logo-icon">🌟</span>
+                <h1>Nexus Corporation</h1>
+                <span class="powered-by">Powered by VoidCore Network v11.0</span>
+            </div>
+            <div class="welcome-user">
+                <span class="user-icon">👋</span>
+                <span>Welcome, Alex Chen (New Employee)</span>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="office-layout">
+            <!-- Left Sidebar: Intent Launcher -->
+            <aside class="intent-launcher-panel">
+                <h3>🎯 Quick Actions</h3>
+                <div id="intent-launcher-container"></div>
+            </aside>
+
+            <!-- Center Content Area -->
+            <main class="main-content">
+                <!-- Bulletin Board -->
+                <section class="bulletin-section">
+                    <h3>📢 Company Updates</h3>
+                    <div id="bulletin-board-container"></div>
+                </section>
+
+                <!-- Document Feed -->
+                <section class="doc-feed-section">
+                    <h3>📄 Recent Documents</h3>
+                    <div id="doc-feed-container"></div>
+                </section>
+
+                <!-- Chat Notifications -->
+                <section class="chat-section">
+                    <h3>💬 Team Communications</h3>
+                    <div id="chat-notifier-container"></div>
+                </section>
+            </main>
+
+            <!-- Right Sidebar: System Observer -->
+            <aside class="system-observer-panel">
+                <h3>🔍 System Activity</h3>
+                <div class="observer-description">
+                    <p>Watch how plugins communicate through VoidCore Network</p>
+                </div>
+                <div id="system-observer-container"></div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="office-footer">
+            <div class="demo-info">
+                <h4>🚀 VoidCore Network Demo</h4>
+                <p>This intranet demonstrates autonomous plugin architecture where each component operates independently and communicates through Intent/Notice/Proposal messages.</p>
+            </div>
+            <div class="scenario-guide">
+                <h4>📝 Try This Scenario:</h4>
+                <ol>
+                    <li>Click "🔍 Get Project Phoenix Info" to see autonomous plugin collaboration</li>
+                    <li>Watch the System Observer visualize message flow</li>
+                    <li>Notice how plugins react without knowing about each other</li>
+                </ol>
+            </div>
+        </footer>
+    </div>
+
+    <!-- VoidCore Network Core -->
+    <script type="module" src="../src/core.js"></script>
+    <script type="module" src="../src/voidcore.js"></script>
+    <script type="module" src="../src/message.js"></script>
+    <script type="module" src="../src/autonomous_plugin.js"></script>
+    
+    <!-- Office Plugins -->
+    <script type="module" src="./js/office-plugins/system-observer.js"></script>
+    <script type="module" src="./js/office-plugins/bulletin-board.js"></script>
+    <script type="module" src="./js/office-plugins/intent-launcher.js"></script>
+    <script type="module" src="./js/office-plugins/chat-notifier.js"></script>
+    <script type="module" src="./js/office-plugins/doc-feed.js"></script>
+    
+    
+    <!-- Main Office Application -->
+    <script type="module" src="./js/office-main.js"></script>
+</body>
+</html>

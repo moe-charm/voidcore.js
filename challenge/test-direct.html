@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct DocFeed Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-container { border: 2px solid #4a90e2; padding: 20px; margin: 10px 0; }
+        button { padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #doc-feed-container { border: 1px solid #ccc; padding: 20px; margin: 20px 0; min-height: 200px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Direct DocFeed Test</h1>
+    
+    <div class="test-container">
+        <h2>📄 Document Feed Test</h2>
+        <div id="doc-feed-container"></div>
+        <button id="test-intent">🔍 Test Project Phoenix Intent</button>
+    </div>
+
+    <!-- VoidCore Network Core -->
+    <script type="module" src="../src/core.js"></script>
+    <script type="module" src="../src/voidcore.js"></script>
+    <script type="module" src="../src/message.js"></script>
+    <script type="module" src="../src/autonomous_plugin.js"></script>
+    
+    <!-- Doc Feed Plugin -->
+    <script type="module" src="./js/office-plugins/doc-feed.js"></script>
+    
+    <!-- Direct Test Script -->
+    <script type="module">
+        import { voidCore } from '../src/voidcore.js';
+        import { Message } from '../src/message.js';
+        import { DocFeedPlugin } from './js/office-plugins/doc-feed.js';
+
+        console.log('🧪 Starting direct DocFeed test...');
+
+        // Initialize DocFeed directly
+        const docFeed = new DocFeedPlugin();
+        
+        // Start the plugin
+        try {
+            console.log('📄 Starting DocFeed...');
+            await docFeed.start();
+            console.log('✅ DocFeed started successfully!');
+            
+            // Test intent publishing
+            document.getElementById('test-intent').addEventListener('click', async () => {
+                console.log('🔍 Publishing project.query intent...');
+                
+                const intent = Message.intent('system', 'project.query', {
+                    project: 'Phoenix',
+                    priority: 'high',
+                    requester: 'Direct Test'
+                }).withSource('DirectTest');
+                
+                await voidCore.publish(intent);
+                console.log('✅ Intent published!');
+            });
+            
+        } catch (error) {
+            console.error('❌ DocFeed initialization failed:', error);
+        }
+    </script>
+</body>
+</html>
