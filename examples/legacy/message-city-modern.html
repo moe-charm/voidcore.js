@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏙️ Message City - VoidCore v13.0 Modern</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #4a90e2;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        #demo-container {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: #87CEEB;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* City Layout */
+        .city-ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 350px;
+            background: linear-gradient(to bottom, #90EE90 0%, #7FDD7F 100%);
+            border-top: 3px solid #4682b4;
+        }
+        .road-horizontal {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 80px;
+            background: linear-gradient(to bottom, #555 0%, #777 50%, #555 100%);
+            transform: translateY(-50%);
+            border-top: 3px solid #333;
+            border-bottom: 3px solid #333;
+        }
+        .road-vertical {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 80px;
+            background: linear-gradient(to right, #555 0%, #777 50%, #555 100%);
+            transform: translateX(-50%);
+            border-left: 3px solid #333;
+            border-right: 3px solid #333;
+        }
+        .intersection {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 80px;
+            height: 80px;
+            background: #666;
+            transform: translate(-50%, -50%);
+            border: 3px solid #333;
+        }
+        
+        /* Traffic Light */
+        .traffic-light-post {
+            position: absolute;
+            left: 45%;
+            top: 35%;
+            width: 30px;
+            height: 100px;
+            background: #333;
+            border-radius: 15px;
+            border: 2px solid #000;
+            z-index: 15;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 8px;
+        }
+        .traffic-light {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid #000;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+        .light-red { background: #330000; }
+        .light-red.active { background: #ff0000; box-shadow: 0 0 15px #ff0000; }
+        .light-yellow { background: #332200; }
+        .light-yellow.active { background: #ffff00; box-shadow: 0 0 15px #ffff00; }
+        .light-green { background: #003300; }
+        .light-green.active { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
+        
+        /* Vehicles */
+        .vehicle {
+            position: absolute;
+            width: 50px;
+            height: 25px;
+            border-radius: 8px;
+            border: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            z-index: 10;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .vehicle.red-car { background: #ff4444; }
+        .vehicle.blue-car { background: #4444ff; }
+        .vehicle.yielding { background: #ffaa00; border-color: #ff6600; }
+        .vehicle.stopped { filter: brightness(0.7); }
+        
+        /* Pedestrians */
+        .pedestrian {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            z-index: 12;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .pedestrian.ped1 { background: #ffaa00; }
+        .pedestrian.ped2 { background: #aa00ff; }
+        .pedestrian.waiting { animation: bounce 2s infinite; }
+        .pedestrian.crossing { filter: brightness(1.2); }
+        
+        /* Emergency Vehicle */
+        .emergency-vehicle {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            background: #ff0000;
+            border-radius: 8px;
+            border: 3px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 20;
+            transition: all 0.1s ease;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+            opacity: 0;
+        }
+        .emergency-vehicle.active {
+            opacity: 1;
+            animation: siren 0.6s infinite;
+        }
+        
+        /* Message Log */
+        .message-log {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 380px;
+            height: 180px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #4682b4;
+            border-radius: 10px;
+            padding: 10px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 10px;
+            line-height: 1.2;
+            overflow-y: auto;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            z-index: 25;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .log-entry {
+            /* Simplified CSS to prevent rendering artifacts */
+            display: block;
+            font-family: monospace;
+            font-size: 10px;
+            line-height: 1.2;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* City Info Panel */
+        .city-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 280px;
+            background: rgba(70, 130, 180, 0.9);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            z-index: 25;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .city-info h3 {
+            margin: 0 0 8px 0;
+            color: #87ceeb;
+            font-size: 14px;
+        }
+        
+        /* Controls */
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #357abd;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        
+        /* Animations */
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-5px); }
+            60% { transform: translateY(-3px); }
+        }
+        @keyframes siren {
+            0% { background: #ff0000; color: white; }
+            50% { background: #ffffff; color: #ff0000; }
+            100% { background: #ff0000; color: white; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="./index.html" class="back-link">← Back to Demo Index</a>
+        <h1>🏙️ Message City (VoidCore v13.0)</h1>
+        <p>Watch autonomous agents communicate and coordinate in real-time!</p>
+    </div>
+
+    <div id="demo-container">
+        <div class="city-ground">
+            <div class="road-horizontal"></div>
+            <div class="road-vertical"></div>
+            <div class="intersection">
+                <div class="traffic-light-post">
+                    <div class="traffic-light light-red" id="red-light"></div>
+                    <div class="traffic-light light-yellow" id="yellow-light"></div>
+                    <div class="traffic-light light-green active" id="green-light"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="message-log" id="message-log">
+            <div id="log-header" class="log-header" style="color: #4682b4; font-weight: bold; text-align: center; margin-bottom: 5px; padding: 2px; border-bottom: 1px solid #4682b4; font-size: 11px;">
+                VoidCore v13.0 Messages
+            </div>
+        </div>
+        
+        <div class="city-info">
+            <h3>🌟 Message City v13.0</h3>
+            <div style="line-height: 1.4;">
+                <strong>🚀 VoidCore v13.0 Features:</strong><br>
+                • Multi-channel message routing<br>
+                • Transport Adapter architecture<br>
+                • Intent/Notice/Proposal patterns<br>
+                • Real-time agent coordination<br><br>
+                
+                <strong>🎯 Autonomous Agents:</strong><br>
+                • Traffic Light Controller<br>
+                • 2 Smart Vehicles (Red/Blue)<br>
+                • 2 AI Pedestrians<br>
+                • Emergency Response System<br><br>
+                
+                <strong>💡 Watch the messages!</strong><br>
+                Every action is coordinated through<br>
+                pure message passing - no direct calls!
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="spawnVehicle()">🚗 Spawn Vehicle</button>
+        <button onclick="spawnPedestrian()">🚶 Spawn Pedestrian</button>
+        <button onclick="triggerEmergency()">🚨 Emergency!</button>
+        <button onclick="toggleTrafficManual()">🚦 Manual Override</button>
+        <button onclick="clearCity()">🧹 Clear City</button>
+    </div>
+
+    <script type="module">
+        import { voidCore } from '../../src/voidcore.js';
+        import { Message } from '../../src/message.js';
+
+        // City state
+        let cityState = {
+            trafficLight: 'green', // Start with green for easier testing
+            vehicles: new Map(),
+            pedestrians: new Map(),
+            emergencyActive: false,
+            manualTrafficMode: false,
+            nextVehicleId: 1,
+            nextPedestrianId: 1
+        };
+
+        // DOM elements
+        const container = document.getElementById('demo-container');
+        const messageLog = document.getElementById('message-log');
+        const redLight = document.getElementById('red-light');
+        const yellowLight = document.getElementById('yellow-light');
+        const greenLight = document.getElementById('green-light');
+
+        // Initialize Message City
+        async function initializeCity() {
+            console.log('🏙️ Initializing Message City with VoidCore v13.0...');
+            
+            // Set up message subscriptions
+            setupMessageHandlers();
+            
+            // Start traffic light system
+            startTrafficLightSystem();
+            
+            // Create initial city population with better spacing
+            setTimeout(async () => {
+                logMessage('system', '🚗 Spawning initial vehicles...');
+                await spawnVehicle('red');
+                setTimeout(async () => {
+                    await spawnVehicle('blue');
+                    logMessage('system', '🚶 Spawning initial pedestrians...');
+                    setTimeout(() => spawnPedestrian(), 1000);
+                    setTimeout(() => spawnPedestrian(), 3000);
+                }, 4000); // Increased from 2000 to 4000ms spacing
+            }, 1000);
+            
+            logMessage('system', '🏙️ Message City initialized successfully!');
+        }
+
+        // Message handling system
+        function setupMessageHandlers() {
+            console.log('🔧 Setting up message handlers...');
+            
+            // Traffic light messages
+            voidCore.subscribe('traffic.light.changed', handleTrafficLightChange);
+            voidCore.subscribe('traffic.light.request', handleTrafficLightRequest);
+            
+            // Vehicle messages
+            voidCore.subscribe('vehicle.spawn.request', handleVehicleSpawnRequest);
+            voidCore.subscribe('vehicle.position.update', handleVehiclePositionUpdate);
+            voidCore.subscribe('vehicle.stopped', handleVehicleStopped);
+            voidCore.subscribe('vehicle.collision.detected', handleVehicleCollision);
+            
+            // Pedestrian messages  
+            voidCore.subscribe('pedestrian.spawn.request', handlePedestrianSpawnRequest);
+            voidCore.subscribe('pedestrian.crossing.request', handlePedestrianCrossingRequest);
+            voidCore.subscribe('pedestrian.crossing.started', handlePedestrianCrossingStarted);
+            voidCore.subscribe('pedestrian.crossing.completed', handlePedestrianCrossingCompleted);
+            
+            // Emergency messages
+            voidCore.subscribe('emergency.activated', handleEmergencyActivated);
+            voidCore.subscribe('emergency.vehicle.approaching', handleEmergencyVehicleApproaching);
+            voidCore.subscribe('emergency.cleared', handleEmergencyCleared);
+            
+            console.log('✅ All message handlers registered');
+        }
+
+        // === TRAFFIC LIGHT SYSTEM ===
+        async function startTrafficLightSystem() {
+            // Start automatic traffic light cycle
+            setInterval(async () => {
+                if (!cityState.emergencyActive && !cityState.manualTrafficMode) {
+                    await cycleTrafficLight();
+                }
+            }, 6000); // 6 second cycles
+        }
+
+        async function cycleTrafficLight() {
+            const currentLight = cityState.trafficLight;
+            let nextLight;
+            
+            switch(currentLight) {
+                case 'red':
+                    nextLight = 'green';
+                    break;
+                case 'green':
+                    nextLight = 'yellow';
+                    break;
+                case 'yellow':
+                    nextLight = 'red';
+                    break;
+                default:
+                    nextLight = 'red';
+            }
+            
+            cityState.trafficLight = nextLight;
+            updateTrafficLightVisual(nextLight);
+            
+            await voidCore.publish(Message.notice('traffic.light.changed', {
+                previousColor: currentLight,
+                newColor: nextLight,
+                intersection: 'main',
+                automatic: true,
+                timestamp: Date.now()
+            }));
+        }
+
+        function updateTrafficLightVisual(color) {
+            redLight.classList.toggle('active', color === 'red');
+            yellowLight.classList.toggle('active', color === 'yellow');
+            greenLight.classList.toggle('active', color === 'green');
+        }
+
+        async function handleTrafficLightChange(msg) {
+            const { newColor, automatic } = msg.payload;
+            logMessage('traffic', `🚦 Traffic light: ${newColor.toUpperCase()} ${automatic ? '(auto)' : '(manual)'}`);
+            
+            // Notify all vehicles about traffic change
+            await voidCore.publish(Message.notice('traffic.state.broadcast', {
+                lightColor: newColor,
+                intersection: 'main',
+                timestamp: Date.now()
+            }));
+        }
+
+        async function handleTrafficLightRequest(msg) {
+            const { requestedColor, requester, reason } = msg.payload;
+            logMessage('traffic', `🚦 Light change requested: ${requestedColor} by ${requester} (${reason})`);
+            
+            if (requester === 'emergency') {
+                cityState.trafficLight = requestedColor;
+                updateTrafficLightVisual(requestedColor);
+                
+                await voidCore.publish(Message.notice('traffic.light.changed', {
+                    previousColor: cityState.trafficLight,
+                    newColor: requestedColor,
+                    intersection: 'main',
+                    emergency: true,
+                    timestamp: Date.now()
+                }));
+            }
+        }
+
+        // HTML escape function
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Message logging system - simplified to prevent rendering artifacts
+        function logMessage(type, message) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            
+            // Clean message text
+            const cleanMessage = String(message).replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+            const truncatedMessage = cleanMessage.length > 45 ? 
+                cleanMessage.substring(0, 42) + '...' : cleanMessage;
+            
+            const timestamp = new Date().toLocaleTimeString().substring(0, 8);
+            
+            // Set text content safely
+            entry.textContent = `${timestamp}: ${truncatedMessage}`;
+            entry.title = `${new Date().toLocaleTimeString()}: ${cleanMessage}`;
+            
+            // Apply basic inline styles to avoid CSS conflicts
+            entry.style.fontSize = '10px';
+            entry.style.lineHeight = '1.3';
+            entry.style.padding = '1px 3px';
+            entry.style.margin = '1px 0';
+            entry.style.borderLeft = '2px solid #ccc';
+            entry.style.wordWrap = 'break-word';
+            entry.style.whiteSpace = 'nowrap';
+            entry.style.overflow = 'hidden';
+            entry.style.textOverflow = 'ellipsis';
+            
+            // Type-specific colors
+            if (type === 'system') entry.style.borderLeftColor = '#666';
+            else if (type === 'vehicle') entry.style.borderLeftColor = '#4444ff';
+            else if (type === 'pedestrian') entry.style.borderLeftColor = '#ff8800';
+            else if (type === 'emergency') entry.style.borderLeftColor = '#ff0000';
+            else if (type === 'traffic') entry.style.borderLeftColor = '#4682b4';
+            
+            messageLog.appendChild(entry);
+            messageLog.scrollTop = messageLog.scrollHeight;
+            
+            // Keep log manageable
+            if (messageLog.children.length > 20) {
+                const oldestMessage = messageLog.children[1];
+                if (oldestMessage && oldestMessage.id !== 'log-header') {
+                    messageLog.removeChild(oldestMessage);
+                }
+            }
+        }
+
+        // === VEHICLE SYSTEM ===
+        async function handleVehicleSpawnRequest(msg) {
+            console.log('handleVehicleSpawnRequest called with:', msg);
+            const { color, position } = msg.payload;
+            const vehicleId = `vehicle_${cityState.nextVehicleId++}`;
+            
+            const vehicle = createVehicleElement(vehicleId, color, position);
+            container.appendChild(vehicle);
+            
+            // Store vehicle data
+            cityState.vehicles.set(vehicleId, {
+                id: vehicleId,
+                color: color,
+                position: position,
+                isMoving: false,
+                speed: 2 + Math.random() * 2, // 2-4 pixels per frame
+                element: vehicle,
+                direction: 'horizontal',
+                yielding: false
+            });
+            
+            logMessage('vehicle', `🚗 Vehicle ${vehicleId} (${color}) spawned`);
+            
+            // Start vehicle AI
+            startVehicleAI(vehicleId);
+            
+            // Auto-remove vehicle after 20 seconds to prevent accumulation
+            setTimeout(async () => {
+                if (cityState.vehicles.has(vehicleId)) {
+                    await removeVehicle(vehicleId);
+                }
+            }, 20000);
+            
+            await voidCore.publish(Message.notice('vehicle.spawned', {
+                vehicleId: vehicleId,
+                color: color,
+                position: position,
+                timestamp: Date.now()
+            }));
+        }
+
+        function createVehicleElement(vehicleId, color, position) {
+            const vehicle = document.createElement('div');
+            vehicle.className = `vehicle ${color}-car`;
+            vehicle.id = vehicleId;
+            vehicle.style.left = position.x + 'px';
+            vehicle.style.bottom = position.y + 'px';
+            vehicle.innerHTML = '🚗';
+            
+            // Add collision detection
+            vehicle.addEventListener('click', () => {
+                voidCore.publish(Message.notice('vehicle.clicked', {
+                    vehicleId: vehicleId,
+                    timestamp: Date.now()
+                }));
+            });
+            
+            return vehicle;
+        }
+
+        function startVehicleAI(vehicleId) {
+            const vehicle = cityState.vehicles.get(vehicleId);
+            if (!vehicle) return;
+            
+            // Vehicle movement loop
+            const moveInterval = setInterval(async () => {
+                const vehicleData = cityState.vehicles.get(vehicleId);
+                if (!vehicleData || !vehicleData.element.parentNode) {
+                    clearInterval(moveInterval);
+                    return;
+                }
+                
+                await updateVehicleMovement(vehicleId);
+            }, 100); // 10 FPS movement
+            
+            // Store interval for cleanup
+            vehicle.moveInterval = moveInterval;
+        }
+
+        async function updateVehicleMovement(vehicleId) {
+            const vehicle = cityState.vehicles.get(vehicleId);
+            if (!vehicle) return;
+            
+            // Check if vehicle should move
+            const canMove = await shouldVehicleMove(vehicle);
+            
+            if (canMove && !vehicle.yielding) {
+                vehicle.isMoving = true;
+                vehicle.position.x += vehicle.speed;
+                vehicle.element.style.left = vehicle.position.x + 'px';
+                vehicle.element.classList.remove('stopped');
+                
+                // Check if vehicle has passed through
+                if (vehicle.position.x > window.innerWidth + 60) {
+                    await removeVehicle(vehicleId);
+                    return;
+                }
+                
+                // Publish position update less frequently to reduce log spam
+                if (Math.random() < 0.02) { // Reduced from 0.1 to 0.02
+                    await voidCore.publish(Message.notice('vehicle.position.update', {
+                        vehicleId: vehicleId,
+                        position: vehicle.position,
+                        isMoving: vehicle.isMoving,
+                        speed: vehicle.speed,
+                        timestamp: Date.now()
+                    }));
+                }
+            } else {
+                if (vehicle.isMoving) {
+                    vehicle.isMoving = false;
+                    vehicle.element.classList.add('stopped');
+                    
+                    await voidCore.publish(Message.notice('vehicle.stopped', {
+                        vehicleId: vehicleId,
+                        position: vehicle.position,
+                        reason: vehicle.yielding ? 'emergency' : 'traffic_light',
+                        timestamp: Date.now()
+                    }));
+                }
+            }
+        }
+
+        async function shouldVehicleMove(vehicle) {
+            // Don't move if yielding to emergency
+            if (vehicle.yielding) return false;
+            
+            // Don't move on red light when approaching intersection (but only when near it)
+            if (cityState.trafficLight === 'red' && vehicle.position.x < 300 && vehicle.position.x > 100) {
+                return false;
+            }
+            
+            // Check for collision with other vehicles (more relaxed)
+            for (const [otherId, otherVehicle] of cityState.vehicles) {
+                if (otherId !== vehicle.id && otherVehicle.direction === vehicle.direction) {
+                    const distance = Math.abs(otherVehicle.position.x - vehicle.position.x);
+                    if (distance < 40 && otherVehicle.position.x > vehicle.position.x) {
+                        // Another vehicle is too close ahead - only log occasionally
+                        if (Math.random() < 0.1) {
+                            await voidCore.publish(Message.notice('vehicle.collision.detected', {
+                                vehicleId: vehicle.id,
+                                nearVehicleId: otherId,
+                                distance: distance,
+                                action: 'stopped_for_safety',
+                                timestamp: Date.now()
+                            }));
+                        }
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }
+
+        async function removeVehicle(vehicleId) {
+            const vehicle = cityState.vehicles.get(vehicleId);
+            if (!vehicle) return;
+            
+            // Clear interval
+            if (vehicle.moveInterval) {
+                clearInterval(vehicle.moveInterval);
+            }
+            
+            // Remove element
+            if (vehicle.element && vehicle.element.parentNode) {
+                vehicle.element.remove();
+            }
+            
+            // Remove from state
+            cityState.vehicles.delete(vehicleId);
+            
+            logMessage('vehicle', `🚗 Vehicle ${vehicleId} left the city`);
+            
+            await voidCore.publish(Message.notice('vehicle.exited', {
+                vehicleId: vehicleId,
+                timestamp: Date.now()
+            }));
+        }
+
+        function handleVehiclePositionUpdate(msg) {
+            // Reduced logging to prevent spam
+            const { vehicleId, position, isMoving } = msg.payload;
+            // Only log major position changes
+            if (position.x % 50 < 5) { // Log every 50px movement
+                logMessage('vehicle', `🚗 ${vehicleId}: moving to (${Math.floor(position.x)}, ${Math.floor(position.y)})`);
+            }
+        }
+
+        function handleVehicleStopped(msg) {
+            const { vehicleId, reason } = msg.payload;
+            logMessage('vehicle', `🚗 ${vehicleId}: stopped (${reason})`);
+        }
+
+        function handleVehicleCollision(msg) {
+            const { vehicleId, nearVehicleId, distance } = msg.payload;
+            logMessage('vehicle', `⚠️ ${vehicleId}: collision avoided with ${nearVehicleId} (${Math.floor(distance)}px)`);
+        }
+        // === PEDESTRIAN SYSTEM ===
+        async function handlePedestrianSpawnRequest(msg) {
+            console.log('handlePedestrianSpawnRequest called with:', msg);
+            const { position } = msg.payload;
+            const pedestrianId = `pedestrian_${cityState.nextPedestrianId++}`;
+            
+            const pedestrian = createPedestrianElement(pedestrianId, position);
+            container.appendChild(pedestrian);
+            
+            // Store pedestrian data
+            cityState.pedestrians.set(pedestrianId, {
+                id: pedestrianId,
+                position: { ...position },
+                isCrossing: false,
+                waitingToCross: false,
+                element: pedestrian,
+                direction: Math.random() > 0.5 ? 'north_to_south' : 'south_to_north',
+                patience: 6 + Math.random() * 6, // 6-12 seconds patience
+                aiState: 'wandering'
+            });
+            
+            logMessage('pedestrian', `🚶 Pedestrian ${pedestrianId} spawned`);
+            
+            // Start pedestrian AI
+            startPedestrianAI(pedestrianId);
+            
+            await voidCore.publish(Message.notice('pedestrian.spawned', {
+                pedestrianId: pedestrianId,
+                position: position,
+                timestamp: Date.now()
+            }));
+        }
+
+        function createPedestrianElement(pedestrianId, position) {
+            const pedestrian = document.createElement('div');
+            pedestrian.className = `pedestrian ${cityState.nextPedestrianId % 2 === 1 ? 'ped1' : 'ped2'}`;
+            pedestrian.id = pedestrianId;
+            pedestrian.style.left = position.x + 'px';
+            pedestrian.style.bottom = position.y + 'px';
+            pedestrian.innerHTML = '🚶';
+            
+            // Add interaction
+            pedestrian.addEventListener('click', () => {
+                voidCore.publish(Message.notice('pedestrian.clicked', {
+                    pedestrianId: pedestrianId,
+                    timestamp: Date.now()
+                }));
+            });
+            
+            return pedestrian;
+        }
+
+        function startPedestrianAI(pedestrianId) {
+            const pedestrian = cityState.pedestrians.get(pedestrianId);
+            if (!pedestrian) return;
+            
+            // Pedestrian decision-making loop
+            const aiInterval = setInterval(async () => {
+                const pedData = cityState.pedestrians.get(pedestrianId);
+                if (!pedData || !pedData.element.parentNode) {
+                    clearInterval(aiInterval);
+                    return;
+                }
+                
+                await updatePedestrianAI(pedestrianId);
+            }, 1000); // Think every second
+            
+            // Store interval for cleanup
+            pedestrian.aiInterval = aiInterval;
+        }
+
+        async function updatePedestrianAI(pedestrianId) {
+            const pedestrian = cityState.pedestrians.get(pedestrianId);
+            if (!pedestrian) return;
+            
+            switch(pedestrian.aiState) {
+                case 'wandering':
+                    // Random decision to cross (less frequent)
+                    if (Math.random() < 0.1) { // Reduced from 0.3 to 0.1
+                        await requestCrossing(pedestrianId);
+                    }
+                    break;
+                    
+                case 'waiting_to_cross':
+                    pedestrian.patience -= 1;
+                    if (pedestrian.patience <= 0) {
+                        // Give up waiting
+                        pedestrian.aiState = 'wandering';
+                        pedestrian.waitingToCross = false;
+                        pedestrian.element.classList.remove('waiting');
+                        logMessage('pedestrian', `🚶 ${pedestrianId}: gave up waiting to cross`);
+                        pedestrian.patience = 5 + Math.random() * 5; // Reset patience (longer)
+                    } else if (cityState.trafficLight === 'red' && !cityState.emergencyActive) {
+                        // Safe to cross!
+                        await startCrossing(pedestrianId);
+                    }
+                    break;
+                    
+                case 'crossing':
+                    // Continue crossing animation
+                    await continueCrossing(pedestrianId);
+                    break;
+            }
+        }
+
+        async function requestCrossing(pedestrianId) {
+            const pedestrian = cityState.pedestrians.get(pedestrianId);
+            if (!pedestrian || pedestrian.isCrossing) return;
+            
+            pedestrian.aiState = 'waiting_to_cross';
+            pedestrian.waitingToCross = true;
+            pedestrian.element.classList.add('waiting');
+            
+            await voidCore.publish(Message.notice('pedestrian.crossing.request', {
+                pedestrianId: pedestrianId,
+                crosswalk: 'main',
+                reason: 'wants_to_cross',
+                timestamp: Date.now()
+            }));
+            
+            logMessage('pedestrian', `🚶 ${pedestrianId}: wants to cross the street`);
+        }
+
+        async function startCrossing(pedestrianId) {
+            const pedestrian = cityState.pedestrians.get(pedestrianId);
+            if (!pedestrian) return;
+            
+            // Safety check - look for moving vehicles
+            const movingVehicles = Array.from(cityState.vehicles.values()).filter(v => v.isMoving);
+            if (movingVehicles.length > 0) {
+                // Only log occasionally to reduce spam
+                if (Math.random() < 0.2) {
+                    logMessage('pedestrian', `🚶 ${pedestrianId}: waiting for vehicles to stop`);
+                }
+                return; // Wait longer
+            }
+            
+            pedestrian.aiState = 'crossing';
+            pedestrian.isCrossing = true;
+            pedestrian.waitingToCross = false;
+            pedestrian.element.classList.remove('waiting');
+            pedestrian.element.classList.add('crossing');
+            
+            // Determine crossing path
+            const startY = pedestrian.position.y;
+            const targetY = pedestrian.direction === 'north_to_south' ? 
+                startY - 150 : startY + 150;
+            
+            pedestrian.crossingTarget = targetY;
+            pedestrian.crossingSpeed = 1.5 + Math.random() * 1; // 1.5-2.5 px per frame
+            
+            await voidCore.publish(Message.notice('pedestrian.crossing.started', {
+                pedestrianId: pedestrianId,
+                startPosition: pedestrian.position,
+                direction: pedestrian.direction,
+                timestamp: Date.now()
+            }));
+            
+            logMessage('pedestrian', `🚶 ${pedestrianId}: started crossing (${pedestrian.direction})`);
+        }
+
+        async function continueCrossing(pedestrianId) {
+            const pedestrian = cityState.pedestrians.get(pedestrianId);
+            if (!pedestrian || !pedestrian.isCrossing) return;
+            
+            // Move towards target
+            if (pedestrian.direction === 'north_to_south') {
+                pedestrian.position.y -= pedestrian.crossingSpeed;
+                if (pedestrian.position.y <= pedestrian.crossingTarget) {
+                    await completeCrossing(pedestrianId);
+                    return;
+                }
+            } else {
+                pedestrian.position.y += pedestrian.crossingSpeed;
+                if (pedestrian.position.y >= pedestrian.crossingTarget) {
+                    await completeCrossing(pedestrianId);
+                    return;
+                }
+            }
+            
+            // Update visual position
+            pedestrian.element.style.bottom = pedestrian.position.y + 'px';
+        }
+
+        async function completeCrossing(pedestrianId) {
+            const pedestrian = cityState.pedestrians.get(pedestrianId);
+            if (!pedestrian) return;
+            
+            pedestrian.aiState = 'wandering';
+            pedestrian.isCrossing = false;
+            pedestrian.element.classList.remove('crossing');
+            
+            await voidCore.publish(Message.notice('pedestrian.crossing.completed', {
+                pedestrianId: pedestrianId,
+                finalPosition: pedestrian.position,
+                timestamp: Date.now()
+            }));
+            
+            logMessage('pedestrian', `🚶 ${pedestrianId}: crossed safely!`);
+            
+            // Remove pedestrian after a while
+            setTimeout(async () => {
+                await removePedestrian(pedestrianId);
+            }, 5000 + Math.random() * 5000); // 5-10 seconds
+        }
+
+        async function removePedestrian(pedestrianId) {
+            const pedestrian = cityState.pedestrians.get(pedestrianId);
+            if (!pedestrian) return;
+            
+            // Clear AI interval
+            if (pedestrian.aiInterval) {
+                clearInterval(pedestrian.aiInterval);
+            }
+            
+            // Remove element
+            if (pedestrian.element && pedestrian.element.parentNode) {
+                pedestrian.element.remove();
+            }
+            
+            // Remove from state
+            cityState.pedestrians.delete(pedestrianId);
+            
+            logMessage('pedestrian', `🚶 Pedestrian ${pedestrianId} left the area`);
+            
+            await voidCore.publish(Message.notice('pedestrian.exited', {
+                pedestrianId: pedestrianId,
+                timestamp: Date.now()
+            }));
+        }
+
+        function handlePedestrianCrossingRequest(msg) {
+            const { pedestrianId, reason } = msg.payload;
+            logMessage('pedestrian', `🚶 ${pedestrianId}: ${reason}`);
+        }
+
+        function handlePedestrianCrossingStarted(msg) {
+            const { pedestrianId, direction } = msg.payload;
+            logMessage('pedestrian', `🚶 ${pedestrianId}: crossing ${direction}`);
+        }
+
+        function handlePedestrianCrossingCompleted(msg) {
+            const { pedestrianId } = msg.payload;
+            logMessage('pedestrian', `🚶 ${pedestrianId}: reached the other side`);
+        }
+        // === EMERGENCY SYSTEM ===
+        async function handleEmergencyActivated(msg) {
+            const { type, priority, duration } = msg.payload;
+            
+            if (cityState.emergencyActive) {
+                logMessage('emergency', '🚨 Emergency already active - ignoring new request');
+                return;
+            }
+            
+            cityState.emergencyActive = true;
+            
+            logMessage('emergency', `🚨 EMERGENCY ACTIVATED: ${type} (${priority})`);
+            
+            // Force all traffic lights to GREEN for emergency vehicle
+            cityState.trafficLight = 'green';
+            updateTrafficLightVisual('green');
+            
+            // Notify all vehicles to yield
+            for (const [vehicleId, vehicle] of cityState.vehicles) {
+                vehicle.yielding = true;
+                vehicle.element.classList.add('yielding');
+            }
+            
+            // Create emergency vehicle
+            await spawnEmergencyVehicle();
+            
+            // Set automatic emergency clear timer
+            setTimeout(async () => {
+                if (cityState.emergencyActive) {
+                    await clearEmergency();
+                }
+            }, duration);
+            
+            await voidCore.publish(Message.notice('emergency.all_clear_to_vehicles', {
+                instruction: 'yield_immediately',
+                emergencyType: type,
+                timestamp: Date.now()
+            }));
+        }
+
+        async function spawnEmergencyVehicle() {
+            const emergencyVehicle = document.createElement('div');
+            emergencyVehicle.className = 'emergency-vehicle active';
+            emergencyVehicle.id = 'emergency-vehicle';
+            emergencyVehicle.style.left = '-80px';
+            emergencyVehicle.style.bottom = '135px'; // Same road level as normal vehicles
+            emergencyVehicle.innerHTML = '🚨';
+            
+            container.appendChild(emergencyVehicle);
+            
+            logMessage('emergency', '🚨 Emergency vehicle approaching intersection');
+            
+            // Start emergency vehicle movement
+            let position = -80;
+            const speed = 8; // Fast emergency vehicle
+            
+            const moveInterval = setInterval(async () => {
+                position += speed;
+                emergencyVehicle.style.left = position + 'px';
+                
+                // Publish approach warnings
+                if (position === 200) {
+                    await voidCore.publish(Message.notice('emergency.vehicle.approaching', {
+                        distance: 'near',
+                        eta: 2,
+                        timestamp: Date.now()
+                    }));
+                    logMessage('emergency', '🚨 Emergency vehicle approaching intersection');
+                }
+                
+                if (position === 350) {
+                    await voidCore.publish(Message.notice('emergency.vehicle.approaching', {
+                        distance: 'very_near',
+                        eta: 1,
+                        timestamp: Date.now()
+                    }));
+                    logMessage('emergency', '🚨 Emergency vehicle at intersection');
+                }
+                
+                // Remove when passed through
+                if (position > window.innerWidth + 80) {
+                    clearInterval(moveInterval);
+                    emergencyVehicle.remove();
+                    await clearEmergency();
+                }
+            }, 100);
+        }
+
+        async function clearEmergency() {
+            if (!cityState.emergencyActive) return;
+            
+            cityState.emergencyActive = false;
+            
+            logMessage('emergency', '🚨 Emergency cleared - resuming normal traffic');
+            
+            // Remove yielding state from all vehicles
+            for (const [vehicleId, vehicle] of cityState.vehicles) {
+                vehicle.yielding = false;
+                vehicle.element.classList.remove('yielding');
+            }
+            
+            // Resume normal traffic light operation
+            setTimeout(async () => {
+                await cycleTrafficLight();
+            }, 2000);
+            
+            await voidCore.publish(Message.notice('emergency.cleared', {
+                message: 'Normal traffic operations resuming',
+                timestamp: Date.now()
+            }));
+        }
+
+        function handleEmergencyVehicleApproaching(msg) {
+            const { distance, eta } = msg.payload;
+            logMessage('emergency', `🚨 Emergency vehicle ${distance} (ETA: ${eta}s)`);
+            
+            // Flash traffic light during approach
+            if (distance === 'very_near') {
+                flashTrafficLights();
+            }
+        }
+
+        function handleEmergencyCleared(msg) {
+            logMessage('emergency', '🚨 Emergency operations completed');
+        }
+
+        function flashTrafficLights() {
+            let flashCount = 0;
+            const flashInterval = setInterval(() => {
+                flashCount++;
+                const isOn = flashCount % 2 === 0;
+                
+                redLight.style.opacity = isOn ? '1' : '0.3';
+                yellowLight.style.opacity = isOn ? '1' : '0.3';
+                greenLight.style.opacity = isOn ? '1' : '0.3';
+                
+                if (flashCount >= 6) {
+                    clearInterval(flashInterval);
+                    // Restore normal appearance
+                    redLight.style.opacity = '1';
+                    yellowLight.style.opacity = '1';
+                    greenLight.style.opacity = '1';
+                }
+            }, 200);
+        }
+
+        // Global control functions
+        window.spawnVehicle = async (color = null) => {
+            const vehicleColor = color || (Math.random() > 0.5 ? 'red' : 'blue');
+            await voidCore.publish(Message.notice('vehicle.spawn.request', {
+                color: vehicleColor,
+                position: { x: -60, y: 140 }, // Fixed: road height is around 140px from bottom
+                requestId: `vehicle_${Date.now()}`
+            }));
+        };
+
+        window.spawnPedestrian = async () => {
+            const side = Math.random() > 0.5 ? 'north' : 'south';
+            const position = side === 'north' ? 
+                { x: 390, y: 280 } : { x: 390, y: 70 };
+                
+            await voidCore.publish(Message.notice('pedestrian.spawn.request', {
+                position: position,
+                requestId: `pedestrian_${Date.now()}`
+            }));
+        };
+
+        window.triggerEmergency = async () => {
+            await voidCore.publish(Message.notice('emergency.activated', {
+                type: 'ambulance',
+                priority: 'immediate',
+                duration: 10000,
+                timestamp: Date.now()
+            }));
+        };
+
+        window.toggleTrafficManual = async () => {
+            cityState.manualTrafficMode = !cityState.manualTrafficMode;
+            logMessage('system', `🚦 Manual traffic mode: ${cityState.manualTrafficMode ? 'ON' : 'OFF'}`);
+            
+            if (cityState.manualTrafficMode) {
+                await cycleTrafficLight();
+            }
+        };
+
+        window.clearCity = () => {
+            const vehicles = container.querySelectorAll('.vehicle');
+            const pedestrians = container.querySelectorAll('.pedestrian');
+            const emergencyVehicles = container.querySelectorAll('.emergency-vehicle');
+            
+            vehicles.forEach(v => v.remove());
+            pedestrians.forEach(p => p.remove());
+            emergencyVehicles.forEach(e => e.remove());
+            
+            cityState.vehicles.clear();
+            cityState.pedestrians.clear();
+            cityState.emergencyActive = false;
+            
+            logMessage('system', '🧹 City cleared - all agents removed');
+        };
+
+        // Start the city
+        initializeCity();
+    </script>
+</body>
+</html>

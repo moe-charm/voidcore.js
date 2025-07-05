@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 Galaxy Viewer - Classic VoidCore Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #000; 
+            color: white;
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #4a90e2;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        #demo-container {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="./index.html" class="back-link">← Back to Demo Index</a>
+        <h1>🌌 Galaxy Viewer</h1>
+        <p>Watch autonomous celestial bodies collide and interact in space!</p>
+    </div>
+
+    <div id="demo-container">
+        <!-- Galaxy Viewer will render here -->
+    </div>
+
+    <script type="module">
+        import { board } from '../src/core.js';
+        
+        // Set log element
+        board.setLogElement(document.body);
+        
+        // Import and run galaxy viewer demo
+        import('../examples/demos/galaxy_viewer_demo.js').then(module => {
+            const container = document.getElementById('demo-container');
+            if (module.runDemo) {
+                module.runDemo(container);
+            } else if (module.default) {
+                module.default(container);
+            } else {
+                console.log('Galaxy viewer module loaded:', module);
+                // Try to find the demo function
+                const demoFn = Object.values(module).find(fn => typeof fn === 'function');
+                if (demoFn) {
+                    demoFn(container);
+                }
+            }
+        }).catch(error => {
+            console.error('Error loading galaxy viewer:', error);
+            document.getElementById('demo-container').innerHTML = 
+                '<div style="color: red; padding: 20px;">Error loading Galaxy Viewer demo: ' + error.message + '</div>';
+        });
+    </script>
+</body>
+</html>

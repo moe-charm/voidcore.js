@@ -37,6 +37,30 @@
         <p>Experience the original VoidCore magic - Galaxy collisions, traffic chaos, and autonomous plugin networks!</p>
     </div>
 
+    <!-- Auto-launch specific demo if hash is provided -->
+    <script type="module">
+        const hash = window.location.hash.substring(1); // Remove the #
+        if (hash === 'galaxy-viewer') {
+            // Auto-select galaxy viewer
+            setTimeout(() => {
+                const selector = document.getElementById('demo-selector');
+                if (selector) {
+                    selector.value = 'galaxy-viewer';
+                    selector.dispatchEvent(new Event('change'));
+                }
+            }, 1000);
+        } else if (hash === 'message-city') {
+            // Auto-select message city
+            setTimeout(() => {
+                const selector = document.getElementById('demo-selector');
+                if (selector) {
+                    selector.value = 'message-city';
+                    selector.dispatchEvent(new Event('change'));
+                }
+            }, 1000);
+        }
+    </script>
+
     <div id="app-root">
         <!-- The GUIVoidCoreManager will populate this -->
     </div>

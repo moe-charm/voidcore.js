@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏙️ Message City - Simple Demo</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #4a90e2;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        #demo-container {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: #87CEEB;
+            position: relative;
+            overflow: hidden;
+        }
+        .city-ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 300px;
+            background: #90EE90;
+            border-top: 3px solid #4682b4;
+        }
+        .road-horizontal {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 60px;
+            background: #696969;
+            transform: translateY(-50%);
+        }
+        .road-vertical {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 60px;
+            background: #696969;
+            transform: translateX(-50%);
+        }
+        .intersection {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 60px;
+            height: 60px;
+            background: #808080;
+            transform: translate(-50%, -50%);
+        }
+        .traffic-light {
+            position: absolute;
+            left: 45%;
+            top: 40%;
+            width: 20px;
+            height: 60px;
+            background: #333;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 5px;
+            z-index: 10;
+        }
+        .light {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #333;
+            margin: 1px auto;
+        }
+        .light.red { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .light.yellow { background: #ffff00; box-shadow: 0 0 10px #ffff00; }
+        .light.green { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        
+        .vehicle {
+            position: absolute;
+            width: 30px;
+            height: 15px;
+            background: #4a90e2;
+            border-radius: 3px;
+            transition: all 0.5s ease;
+            z-index: 5;
+        }
+        .vehicle.moving {
+            animation: drive 8s linear infinite;
+        }
+        .vehicle.stopped {
+            animation-play-state: paused;
+        }
+        
+        .pedestrian {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+        .pedestrian.walking {
+            animation: walk 6s linear infinite;
+        }
+        
+        @keyframes drive {
+            0% { left: -40px; bottom: 170px; }
+            25% { left: 45%; bottom: 170px; }
+            50% { left: 55%; bottom: 170px; }
+            100% { left: 100%; bottom: 170px; }
+        }
+        
+        @keyframes walk {
+            0% { left: 47.5%; bottom: 250px; }
+            50% { left: 47.5%; bottom: 170px; }
+            100% { left: 47.5%; bottom: 100px; }
+        }
+        
+        .status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 300px;
+        }
+        
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #357abd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="./index.html" class="back-link">← Back to Demo Index</a>
+        <h1>🏙️ Message City (Simple)</h1>
+        <p>Watch autonomous message-driven city traffic!</p>
+    </div>
+
+    <div id="demo-container">
+        <div class="city-ground">
+            <div class="road-horizontal"></div>
+            <div class="road-vertical"></div>
+            <div class="intersection">
+                <div class="traffic-light" id="traffic-light">
+                    <div class="light red" id="red-light"></div>
+                    <div class="light" id="yellow-light"></div>
+                    <div class="light" id="green-light"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status" id="status">
+            🏙️ Message City ready! Traffic light will control the flow.
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="addVehicle()">🚗 Add Vehicle</button>
+        <button onclick="addPedestrian()">🚶 Add Pedestrian</button>
+        <button onclick="emergencyMode()">🚨 Emergency Mode</button>
+        <button onclick="clearCity()">🧹 Clear City</button>
+    </div>
+
+    <script type="module">
+        import { voidCore } from '../../src/voidcore.js';
+        import { Message } from '../../src/message.js';
+
+        let vehicleCount = 0;
+        let pedestrianCount = 0;
+        let currentLight = 'red';
+        let emergencyActive = false;
+        let trafficInterval = null;
+        
+        const container = document.getElementById('demo-container');
+        const status = document.getElementById('status');
+        const redLight = document.getElementById('red-light');
+        const yellowLight = document.getElementById('yellow-light');
+        const greenLight = document.getElementById('green-light');
+
+        // Subscribe to traffic events
+        voidCore.subscribe('traffic.light.changed', (msg) => {
+            const { color, reason } = msg.payload;
+            updateTrafficLight(color);
+            status.textContent = `🚦 Light: ${color.toUpperCase()} (${reason})`;
+        });
+
+        voidCore.subscribe('vehicle.created', (msg) => {
+            status.textContent = `🚗 Vehicle ${msg.payload.id} created - waiting for green light`;
+        });
+
+        voidCore.subscribe('pedestrian.created', (msg) => {
+            status.textContent = `🚶 Pedestrian ${msg.payload.id} created - waiting to cross`;
+        });
+
+        voidCore.subscribe('emergency.activated', (msg) => {
+            status.textContent = `🚨 EMERGENCY MODE: All traffic stopped for ${msg.payload.duration}s`;
+        });
+
+        // Traffic light control
+        function updateTrafficLight(color) {
+            currentLight = color;
+            redLight.classList.toggle('red', color === 'red');
+            yellowLight.classList.toggle('yellow', color === 'yellow');
+            greenLight.classList.toggle('green', color === 'green');
+            
+            // Control vehicles based on light
+            const vehicles = container.querySelectorAll('.vehicle');
+            vehicles.forEach(vehicle => {
+                if (color === 'green' && !emergencyActive) {
+                    vehicle.classList.add('moving');
+                    vehicle.classList.remove('stopped');
+                } else {
+                    vehicle.classList.remove('moving');
+                    vehicle.classList.add('stopped');
+                }
+            });
+            
+            // Control pedestrians
+            const pedestrians = container.querySelectorAll('.pedestrian');
+            pedestrians.forEach(pedestrian => {
+                if (color === 'red' && !emergencyActive) {
+                    pedestrian.classList.add('walking');
+                } else {
+                    pedestrian.classList.remove('walking');
+                }
+            });
+        }
+
+        // Add vehicle
+        window.addVehicle = async () => {
+            vehicleCount++;
+            const vehicle = document.createElement('div');
+            vehicle.className = 'vehicle';
+            vehicle.id = `vehicle-${vehicleCount}`;
+            
+            if (currentLight === 'green' && !emergencyActive) {
+                vehicle.classList.add('moving');
+            } else {
+                vehicle.classList.add('stopped');
+            }
+            
+            container.appendChild(vehicle);
+
+            await voidCore.publish(Message.notice('vehicle.created', {
+                id: vehicleCount,
+                position: { x: -40, y: 170 },
+                timestamp: Date.now()
+            }));
+
+            // Auto-remove after animation
+            setTimeout(() => {
+                if (vehicle.parentNode) {
+                    vehicle.remove();
+                }
+            }, 10000);
+        };
+
+        // Add pedestrian
+        window.addPedestrian = async () => {
+            pedestrianCount++;
+            const pedestrian = document.createElement('div');
+            pedestrian.className = 'pedestrian';
+            pedestrian.id = `pedestrian-${pedestrianCount}`;
+            
+            if (currentLight === 'red' && !emergencyActive) {
+                pedestrian.classList.add('walking');
+            }
+            
+            container.appendChild(pedestrian);
+
+            await voidCore.publish(Message.notice('pedestrian.created', {
+                id: pedestrianCount,
+                position: { x: '47.5%', y: 250 },
+                timestamp: Date.now()
+            }));
+
+            // Auto-remove after animation
+            setTimeout(() => {
+                if (pedestrian.parentNode) {
+                    pedestrian.remove();
+                }
+            }, 8000);
+        };
+
+        // Emergency mode
+        window.emergencyMode = async () => {
+            emergencyActive = true;
+            
+            // Stop all traffic
+            const vehicles = container.querySelectorAll('.vehicle');
+            const pedestrians = container.querySelectorAll('.pedestrian');
+            
+            vehicles.forEach(v => {
+                v.classList.remove('moving');
+                v.classList.add('stopped');
+            });
+            
+            pedestrians.forEach(p => {
+                p.classList.remove('walking');
+            });
+            
+            // Emergency light pattern
+            updateTrafficLight('red');
+            
+            await voidCore.publish(Message.notice('emergency.activated', {
+                duration: 5,
+                reason: 'Emergency vehicle priority',
+                timestamp: Date.now()
+            }));
+            
+            // Flash lights during emergency
+            let flashCount = 0;
+            const flashInterval = setInterval(() => {
+                flashCount++;
+                if (flashCount % 2 === 0) {
+                    redLight.style.background = '#ff0000';
+                    yellowLight.style.background = '#ffff00';
+                } else {
+                    redLight.style.background = '#333';
+                    yellowLight.style.background = '#333';
+                }
+                
+                if (flashCount >= 10) {
+                    clearInterval(flashInterval);
+                    emergencyActive = false;
+                    
+                    // Resume normal operation
+                    setTimeout(() => {
+                        startTrafficCycle();
+                    }, 1000);
+                }
+            }, 500);
+        };
+
+        // Clear city
+        window.clearCity = () => {
+            const vehicles = container.querySelectorAll('.vehicle');
+            const pedestrians = container.querySelectorAll('.pedestrian');
+            
+            vehicles.forEach(v => v.remove());
+            pedestrians.forEach(p => p.remove());
+            
+            vehicleCount = 0;
+            pedestrianCount = 0;
+            status.textContent = 'City cleared! Ready for new traffic.';
+        };
+
+        // Start traffic light cycle
+        function startTrafficCycle() {
+            if (trafficInterval) clearInterval(trafficInterval);
+            
+            trafficInterval = setInterval(async () => {
+                if (emergencyActive) return;
+                
+                if (currentLight === 'red') {
+                    await voidCore.publish(Message.notice('traffic.light.changed', {
+                        color: 'green',
+                        reason: 'Normal cycle - vehicles go',
+                        timestamp: Date.now()
+                    }));
+                } else if (currentLight === 'green') {
+                    await voidCore.publish(Message.notice('traffic.light.changed', {
+                        color: 'yellow',
+                        reason: 'Prepare to stop',
+                        timestamp: Date.now()
+                    }));
+                } else if (currentLight === 'yellow') {
+                    await voidCore.publish(Message.notice('traffic.light.changed', {
+                        color: 'red',
+                        reason: 'Normal cycle - pedestrians cross',
+                        timestamp: Date.now()
+                    }));
+                }
+            }, 4000);
+        }
+
+        // Initialize
+        updateTrafficLight('red');
+        startTrafficCycle();
+        
+        // Add some initial traffic
+        setTimeout(() => {
+            addVehicle();
+            setTimeout(() => addPedestrian(), 1000);
+            setTimeout(() => addVehicle(), 2000);
+        }, 500);
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
-// src/voidcore.js - 静寂の器 (The Vessel of Silence) v13.0
-// 純粋なメッセージルーティング - 中身は一切知らない
-// Now with swappable Transport layer - "Heart transplant" capability
+// src/voidcore.js - 静寂の器 (The Vessel of Silence) v14.0
+// セリンの大改革版: 純粋メッセージベースシステム
+// 基底クラス継承完全排除、紳士協定システム実装
 
 import { ChannelManager } from './channel-manager.js'
 

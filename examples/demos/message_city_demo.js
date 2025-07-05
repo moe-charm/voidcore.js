@@ -1,5 +1,5 @@
 // examples/demos/message_city_demo.js
-import { board } from '../../src/core.js';
+import { voidCore } from '../../src/voidcore.js';
 
 let trafficLightPluginInstance = null;
 let vehiclePluginInstances = [];
@@ -7,7 +7,7 @@ let pedestrianPluginInstances = [];
 let emergencyVehiclePluginInstance = null;
 
 export async function runDemo(container) {
-  board.log('--- Loading Message City demo ---');
+  console.log('--- Loading Message City demo ---');
 
   // Clear the container for this demo
   if (container) {
@@ -149,7 +149,7 @@ export async function runDemo(container) {
   // Return cleanup function
   return {
     cleanup: () => {
-      board.log('--- Cleaning up Message City demo ---');
+      console.log('--- Cleaning up Message City demo ---');
       if (container) container.innerHTML = '';
       
       // Clean up plugin instances

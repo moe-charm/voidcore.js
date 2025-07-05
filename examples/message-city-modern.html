@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 Message City - VoidCore v14.0 Pure System</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .version-badge {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #87ceeb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        #demo-container {
+            width: 100%;
+            height: 600px;
+            border: 3px solid #87ceeb;
+            border-radius: 15px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        /* Simple City Layout */
+        .city-ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 350px;
+            background: linear-gradient(to bottom, #90EE90 0%, #7FDD7F 100%);
+        }
+        .road {
+            position: absolute;
+            background: #444;
+            border: 2px solid #222;
+        }
+        .road-horizontal {
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 60px;
+            transform: translateY(-50%);
+        }
+        .road-vertical {
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 60px;
+            transform: translateX(-50%);
+        }
+        .intersection {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 60px;
+            height: 60px;
+            background: #555;
+            transform: translate(-50%, -50%);
+            border: 2px solid #222;
+        }
+        
+        /* Traffic Light */
+        .traffic-light-post {
+            position: absolute;
+            left: 45%;
+            top: 40%;
+            width: 20px;
+            height: 80px;
+            background: #333;
+            border-radius: 10px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 5px;
+        }
+        .light {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #666;
+            margin: 1px auto;
+            transition: all 0.3s ease;
+        }
+        .light.active-red { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .light.active-yellow { background: #ffff00; box-shadow: 0 0 10px #ffff00; }
+        .light.active-green { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        
+        /* Vehicles and Pedestrians */
+        .agent {
+            position: absolute;
+            border-radius: 3px;
+            transition: all 0.1s ease;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        .vehicle {
+            width: 35px;
+            height: 20px;
+            background: #4a90e2;
+        }
+        .vehicle.red { background: #ff4757; }
+        .vehicle.blue { background: #3742fa; }
+        .vehicle.emergency { 
+            background: #ff0000; 
+            animation: siren 0.5s infinite;
+            width: 40px;
+            height: 25px;
+        }
+        .pedestrian {
+            width: 15px;
+            height: 15px;
+            background: #ff8800;
+            border-radius: 50%;
+            font-size: 10px;
+        }
+        
+        @keyframes siren {
+            0% { background: #ff0000; }
+            50% { background: #ffffff; }
+            100% { background: #ff0000; }
+        }
+        
+        /* Pure System Message Log */
+        .message-log {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 320px;
+            height: 150px;
+            background: rgba(0,0,0,0.8);
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            overflow-y: auto;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 20px rgba(0,255,0,0.3);
+        }
+        .log-header {
+            color: #00ffff;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 10px;
+        }
+        .log-entry {
+            margin: 1px 0;
+            line-height: 1.1;
+        }
+        .log-entry.system { color: #00ffff; }
+        .log-entry.agent { color: #ffff00; }
+        .log-entry.health { color: #00ff88; }
+        
+        /* Pure System Info Panel */
+        .pure-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 250px;
+            background: rgba(0,0,0,0.8);
+            color: #87ceeb;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            border: 2px solid #87ceeb;
+            box-shadow: 0 0 20px rgba(135,206,235,0.3);
+        }
+        .pure-info h3 {
+            margin: 0 0 10px 0;
+            color: #00ffff;
+            text-align: center;
+        }
+        
+        /* Controls */
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="./index.html" class="back-link">← Back to Demo Index</a>
+        <h1>🌟 Message City</h1>
+        <span class="version-badge">VoidCore v14.0 - Pure System</span>
+        <p>純粋メッセージベースシステム - 基底クラス継承完全排除！</p>
+    </div>
+
+    <div id="demo-container">
+        <div class="city-ground">
+            <div class="road road-horizontal"></div>
+            <div class="road road-vertical"></div>
+            <div class="intersection">
+                <div class="traffic-light-post">
+                    <div class="light" id="red-light"></div>
+                    <div class="light" id="yellow-light"></div>
+                    <div class="light active-green" id="green-light"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="message-log" id="message-log">
+            <div class="log-header">🌟 Pure Message System Log</div>
+        </div>
+        
+        <div class="pure-info">
+            <h3>🚀 Pure System Features</h3>
+            <div style="line-height: 1.4;">
+                <strong>✅ Zero Inheritance:</strong><br>
+                No base classes, pure functions<br><br>
+                
+                <strong>🤝 Gentleman's Agreement:</strong><br>
+                Health checks, Process lifecycle<br><br>
+                
+                <strong>📮 Pure Messages:</strong><br>
+                Everything through message passing<br><br>
+                
+                <strong>🎯 Simple & Clean:</strong><br>
+                Minimal code, maximum power
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="spawnAgent('vehicle')">🚗 Spawn Vehicle</button>
+        <button onclick="spawnAgent('pedestrian')">🚶 Spawn Pedestrian</button>
+        <button onclick="spawnAgent('emergency')">🚨 Emergency!</button>
+        <button onclick="runHealthCheck()">💊 Health Check</button>
+        <button onclick="clearCity()">🧹 Clear City</button>
+    </div>
+
+    <script type="module">
+        import { voidCore, Message, createPlugin } from '../src/index.js';
+
+        // =========================================
+        // 🌟 Pure Message-Based City System
+        // =========================================
+        
+        const cityState = {
+            agents: new Map(),
+            trafficLight: 'green',
+            nextId: 1,
+            emergencyActive: false
+        };
+
+        const container = document.getElementById('demo-container');
+        const messageLog = document.getElementById('message-log');
+        const redLight = document.getElementById('red-light');
+        const yellowLight = document.getElementById('yellow-light');
+        const greenLight = document.getElementById('green-light');
+
+        // =========================================
+        // 🤖 Pure Plugins (No Inheritance!)
+        // =========================================
+
+        // Traffic Light Controller Plugin
+        const trafficController = createPlugin({
+            pluginId: 'traffic-controller',
+            name: 'Traffic Light Controller',
+            version: '2.0.0',
+            capabilities: ['traffic.control'],
+            autoHealth: true,
+            autoProcess: true
+        }, {
+            // Custom logic without inheritance
+            async run() {
+                await this.initialize();
+                
+                // Handle traffic control requests
+                this.on('IntentRequest', '*', async (msg) => {
+                    if (msg.action === 'traffic.change') {
+                        const { color, reason } = msg.payload;
+                        await this.changeLight(color, reason);
+                    }
+                });
+                
+                // Auto cycle every 4 seconds
+                setInterval(async () => {
+                    if (!cityState.emergencyActive) {
+                        await this.cycleLight();
+                    }
+                }, 4000);
+                
+                this.log('Traffic controller started');
+            },
+            
+            async changeLight(color, reason = 'auto') {
+                cityState.trafficLight = color;
+                updateTrafficLightVisual(color);
+                
+                await this.notice('traffic.changed', {
+                    color: color,
+                    reason: reason,
+                    timestamp: Date.now()
+                });
+                
+                logMessage('system', `🚦 Traffic: ${color.toUpperCase()} (${reason})`);
+            },
+            
+            async cycleLight() {
+                const colors = ['green', 'yellow', 'red'];
+                const currentIndex = colors.indexOf(cityState.trafficLight);
+                const nextColor = colors[(currentIndex + 1) % colors.length];
+                await this.changeLight(nextColor, 'auto cycle');
+            }
+        });
+
+        // Vehicle Manager Plugin  
+        const vehicleManager = createPlugin({
+            pluginId: 'vehicle-manager',
+            name: 'Vehicle Manager',
+            capabilities: ['vehicle.spawn', 'vehicle.control'],
+            autoHealth: true,
+        }, {
+            async run() {
+                await this.initialize();
+                
+                // Handle vehicle spawn requests
+                this.on('IntentRequest', '*', async (msg) => {
+                    console.log('🚗 Vehicle Manager received IntentRequest:', msg.action, msg.payload);
+                    if (msg.action === 'agent.spawn' && (msg.payload.type === 'vehicle' || msg.payload.type === 'emergency')) {
+                        console.log('🚗 Calling spawnVehicle...');
+                        await this.spawnVehicle(msg.payload);
+                    }
+                });
+                
+                // Handle traffic changes
+                this.on('Notice', 'traffic.changed', (msg) => {
+                    this.updateVehicleBehavior(msg.payload.color);
+                });
+                
+                this.log('Vehicle manager started');
+            },
+            
+            async spawnVehicle(config) {
+                console.log('🚗 spawnVehicle called with config:', config);
+                const vehicleId = `vehicle-${cityState.nextId++}`;
+                const isEmergency = config.type === 'emergency';
+                console.log('🚗 Creating vehicle:', vehicleId, 'isEmergency:', isEmergency);
+                
+                const vehicleDiv = document.createElement('div');
+                vehicleDiv.className = `agent vehicle ${isEmergency ? 'emergency' : (config.color || 'blue')}`;
+                vehicleDiv.id = vehicleId;
+                vehicleDiv.style.left = '-40px';
+                vehicleDiv.style.bottom = '140px';
+                vehicleDiv.innerHTML = isEmergency ? '🚨' : '🚗';
+                
+                container.appendChild(vehicleDiv);
+                
+                const vehicle = {
+                    id: vehicleId,
+                    element: vehicleDiv,
+                    type: isEmergency ? 'emergency' : 'vehicle',
+                    position: { x: -40, y: 140 },
+                    speed: isEmergency ? 8 : 3,
+                    active: true
+                };
+                
+                cityState.agents.set(vehicleId, vehicle);
+                
+                // Start movement
+                this.startVehicleMovement(vehicle);
+                
+                await this.notice('agent.spawned', {
+                    agentId: vehicleId,
+                    type: vehicle.type,
+                    timestamp: Date.now()
+                });
+                
+                logMessage('agent', `${isEmergency ? '🚨' : '🚗'} ${vehicleId} spawned`);
+                
+                if (isEmergency) {
+                    cityState.emergencyActive = true;
+                    await voidCore.publish(Message.intentRequest('traffic.change', {
+                        color: 'green',
+                        reason: 'emergency override'
+                    }));
+                }
+            },
+            
+            startVehicleMovement(vehicle) {
+                const moveInterval = setInterval(() => {
+                    if (!vehicle.active) {
+                        clearInterval(moveInterval);
+                        return;
+                    }
+                    
+                    vehicle.position.x += vehicle.speed;
+                    vehicle.element.style.left = vehicle.position.x + 'px';
+                    
+                    // Remove when off screen
+                    if (vehicle.position.x > window.innerWidth + 50) {
+                        vehicle.active = false;
+                        vehicle.element.remove();
+                        cityState.agents.delete(vehicle.id);
+                        
+                        if (vehicle.type === 'emergency') {
+                            cityState.emergencyActive = false;
+                        }
+                        
+                        clearInterval(moveInterval);
+                    }
+                }, 100);
+            },
+            
+            updateVehicleBehavior(lightColor) {
+                // Simple: vehicles slow down on red (near intersection)
+                cityState.agents.forEach(vehicle => {
+                    if (vehicle.type === 'vehicle' && vehicle.position.x > 200 && vehicle.position.x < 400) {
+                        vehicle.speed = lightColor === 'red' ? 1 : 3;
+                    }
+                });
+            }
+        });
+
+        // Pedestrian Manager Plugin
+        const pedestrianManager = createPlugin({
+            pluginId: 'pedestrian-manager',
+            capabilities: ['pedestrian.spawn'],
+            autoHealth: true,
+        }, {
+            async run() {
+                await this.initialize();
+                
+                this.on('IntentRequest', '*', async (msg) => {
+                    console.log('🚶 Pedestrian Manager received IntentRequest:', msg.action, msg.payload);
+                    if (msg.action === 'agent.spawn' && msg.payload.type === 'pedestrian') {
+                        console.log('🚶 Calling spawnPedestrian...');
+                        await this.spawnPedestrian(msg.payload);
+                    }
+                });
+                
+                this.on('Notice', 'traffic.changed', (msg) => {
+                    this.updatePedestrianBehavior(msg.payload.color);
+                });
+                
+                this.log('Pedestrian manager started');
+            },
+            
+            async spawnPedestrian(config) {
+                const pedId = `pedestrian-${cityState.nextId++}`;
+                
+                const pedDiv = document.createElement('div');
+                pedDiv.className = 'agent pedestrian';
+                pedDiv.id = pedId;
+                pedDiv.style.left = '45%';
+                pedDiv.style.bottom = '200px';
+                pedDiv.innerHTML = '🚶';
+                
+                container.appendChild(pedDiv);
+                
+                const pedestrian = {
+                    id: pedId,
+                    element: pedDiv,
+                    type: 'pedestrian',
+                    position: { x: 45, y: 200 },
+                    active: true,
+                    crossing: false
+                };
+                
+                cityState.agents.set(pedId, pedestrian);
+                
+                await this.notice('agent.spawned', {
+                    agentId: pedId,
+                    type: 'pedestrian',
+                    timestamp: Date.now()
+                });
+                
+                logMessage('agent', `🚶 ${pedId} spawned`);
+                
+                // Auto remove after 10 seconds
+                setTimeout(() => {
+                    if (pedestrian.active) {
+                        pedestrian.element.remove();
+                        cityState.agents.delete(pedId);
+                    }
+                }, 10000);
+            },
+            
+            updatePedestrianBehavior(lightColor) {
+                // Pedestrians cross on red light
+                if (lightColor === 'red') {
+                    cityState.agents.forEach(ped => {
+                        if (ped.type === 'pedestrian' && !ped.crossing) {
+                            this.startCrossing(ped);
+                        }
+                    });
+                }
+            },
+            
+            startCrossing(pedestrian) {
+                pedestrian.crossing = true;
+                let crossProgress = 0;
+                
+                const crossInterval = setInterval(() => {
+                    crossProgress += 3;
+                    pedestrian.element.style.bottom = (200 - crossProgress) + 'px';
+                    
+                    if (crossProgress >= 120) {
+                        clearInterval(crossInterval);
+                        pedestrian.crossing = false;
+                        logMessage('agent', `🚶 ${pedestrian.id} crossed safely`);
+                    }
+                }, 100);
+            }
+        });
+
+        // =========================================
+        // 🎯 Pure Message System Functions
+        // =========================================
+        
+        function updateTrafficLightVisual(color) {
+            redLight.className = color === 'red' ? 'light active-red' : 'light';
+            yellowLight.className = color === 'yellow' ? 'light active-yellow' : 'light';
+            greenLight.className = color === 'green' ? 'light active-green' : 'light';
+        }
+        
+        function logMessage(type, message) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            messageLog.appendChild(entry);
+            messageLog.scrollTop = messageLog.scrollHeight;
+            
+            // Keep log manageable
+            if (messageLog.children.length > 15) {
+                messageLog.removeChild(messageLog.children[1]); // Skip header
+            }
+        }
+        
+        // =========================================
+        // 🎮 Global Functions (for buttons)
+        // =========================================
+        
+        window.spawnAgent = async function(type) {
+            console.log('📮 Creating intentRequest with target=*, action=agent.spawn');
+            await voidCore.publish(Message.intentRequest('*', 'agent.spawn', {
+                type: type,
+                color: type === 'vehicle' ? (Math.random() > 0.5 ? 'red' : 'blue') : undefined,
+                timestamp: Date.now()
+            }));
+        };
+        
+        window.runHealthCheck = async function() {
+            logMessage('health', '💊 Running health check on all plugins...');
+            
+            await voidCore.publish(Message.intentRequest('core.health.ping', {
+                timestamp: Date.now()
+            }));
+        };
+        
+        window.clearCity = function() {
+            cityState.agents.forEach(agent => {
+                agent.element.remove();
+            });
+            cityState.agents.clear();
+            cityState.emergencyActive = false;
+            cityState.nextId = 1;
+            
+            logMessage('system', '🧹 City cleared - all agents removed');
+        };
+        
+        // =========================================
+        // 🚀 Initialize Pure System
+        // =========================================
+        
+        async function initializePureCity() {
+            logMessage('system', '🌟 Initializing Pure Message City v14.0...');
+            
+            // 🔧 CRITICAL FIX: Force VoidCore initialization
+            console.log('🔧 Forcing VoidCore initialization...');
+            if (!voidCore.initialized) {
+                await voidCore._ensureInitialized();
+                console.log('✅ VoidCore initialization forced and completed!');
+            }
+            
+            // 🧪 FINAL DEBUG: Direct ChannelManager test
+            console.log('🧪 Testing ChannelManager directly...');
+            
+            const testHandler = (message) => {
+                try {
+                    console.log('🧪 FINAL TEST - ChannelManager received:', message);
+                    console.log('🧪 Message type:', typeof message);
+                    console.log('🧪 Message keys:', Object.keys(message));
+                } catch (error) {
+                    console.error('🧪 FINAL TEST ERROR:', error);
+                }
+            };
+            
+            // Test direct subscription
+            voidCore.channelManager.subscribe('IntentRequest', testHandler);
+            console.log('🧪 Direct ChannelManager subscription added');
+            
+            // Test VoidCore wrapper
+            voidCore.subscribe('IntentRequest', (message) => {
+                console.log('🧪 VoidCore wrapper received:', message);
+            });
+            
+            console.log('🧪 Final state check:', {
+                initialized: voidCore.initialized,
+                subscriptionCount: voidCore.channelManager.subscriptionCount,
+                typeToChannelMap: voidCore.channelManager.typeToChannelMap,
+                transport: voidCore.channelManager.transport,
+                transportSubscribers: voidCore.channelManager.transport.subscribers
+            });
+            
+            // Start all plugins
+            await trafficController.run();
+            await vehicleManager.run();
+            await pedestrianManager.run();
+            
+            // Health check responses
+            voidCore.subscribe('IntentResponse', 'core.health.ping', (msg) => {
+                logMessage('health', `💊 ${msg.payload.pluginId}: ${msg.payload.status}`);
+            });
+            
+            logMessage('system', '✅ Pure system initialized successfully!');
+            
+            // Spawn some initial agents
+            setTimeout(async () => {
+                console.log('🚗 Attempting to spawn initial vehicle...');
+                logMessage('system', '🚗 Spawning initial vehicle...');
+                await window.spawnAgent('vehicle');
+                setTimeout(() => {
+                    console.log('🚶 Attempting to spawn pedestrian...');
+                    logMessage('system', '🚶 Spawning pedestrian...');
+                    window.spawnAgent('pedestrian');
+                }, 2000);
+                setTimeout(() => {
+                    console.log('🚗 Attempting to spawn second vehicle...');
+                    logMessage('system', '🚗 Spawning second vehicle...');
+                    window.spawnAgent('vehicle');
+                }, 4000);
+            }, 1000);
+        }
+        
+        // Start the pure system
+        initializePureCity();
+    </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>🧪 VoidCore Simple Test</title>
+    <style>
+        body { 
+            font-family: monospace; 
+            padding: 20px; 
+            background: #222; 
+            color: #0f0; 
+        }
+        .log { 
+            background: #000; 
+            padding: 10px; 
+            border: 1px solid #0f0; 
+            height: 300px; 
+            overflow-y: auto; 
+            margin: 10px 0; 
+        }
+        button { 
+            background: #0f0; 
+            color: #000; 
+            border: none; 
+            padding: 10px 20px; 
+            margin: 5px; 
+            cursor: pointer; 
+            font-weight: bold; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 VoidCore v14.0 - Super Simple Test</h1>
+    
+    <button onclick="sendTestMessage()">📮 Send Test Message</button>
+    <button onclick="clearLog()">🧹 Clear Log</button>
+    
+    <div class="log" id="log"></div>
+
+    <script type="module">
+        import { voidCore, Message } from '../src/index.js';
+
+        const log = document.getElementById('log');
+
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            log.innerHTML += `[${timestamp}] ${message}<br>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // === SUPER SIMPLE TEST ===
+        
+        async function initTest() {
+            addLog('🚀 Starting VoidCore Simple Test...');
+            
+            try {
+                // Force initialization
+                await voidCore._ensureInitialized();
+                addLog('✅ VoidCore initialized successfully!');
+                
+                // Simple message handler
+                voidCore.subscribe('Notice', (message) => {
+                    addLog(`📥 Received Notice: ${message.event_name} - ${JSON.stringify(message.payload)}`);
+                });
+                
+                addLog('📡 Subscribed to Notice messages');
+                addLog('🎯 Ready! Click "Send Test Message" button.');
+                
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`);
+                console.error('Init error:', error);
+            }
+        }
+
+        // Global function for button
+        window.sendTestMessage = async function() {
+            try {
+                addLog('📮 Sending test message...');
+                
+                const testMessage = Message.notice('test.simple', {
+                    content: 'Hello from VoidCore!',
+                    timestamp: Date.now()
+                });
+                
+                await voidCore.publish(testMessage);
+                addLog('✅ Test message sent!');
+                
+            } catch (error) {
+                addLog(`❌ Send error: ${error.message}`);
+                console.error('Send error:', error);
+            }
+        };
+
+        window.clearLog = function() {
+            log.innerHTML = '';
+        };
+
+        // Start the test
+        initTest();
+    </script>
+</body>
+</html>

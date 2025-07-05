@@ -121,8 +121,9 @@ export class ChannelManager {
   // v13.0: Create type-filtered handler for Transport
   createTypeHandler(expectedType, originalHandler) {
     return (message) => {
-      // Only call handler if message type matches
-      if (message && message.type === expectedType) {
+      // Only call handler if message category matches (not type)
+      // v14.0 FIX: Use message.category instead of message.type
+      if (message && message.category === expectedType) {
         return originalHandler(message)
       }
     }

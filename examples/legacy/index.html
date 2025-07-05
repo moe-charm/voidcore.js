@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>VoidCore.js - Legacy Examples</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #636e72 0%, #74b9ff 100%);
+      color: white;
+    }
+    .header { 
+      text-align: center; 
+      margin-bottom: 40px; 
+      padding: 30px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #87ceeb;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+    }
+    .back-link:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    .demo-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
+      gap: 25px; 
+      max-width: 1200px; 
+      margin: 0 auto; 
+    }
+    .demo-card { 
+      background: rgba(255,255,255,0.1); 
+      border-radius: 15px; 
+      padding: 25px; 
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: transform 0.3s ease; 
+    }
+    .demo-card:hover { 
+      transform: translateY(-5px); 
+    }
+    .demo-title { 
+      font-size: 1.5em; 
+      margin-bottom: 12px; 
+      color: white; 
+    }
+    .demo-description { 
+      color: rgba(255,255,255,0.8); 
+      margin-bottom: 18px; 
+      line-height: 1.6; 
+    }
+    .demo-button { 
+      background: linear-gradient(45deg, #636e72, #74b9ff); 
+      color: white; 
+      border: none; 
+      padding: 12px 24px; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      text-decoration: none; 
+      display: inline-block; 
+      transition: background 0.3s ease; 
+      font-weight: bold; 
+    }
+    .demo-button:hover { 
+      transform: translateY(-2px);
+    }
+    .legacy-badge { 
+      background: linear-gradient(45deg, #636e72, #95a5a6); 
+      color: white; 
+      padding: 5px 10px; 
+      border-radius: 15px; 
+      font-size: 0.8em; 
+      font-weight: bold; 
+      margin-left: 10px; 
+    }
+    .warning-box {
+      background: rgba(255, 193, 7, 0.2);
+      border: 2px solid rgba(255, 193, 7, 0.6);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 30px auto;
+      max-width: 800px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="../index.html" class="back-link">← Back to VoidCore v14.0</a>
+    <h1>🗄️ VoidCore Legacy Examples</h1>
+    <p>VoidCore v13.0以前のサンプルとデモンストレーション</p>
+  </div>
+
+  <div class="warning-box">
+    <h3>⚠️ レガシー警告</h3>
+    <p>
+      これらのサンプルは<strong>VoidCore v13.0以前</strong>のものです。<br>
+      学習・参考用として保存されていますが、新規開発では<strong>v14.0 Pure System</strong>の使用を強く推奨します。
+    </p>
+  </div>
+
+  <div class="demo-grid">
+    <div class="demo-card">
+      <div class="demo-title">
+        🌌 Galaxy Viewer (Simple)
+        <span class="legacy-badge">v11.0 Style</span>
+      </div>
+      <div class="demo-description">
+        軽量化された星の物理シミュレーション。古典的なVoidCoreの基本概念を学習できます。
+      </div>
+      <a href="./galaxy-viewer-simple.html" class="demo-button">🌟 View Stars</a>
+    </div>
+
+    <div class="demo-card">
+      <div class="demo-title">
+        🏙️ Message City (Simple)
+        <span class="legacy-badge">v11.0 Style</span>
+      </div>
+      <div class="demo-description">
+        シンプルなCSS アニメーションベースの交通シミュレーション。基本的なメッセージパッシングの例。
+      </div>
+      <a href="./message-city-simple.html" class="demo-button">🚗 Simple Traffic</a>
+    </div>
+
+    <div class="demo-card">
+      <div class="demo-title">
+        🏙️ Message City (Modern v13.0)
+        <span class="legacy-badge">v13.0 Legacy</span>
+      </div>
+      <div class="demo-description">
+        AutonomousPlugin継承を使用した複雑な都市シミュレーション。v13.0時代の最終形態。
+      </div>
+      <a href="./message-city-modern.html" class="demo-button">🏗️ Legacy Modern</a>
+    </div>
+
+    <div class="demo-card">
+      <div class="demo-title">
+        📚 Legacy Documentation
+        <span class="legacy-badge">Archive</span>
+      </div>
+      <div class="demo-description">
+        古いバージョンのドキュメンテーション、AutonomousPluginの使い方、継承ベースシステムの解説。
+      </div>
+      <a href="#" onclick="showLegacyDocs()" class="demo-button">📖 Read Docs</a>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-top: 40px; padding: 25px; background: rgba(255,255,255,0.1); border-radius: 15px;">
+    <h3>🚀 新しいシステムへの移行</h3>
+    <p>
+      VoidCore v14.0 Pure Systemでは、これらの複雑な継承システムを完全に排除し、<br>
+      よりシンプルで強力な純粋メッセージベースアーキテクチャを採用しています。
+    </p>
+    <a href="../index.html" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background: linear-gradient(45deg, #00f260, #0575e6); color: white; text-decoration: none; border-radius: 20px; font-weight: bold;">
+      🌟 v14.0 Pure System を体験
+    </a>
+  </div>
+
+  <script>
+    function showLegacyDocs() {
+      alert(`
+🗄️ Legacy Documentation
+
+VoidCore v13.0 以前の主要概念:
+
+1. AutonomousPlugin 基底クラス
+   - 5段階ライフサイクル
+   - prepare → debut → observe → work → retire
+
+2. 継承ベースの設計
+   class MyPlugin extends AutonomousPlugin {
+     async _prepare() { ... }
+     async _work() { ... }
+   }
+
+3. 複雑な状態管理
+   - currentPhase
+   - subscription管理
+   - 手動リソース解放
+
+→ v14.0では全て廃止され、シンプルな createPlugin() に置き換わりました。
+      `);
+    }
+  </script>
+</body>
+</html>

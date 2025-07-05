@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 Galaxy Viewer - Lightweight Demo</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #000; 
+            color: white;
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #4a90e2;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        #demo-container {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+        .star {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255,255,255,0.9), 0 0 40px rgba(255,255,255,0.5);
+            animation: twinkle 2s infinite;
+            z-index: 10;
+            transition: all 0.1s ease;
+        }
+        .star.collision {
+            background: #ff6b6b;
+            box-shadow: 0 0 30px #ff6b6b, 0 0 60px #ff4444, 0 0 90px #ff0000;
+            animation: explode 1.5s ease-out;
+            transform: scale(2);
+        }
+        .orbit-trail {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: fadeTrail 2s ease-out forwards;
+        }
+        .explosion-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: explodeParticle 1s ease-out forwards;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+        @keyframes orbit {
+            0% { transform: rotate(0deg) translateX(var(--orbit-radius, 100px)) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(var(--orbit-radius, 100px)) rotate(-360deg); }
+        }
+        @keyframes explode {
+            0% { transform: scale(2); opacity: 1; }
+            25% { transform: scale(4); opacity: 0.8; }
+            50% { transform: scale(6); opacity: 0.6; }
+            75% { transform: scale(8); opacity: 0.3; }
+            100% { transform: scale(10); opacity: 0; }
+        }
+        @keyframes fadeTrail {
+            0% { opacity: 0.5; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.1); }
+        }
+        @keyframes explodeParticle {
+            0% { opacity: 1; transform: scale(1) translate(0, 0); }
+            100% { opacity: 0; transform: scale(0.2) translate(var(--particle-x, 0), var(--particle-y, 0)); }
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #357abd;
+        }
+        .status {
+            text-align: center;
+            margin-top: 10px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="./index.html" class="back-link">← Back to Demo Index</a>
+        <h1>🌌 Galaxy Viewer (Lightweight)</h1>
+        <p>Watch autonomous celestial bodies in a simplified universe!</p>
+        <p><em>Browser-friendly version - no Three.js crashes!</em></p>
+    </div>
+
+    <div id="demo-container">
+        <!-- Stars will appear here -->
+    </div>
+
+    <div class="controls">
+        <button onclick="addStar()">✨ Add Star</button>
+        <button onclick="triggerCollision()">💥 Collision!</button>
+        <button onclick="clearGalaxy()">🧹 Clear Galaxy</button>
+        <button onclick="autoMode()">🤖 Auto Mode</button>
+    </div>
+
+    <div class="status" id="status">
+        Ready to explore the galaxy! Click "Add Star" to begin.
+    </div>
+
+    <script type="module">
+        import { voidCore } from '../../src/voidcore.js';
+        import { Message } from '../../src/message.js';
+
+        let starCount = 0;
+        let autoModeActive = false;
+        let autoInterval = null;
+        const container = document.getElementById('demo-container');
+        const status = document.getElementById('status');
+        
+        // Star physics system
+        const stars = new Map(); // Store star data
+        let animationFrame = null;
+        let frameCount = 0;
+        
+        // Animation loop like the original
+        function animate() {
+            animationFrame = requestAnimationFrame(animate);
+            frameCount++;
+            
+            const time = Date.now() * 0.001;
+            const containerWidth = container.offsetWidth || 800;
+            const containerHeight = container.offsetHeight || 500;
+            const centerX = containerWidth / 2;
+            const centerY = containerHeight / 2;
+            
+            stars.forEach((starData, starId) => {
+                const starElement = document.getElementById(starId);
+                if (!starElement) return;
+                
+                // Store previous position for trail
+                const prevX = starData.x || centerX;
+                const prevY = starData.y || centerY;
+                
+                // Complex orbital motion like original Galaxy Viewer
+                const starIndex = starData.index;
+                const offset = starIndex * 0.8; // Phase difference
+                
+                // Varied orbits for collision potential
+                const baseRadius = 60 + (starIndex % 3) * 40; // 60-140px
+                const speed = 0.3 + (starIndex % 5) * 0.2;   // 0.3-0.9 speed
+                
+                // Complex 3D-like motion
+                const x = Math.cos(time * speed + offset) * baseRadius;
+                const y = Math.sin(time * (speed * 1.3) + offset) * baseRadius;
+                const z = Math.sin(time * (speed * 0.7) + offset) * (baseRadius * 0.3);
+                
+                // Convert to screen coordinates
+                const screenX = centerX + x + z * 0.5; // Z affects X for depth
+                const screenY = centerY + y + z * 0.3; // Z affects Y for depth
+                
+                starElement.style.left = screenX + 'px';
+                starElement.style.top = screenY + 'px';
+                
+                // Create trail effect every 3 frames (lightweight)
+                if (frameCount % 3 === 0 && starData.x !== undefined) {
+                    createTrail(prevX, prevY);
+                }
+                
+                // Update stored position for collision detection
+                starData.x = screenX;
+                starData.y = screenY;
+                
+                // Scale based on Z for depth effect
+                const scale = 1 + z * 0.01;
+                starElement.style.transform = `scale(${scale})`;
+            });
+            
+            // Check collisions every frame
+            checkForCollisions();
+        }
+        
+        // Create lightweight trail effect
+        function createTrail(x, y) {
+            const trail = document.createElement('div');
+            trail.className = 'orbit-trail';
+            trail.style.left = x + 'px';
+            trail.style.top = y + 'px';
+            container.appendChild(trail);
+            
+            // Auto-remove trail after animation
+            setTimeout(() => {
+                if (trail.parentNode) {
+                    trail.remove();
+                }
+            }, 2000);
+        }
+        
+        // Create explosion effect based on energy
+        function createExplosion(x, y, energy) {
+            // Number of particles based on energy (but keep it lightweight)
+            const particleCount = Math.min(8, Math.floor(energy / 100) + 3);
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'explosion-particle';
+                
+                // Random explosion direction
+                const angle = (i / particleCount) * Math.PI * 2 + Math.random() * 0.5;
+                const distance = 30 + Math.random() * 40; // 30-70px explosion radius
+                const particleX = Math.cos(angle) * distance;
+                const particleY = Math.sin(angle) * distance;
+                
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.setProperty('--particle-x', particleX + 'px');
+                particle.style.setProperty('--particle-y', particleY + 'px');
+                
+                // Color based on energy
+                if (energy > 400) {
+                    particle.style.background = '#ff0000'; // Red for high energy
+                } else if (energy > 200) {
+                    particle.style.background = '#ff6b6b'; // Orange for medium energy
+                } else {
+                    particle.style.background = '#ffaa00'; // Yellow for low energy
+                }
+                
+                container.appendChild(particle);
+                
+                // Auto-remove particle after animation
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.remove();
+                    }
+                }, 1000);
+            }
+        }
+
+        // Subscribe to galaxy events
+        voidCore.subscribe('galaxy.star.created', (msg) => {
+            const activeStars = stars.size;
+            status.textContent = `⭐ ${msg.payload.name} created! Active: ${activeStars}/12`;
+        });
+
+        voidCore.subscribe('galaxy.collision', (msg) => {
+            const activeStars = stars.size;
+            const { energy, distance, star1Age, star2Age } = msg.payload;
+            status.textContent = `💥 Collision! Energy: ${energy} (${distance}px gap, ages: ${star1Age}s + ${star2Age}s) | Active: ${activeStars}/12`;
+        });
+
+        // Add a star to the galaxy
+        window.addStar = async () => {
+            starCount++;
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.id = `star-${starCount}`;
+            
+            // Get container dimensions (ensure they exist)
+            const containerWidth = container.offsetWidth || 800;
+            const containerHeight = container.offsetHeight || 500;
+            
+            // Start at center
+            const centerX = containerWidth / 2;
+            const centerY = containerHeight / 2;
+            star.style.left = centerX + 'px';
+            star.style.top = centerY + 'px';
+            
+            // Store star data for animation
+            stars.set(`star-${starCount}`, {
+                index: starCount - 1,
+                x: centerX,
+                y: centerY,
+                created: Date.now()
+            });
+            
+            console.log(`Adding star ${starCount} - physics-based motion enabled`);
+            
+            container.appendChild(star);
+
+            // Publish VoidCore message
+            await voidCore.publish(Message.notice('galaxy.star.created', {
+                name: `Star-${starCount}`,
+                position: { x: centerX, y: centerY },
+                energy: Math.floor(Math.random() * 100) + 50
+            }));
+
+            // Auto-remove after 30 seconds for much longer show
+            setTimeout(() => {
+                if (star.parentNode) {
+                    star.remove();
+                    stars.delete(`star-${starCount}`);
+                    console.log(`⏰ Star-${starCount} expired naturally (30s lifetime)`);
+                }
+            }, 30000);
+        };
+
+        // Trigger collision effect
+        window.triggerCollision = async () => {
+            const stars = container.querySelectorAll('.star:not(.collision)');
+            if (stars.length >= 2) {
+                const star1 = stars[Math.floor(Math.random() * stars.length)];
+                const star2 = stars[Math.floor(Math.random() * stars.length)];
+                
+                if (star1 !== star2) {
+                    star1.classList.add('collision');
+                    star2.classList.add('collision');
+                    
+                    await voidCore.publish(Message.notice('galaxy.collision', {
+                        participants: [star1.id, star2.id],
+                        energy: Math.floor(Math.random() * 500) + 100,
+                        timestamp: Date.now()
+                    }));
+
+                    // Remove collision stars
+                    setTimeout(() => {
+                        star1.remove();
+                        star2.remove();
+                    }, 1000);
+                }
+            } else {
+                status.textContent = '⚠️ Need at least 2 stars for collision!';
+            }
+        };
+
+        // Clear all stars
+        window.clearGalaxy = () => {
+            container.innerHTML = '';
+            stars.clear();
+            starCount = 0;
+            status.textContent = 'Galaxy cleared! Ready for new stars.';
+            console.log('🧹 Galaxy cleared - all stars removed');
+        };
+
+        // Auto mode - creates stars automatically
+        window.autoMode = () => {
+            if (autoModeActive) {
+                clearInterval(autoInterval);
+                autoModeActive = false;
+                status.textContent = 'Auto mode stopped.';
+            } else {
+                autoModeActive = true;
+                status.textContent = 'Auto mode started! Stars appearing automatically.';
+                
+                autoInterval = setInterval(() => {
+                    if (container.children.length < 10) {
+                        addStar();
+                    }
+                    
+                    // Random collision chance
+                    if (Math.random() < 0.3 && container.children.length >= 2) {
+                        triggerCollision();
+                    }
+                }, 2000);
+            }
+        };
+
+        // Initial setup - add some stars automatically
+        status.textContent = '🌌 Lightweight Galaxy ready! No crashes, just pure VoidCore magic.';
+        
+        // Start animation loop
+        animate();
+        
+        // Add more initial stars for spectacular collisions!
+        setTimeout(() => {
+            // Add 8 stars for maximum collision fun!
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => addStar(), i * 300);
+            }
+        }, 100);
+        
+        // Auto spawn new stars to keep the action going!
+        setInterval(() => {
+            if (container.children.length < 12) {
+                addStar();
+            }
+        }, 3000);
+        
+        // Check for actual star collisions using stored positions
+        function checkForCollisions() {
+            const starArray = Array.from(stars.entries());
+            for (let i = 0; i < starArray.length; i++) {
+                for (let j = i + 1; j < starArray.length; j++) {
+                    const [id1, data1] = starArray[i];
+                    const [id2, data2] = starArray[j];
+                    
+                    const star1 = document.getElementById(id1);
+                    const star2 = document.getElementById(id2);
+                    
+                    if (!star1 || !star2 || star1.classList.contains('collision') || star2.classList.contains('collision')) {
+                        continue;
+                    }
+                    
+                    const distance = Math.sqrt(
+                        Math.pow(data2.x - data1.x, 2) + Math.pow(data2.y - data1.y, 2)
+                    );
+                    
+                    // Collision if stars are close enough (30px for more frequent collisions)
+                    if (distance < 30) {
+                        star1.classList.add('collision');
+                        star2.classList.add('collision');
+                        
+                        // Calculate collision energy based on physics
+                        const star1Age = (Date.now() - data1.created) / 1000; // seconds
+                        const star2Age = (Date.now() - data2.created) / 1000;
+                        const combinedMass = (star1Age + star2Age) * 10; // Age = mass
+                        const speed = Math.max(0.1, (30 - distance) / 30); // Closer = faster impact
+                        const energy = Math.floor(combinedMass * speed * 50); // Physics-based energy
+                        
+                        voidCore.publish(Message.notice('galaxy.collision', {
+                            participants: [id1, id2],
+                            energy: energy,
+                            distance: distance.toFixed(1),
+                            star1Age: star1Age.toFixed(1),
+                            star2Age: star2Age.toFixed(1),
+                            timestamp: Date.now()
+                        }));
+                        
+                        console.log(`💥 Collision between ${id1} and ${id2}! Distance: ${distance.toFixed(1)}px`);
+                        
+                        // Create explosion effect at collision point
+                        const explosionX = (data1.x + data2.x) / 2;
+                        const explosionY = (data1.y + data2.y) / 2;
+                        createExplosion(explosionX, explosionY, energy);
+                        
+                        // Remove collision stars and data
+                        setTimeout(() => {
+                            star1.remove();
+                            star2.remove();
+                            stars.delete(id1);
+                            stars.delete(id2);
+                        }, 1500);
+                        
+                        return; // Exit after first collision
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
