@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>📮 簡単VoidCore！ - 郵便局デモ</title>
+    <style>
+        body { 
+            font-family: 'Courier New', monospace; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .demo-container {
+            display: grid;
+            grid-template-columns: 1fr 350px 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            height: 500px;
+        }
+        
+        /* プラグイン表示 */
+        .plugin {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+            position: relative;
+        }
+        .plugin-a { border-color: #4ecdc4; }
+        .plugin-b { border-color: #ff6b6b; }
+        
+        .plugin h3 {
+            margin: 0 0 15px 0;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        
+        /* VoidCore中央表示 */
+        .voidcore {
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 3px solid #ffd93d;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+        
+        .voidcore h3 {
+            margin: 0 0 10px 0;
+            color: #ffd93d;
+        }
+        
+        /* ボタン */
+        .button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* 状態表示 */
+        .status {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            min-height: 60px;
+            font-size: 12px;
+            overflow-y: auto;
+        }
+        
+        /* ログ表示 */
+        .log-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.4;
+            border: 1px solid #0f0;
+        }
+        
+        /* アニメーション */
+        .message-arrow {
+            position: absolute;
+            top: 50%;
+            width: 0;
+            height: 0;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .arrow-right {
+            left: 100%;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-left: 20px solid #4ecdc4;
+        }
+        
+        .arrow-left {
+            right: 100%;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-right: 20px solid #ff6b6b;
+        }
+        
+        .arrow-active {
+            opacity: 1;
+            transform: translateX(10px);
+        }
+        
+        /* メッセージ種類選択 */
+        .message-type-selector {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .message-type-selector select {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .message-type-selector option {
+            background: #2a5298;
+            color: white;
+        }
+        
+        /* 統計表示 */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd93d;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📮 簡単VoidCore！郵便局デモ</h1>
+        <p>プラグイン同士のメッセージやりとりをリアルタイム観察するにゃ！</p>
+    </div>
+
+    <div class="demo-container">
+        <!-- プラグインA (聞く人) -->
+        <div class="plugin plugin-a">
+            <h3>🎧 プラグインA (聞く人)</h3>
+            
+            <div class="message-type-selector">
+                <label>聞きたいメッセージ:</label><br>
+                <select id="listen-type">
+                    <option value="user.login">user.login (ログイン)</option>
+                    <option value="user.logout">user.logout (ログアウト)</option>
+                    <option value="data.updated">data.updated (データ更新)</option>
+                    <option value="*">* (全部聞く)</option>
+                </select>
+            </div>
+            
+            <button class="button" onclick="setupListener()" id="setup-btn">
+                🙋‍♂️ 掲示板に自己紹介
+            </button>
+            
+            <div class="status" id="plugin-a-status">
+                まだ掲示板に自己紹介してないにゃ
+            </div>
+            
+            <div class="message-arrow arrow-left" id="arrow-to-a"></div>
+        </div>
+
+        <!-- VoidCore中央 -->
+        <div class="voidcore">
+            <h3>🏛️ VoidCore郵便局</h3>
+            <p style="font-size: 12px; margin: 10px 0;">「静寂の器」- メッセージを通すだけ</p>
+            
+            <div class="status" id="voidcore-status">
+                📋 郵便局掲示板:<br>
+                <div id="subscription-rules" style="font-size: 10px; margin-top: 5px;">
+                    まだ自己紹介なしにゃ
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="subscribe-count">0</div>
+                    <div class="stat-label">自己紹介</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="publish-count">0</div>
+                    <div class="stat-label">配達回数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="delivery-count">0</div>
+                    <div class="stat-label">受信回数</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- プラグインB (話す人) -->
+        <div class="plugin plugin-b">
+            <h3>📢 プラグインB (送信専門)</h3>
+            
+            <div class="message-type-selector">
+                <label>送るメッセージ:</label><br>
+                <select id="send-type">
+                    <option value="user.login">user.login (ログイン)</option>
+                    <option value="user.logout">user.logout (ログアウト)</option>
+                    <option value="data.updated">data.updated (データ更新)</option>
+                    <option value="system.ready">system.ready (システム準備)</option>
+                </select>
+            </div>
+            
+            <button class="button" onclick="sendMessage()" id="send-btn">
+                📮 メッセージを送る
+            </button>
+            
+            <div class="status" id="plugin-b-status">
+                送信専門プラグイン！いつでもメッセージ送れるにゃ
+            </div>
+            
+            <div class="message-arrow arrow-right" id="arrow-to-b"></div>
+        </div>
+    </div>
+
+    <!-- 関数実行ログ -->
+    <div class="log-container">
+        <h3>📋 関数実行ログ - リアルタイム表示</h3>
+        <div class="log" id="function-log">
+            VoidCore v14.0 デモ開始！<br>
+            プラグインAで「聞く準備」をしてから、プラグインBで「メッセージ送信」してにゃ！<br>
+        </div>
+    </div>
+
+    <script type="module">
+        import { voidCore, Message, createPlugin } from '../src/index.js';
+
+        // ================================
+        // 状態管理
+        // ================================
+        let pluginA = null;
+        let pluginB = null;
+        let subscribeCount = 0;
+        let publishCount = 0;
+        let deliveryCount = 0;
+        let currentListenerA = null;
+        let subscriptionRules = [];
+
+        // ================================
+        // DOM要素
+        // ================================
+        const functionLog = document.getElementById('function-log');
+        const pluginAStatus = document.getElementById('plugin-a-status');
+        const pluginBStatus = document.getElementById('plugin-b-status');
+        const voidcoreStatus = document.getElementById('voidcore-status');
+        const setupBtn = document.getElementById('setup-btn');
+        const sendBtn = document.getElementById('send-btn');
+
+        // ================================
+        // ログ関数
+        // ================================
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#0f0',
+                warn: '#ff0',
+                error: '#f00',
+                success: '#0ff'
+            };
+            const color = colors[type] || '#0f0';
+            
+            functionLog.innerHTML += `<span style="color: ${color}">[${timestamp}] ${message}</span><br>`;
+            functionLog.scrollTop = functionLog.scrollHeight;
+        }
+
+        function updateStats() {
+            document.getElementById('subscribe-count').textContent = subscribeCount;
+            document.getElementById('publish-count').textContent = publishCount;
+            document.getElementById('delivery-count').textContent = deliveryCount;
+            
+            // VoidCore郵便局の掲示板更新
+            const rulesDiv = document.getElementById('subscription-rules');
+            if (subscriptionRules.length === 0) {
+                rulesDiv.innerHTML = 'まだ自己紹介なしにゃ';
+            } else {
+                rulesDiv.innerHTML = subscriptionRules.map((rule, index) => 
+                    `🙋 ${rule.plugin}: 欲しいデータ "${rule.eventType}"`
+                ).join('<br>');
+            }
+        }
+
+        function showArrow(direction, duration = 1000) {
+            const arrow = document.getElementById(direction === 'right' ? 'arrow-to-b' : 'arrow-to-a');
+            arrow.classList.add('arrow-active');
+            setTimeout(() => {
+                arrow.classList.remove('arrow-active');
+            }, duration);
+        }
+
+        // ================================
+        // VoidCore初期化
+        // ================================
+        async function initializeDemo() {
+            await voidCore._ensureInitialized();
+            addLog('🚀 VoidCore郵便局が開店しました！', 'success');
+
+            // プラグイン作成
+            pluginA = createPlugin({
+                pluginId: 'plugin-a',
+                name: 'リスナープラグイン',
+                autoHealth: false,
+                autoProcess: false
+            });
+
+            pluginB = createPlugin({
+                pluginId: 'plugin-b', 
+                name: 'センダープラグイン',
+                autoHealth: false,
+                autoProcess: false
+            });
+
+            addLog('📦 プラグインA (受信専門) 作成完了');
+            addLog('📦 プラグインB (送信専門) 作成完了');
+        }
+
+        // ================================
+        // 聞く準備設定 (プラグインA)
+        // ================================
+        window.setupListener = function() {
+            const listenType = document.getElementById('listen-type').value;
+            
+            addLog(`🔧 プラグインA.on('Notice', '${listenType}', handler) 実行開始`, 'warn');
+            
+            // 前の購読があれば解除
+            if (currentListenerA) {
+                addLog('🗑️ プラグインAの前の購読ルールを削除中...');
+                subscriptionRules = subscriptionRules.filter(r => r.plugin !== 'プラグインA');
+            }
+
+            // 新しい購読設定
+            pluginA.on('Notice', listenType, (message, self) => {
+                deliveryCount++;
+                addLog(`📬 プラグインAがメッセージ受信！`, 'success');
+                addLog(`   └─ イベント: ${message.event_name}`, 'success');
+                addLog(`   └─ データ: ${JSON.stringify(message.payload)}`, 'success');
+                
+                pluginAStatus.innerHTML = `📥 受信成功！<br>イベント: ${message.event_name}<br>データ: ${JSON.stringify(message.payload)}`;
+                showArrow('left');
+                updateStats();
+            });
+
+            if (!currentListenerA) subscribeCount++;
+            currentListenerA = listenType;
+            
+            // VoidCore台帳に追加
+            subscriptionRules.push({
+                plugin: 'プラグインA',
+                eventType: listenType,
+                timestamp: new Date().toLocaleTimeString()
+            });
+            
+            addLog(`✅ voidCore.subscribe('Notice', handler) 実行完了`, 'success');
+            addLog(`📋 VoidCore掲示板更新: プラグインA が "${listenType}" 欲しいと自己紹介`, 'info');
+            
+            pluginAStatus.innerHTML = `🙋‍♂️ 自己紹介完了！<br>欲しいデータ: ${listenType}`;
+            
+            setupBtn.textContent = '🔄 自己紹介やり直し';
+            
+            updateStats();
+        };
+
+
+        // ================================
+        // メッセージ送信
+        // ================================
+        window.sendMessage = function() {
+            const sendType = document.getElementById('send-type').value;
+            const testData = {
+                userId: Math.floor(Math.random() * 1000),
+                timestamp: Date.now(),
+                source: 'plugin-b'
+            };
+
+            addLog(`📮 プラグインB.notice('${sendType}', data) 実行開始`, 'warn');
+            
+            pluginB.notice(sendType, testData).then(() => {
+                publishCount++;
+                addLog(`✅ voidCore.publish(Message.notice('${sendType}', ...)) 実行完了`, 'success');
+                addLog(`📡 VoidCoreが配達処理実行中...`, 'info');
+                
+                pluginBStatus.innerHTML = `📮 送信完了！<br>イベント: ${sendType}<br>データ: ${JSON.stringify(testData)}`;
+                showArrow('right');
+                updateStats();
+            });
+        };
+
+        // ================================
+        // 初期化実行
+        // ================================
+        initializeDemo();
+    </script>
+</body>
+</html>
