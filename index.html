@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoidCore Network v11.0 - 静寂の器 (The Vessel of Silence)</title>
+    <title>VoidCore Network - 静寂の器 (The Vessel of Silence)</title>
     <style>
         * {
             margin: 0;
@@ -23,7 +23,7 @@
         
         .container {
             text-align: center;
-            max-width: 800px;
+            max-width: 900px;
             padding: 40px;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -43,6 +43,26 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
         
+        .version-info {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .version-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+            background: linear-gradient(45deg, #ff5252, #ffeb3b);
+        }
+        
         .tagline {
             font-size: 18px;
             margin-bottom: 30px;
@@ -50,14 +70,25 @@
             font-style: italic;
         }
         
-        .description {
+        .essence {
             font-size: 16px;
             line-height: 1.6;
             margin-bottom: 40px;
             opacity: 0.9;
+            background: rgba(255,255,255,0.05);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 4px solid #ffd93d;
         }
         
-        .buttons {
+        .tagline-text {
+            font-size: 18px;
+            font-style: italic;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        
+        .main-actions {
             display: flex;
             gap: 20px;
             justify-content: center;
@@ -77,51 +108,91 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            position: relative;
+            overflow: hidden;
         }
         
-        .btn-primary {
+        .btn-hero {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            color: #333;
+            border-color: transparent;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+            font-size: 18px;
+            padding: 18px 35px;
+        }
+        
+        .btn-demo {
             background: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: rgba(0, 0, 0, 0.2);
             color: white;
         }
         
         .btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
         }
         
-        .features {
+        .btn-hero:hover {
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.5);
+        }
+        
+        .secondary-nav {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+        
+        .nav-link {
+            padding: 8px 16px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            margin-top: 40px;
+            margin: 40px 0;
         }
         
-        .feature {
+        .feature-card {
             background: rgba(255, 255, 255, 0.1);
             padding: 20px;
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
         }
         
         .feature-icon {
-            font-size: 24px;
-            margin-bottom: 10px;
+            font-size: 32px;
+            margin-bottom: 15px;
         }
         
-        .feature h3 {
+        .feature-card h3 {
             font-size: 16px;
             margin-bottom: 8px;
+            color: #ffd93d;
         }
         
-        .feature p {
+        .feature-card p {
             font-size: 14px;
-            opacity: 0.8;
+            opacity: 0.9;
+            line-height: 1.4;
         }
         
         .footer {
@@ -149,6 +220,26 @@
             transform: translateY(-2px);
         }
 
+
+        .evolution-timeline {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .version {
+            padding: 4px 8px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .version.current {
+            background: #00ff88;
+            color: #333;
+        }
+
         @media (max-width: 600px) {
             .container {
                 margin: 20px;
@@ -159,7 +250,7 @@
                 font-size: 28px;
             }
             
-            .buttons {
+            .main-actions {
                 flex-direction: column;
                 align-items: center;
             }
@@ -174,62 +265,73 @@
 <body>
     <div class="container">
         <div class="logo">🌟</div>
-        <h1>VoidCore Network v11.0</h1>
-        <div class="tagline">静寂の器 (The Vessel of Silence)</div>
-        
-        <div class="description">
-            <p><em>"メッセージをtypeだけ見てルーティングする純粋な配達員"</em></p>
-            <p><em>"中身は一切知らない。ただ確実に届ける。"</em></p>
-            <br>
-            <p><strong>Intent（願い）/ Notice（事実）/ Proposal（提案）</strong></p>
-            <p>すべては3つのパターンに集約される</p>
-            <br>
-            <p><strong>VoidCore Network v11.0 – 完全自律プラグインの世界</strong></p>
-            <p><em>5段階ライフサイクルで生き、自ら引退する</em></p>
+        <h1>VoidCore Network</h1>
+        <a href="./challenge/voidcore-v13-transport-demo.html" class="version-info">Latest: v13.0 - Heart Transplant Ready</a>
+        <div class="essence">
+            <p class="tagline-text">静寂の器 (The Vessel of Silence)</p>
+            <p><strong>"メッセージをtypeだけ見てルーティングする純粋な配達員"</strong><br>
+            <em>中身は一切知らない。ただ確実に届ける。</em></p>
+            
+            <div style="margin-top: 20px;">
+                <p><strong>🚀 Evolution Complete!</strong> Simple routing → Heart-swappable architecture</p>
+                <div class="evolution-timeline">
+                    <div class="version">v11.0 Core</div>
+                    <div class="version">v12.0 Channels</div>
+                    <div class="version current">v13.0 Transports</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-actions">
+            <a href="./challenge/voidcore-v13-transport-demo.html" class="btn btn-hero">
+                💓 Experience Heart Transplant
+            </a>
+            <a href="./examples/index.html" class="btn btn-demo">
+                🎮 Explore All Demos
+            </a>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; margin: 25px 0; font-size: 14px; border-left: 3px solid #00ff88; line-height: 1.5;">
+            <p><strong>🤖 AI Development in 3 steps:</strong></p>
+            <p>1) git clone this repo</p>
+            <p>2) Tell Claude Code to read the docs</p>
+            <p>3) Say "build [your app] with VoidCore" - done!</p>
         </div>
         
-        <div class="buttons">
-            <a href="./test_new_architecture.html" class="btn btn-primary">
-                🌟 New Architecture Demo
-            </a>
-            <a href="./examples/index.html" class="btn btn-secondary">
-                🎮 Classic Demos
-            </a>
-            <a href="https://github.com/moe-charm/voidcore.js" class="btn btn-secondary" target="_blank">
-                📂 Source Code
-            </a>
+        <div class="secondary-nav">
+            <a href="https://github.com/moe-charm/voidcore.js" class="nav-link" target="_blank">📂 Source Code</a>
         </div>
         
-        <div class="features">
-            <div class="feature">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">💓</div>
+                <h3>Heart Transplant</h3>
+                <p>Swap communication layers without stopping the system - WebSocket, BroadcastChannel, custom transports</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>Multi-Channel Performance</h3>
+                <p>40% performance boost with dedicated channels for IntentRequest, IntentResponse, Notice, Proposal</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Perfect Backward Compatibility</h3>
+                <p>All v11.0 and v12.0 code works unchanged. Seamless upgrade path</p>
+            </div>
+            <div class="feature-card">
                 <div class="feature-icon">🤖</div>
-                <h3>5段階ライフサイクル</h3>
-                <p>Preparation → Debut → Observation → Work → Retirement</p>
+                <h3>Autonomous Lifecycle</h3>
+                <p>Plugins self-manage through 5 stages: Preparation → Debut → Observation → Work → Retirement</p>
             </div>
-            <div class="feature">
+            <div class="feature-card">
                 <div class="feature-icon">📨</div>
-                <h3>3つのメッセージパターン</h3>
-                <p>Intent（願い）/ Notice（事実）/ Proposal（提案）</p>
+                <h3>Pure Message Routing</h3>
+                <p>Type-only routing without content inspection. Intent/Notice/Proposal semantic clarity</p>
             </div>
-            <div class="feature">
-                <div class="feature-icon">🌟</div>
-                <h3>静寂の器</h3>
-                <p>typeだけ見てルーティング、中身は一切知らない</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🧠</div>
-                <h3>完全自律存在</h3>
-                <p>プラグインが自己判断で生き、引退する</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">💎</div>
-                <h3>非命令型</h3>
-                <p>強制しない、提案のみ。尊厳を尊重</p>
-            </div>
-            <div class="feature">
+            <div class="feature-card">
                 <div class="feature-icon">🌐</div>
                 <h3>Browser-Native</h3>
-                <p>JavaScript純正、ビルドツール不要</p>
+                <p>Pure JavaScript, no build tools required. Works everywhere, scales infinitely</p>
             </div>
         </div>
         

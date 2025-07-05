@@ -1,5 +1,5 @@
-// src/message.js - メッセージ分類システム
-// Intent/Notice/Proposal の3パターン
+// src/message.js - メッセージ分類システム v12.0
+// IntentRequest/IntentResponse/Notice/Proposal の4パターン
 
 export class Message {
   constructor(type, payload, category = 'Notice') {
@@ -10,10 +10,32 @@ export class Message {
     this.id = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   }
 
-  // Intent専用ファクトリ - 「〜してほしい」(1対1)
+  // === v12.0 NEW MESSAGE TYPES ===
+  
+  // IntentRequest専用ファクトリ - 「〜してください」(1対1、要求)
+  static intentRequest(target, action, payload) {
+    const message = new Message(action, payload, 'IntentRequest')
+    message.target = target
+    message.action = action
+    return message
+  }
+
+  // IntentResponse専用ファクトリ - 「〜しました」(1対1、応答)
+  static intentResponse(action, payload) {
+    const message = new Message(action, payload, 'IntentResponse')
+    message.action = action
+    return message
+  }
+
+  // === BACKWARD COMPATIBILITY ===
+  
+  // Intent専用ファクトリ - 「〜してほしい」(1対1) - v11.0 互換性
+  // 自動的にIntentRequestとして処理される
   static intent(target_role, action, payload) {
-    const message = new Message(action, payload, 'Intent')
-    message.target_role = target_role
+    console.log('⚠️ Message.intent() is deprecated. Use Message.intentRequest() for v12.0')
+    const message = new Message(action, payload, 'IntentRequest')
+    message.target_role = target_role // v11.0互換性
+    message.target = target_role      // v12.0形式にも対応
     message.action = action
     return message
   }
@@ -50,7 +72,11 @@ export class Message {
     if (!this.type || !this.category) return false
 
     switch (this.category) {
-      case 'Intent':
+      case 'IntentRequest':
+        return !!(this.target && this.action)
+      case 'IntentResponse':
+        return !!this.action
+      case 'Intent': // v11.0 backward compatibility
         return !!(this.target_role && this.action)
       case 'Notice':
         return !!this.event_name
@@ -64,12 +90,16 @@ export class Message {
   // メッセージの説明文生成
   getDescription() {
     switch (this.category) {
-      case 'Intent':
-        return `「${this.target_role}に${this.action}してほしい」`
+      case 'IntentRequest':
+        return `Request: "${this.target}, please ${this.action}"`
+      case 'IntentResponse':
+        return `Response: "${this.action} completed"`
+      case 'Intent': // v11.0 backward compatibility
+        return `Legacy Intent: "${this.target_role}, please ${this.action}"`
       case 'Notice':
-        return `「${this.event_name}が起きた」`
+        return `Notice: "${this.event_name} happened"`
       case 'Proposal':
-        return `「${this.target_plugin}に${this.suggestion}しませんか？」`
+        return `Proposal: "${this.target_plugin}, shall we ${this.suggestion}?"`
       default:
         return `Unknown message type: ${this.type}`
     }
@@ -85,7 +115,8 @@ export class Message {
       timestamp: this.timestamp,
       source: this.source,
       // カテゴリ別の特殊フィールド
-      ...(this.target_role && { target_role: this.target_role }),
+      ...(this.target && { target: this.target }),
+      ...(this.target_role && { target_role: this.target_role }), // v11.0 compatibility
       ...(this.action && { action: this.action }),
       ...(this.event_name && { event_name: this.event_name }),
       ...(this.target_plugin && { target_plugin: this.target_plugin }),

@@ -1,0 +1,57 @@
+{
+  "name": "voidcore-network",
+  "version": "13.0.0",
+  "description": "🌟 The Vessel of Silence - Pure message routing with heart-swappable transports",
+  "main": "src/voidcore.js",
+  "type": "module",
+  "keywords": [
+    "message-routing",
+    "autonomous-plugins",
+    "transport-adapter",
+    "vanilla-javascript",
+    "browser-native",
+    "no-dependencies"
+  ],
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "demo": "python3 -m http.server 8080",
+    "test": "echo 'Open http://localhost:8080 to run demos'",
+    "heart-transplant": "echo 'Demo: http://localhost:8080/challenge/voidcore-v13-transport-demo.html'",
+    "v12-demo": "echo 'Demo: http://localhost:8080/challenge/voidcore-v12-demo.html'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/moe-charm/voidcore.js"
+  },
+  "author": "moe-charm",
+  "license": "MIT",
+  "files": [
+    "src/",
+    "docs/",
+    "examples/",
+    "challenge/",
+    "README.md",
+    "QUICKSTART.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "browser": {
+    "./src/voidcore.js": "./src/voidcore.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/voidcore.js",
+      "browser": "./src/voidcore.js"
+    },
+    "./message": {
+      "import": "./src/message.js"
+    },
+    "./transport": {
+      "import": "./src/transport.js"
+    }
+  }
+}

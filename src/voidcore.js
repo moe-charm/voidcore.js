@@ -1,14 +1,61 @@
-// src/voidcore.js - 静寂の器 (The Vessel of Silence)
+// src/voidcore.js - 静寂の器 (The Vessel of Silence) v13.0
 // 純粋なメッセージルーティング - 中身は一切知らない
+// Now with swappable Transport layer - "Heart transplant" capability
+
+import { ChannelManager } from './channel-manager.js'
 
 class VoidCore {
-  constructor() {
-    this.subscribers = new Map() // type -> Set<handler>
+  constructor(transport = null) {
+    // v13.0: ChannelManager with optional Transport injection
+    this.channelManager = new ChannelManager(transport)
+    this.initialized = false
+    
+    // v11.0 backward compatibility
+    this.subscribers = new Map() // type -> Set<handler> (legacy access)
     this.logElement = null
+    
+    // v13.0: Auto-initialize for backward compatibility (lazy)
+    this.initPromise = null
   }
 
   setLogElement(element) {
     this.logElement = element
+    this.channelManager.setLogElement(element)
+  }
+
+  // === v13.0 TRANSPORT METHODS ===
+
+  // Heart transplant! Swap the transport layer at runtime
+  async setTransport(newTransport) {
+    await this.channelManager.setTransport(newTransport)
+    this.log(`💓 VoidCore v13.0: Transport swapped to ${newTransport.constructor.name}`)
+  }
+
+  // Ensure ChannelManager is initialized (called automatically)
+  async _ensureInitialized() {
+    if (!this.initialized && !this.initPromise) {
+      this.initPromise = this.channelManager.initialize().then(() => {
+        this.initialized = true
+      })
+    }
+    
+    if (this.initPromise) {
+      await this.initPromise
+    }
+  }
+
+  // === v12.0 CHANNEL METHODS ===
+
+  // Enable multi-channel mode for high performance
+  enableMultiChannel(config = {}) {
+    this.channelManager.enableMultiChannel(config)
+    this.log(`🌟 VoidCore v12.0: Multi-channel mode activated`)
+  }
+
+  // Disable multi-channel mode (back to v11.0 compatibility)
+  disableMultiChannel() {
+    this.channelManager.disableMultiChannel()
+    this.log(`📡 VoidCore v12.0: Single-channel compatibility mode`)
   }
 
   log(msg) {
@@ -24,11 +71,22 @@ class VoidCore {
 
   // メッセージ購読（typeのみを知る）
   subscribe(type, handler) {
+    // v13.0: Lazy initialization - defer to first publish/subscribe usage
+    if (!this.initialized && !this.initPromise) {
+      this._ensureInitialized().catch(console.error)
+    }
+    
+    // v12.0: Delegate to ChannelManager
+    const unsubscribe = this.channelManager.subscribe(type, handler)
+    
+    // v11.0 backward compatibility: maintain legacy subscribers map
     if (!this.subscribers.has(type)) {
       this.subscribers.set(type, new Set())
     }
     this.subscribers.get(type).add(handler)
+    
     this.log(`🔔 Subscribe: ${type}`)
+    return unsubscribe // v12.0: return unsubscribe function
   }
 
   // 購読解除
@@ -47,54 +105,39 @@ class VoidCore {
   async publish(message) {
     if (!message || !message.type) {
       this.log("⚠️ Invalid message: missing type")
-      return
+      return 0
     }
 
-    this.log(`📨 Publish: ${message.type} (${message.category || 'Unknown'})`)
+    // v13.0: Ensure initialization
+    await this._ensureInitialized()
 
-    // typeだけを見てルーティング
-    const handlers = this.subscribers.get(message.type)
-    if (handlers && handlers.size > 0) {
-      // 非同期で全ハンドラーに配送
-      const promises = Array.from(handlers).map(handler => {
-        try {
-          return Promise.resolve(handler(message))
-        } catch (error) {
-          this.log(`❌ Handler error for ${message.type}: ${error.message}`)
-          return Promise.resolve()
-        }
-      })
-      await Promise.all(promises)
-      this.log(`✅ Delivered to ${handlers.size} subscribers`)
-    } else {
-      this.log(`📭 No subscribers for ${message.type}`)
-    }
+    // v12.0: Delegate to ChannelManager for smart routing
+    const deliveredCount = await this.channelManager.publish(message)
+    
+    return deliveredCount
   }
 
   // 購読者数取得
   getSubscriberCount(type) {
-    return this.subscribers.get(type)?.size || 0
+    // v12.0: Use ChannelManager for accurate count across all channels
+    return this.channelManager.getSubscriberCount(type)
   }
 
   // 全購読解除
-  clear() {
+  async clear() {
+    // v13.0: Clear ChannelManager
+    await this.channelManager.clear()
+    this.initialized = false
+    
+    // v11.0 backward compatibility
     this.subscribers.clear()
     this.log("🧹 All subscriptions cleared")
   }
 
   // 統計情報
   getStats() {
-    const totalSubscribers = Array.from(this.subscribers.values())
-      .reduce((sum, handlers) => sum + handlers.size, 0)
-    
-    return {
-      messageTypes: this.subscribers.size,
-      totalSubscribers,
-      subscriptions: Array.from(this.subscribers.entries()).map(([type, handlers]) => ({
-        type,
-        subscriberCount: handlers.size
-      }))
-    }
+    // v12.0: Get comprehensive stats from ChannelManager
+    return this.channelManager.getStats()
   }
 }
 

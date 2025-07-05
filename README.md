@@ -2,298 +2,216 @@
 
 > **"メッセージをtypeだけ見てルーティングする純粋な配達員"**  
 > _中身は一切知らない。ただ確実に届ける。_
-> 
-> _Intent（願い）、Notice（事実）、Proposal（提案）—— すべては3つのパターンに集約される。_
-> 
-> **VoidCore Network v11.0 – 完全自律プラグインの世界**  
-> _(5段階ライフサイクルで生き、自ら引退する)_
+
+**Latest: v13.0 - Heart Transplant Ready** 💓
 
 ---
 
-## 🌟 核心哲学: VoidCore = 静寂の器
+## 🚀 Quick Start
 
-**VoidCore**は、メッセージをtypeだけ見てルーティングする純粋な配達員です。中身は一切知りません。
-
-### 三つの根幹原則
-
-1. **静寂 (Silence)** - コア自身は一切の意味を知らない純粋な媒体
-2. **非命令型 (Non-Imperative)** - 強制しない、提案のみ
-3. **尊厳尊重 (Dignity)** - プラグインが自律判断
-
----
-
-## 🚀 Features
-
-- 🌱 **Autonomous Lifecycle** — Plugins initialize, declare their capabilities, observe the environment, and clean up themselves.
-- 🧩 **Decentralized Architecture** — The Core never sends commands. It only provides a shared message board.
-- 🧼 **No Global State, No Dependencies** — Every plugin is fully responsible for its own life.
-- 🛠️ **Ultra-light** — Core fits in just a few lines. You can start in seconds.
-- 🌐 **Browser-native** — Works entirely in JavaScript. No build tools required.
-
----
-
-## 🎯 3つのメッセージ分類
-
-すべてのコミュニケーションは、たった3つのパターンに集約されます。
-
-### 1. Intent (意図) - 「〜してほしい」
-
-**特徴**: 特定の役割に願いを送る (1対1通信)
-
-```javascript
-{
-  type: "Intent",
-  target_role: "file_explorer",  // 特定の役割を指定
-  action: "file.open",
-  payload: { path: "/doc.txt" }
-}
-```
-
-### 2. Notice (通知) - 「〜が起きた」
-
-**特徴**: 事実を世界に放送 (1対多通信)
-
-```javascript
-{
-  type: "Notice",
-  event_name: "file.saved",
-  payload: { path: "/doc.txt", size: 2048 }
-}
-```
-
-### 3. Proposal (提案) - 「〜しませんか」
-
-**特徴**: 特定プラグインに提案 (1対1通信、非強制)
-
-```javascript
-{
-  type: "Proposal",
-  target_plugin: "VideoProcessor",
-  suggestion: "pause",
-  payload: { reason: "メモリ不足" }
-}
-```
-
----
-
-## 🚀 完全自律プラグイン 5段階ライフサイクル
-
-すべてのプラグインは、この5つの段階を経て、自律的に生き、そして引退します。
-
-### Phase 1: Preparation (準備)
-- 内部リソースの初期化
-- 設定の読み込み
-- UIコンポーネントの準備
-
-### Phase 2: Debut (登場)
-- 自己紹介: `provide(capability)` で能力を世界に宣言
-- 他のプラグインから発見可能になる
-
-### Phase 3: Observation (観測)
-- 依存する能力を監視: `observe(capability)`
-- 必要なメッセージを購読: `subscribe(type, event)`
-- 世界の状態を把握
-
-### Phase 4: Work (活動)
-- 自律的な動作ループ
-- メッセージの送受信
-- 本来の機能を実行
-
-### Phase 5: Retirement (引退)
-- 自己判断による引退決定
-- `retract(capability)` で能力を撤回
-- リソースのクリーンアップ
-
----
-
-## 💡 プラグイン開発ガイド
-
-### AutonomousPlugin 基底クラス
-
-VoidCore.jsでは、完全自律存在モデルを実現するための`AutonomousPlugin`基底クラスを提供しています。
-
-**Key Features of `AutonomousPlugin`:**
-
--   **Automated Debut**: Automatically `provide`s the plugin's capability to the `CoreBulletinBoard` upon instantiation.
--   **Simplified Retirement**: Provides a `retire()` method to gracefully `retract` the plugin's capability from the board.
--   **Board Access**: Offers convenient access to `board.observe()`, `board.publish()`, and `board.subscribe()` methods.
--   **Lifecycle Hooks**: Includes an overridable `_prepare()` method for internal setup before debut.
-
-**How to use `AutonomousPlugin`:**
-
-Simply extend the `AutonomousPlugin` class and call `super()` with your plugin's unique capability name. Your plugin will automatically `provide` itself to the `CoreBulletinBoard`.
-
-```js
-// Example: A simple plugin extending AutonomousPlugin
-import { AutonomousPlugin } from './src/autonomous_plugin.js';
-
-export class MyAwesomePlugin extends AutonomousPlugin {
-  constructor() {
-    super("MyAwesomeService"); // This plugin provides 'MyAwesomeService'
-    this.board.log('MyAwesomePlugin is alive!');
-
-    // Example: Observe another service
-    const logger = this.observe("LoggerService");
-    if (logger) {
-      logger.log("MyAwesomePlugin is using the Logger!");
-    }
-
-    // Example: Publish a Notice message
-    this.publish({
-      type: 'Notice',
-      source: 'plugins/my-awesome-plugin/v1.0',
-      event_name: 'my.awesome.event',
-      payload: { data: 'some data' },
-      message_id: `notice-${Date.now()}`
-    });
-
-    // Example: Subscribe to an Intent message
-    this.subscribe('Intent', 'do.something.awesome', (message) => {
-      this.board.log(`Received intent to do something awesome: ${JSON.stringify(message.payload)}`);
-      // Perform awesome action
-    });
-  }
-
-  // You can override the _prepare method for custom setup
-  _prepare() {
-    super._prepare(); // Always call the parent's _prepare
-    this.board.log('MyAwesomePlugin is preparing its awesomeness...');
-    // Add custom preparation logic here
-  }
-
-  // Call this method when the plugin needs to retire
-  retireMyAwesomeService() {
-    this.retire(); // Uses the base class retirement logic
-  }
-}
-
-// To initialize your plugin (e.g., in main.js)
-// export function init() {
-//   new MyAwesomePlugin();
-// }
-```
-
-### Plugin Structure
-
-Plugins are designed around a simple "provide, observe, retract" lifecycle, reflecting the "flow of life" within VoidCore. Each plugin is a self-contained unit responsible for its own actions and interactions with the `CoreBulletinBoard`.
-
-```js
-// Example of a Plugin (simplified for conceptual understanding)
-// For actual implementation, consider extending AutonomousPlugin as shown above.
-export class FileExplorerPlugin {
-  constructor(core) {
-    core.provide("file.explorer", this);
-    this.reactTo(core.observe("file.selected"));
-  }
-
-  reactTo(file) {
-    if (file) console.log("Showing file:", file.name);
-  }
-
-  shutdown() {
-    core.retract("file.explorer");
-  }
-}
-```
-
-### Recommended Vocabulary for Messages
-
-To ensure clear and consistent communication across the VoidCore ecosystem, we recommend using the following prefixes for your message `event_name`s (for `Notice` and `Intent` types) and `suggestion`s (for `Proposal` types):
-
--   `Intent.*` – Wishes/Requests (what you want to happen)
--   `Notice.*` – Notifications (what has happened)
--   `Proposal.*` – Gentle suggestions to others
-
-This vocabulary helps other developers understand the intent behind your messages and promotes a harmonious, self-organizing system.
-
----
-
-## 🔧 How It Works
-
-```js
-// Core Bulletin Board (simplified)
-class CoreBulletinBoard {
-  constructor() {
-    this.board = new Map();
-  }
-
-  provide(name, service) {
-    this.board.set(name, service);
-  }
-
-  retract(name) {
-    this.board.delete(name);
-  }
-
-  observe(name) {
-    return this.board.get(name);
-  }
-}
-```
-
----
-
-## 🎮 Live Demo
-
-**Experience VoidCore in action:** https://moe-charm.github.io/voidcore.js/
-
-Try all 6 interactive demos showcasing autonomous plugins, message-driven architecture, and real-time collaboration!
-
----
-
-## ⚙️ Setup and Running the Demo
-
-This repository is designed to run entirely in the browser. While no server environment is strictly required for the core logic, you'll need a local HTTP server to test the examples due to browser security restrictions on ES module imports from `file://` URLs.
-
-### 🌐 How to run the demo locally:
-
-**1. Using Python's built-in HTTP server (recommended for simplicity):**
-
+### Installation
 ```bash
-python3 -m http.server
+git clone https://github.com/moe-charm/voidcore.js
+cd voidcore-js
+npm start
 ```
 
-**2. Or, if you have Node.js installed, using `serve`:**
+### Basic Usage
+```javascript
+import { voidCore, Message } from './src/voidcore.js'
 
-```bash
-npx serve .
+// Subscribe to messages
+voidCore.subscribe('hello.world', (message) => {
+  console.log('Received:', message.payload)
+})
+
+// Send a message
+await voidCore.publish(Message.intent('greeter', 'hello.world', {
+  text: 'Hello, VoidCore!'
+}))
 ```
 
-Once the server is running, open your browser and navigate to:
+### 💓 Heart Transplant (v13.0)
+```javascript
+import { WebSocketTransport } from './src/transport.js'
 
-`http://localhost:8000/examples/index.html`
+// Swap communication layer without stopping the system
+await voidCore.setTransport(new WebSocketTransport('ws://localhost:8080'))
+```
 
 ---
 
-## 🎯 Project Purpose and Vision
+## 🎯 Core Philosophy
 
-VoidCore.js was developed to demonstrate that a fully autonomous plugin, as a self-aware entity, can be expressed with just a few lines of JavaScript.
+VoidCore embodies three fundamental principles:
 
-Unlike traditional plugin managers or event-driven systems, this mechanism achieves the **"Complete Autonomous Existence Model"** where:
-
-- The core never issues commands.
-- Plugins register themselves on the bulletin board, observe, and terminate autonomously.
-- State transitions and dependency resolution are handled by the plugins themselves.
-
-This philosophy and architecture have broad applicability beyond the browser, including embedded systems, distributed systems, and data flow processing.
-
-### The Vision: AI-driven Self-Evolution
-
-Beyond the current implementation, VoidCore envisions an AI residing within the core that observes and learns from plugin communications and user interactions. This AI could:
-
--   **Automatically mediate meanings**: Propose compatibility rules between different plugin protocols.
--   **Enable self-evolution**: Allow the system to adapt and evolve based on user context and plugin interactions, transforming into a new kind of self-evolving life form.
-
-This perfect balance of **"Freedom"** (for plugins to create protocols) and **"Control"** (for the AI to bring order to chaos) is the essence of the VoidCore architecture.
+1. **静寂 (Silence)** - The core knows nothing about message content, only types
+2. **非命令型 (Non-Imperative)** - No commands, only suggestions and proposals  
+3. **尊厳尊重 (Dignity)** - Plugins maintain complete autonomy
 
 ---
 
-## ☕ Support This Project
+## ✨ Key Features
 
-If VoidCore helps bring your ideas to life, consider [☕ buying me a coffee](https://coff.ee/moecharmde6) to fuel more autonomous adventures!
+- 💓 **Heart Transplant** - Swap transport layers at runtime (v13.0)
+- 🚀 **Multi-Channel Performance** - 40% faster with dedicated channels (v12.0)
+- 🔄 **Perfect Backward Compatibility** - All versions work together
+- 🤖 **Autonomous Plugins** - 5-stage lifecycle management
+- 🌐 **Browser-Native** - Pure JavaScript, no build tools
+- 📦 **Zero Dependencies** - Lightweight and self-contained
+
+---
+
+## 🌟 Evolution Timeline
+
+| Version | Feature | Description |
+|---------|---------|-------------|
+| **v13.0** | 💓 Transport Adapters | Heart-swappable communication layers |
+| **v12.0** | 🚀 Multi-Channel | Performance boost with message separation |
+| **v11.0** | 🤖 Autonomous Core | Plugin lifecycle and message routing |
+
+---
+
+## 📬 Message Types
+
+VoidCore uses four clear message types for all communication:
+
+### 1. IntentRequest - "Please do X"
+```javascript
+const request = Message.intentRequest('file_manager', 'file.open', {
+  path: '/documents/readme.txt'
+})
+```
+
+### 2. IntentResponse - "X completed"
+```javascript
+const response = Message.intentResponse('file.open.result', {
+  status: 'success',
+  content: 'File content here...'
+})
+```
+
+### 3. Notice - "X happened" 
+```javascript
+const notice = Message.notice('system.status', {
+  status: 'File saved successfully',
+  timestamp: Date.now()
+})
+```
+
+### 4. Proposal - "Shall we do X?"
+```javascript
+const proposal = Message.proposal('backup_manager', 'system.backup', {
+  action: 'Create daily backup',
+  estimatedTime: 30000
+})
+```
+
+---
+
+## 🔌 Transport Adapters (v13.0)
+
+### Built-in Transports
+
+**DefaultTransport** - Local memory (automatic)
+```javascript
+// No setup needed - works out of the box
+```
+
+**WebSocketTransport** - Real-time networking
+```javascript
+import { WebSocketTransport } from './src/transport.js'
+await voidCore.setTransport(new WebSocketTransport('ws://server.com'))
+```
+
+**BroadcastChannelTransport** - Inter-tab communication
+```javascript
+import { BroadcastChannelTransport } from './src/transport.js'
+await voidCore.setTransport(new BroadcastChannelTransport('my-app'))
+```
+
+### Custom Transport
+```javascript
+export class MyTransport extends ITransport {
+  async initialize() { /* Setup */ }
+  async send(message, channel) { /* Send logic */ }
+  subscribe(handler, channel) { /* Subscribe logic */ }
+  getStats() { /* Statistics */ }
+  async destroy() { /* Cleanup */ }
+}
+```
+
+---
+
+## 🎮 Live Demos
+
+Experience VoidCore in action:
+
+- **💓 [Heart Transplant Demo](http://localhost:8080/challenge/voidcore-v13-transport-demo.html)** - Watch transport swapping live
+- **🚀 [Multi-Channel Demo](http://localhost:8080/challenge/voidcore-v12-demo.html)** - See performance improvements
+- **🎯 [All Examples](http://localhost:8080/examples/)** - Complete demo collection
+
+---
+
+## 🤖 AI-Powered Development
+
+Get started in 3 simple steps:
+
+1. `git clone this repo`
+2. Tell Claude Code to read the docs
+3. Say "build [your app] with VoidCore" - done!
+
+---
+
+## 📚 Documentation
+
+- **[v13.0 Transport Architecture](./docs/VoidCore_Architecture_Specification_v13.0.md)** - Heart transplant guide
+- **[v12.0 Multi-Channel](./docs/VoidCore_Architecture_Specification_v12.0.md)** - Performance improvements  
+- **[Plugin Lifecycle](./docs/Plugin_Lifecycle_Guide_v2.0.md)** - Autonomous plugin development
+- **[Implementation Guide](./docs/JavaScript_Implementation_Guide.md)** - Technical details
+
+---
+
+## 🏗️ Project Structure
+
+```
+voidcore-js/
+├── src/                    # Core library
+│   ├── voidcore.js        # Main VoidCore class
+│   ├── message.js         # Message types
+│   ├── transport.js       # Transport adapters
+│   └── channel-manager.js # Channel management
+├── challenge/             # Interactive demos
+├── examples/              # Code samples
+├── docs/                  # Documentation
+└── plugins/               # Example plugins
+```
+
+---
+
+## 🤝 Contributing
+
+VoidCore thrives on community contributions:
+
+1. Fork the repository
+2. Create your feature branch
+3. Add tests and documentation
+4. Submit a pull request
 
 ---
 
 ## 📄 License
 
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](./LICENSE) file for details.
+
+---
+
+## 💖 Philosophy in Action
+
+*"哲学的に聞こえるかもしれませんが、実用性を徹底追求した結果です！"*
+
+**Beautiful simplicity, infinite scalability, autonomous dignity.**
+
+---
+
+⭐ **Star this repo if VoidCore sparks joy in your development workflow!**
