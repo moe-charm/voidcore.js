@@ -2,11 +2,84 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>VoidCore.js Demos</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <title>VoidCore.js v11.0 - Demos & Examples</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+    .demo-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease; }
+    .demo-card:hover { transform: translateY(-5px); }
+    .demo-title { font-size: 1.5em; margin-bottom: 10px; color: #333; }
+    .demo-description { color: #666; margin-bottom: 15px; line-height: 1.5; }
+    .demo-button { background: #4a90e2; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block; transition: background 0.3s ease; }
+    .demo-button:hover { background: #357abd; }
+    .challenge-badge { background: linear-gradient(45deg, #ff6b6b, #ffd93d); color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.8em; font-weight: bold; margin-left: 10px; }
+  </style>
 </head>
 <body>
-  <div id="app-root"></div>
-  <script type="module" src="./main.js"></script>
+  <div class="header">
+    <h1>🌟 VoidCore.js v11.0 - Demos & Examples</h1>
+    <p>Autonomous plugin architecture with intelligent message routing</p>
+  </div>
+
+  <div class="demo-grid">
+    <div class="demo-card">
+      <div class="demo-title">🚀 Original VoidCore Demo</div>
+      <div class="demo-description">
+        Classic VoidCore network demonstration with Three.js visualization and basic plugin architecture.
+      </div>
+      <a href="./main.js" class="demo-button">View Original Demo</a>
+    </div>
+
+    <div class="demo-card">
+      <div class="demo-title">
+        🏢 Dream Intranet - Alex's Story 
+        <span class="challenge-badge">dev.to Challenge</span>
+      </div>
+      <div class="demo-description">
+        Complete story-driven AI intranet experience featuring natural language command bar, proactive suggestions, and Alex Chen's first day journey.
+      </div>
+      <a href="../challenge/index-alex-story.html" class="demo-button">Experience Alex's Story</a>
+    </div>
+
+    <div class="demo-card">
+      <div class="demo-title">🎯 Simplified Office Demo</div>
+      <div class="demo-description">
+        Clean implementation showing VoidCore message flow with interactive buttons and real-time visualization.
+      </div>
+      <a href="../challenge/index-simple.html" class="demo-button">Try Simple Demo</a>
+    </div>
+
+    <div class="demo-card">
+      <div class="demo-title">✨ Project Constellation</div>
+      <div class="demo-description">
+        Advanced visualization with living command bar, intent cards, and Project Constellation message flow diagram.
+      </div>
+      <a href="../challenge/dream-intranet.html" class="demo-button">Explore Constellation</a>
+    </div>
+
+    <div class="demo-card">
+      <div class="demo-title">👥 Employee Portal</div>
+      <div class="demo-description">
+        Employee-focused intranet with smart content management and AI-powered document prioritization.
+      </div>
+      <a href="../challenge/intranet-final.html" class="demo-button">Open Portal</a>
+    </div>
+
+    <div class="demo-card">
+      <div class="demo-title">⚡ Minimal Core Demo</div>
+      <div class="demo-description">
+        Basic working example proving VoidCore functionality with minimal implementation for debugging and learning.
+      </div>
+      <a href="../challenge/minimal-demo.html" class="demo-button">View Minimal Demo</a>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-top: 40px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <h3>🎯 About the dev.to Frontend Challenge</h3>
+    <p>Our "Dream Intranet" demos showcase VoidCore's potential as an AI-powered office platform. The challenge was to create something truly revolutionary - not just another intranet, but an intelligent ecosystem that anticipates needs and enhances productivity.</p>
+    <p><strong>Key Innovation:</strong> Natural language AI interface with proactive suggestions and emotional storytelling</p>
+  </div>
 </body>
 </html>

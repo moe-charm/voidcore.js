@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 Alex's First Day - Nexus Corporation Dream Intranet</title>
+    <link rel="stylesheet" href="./css/office-intranet.css">
+    <style>
+        /* Story Introduction Overlay */
+        .story-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 20000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .story-content {
+            max-width: 600px;
+            padding: 40px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 20px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .story-title {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #4a90e2;
+            text-shadow: 0 2px 10px rgba(74, 144, 226, 0.5);
+        }
+
+        .story-text {
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .story-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .story-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Typing Animation */
+        .typing-text {
+            overflow: hidden;
+            border-right: .15em solid #4a90e2;
+            white-space: nowrap;
+            margin: 0 auto;
+            animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #4a90e2 }
+        }
+
+        /* Enhanced Story Elements */
+        .alex-indicator {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 1001;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            animation: pulse 2s infinite;
+        }
+
+        .story-hint {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(74, 144, 226, 0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            z-index: 1001;
+            animation: bounceIn 0.5s ease-out;
+            display: none;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: translateX(-50%) translateY(100px); opacity: 0; }
+            60% { transform: translateX(-50%) translateY(-10px); }
+            100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        /* Dramatic Effect for World Coming Alive */
+        .world-awakening {
+            animation: worldAwaken 1s ease-out;
+        }
+
+        @keyframes worldAwaken {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.5) saturate(1.5); }
+            100% { filter: brightness(1); }
+        }
+
+        /* Success Celebration */
+        .success-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 20px;
+            font-size: 24px;
+            z-index: 10001;
+            display: none;
+            animation: successPop 0.5s ease-out;
+        }
+
+        @keyframes successPop {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            60% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Living Command Bar Enhancements */
+        .command-bar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            display: none;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .command-bar {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            max-width: 90vw;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .command-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .command-bar-title {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .command-bar-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+
+        .command-bar-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .command-input {
+            width: 100%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 18px;
+            outline: none;
+        }
+
+        .command-input::placeholder {
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Intent Cards */
+        .intent-cards-container {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 350px;
+            z-index: 1000;
+        }
+
+        .intent-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideInRight 0.5s ease-out;
+            position: relative;
+        }
+
+        .intent-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .intent-card-title {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        /* Enhanced Message Flow */
+        .enhanced-message-flow {
+            background: #000;
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 300px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .message-particle {
+            display: inline-block;
+            background: #00ff00;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: particleGlow 1s ease-out;
+            margin-right: 8px;
+        }
+
+        @keyframes particleGlow {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+
+        /* AI Status Indicator */
+        .ai-status-indicator {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            animation: pulse 2s infinite;
+            z-index: 1000;
+        }
+
+        /* Emotional Touches */
+        .trembling {
+            animation: tremble 0.5s ease-in-out infinite;
+        }
+
+        @keyframes tremble {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-1px); }
+            75% { transform: translateX(1px); }
+        }
+
+        .celebrating {
+            animation: celebrate 1s ease-out;
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Story Introduction -->
+    <div id="story-overlay" class="story-overlay">
+        <div class="story-content">
+            <h1 class="story-title">🎭 Alex Chen's First Day</h1>
+            <div class="story-text">
+                <p>Alex is a new employee - today is his first day.</p>
+                <p>But his trainer is in a meeting and unavailable...</p>
+                <p>He's been told to join the massive "<strong>Project Phoenix</strong>" starting today, but</p>
+                <p style="font-size: 24px; color: #ff6b6b;">he has absolutely no idea where to start!</p>
+            </div>
+            <button class="story-button" onclick="startAlexJourney()">
+                🚀 Experience Alex's Journey
+            </button>
+        </div>
+    </div>
+
+    <!-- Alex Indicator -->
+    <div id="alex-indicator" class="alex-indicator" style="display: none;">
+        👤 You are now Alex Chen
+    </div>
+
+    <!-- Story Hints -->
+    <div id="story-hint" class="story-hint"></div>
+
+    <!-- Success Overlay -->
+    <div id="success-overlay" class="success-overlay" onclick="this.style.display='none'; document.body.classList.remove('celebrating');">
+        🎉 最高の初日！
+        <div style="font-size: 14px; opacity: 0.8; margin-top: 10px;">クリックで閉じる</div>
+    </div>
+
+    <!-- Living Command Bar -->
+    <div id="command-bar-overlay" class="command-bar-overlay">
+        <div class="command-bar">
+            <div class="command-bar-header">
+                <div class="command-bar-title">🤖 AI Assistant</div>
+                <button id="command-bar-close" class="command-bar-close">✕</button>
+            </div>
+            <input type="text" id="command-input" class="command-input" placeholder="何でも聞いてください..." autocomplete="off">
+            <div id="command-suggestions" class="command-suggestions"></div>
+        </div>
+    </div>
+
+    <!-- Intent Cards Container -->
+    <div id="intent-cards" class="intent-cards-container"></div>
+
+    <!-- AI Status Indicator -->
+    <div id="ai-status" class="ai-status-indicator">
+        🤖 AI Assistant
+    </div>
+
+    <div class="office-container">
+        <!-- Header -->
+        <header class="office-header">
+            <div class="company-logo">
+                <span class="logo-icon">🌟</span>
+                <h1>Nexus Corporation</h1>
+                <span class="powered-by">Dream Intranet • VoidCore Network v11.0</span>
+            </div>
+            <div class="welcome-user">
+                <span class="user-icon">👋</span>
+                <span id="user-name">Welcome, Alex Chen (New Employee)</span>
+                <span style="color: #666; font-size: 0.9em;">Press Ctrl+K for AI Assistant</span>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="office-layout">
+            <!-- Left Sidebar: Intent Launcher -->
+            <aside class="intent-launcher-panel">
+                <h3>🎯 Quick Actions</h3>
+                <div id="intent-launcher-container">
+                    <button id="phoenix-btn" class="intent-button">
+                        <span class="intent-icon">🔍</span>
+                        <div class="intent-content">
+                            <div class="intent-title">Get Project Phoenix Info</div>
+                            <div class="intent-description">Gather all information about our flagship project</div>
+                        </div>
+                    </button>
+                    <button id="team-btn" class="intent-button">
+                        <span class="intent-icon">👥</span>
+                        <div class="intent-content">
+                            <div class="intent-title">Check Team Status</div>
+                            <div class="intent-description">See what everyone is working on</div>
+                        </div>
+                    </button>
+                    <button id="docs-btn" class="intent-button">
+                        <span class="intent-icon">📋</span>
+                        <div class="intent-content">
+                            <div class="intent-title">Find Urgent Documents</div>
+                            <div class="intent-description">Locate high-priority documents needing attention</div>
+                        </div>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Center Content Area -->
+            <main class="main-content">
+                <!-- Document Feed -->
+                <section class="doc-feed-section">
+                    <h3>📄 Recent Documents</h3>
+                    <div id="doc-feed-container">
+                        <div class="doc-item" data-id="phoenix-spec">
+                            <div class="doc-header">
+                                <h4 class="doc-title">🚀 Project Phoenix - Technical Specifications v2.3</h4>
+                                <div class="doc-badges">
+                                    <span class="doc-priority medium">MEDIUM</span>
+                                    <span class="doc-type">specification</span>
+                                </div>
+                            </div>
+                            <div class="doc-description">Comprehensive technical specifications for Project Phoenix Phase 2</div>
+                            <div class="doc-meta">
+                                <div class="doc-info">
+                                    <span class="doc-author">👤 Tech Lead Sarah Kim</span>
+                                    <span class="doc-modified">🕒 30 min ago</span>
+                                    <span class="doc-size">📦 2.4 MB</span>
+                                    <span class="doc-version">🏷️ v2.3</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="doc-item" data-id="onboarding-guide">
+                            <div class="doc-header">
+                                <h4 class="doc-title">📚 New Employee VoidCore Network Guide</h4>
+                                <div class="doc-badges">
+                                    <span class="doc-priority high">HIGH</span>
+                                    <span class="doc-type">guide</span>
+                                </div>
+                            </div>
+                            <div class="doc-description">Complete guide to understanding and using VoidCore Network systems</div>
+                            <div class="doc-meta">
+                                <div class="doc-info">
+                                    <span class="doc-author">👤 HR Department</span>
+                                    <span class="doc-modified">🕒 1 day ago</span>
+                                    <span class="doc-size">📦 1.2 MB</span>
+                                    <span class="doc-version">🏷️ v1.5</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="doc-item" data-id="api-docs">
+                            <div class="doc-header">
+                                <h4 class="doc-title">⚙️ VoidCore Network API Documentation</h4>
+                                <div class="doc-badges">
+                                    <span class="doc-priority medium">MEDIUM</span>
+                                    <span class="doc-type">documentation</span>
+                                </div>
+                            </div>
+                            <div class="doc-description">Complete API reference for VoidCore Network v11.0</div>
+                            <div class="doc-meta">
+                                <div class="doc-info">
+                                    <span class="doc-author">👤 Development Team</span>
+                                    <span class="doc-modified">🕒 1 hour ago</span>
+                                    <span class="doc-size">📦 5.1 MB</span>
+                                    <span class="doc-version">🏷️ v11.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- System Activity -->
+                <section class="chat-section">
+                    <h3>📊 System Activity</h3>
+                    <div id="activity-feed"></div>
+                </section>
+            </main>
+
+            <!-- Right Sidebar: System Observer -->
+            <aside class="system-observer-panel">
+                <h3>🔍 Message Flow Visualization</h3>
+                <div class="observer-description">
+                    <p><strong>Watch the magic happen:</strong> AI and plugins working together!</p>
+                </div>
+                
+                <div id="message-flow" class="enhanced-message-flow"></div>
+                
+                <div id="system-status" style="margin-top: 15px; font-size: 14px;">
+                    <div>📡 Message Types: <span id="msg-types">0</span></div>
+                    <div>👥 Active Subscribers: <span id="subscribers">0</span></div>
+                    <div>🔄 Status: <span id="network-status">Initializing...</span></div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="office-footer">
+            <div class="demo-info">
+                <h4>🌟 Alex's Journey - Your Dream Intranet Experience</h4>
+                <p id="story-status">途方に暮れているAlex君... <strong>Ctrl+K</strong>を押して助けてあげましょう！</p>
+            </div>
+            <div class="scenario-guide" style="margin-top: 20px;">
+                <h4>💡 デモ用クイックコマンド：</h4>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <button style="font-family: monospace; background: white; padding: 12px 20px; margin: 5px 0; border-radius: 8px; border: none; border-left: 4px solid #4a90e2; cursor: pointer; font-size: 16px; width: 100%; text-align: left; transition: all 0.2s ease;" 
+                         onmouseover="this.style.background='#f0f7ff';"
+                         onmouseout="this.style.background='white';"
+                         onclick="
+                            this.style.background='#e8f5e9'; 
+                            this.innerHTML='🚀 実行中...';
+                            
+                            // Execute directly
+                            window.commandBar.executeCommand('プロジェクトフェニックスって何？');
+                            
+                            setTimeout(() => { 
+                                this.style.background='white'; 
+                                this.innerHTML='🚀 プロジェクトフェニックスって何？'; 
+                            }, 2000);">
+                        🚀 プロジェクトフェニックスって何？
+                    </button>
+                    
+                    <button style="font-family: monospace; background: white; padding: 12px 20px; margin: 5px 0; border-radius: 8px; border: none; border-left: 4px solid #dc3545; cursor: pointer; font-size: 16px; width: 100%; text-align: left; transition: all 0.2s ease;" 
+                         onmouseover="this.style.background='#fff5f5';"
+                         onmouseout="this.style.background='white';"
+                         onclick="
+                            this.style.background='#e8f5e9'; 
+                            this.innerHTML='🔍 Executing...';
+                            
+                            // Execute directly
+                            window.commandBar.executeCommand('search urgent documents');
+                            
+                            setTimeout(() => { 
+                                this.style.background='white'; 
+                                this.innerHTML='🔍 Search Urgent Documents'; 
+                            }, 2000);">
+                        🔍 Search Urgent Documents
+                    </button>
+                    
+                    <button style="font-family: monospace; background: white; padding: 12px 20px; margin: 5px 0; border-radius: 8px; border: none; border-left: 4px solid #28a745; cursor: pointer; font-size: 16px; width: 100%; text-align: left; transition: all 0.2s ease;" 
+                         onmouseover="this.style.background='#f0fff4';"
+                         onmouseout="this.style.background='white';"
+                         onclick="
+                            this.style.background='#e8f5e9'; 
+                            this.innerHTML='👥 Executing...';
+                            
+                            // Execute directly
+                            window.commandBar.executeCommand('connect to team');
+                            
+                            setTimeout(() => { 
+                                this.style.background='white'; 
+                                this.innerHTML='👥 Connect to Team'; 
+                            }, 2000);">
+                        👥 Connect to Team
+                    </button>
+                </div>
+                <p style="font-size: 0.9em; color: #666;">👆 Click to execute instantly! Start Alex's amazing experience</p>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { voidCore } from '../src/voidcore.js';
+        import { Message } from '../src/message.js';
+
+        console.log('🌟 Alex\'s First Day - Dream Intranet Story');
+
+        // Story Controller
+        window.alexStory = {
+            stage: 0,
+            isCommandBarUsed: false,
+            isPhoenixQueried: false,
+            isSummaryAccepted: false,
+            isTeamConnected: false
+        };
+
+        // Start Alex's Journey
+        window.startAlexJourney = function() {
+            document.getElementById('story-overlay').style.display = 'none';
+            document.getElementById('alex-indicator').style.display = 'block';
+            
+            // Show first hint after 2 seconds
+            setTimeout(() => {
+                showStoryHint("😰 I'm lost... where should I start... maybe I should try <strong>Ctrl+K</strong>?");
+                document.getElementById('ai-status').classList.add('trembling');
+            }, 2000);
+        };
+
+        function showStoryHint(message) {
+            const hint = document.getElementById('story-hint');
+            hint.innerHTML = message;
+            hint.style.display = 'block';
+            hint.style.animation = 'bounceIn 0.5s ease-out';
+            
+            setTimeout(() => {
+                hint.style.display = 'none';
+            }, 8000);
+        }
+
+        function updateStoryStatus(message) {
+            document.getElementById('story-status').innerHTML = message;
+        }
+
+        // Message Flow Visualization
+        const messageFlow = document.getElementById('message-flow');
+        let messageCount = 0;
+
+        function addToMessageFlow(message, color = '#00ff00', isImportant = false) {
+            messageCount++;
+            const timestamp = new Date().toLocaleTimeString();
+            const flowEntry = document.createElement('div');
+            
+            const particle = document.createElement('span');
+            particle.className = 'message-particle';
+            particle.style.backgroundColor = color;
+            
+            flowEntry.innerHTML = `
+                ${particle.outerHTML}
+                <span style="color: #666;">[${timestamp}]</span> 
+                <span style="color: ${color}; ${isImportant ? 'font-weight: bold; font-size: 14px;' : ''}">${message}</span>
+            `;
+            
+            messageFlow.appendChild(flowEntry);
+            messageFlow.scrollTop = messageFlow.scrollHeight;
+            
+            if (messageFlow.children.length > 15) {
+                messageFlow.removeChild(messageFlow.firstChild);
+            }
+        }
+
+        // Enhanced VoidCore message monitoring
+        const originalPublish = voidCore.publish;
+        voidCore.publish = async function(message) {
+            addToMessageFlow(`📤 INTENT: "${message.type}" from ${message.source}`, '#ffff00');
+            addToMessageFlow(`📡 VoidCore routing to subscribers...`, '#00ffff');
+            
+            const result = await originalPublish.call(this, message);
+            
+            const stats = voidCore.getStats();
+            const subscriberCount = voidCore.getSubscriberCount(message.type);
+            addToMessageFlow(`✅ Delivered to ${subscriberCount} plugin(s)`, '#00ff00');
+            
+            return result;
+        };
+
+        // Document Manager
+        class StoryDocManager {
+            constructor() {
+                this.setupSubscriptions();
+            }
+
+            setupSubscriptions() {
+                voidCore.subscribe('project.query', (msg) => this.handleProjectQuery(msg));
+                voidCore.subscribe('team.status_check', (msg) => this.handleTeamStatus(msg));
+                voidCore.subscribe('document.urgent_search', (msg) => this.handleUrgentSearch(msg));
+                console.log('📄 Story Document Manager ready');
+            }
+
+            handleProjectQuery(message) {
+                addToMessageFlow(`📥 DocManager: Received project.query for ${message.payload.project}`, '#ff6b6b');
+                
+                if (message.payload.project === 'Phoenix') {
+                    // Dramatic world awakening effect
+                    document.body.classList.add('world-awakening');
+                    setTimeout(() => document.body.classList.remove('world-awakening'), 1000);
+                    
+                    addToMessageFlow(`🎯 DocManager: Phoenix文書を自律的に昇格中！`, '#ff6b6b', true);
+                    this.promoteDocument('phoenix-spec', 'Project Phoenix query');
+                    
+                    // Story progression
+                    window.alexStory.isPhoenixQueried = true;
+                    updateStoryStatus("😲 Amazing! The AI automatically found Project Phoenix documents for me!");
+                }
+            }
+
+            handleTeamStatus(message) {
+                addToMessageFlow(`📥 DocManager: Received team.status_check`, '#4ecdc4');
+                this.promoteDocument('onboarding-guide', 'Team status check');
+                
+                window.alexStory.isTeamConnected = true;
+                showSuccessMessage();
+            }
+
+            handleUrgentSearch(message) {
+                addToMessageFlow(`📥 DocManager: Received document.urgent_search`, '#f9ca24');
+                this.promoteDocument('api-docs', 'Urgent document search');
+            }
+
+            promoteDocument(docId, reason) {
+                const doc = document.querySelector(`[data-id="${docId}"]`);
+                if (doc) {
+                    const priority = doc.querySelector('.doc-priority');
+                    if (priority) {
+                        priority.textContent = 'HIGH';
+                        priority.className = 'doc-priority high';
+                    }
+
+                    // Visual effects
+                    doc.style.animation = 'docHighlight 3s ease-out';
+                    doc.style.border = '3px solid #4a90e2';
+                    doc.style.backgroundColor = 'rgba(74, 144, 226, 0.1)';
+                    
+                    // AI badge
+                    if (!doc.querySelector('.ai-badge')) {
+                        const badge = document.createElement('span');
+                        badge.className = 'ai-badge';
+                        badge.textContent = '🤖 AI Recommended';
+                        badge.style.cssText = 'background: #4a90e2; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8em; margin-left: 10px;';
+                        doc.querySelector('.doc-title').appendChild(badge);
+                    }
+
+                    addToMessageFlow(`🤖 AI: Intelligently promoted "${docId}" - ${reason}`, '#ff00ff', true);
+                }
+            }
+        }
+
+        // Living Command Bar with Story Integration
+        class StoryCommandBar {
+            constructor() {
+                this.isOpen = false;
+                this.suggestions = [];
+                this.selectedIndex = 0;
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'k') {
+                        e.preventDefault();
+                        this.toggle();
+                    }
+                    
+                    if (this.isOpen) {
+                        if (e.key === 'Escape') {
+                            this.close();
+                        } else if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            this.selectNext();
+                        } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            this.selectPrevious();
+                        } else if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.executeSelected();
+                        }
+                    }
+                });
+
+                // Don't close on click - only ESC key for safety
+                // This allows users to safely copy text and interact with the command bar
+                // document.getElementById('command-bar-overlay').addEventListener('click', (e) => {
+                //     // Disabled click-to-close for better UX
+                // });
+
+                // Close button event
+                document.getElementById('command-bar-close').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.close();
+                });
+
+                document.getElementById('command-input').addEventListener('input', (e) => {
+                    this.updateSuggestions(e.target.value);
+                    
+                    // Simulate trembling typing for first input
+                    if (!window.alexStory.isCommandBarUsed && e.target.value.length > 0) {
+                        e.target.classList.add('trembling');
+                        setTimeout(() => e.target.classList.remove('trembling'), 500);
+                    }
+                });
+            }
+
+            toggle() {
+                if (this.isOpen) {
+                    this.close();
+                } else {
+                    this.open();
+                }
+            }
+
+            open() {
+                this.isOpen = true;
+                document.getElementById('command-bar-overlay').style.display = 'block';
+                const input = document.getElementById('command-input');
+                input.focus();
+                
+                // Story progression
+                if (!window.alexStory.isCommandBarUsed) {
+                    window.alexStory.isCommandBarUsed = true;
+                    updateStoryStatus("😊 Great! The AI assistant is open! Let me try asking 'What is Project Phoenix?'!");
+                    
+                    // Pre-fill with hint
+                    setTimeout(() => {
+                        input.placeholder = "Example: What is Project Phoenix?";
+                        
+                        // Add execute button for easy demo
+                        if (!document.getElementById('input-phoenix-btn')) {
+                            const inputBtn = document.createElement('button');
+                            inputBtn.id = 'input-phoenix-btn';
+                            inputBtn.innerHTML = '▶️ Execute';
+                            inputBtn.style.cssText = `
+                                position: absolute;
+                                right: 10px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                background: rgba(255,255,255,0.2);
+                                color: white;
+                                border: none;
+                                padding: 5px 10px;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                font-size: 14px;
+                                transition: all 0.2s ease;
+                            `;
+                            inputBtn.onmouseover = () => {
+                                inputBtn.style.background = 'rgba(255,255,255,0.3)';
+                            };
+                            inputBtn.onmouseout = () => {
+                                inputBtn.style.background = 'rgba(255,255,255,0.2)';
+                            };
+                            inputBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                const currentValue = input.value.trim();
+                                
+                                if (currentValue) {
+                                    inputBtn.innerHTML = '✅ Executing...';
+                                    
+                                    // Execute the current input value
+                                    setTimeout(() => {
+                                        this.executeCommand(currentValue);
+                                        inputBtn.innerHTML = '▶️ Execute';
+                                    }, 300);
+                                } else {
+                                    // If empty, use default
+                                    input.value = 'What is Project Phoenix?';
+                                    input.focus();
+                                    input.select();
+                                    showStoryHint("👍 Default command set! Press Enter to execute!");
+                                }
+                            };
+                            
+                            // Update button text based on input content
+                            const updateButtonText = () => {
+                                const value = input.value.trim();
+                                if (value) {
+                                    if (value.toLowerCase().includes('phoenix')) {
+                                        inputBtn.innerHTML = '🚀 Execute';
+                                    } else if (value.toLowerCase().includes('team')) {
+                                        inputBtn.innerHTML = '👥 Execute';
+                                    } else if (value.toLowerCase().includes('docs') || value.toLowerCase().includes('urgent')) {
+                                        inputBtn.innerHTML = '🔍 Execute';
+                                    } else {
+                                        inputBtn.innerHTML = '▶️ Execute';
+                                    }
+                                } else {
+                                    inputBtn.innerHTML = '➕ Input';
+                                }
+                            };
+                            
+                            // Listen for input changes
+                            input.addEventListener('input', updateButtonText);
+                            input.addEventListener('keyup', updateButtonText);
+                            
+                            input.parentElement.style.position = 'relative';
+                            input.parentElement.appendChild(inputBtn);
+                            
+                            // Initial update
+                            updateButtonText();
+                        }
+                    }, 500);
+                }
+                
+                this.updateSuggestions('');
+                addToMessageFlow('🎯 Command bar opened', '#ffff00');
+            }
+
+            close() {
+                this.isOpen = false;
+                document.getElementById('command-bar-overlay').style.display = 'none';
+                document.getElementById('command-input').value = '';
+            }
+
+            updateSuggestions(query) {
+                const baseSuggestions = [
+                    { icon: '🚀', text: 'What is Project Phoenix?', command: 'project phoenix info' },
+                    { icon: '👥', text: 'Connect to Team', command: 'team connect' },
+                    { icon: '📅', text: 'Today\'s Schedule', command: 'schedule today' },
+                    { icon: '🔍', text: 'Search Urgent Documents', command: 'docs urgent' },
+                    { icon: '📊', text: 'Show Dashboard', command: 'dashboard' },
+                    { icon: '💬', text: 'Sync with Sarah', command: 'schedule meeting sarah' }
+                ];
+
+                if (query.length === 0) {
+                    this.suggestions = baseSuggestions.slice(0, 4);
+                } else {
+                    this.suggestions = baseSuggestions.filter(s => 
+                        s.text.toLowerCase().includes(query.toLowerCase()) ||
+                        s.command.toLowerCase().includes(query.toLowerCase())
+                    );
+                }
+
+                this.selectedIndex = 0;
+                this.renderSuggestions();
+            }
+
+            renderSuggestions() {
+                const container = document.getElementById('command-suggestions');
+                container.innerHTML = this.suggestions.map((suggestion, index) => `
+                    <div class="suggestion-item ${index === this.selectedIndex ? 'selected' : ''}" 
+                         data-index="${index}">
+                        <span class="suggestion-icon">${suggestion.icon}</span>
+                        ${suggestion.text}
+                    </div>
+                `).join('');
+
+                container.querySelectorAll('.suggestion-item').forEach((item, index) => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Set the input value instead of executing immediately
+                        const input = document.getElementById('command-input');
+                        input.value = this.suggestions[index].text;
+                        input.focus();
+                        input.select();
+                        
+                        // Update selected index for visual feedback
+                        this.selectedIndex = index;
+                        this.renderSuggestions();
+                        
+                        // Show hint
+                        showStoryHint("👍 Good choice! Press Enter or the ✍️ Execute button!");
+                    });
+                });
+            }
+
+            selectNext() {
+                this.selectedIndex = (this.selectedIndex + 1) % this.suggestions.length;
+                this.renderSuggestions();
+            }
+
+            selectPrevious() {
+                this.selectedIndex = (this.selectedIndex - 1 + this.suggestions.length) % this.suggestions.length;
+                this.renderSuggestions();
+            }
+
+            executeSelected() {
+                if (this.suggestions[this.selectedIndex]) {
+                    this.executeCommand(this.suggestions[this.selectedIndex].command);
+                }
+            }
+
+            async executeCommand(command) {
+                console.log('🎯 Executing command:', command);
+                this.close();
+
+                addToMessageFlow(`🎯 AI Command executing: "${command}"`, '#ffff00', true);
+
+                if (command.toLowerCase().includes('project phoenix') || command.toLowerCase().includes('phoenix')) {
+                    await this.handleProjectPhoenixQuery();
+                } else if (command.toLowerCase().includes('team')) {
+                    await this.handleTeamQuery();
+                } else if (command.toLowerCase().includes('docs') || command.toLowerCase().includes('urgent') || command.toLowerCase().includes('document')) {
+                    await this.handleDocumentQuery();
+                } else if (command.toLowerCase().includes('schedule') || command.toLowerCase().includes('today') || command.toLowerCase().includes('sarah')) {
+                    await this.handleScheduleQuery();
+                } else {
+                    // Default response
+                    showStoryHint(`🤖 Processing "${command}"...`);
+                }
+            }
+
+            async handleProjectPhoenixQuery() {
+                updateStoryStatus("🌟 The AI is activating! The world begins to respond to Alex...");
+                
+                const intent = Message.intent('system', 'project.query', {
+                    project: 'Phoenix',
+                    priority: 'high',
+                    requester: 'Alex Chen (via Story Command Bar)'
+                }).withSource('StoryCommandBar');
+
+                await voidCore.publish(intent);
+                
+                // Schedule the proactive summary suggestion
+                setTimeout(() => {
+                    intentCards.addCard({
+                        title: "🤖 AI Assistant",
+                        message: "Do you need a Project Phoenix summary? I can provide an overview specifically for new employees.",
+                        action: () => {
+                            window.alexStory.isSummaryAccepted = true;
+                            updateStoryStatus("📖 AI is generating summary... Alex is starting to understand!");
+                            showStoryHint("Excellent! Soon you'll also get suggestions for connecting with the team leader!");
+                        },
+                        duration: 15000
+                    });
+                }, 5000);
+            }
+
+            async handleTeamQuery() {
+                const intent = Message.intent('system', 'team.status_check', {
+                    department: 'Engineering',
+                    scope: 'current_activity'
+                }).withSource('StoryCommandBar');
+
+                await voidCore.publish(intent);
+            }
+
+            async handleDocumentQuery() {
+                updateStoryStatus("📚 Searching urgent documents... AI is finding important information!");
+                
+                const intent = Message.intent('system', 'document.urgent_search', {
+                    priority: 'urgent',
+                    days: 7
+                }).withSource('StoryCommandBar');
+
+                await voidCore.publish(intent);
+                
+                showStoryHint("🔍 API documentation marked as urgent! Essential information for development!");
+            }
+            
+            async handleScheduleQuery() {
+                updateStoryStatus("📅 Checking today's schedule... AI is optimizing your agenda!");
+                
+                // Show today's schedule
+                intentCards.addCard({
+                    title: "📅 Today's Schedule",
+                    message: `
+                        <div style="text-align: left; line-height: 1.6;">
+                            <strong>9:00-10:00</strong> 🌅 Onboarding<br>
+                            <strong>10:00-11:30</strong> 🚀 Project Phoenix Briefing<br>
+                            <strong>11:30-12:00</strong> 👥 Team Meeting<br>
+                            <strong>13:00-14:00</strong> 🍕 Lunch & Colleague Introductions<br>
+                            <strong>14:00-16:00</strong> 💻 Environment Setup<br>
+                            <strong>16:00-17:00</strong> 📚 Technical Documentation Review
+                        </div>
+                    `,
+                    duration: 12000
+                });
+                
+                showStoryHint("📅 AI optimized your first day schedule! Next up is the Project Phoenix briefing!");
+                
+                // Suggest Phoenix project after showing schedule
+                setTimeout(() => {
+                    if (!window.alexStory.isPhoenixQueried) {
+                        showStoryHint("💡 There's a Project Phoenix briefing at 10:00. Would you like to prepare by asking 'What is Project Phoenix?' first?");
+                    }
+                }, 3000);
+            }
+        }
+
+        // Intent Cards Manager with Story Integration
+        class StoryIntentCards {
+            constructor() {
+                this.cards = [];
+                this.container = document.getElementById('intent-cards');
+            }
+
+            addCard({ title, message, action, duration = 12000 }) {
+                const cardId = Date.now();
+                const card = {
+                    id: cardId,
+                    title,
+                    message,
+                    action,
+                    duration
+                };
+
+                this.cards.push(card);
+                this.renderCard(card);
+
+                setTimeout(() => {
+                    this.removeCard(cardId);
+                }, duration);
+            }
+
+            renderCard(card) {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'intent-card';
+                cardElement.dataset.cardId = card.id;
+                
+                cardElement.innerHTML = `
+                    <div class="intent-card-header">
+                        <div class="intent-card-title">${card.title}</div>
+                        <button class="intent-card-close">✕</button>
+                    </div>
+                    <div class="intent-card-message">${card.message}</div>
+                    ${card.action ? `
+                        <div class="intent-card-actions">
+                            <button class="intent-action-btn primary-action">はい、実行</button>
+                            <button class="intent-action-btn secondary-action">今は結構</button>
+                        </div>
+                    ` : ''}
+                `;
+
+                cardElement.querySelector('.intent-card-close').addEventListener('click', () => {
+                    this.removeCard(card.id);
+                });
+
+                if (card.action) {
+                    cardElement.querySelector('.primary-action').addEventListener('click', () => {
+                        card.action();
+                        this.removeCard(card.id);
+                    });
+
+                    cardElement.querySelector('.secondary-action').addEventListener('click', () => {
+                        this.removeCard(card.id);
+                    });
+                }
+
+                this.container.appendChild(cardElement);
+                addToMessageFlow(`💬 AIから提案: ${card.title}`, '#00ffff');
+                
+                // Add pulsing effect to AI status
+                document.getElementById('ai-status').classList.add('has-suggestion');
+                setTimeout(() => {
+                    document.getElementById('ai-status').classList.remove('has-suggestion');
+                }, 3000);
+            }
+
+            removeCard(cardId) {
+                const cardElement = this.container.querySelector(`[data-card-id="${cardId}"]`);
+                if (cardElement) {
+                    cardElement.style.animation = 'slideInRight 0.3s ease-out reverse';
+                    setTimeout(() => {
+                        cardElement.remove();
+                    }, 300);
+                }
+
+                this.cards = this.cards.filter(card => card.id !== cardId);
+            }
+        }
+
+        // Show success message
+        function showSuccessMessage() {
+            if (window.alexStory.isPhoenixQueried && window.alexStory.isSummaryAccepted) {
+                const successOverlay = document.getElementById('success-overlay');
+                successOverlay.style.display = 'block';
+                document.body.classList.add('celebrating');
+                
+                updateStoryStatus("🎉 Alex had an amazing first day! He understood the project and connected with his team!");
+                
+                // Auto-hide success overlay after 4 seconds
+                setTimeout(() => {
+                    successOverlay.style.display = 'none';
+                    document.body.classList.remove('celebrating');
+                }, 4000);
+                
+                setTimeout(() => {
+                    intentCards.addCard({
+                        title: "🎊 Congratulations!",
+                        message: "Alex's first day was a huge success! This is the power of VoidCore Network - AI that supports humans and creates the ultimate workplace experience.",
+                        duration: 20000
+                    });
+                }, 2000);
+            }
+        }
+
+        // Initialize Story Systems
+        const docManager = new StoryDocManager();
+        const commandBar = new StoryCommandBar();
+        const intentCards = new StoryIntentCards();
+        
+        // Make commandBar globally accessible for footer button
+        window.commandBar = commandBar;
+
+        // Button handlers
+        document.getElementById('phoenix-btn').addEventListener('click', async () => {
+            const intent = Message.intent('system', 'project.query', {
+                project: 'Phoenix',
+                priority: 'high',
+                requester: 'Quick Action Button'
+            }).withSource('QuickActionButton');
+
+            await voidCore.publish(intent);
+        });
+
+        document.getElementById('team-btn').addEventListener('click', async () => {
+            const intent = Message.intent('system', 'team.status_check', {
+                department: 'Engineering',
+                scope: 'all'
+            }).withSource('QuickActionButton');
+
+            await voidCore.publish(intent);
+        });
+
+        document.getElementById('docs-btn').addEventListener('click', async () => {
+            const intent = Message.intent('system', 'document.urgent_search', {
+                priority: 'urgent',
+                days: 7
+            }).withSource('QuickActionButton');
+
+            await voidCore.publish(intent);
+        });
+
+        // AI status click handler
+        document.getElementById('ai-status').addEventListener('click', () => {
+            commandBar.open();
+        });
+
+        // Update system status
+        function updateSystemStatus() {
+            const stats = voidCore.getStats();
+            document.getElementById('msg-types').textContent = stats.messageTypes;
+            document.getElementById('subscribers').textContent = stats.totalSubscribers;
+            document.getElementById('network-status').textContent = 'ACTIVE';
+        }
+
+        setTimeout(updateSystemStatus, 1000);
+
+        // Add team connection suggestion after summary
+        setTimeout(() => {
+            if (window.alexStory.isSummaryAccepted && !window.alexStory.isTeamConnected) {
+                intentCards.addCard({
+                    title: "🤖 AI Assistant",
+                    message: "このプロジェクトのリーダー、Sarah Kimさんが今利用可能です。今すぐ同期しますか？",
+                    action: () => {
+                        window.alexStory.isTeamConnected = true;
+                        commandBar.handleTeamQuery();
+                    },
+                    duration: 15000
+                });
+            }
+        }, 30000);
+
+        console.log('🌟 Alex\'s First Day Story - Ready!');
+    </script>
+</body>
+</html>

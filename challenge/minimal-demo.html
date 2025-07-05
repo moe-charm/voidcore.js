@@ -63,14 +63,14 @@
     </div>
 
     <script type="module">
-        // 最小のVoidCoreシステム
+        // Minimal VoidCore system
         import { voidCore } from '../src/voidcore.js';
         import { Message } from '../src/message.js';
 
-        // ログ設定
-        voidCore.logElement = null; // コンソールにログ出力
+        // Log configuration
+        voidCore.logElement = null; // Output logs to console
 
-        // 最小DocFeedプラグイン
+        // Minimal DocFeed plugin
         class MinimalDocFeed {
             constructor() {
                 this.role = 'document_manager';
@@ -89,7 +89,7 @@
                 if (message.payload.project === 'Phoenix') {
                     console.log('🚀 Processing Phoenix query!');
                     
-                    // Phoenix ドキュメントをハイライト
+                    // Highlight Phoenix document
                     const phoenixDoc = document.querySelector('[data-id="phoenix-spec"]');
                     if (phoenixDoc) {
                         phoenixDoc.classList.add('featured');
@@ -109,11 +109,11 @@
             }
         }
 
-        // 初期化
+        // Initialize
         console.log('🚀 Starting minimal demo...');
         const docFeed = new MinimalDocFeed();
 
-        // ボタンイベント
+        // Button events
         document.getElementById('phoenix-btn').addEventListener('click', async () => {
             console.log('🎯 Button clicked, publishing intent...');
             document.getElementById('intent-status').textContent = 'Launching intent...';
