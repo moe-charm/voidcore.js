@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ProjectManager Test</title>
+</head>
+<body>
+    <div id="container"></div>
+    <script type="module">
+        import { ProjectManager } from './src/project-manager.js';
+        import { voidCore } from './src/voidcore.js';
+
+        async function test() {
+            console.log('Starting ProjectManager test...');
+            
+            const container = document.getElementById('container');
+            const projectManager = new ProjectManager(voidCore);
+            
+            console.log('ProjectManager created:', projectManager);
+            console.log('Initial currentProject:', projectManager.currentProject);
+            
+            try {
+                const result = await projectManager.initialize(container);
+                console.log('Initialize result:', result);
+                console.log('After init currentProject:', projectManager.currentProject);
+                
+                // Test adding a plugin
+                try {
+                    projectManager.addCurrentPlugin();
+                    console.log('addCurrentPlugin succeeded');
+                } catch (error) {
+                    console.log('addCurrentPlugin failed:', error.message);
+                }
+                
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                console.log('Final currentProject:', projectManager.currentProject);
+            }
+        }
+        
+        test();
+    </script>
+</body>
+</html>

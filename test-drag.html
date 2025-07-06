@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Simple Drag Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: monospace;
+            background: #1a1a2e;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .test-area {
+            width: 800px;
+            height: 600px;
+            background: #0f1419;
+            border: 2px solid #4a90e2;
+            position: relative;
+            margin: 20px auto;
+        }
+        
+        .draggable-box {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(145deg, #4a90e2, #7b68ee);
+            border: 2px solid #fff;
+            border-radius: 8px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            user-select: none;
+            touch-action: none;
+        }
+        
+        .draggable-box:hover {
+            box-shadow: 0 0 20px rgba(74, 144, 226, 0.5);
+        }
+        
+        .draggable-box.dragging {
+            cursor: grabbing;
+            transform: scale(1.05);
+            z-index: 1000;
+        }
+        
+        .info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .coords {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">
+        <h1>🎯 Simple Drag Test</h1>
+        <p>ChromeとEdgeでドラッグテスト。マウスにピッタリ追従するかチェック！</p>
+    </div>
+    
+    <div class="coords" id="coords">
+        マウス: (0, 0)<br>
+        ボックス: (50, 50)
+    </div>
+    
+    <div class="test-area" id="testArea">
+        <div class="draggable-box" id="box1" style="left: 50px; top: 50px;">BOX 1</div>
+        <div class="draggable-box" id="box2" style="left: 200px; top: 150px;">BOX 2</div>
+        <div class="draggable-box" id="box3" style="left: 350px; top: 250px;">BOX 3</div>
+    </div>
+
+    <script>
+        // 超シンプルドラッグ実装
+        let isDragging = false;
+        let currentBox = null;
+        let offset = { x: 0, y: 0 };
+        
+        // 座標表示用
+        const coordsDiv = document.getElementById('coords');
+        const testArea = document.getElementById('testArea');
+        
+        // 全てのボックスにイベント追加
+        document.querySelectorAll('.draggable-box').forEach(box => {
+            box.addEventListener('mousedown', startDrag);
+        });
+        
+        // マウス座標追跡
+        document.addEventListener('mousemove', (e) => {
+            coordsDiv.innerHTML = `マウス: (${e.clientX}, ${e.clientY})<br>`;
+            if (currentBox) {
+                const rect = currentBox.getBoundingClientRect();
+                coordsDiv.innerHTML += `ボックス: (${Math.round(rect.left)}, ${Math.round(rect.top)})`;
+            }
+        });
+        
+        function startDrag(e) {
+            isDragging = true;
+            currentBox = e.target;
+            
+            const rect = currentBox.getBoundingClientRect();
+            const areaRect = testArea.getBoundingClientRect();
+            
+            offset.x = e.clientX - rect.left;
+            offset.y = e.clientY - rect.top;
+            
+            currentBox.classList.add('dragging');
+            document.body.style.cursor = 'grabbing';
+            
+            console.log('🚀 ドラッグ開始:', {
+                mouse: { x: e.clientX, y: e.clientY },
+                box: { left: rect.left, top: rect.top },
+                area: { left: areaRect.left, top: areaRect.top },
+                offset: offset
+            });
+            
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', stopDrag);
+            
+            e.preventDefault();
+        }
+        
+        function handleDrag(e) {
+            if (!isDragging || !currentBox) return;
+            
+            const areaRect = testArea.getBoundingClientRect();
+            
+            // エリア内での相対座標
+            const x = e.clientX - areaRect.left - offset.x;
+            const y = e.clientY - areaRect.top - offset.y;
+            
+            // 境界チェック
+            const maxX = testArea.clientWidth - currentBox.offsetWidth;
+            const maxY = testArea.clientHeight - currentBox.offsetHeight;
+            const clampedX = Math.max(0, Math.min(x, maxX));
+            const clampedY = Math.max(0, Math.min(y, maxY));
+            
+            // 位置設定
+            currentBox.style.left = clampedX + 'px';
+            currentBox.style.top = clampedY + 'px';
+            
+            console.log('🖱️ ドラッグ中:', {
+                mouse: { x: e.clientX, y: e.clientY },
+                area: { left: areaRect.left, top: areaRect.top },
+                calculated: { x, y },
+                final: { x: clampedX, y: clampedY }
+            });
+        }
+        
+        function stopDrag() {
+            if (currentBox) {
+                currentBox.classList.remove('dragging');
+                currentBox = null;
+            }
+            
+            isDragging = false;
+            document.body.style.cursor = '';
+            
+            document.removeEventListener('mousemove', handleDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            
+            console.log('🛑 ドラッグ終了');
+        }
+    </script>
+</body>
+</html>

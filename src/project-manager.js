@@ -58,11 +58,14 @@ export class ProjectManager {
     this.container = container;
     
     try {
+      console.log('🗂️ ProjectManager initialization started...');
+      
+      // 最初に新規プロジェクト作成（ZIP読み込みより前）
+      this.currentProject = { ...this.defaultProject };
+      console.log('🗂️ Default project created:', this.currentProject);
+      
       // ZIP ライブラリを動的読み込み
       await this.loadZipLibrary();
-      
-      // 新規プロジェクト作成
-      this.currentProject = { ...this.defaultProject };
       
       // プロジェクト管理UI作成
       this.createProjectManagerUI();
@@ -73,46 +76,77 @@ export class ProjectManager {
       // 自動保存開始
       this.startAutoSave();
       
-      console.log('🗂️ ProjectManager initialized with ZIP support:', this.zipSupported);
+      console.log('🗂️ ProjectManager initialized successfully');
+      console.log('🗂️ ZIP support:', this.zipSupported);
+      console.log('🗂️ Current project:', this.currentProject);
       return true;
       
     } catch (error) {
       console.error('❌ ProjectManager initialization failed:', error);
+      
+      // 失敗時もcurrentProjectを確保
+      if (!this.currentProject) {
+        this.currentProject = { ...this.defaultProject };
+        console.log('🗂️ Fallback project created:', this.currentProject);
+      }
+      
       return false;
     }
   }
 
   async loadZipLibrary() {
     try {
-      // JSZip CDN動的読み込み
+      // JSZip CDN動的読み込み (AMD競合回避)
       if (!window.JSZip) {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-        script.onload = () => {
-          this.JSZip = window.JSZip;
-          this.zipSupported = true;
-          console.log('📦 JSZip library loaded successfully');
-        };
-        script.onerror = () => {
-          console.warn('⚠️ Failed to load JSZip, fallback to JSON export');
-          this.zipSupported = false;
-        };
-        document.head.appendChild(script);
+        console.log('📦 Loading JSZip library...');
         
-        // ロード完了を待機
-        await new Promise((resolve) => {
-          const checkInterval = setInterval(() => {
-            if (window.JSZip || script.readyState === 'complete') {
-              clearInterval(checkInterval);
-              this.JSZip = window.JSZip;
-              this.zipSupported = !!window.JSZip;
+        // AMD競合を回避するために、defineを一時的に無効化
+        const originalDefine = window.define;
+        window.define = undefined;
+        
+        // Promise-based script loading
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+          
+          script.onload = () => {
+            // defineを復元
+            window.define = originalDefine;
+            
+            this.JSZip = window.JSZip;
+            this.zipSupported = true;
+            console.log('📦 JSZip library loaded successfully');
+            resolve();
+          };
+          
+          script.onerror = () => {
+            // defineを復元
+            window.define = originalDefine;
+            
+            console.warn('⚠️ Failed to load JSZip, fallback to JSON export');
+            this.zipSupported = false;
+            resolve(); // Continue even if ZIP loading fails
+          };
+          
+          document.head.appendChild(script);
+          
+          // Timeout fallback
+          setTimeout(() => {
+            if (!window.JSZip) {
+              // defineを復元
+              window.define = originalDefine;
+              
+              console.warn('⚠️ JSZip load timeout, proceeding without ZIP support');
+              this.zipSupported = false;
               resolve();
             }
-          }, 100);
+          }, 5000);
         });
+        
       } else {
         this.JSZip = window.JSZip;
         this.zipSupported = true;
+        console.log('📦 JSZip already available');
       }
     } catch (error) {
       console.warn('⚠️ ZIP library load failed, using fallback:', error);
@@ -493,27 +527,83 @@ export class ProjectManager {
   }
   
   async exportProjectZip() {
+    console.log('🚀 Starting ZIP export...');
+    console.log('📦 JSZip available:', !!window.JSZip);
+    console.log('📦 this.JSZip available:', !!this.JSZip);
+    console.log('📦 ZIP supported:', this.zipSupported);
+    
     if (!this.currentProject) {
+      console.error('❌ No currentProject found');
       this.showNotification('No project to export', 'warning');
       return;
     }
     
+    console.log('🔍 Project check:', {
+      plugins: this.currentProject.plugins.length,
+      name: this.currentProject.metadata.name,
+      hasZipSupport: this.zipSupported
+    });
+    
     if (!this.zipSupported) {
-      // ZIP未対応の場合はJSON fallback
-      this.exportProjectJSON();
-      return;
+      console.log('⚠️ ZIP not supported, trying to reload JSZip...');
+      
+      // JSZip の再読み込みを試行
+      if (window.JSZip) {
+        console.log('🔧 JSZip found in window, reactivating...');
+        this.JSZip = window.JSZip;
+        this.zipSupported = true;
+      } else {
+        console.log('🔄 Attempting to load JSZip manually...');
+        try {
+          await this.loadZipLibrary();
+          if (this.zipSupported) {
+            console.log('✅ JSZip loaded successfully!');
+          } else {
+            console.log('❌ Manual JSZip load failed, falling back to JSON');
+            this.exportProjectJSON();
+            return;
+          }
+        } catch (error) {
+          console.log('❌ JSZip manual load error:', error);
+          this.exportProjectJSON();
+          return;
+        }
+      }
     }
     
     try {
       // プロジェクト情報更新
-      this.currentProject.metadata.name = document.getElementById('projectName').value || 'Untitled Project';
-      this.currentProject.metadata.description = document.getElementById('projectDescription').value || '';
+      const projectNameEl = document.getElementById('projectName');
+      const projectDescEl = document.getElementById('projectDescription');
+      
+      this.currentProject.metadata.name = projectNameEl?.value || 'Untitled Project';
+      this.currentProject.metadata.description = projectDescEl?.value || '';
       this.currentProject.metadata.lastModified = Date.now();
       
-      // 現在のエディタコードからプラグインを抽出して追加
-      await this.addCurrentEditorPlugin();
+      console.log('📝 Project metadata updated:', {
+        name: this.currentProject.metadata.name,
+        pluginCount: this.currentProject.plugins.length
+      });
       
+      // 現在のエディタコードからプラグインを抽出して追加（まだ追加されてない場合のみ）
+      if (this.currentProject.plugins.length === 0) {
+        try {
+          await this.addCurrentEditorPlugin();
+          console.log('🔧 Added current editor plugin to project');
+        } catch (error) {
+          console.log('⚠️ No plugin to add from editor:', error.message);
+        }
+      }
+      
+      if (!this.JSZip) {
+        console.error('❌ JSZip not available, using JSON fallback');
+        this.exportProjectJSON();
+        return;
+      }
+      
+      console.log('📦 Creating ZIP instance...');
       const zip = new this.JSZip();
+      console.log('📦 ZIP instance created successfully');
       
       // 1. voidcore.project.json (メタ情報)
       const projectMeta = {
@@ -542,7 +632,10 @@ export class ProjectManager {
       zip.file('voidcore.link.json', JSON.stringify(linkData, null, 2));
       
       // 3. 各プラグインの構造とソースコード
+      console.log(`📦 Adding ${this.currentProject.plugins.length} plugins to ZIP...`);
       for (const plugin of this.currentProject.plugins) {
+        console.log(`📦 Processing plugin: ${plugin.id}`);
+        console.log(`📦 Plugin source length: ${plugin.sourceCode?.length || 0} characters`);
         // プラグイン構造 (.plugin.json)
         const pluginStructure = {
           name: plugin.name || plugin.id,
@@ -567,8 +660,12 @@ export class ProjectManager {
       // zip.folder('assets');
       
       // ZIP生成とダウンロード
+      console.log('📦 Generating ZIP blob...');
       const blob = await zip.generateAsync({ type: 'blob' });
+      console.log('📦 ZIP blob size:', blob.size, 'bytes');
+      
       const fileName = `${this.currentProject.metadata.name.replace(/\s+/g, '-')}.voidcore.zip`;
+      console.log('📦 ZIP filename:', fileName);
       
       this.downloadBlob(blob, fileName);
       
@@ -733,30 +830,98 @@ export class ProjectManager {
   // ==========================================
   
   addCurrentPlugin() {
+    console.log('🔧 addCurrentPlugin called');
+    
+    // currentProjectの確認
+    if (!this.currentProject) {
+      throw new Error('projectManager.currentProject is null');
+    }
+    
     // Monaco Editorから現在のコードを取得
     const editorContent = window.monacoEditor?.getValue() || '';
+    console.log('🔧 Editor content length:', editorContent.length);
     
     if (!editorContent.trim()) {
-      this.showNotification('No plugin code to add', 'warning');
+      console.log('⚠️ No editor content, creating default plugin...');
+      
+      // デフォルトプラグインテンプレートを作成
+      const defaultPluginCode = `// Default VoidCore Plugin
+const defaultPlugin = createPlugin({
+  pluginId: 'default-plugin-${Date.now()}',
+  name: 'Default Plugin',
+  capabilities: ['basic']
+}, {
+  async run() {
+    await this.initialize();
+    this.log('🎯 Default plugin ready!');
+    
+    await this.notice('plugin.ready', {
+      timestamp: Date.now()
+    });
+  }
+});
+
+return defaultPlugin;`;
+      
+      // Monaco Editorにデフォルトコードを設定
+      if (window.monacoEditor) {
+        window.monacoEditor.setValue(defaultPluginCode);
+        console.log('🔧 Set default plugin code in editor');
+      }
+      
+      // デフォルトプラグインで続行
+      this.addCurrentEditorPlugin();
       return;
     }
     
+    console.log('🔧 Calling addCurrentEditorPlugin...');
     this.addCurrentEditorPlugin();
   }
   
   async addCurrentEditorPlugin() {
     try {
+      // currentProjectの確認
+      if (!this.currentProject) {
+        throw new Error('projectManager.currentProject is null');
+      }
+      
       const editorContent = window.monacoEditor?.getValue() || '';
+      console.log('🔍 Editor content length:', editorContent.length);
+      console.log('🔍 Editor content preview:', editorContent.substring(0, 200));
       
       if (!editorContent.trim()) {
+        console.log('⚠️ No editor content to add');
         return;
       }
       
       // プラグインIDを抽出
       const pluginId = this.extractPluginId(editorContent);
+      console.log('🔍 Extracted plugin ID:', pluginId);
       
       if (!pluginId) {
-        this.showNotification('Cannot detect plugin ID', 'warning');
+        console.log('❌ Cannot detect plugin ID from editor content');
+        // デフォルトのプラグインIDを生成
+        const timestamp = Date.now();
+        const defaultPluginId = `user-plugin-${timestamp}`;
+        console.log('🔧 Generated default plugin ID:', defaultPluginId);
+        
+        // デフォルトプラグインとして保存
+        const pluginData = {
+          id: defaultPluginId,
+          name: 'User Plugin',
+          version: '1.0.0',
+          sourceCode: editorContent,
+          messageTypes: { subscribes: [], publishes: [] },
+          dependencies: [],
+          settings: {},
+          capabilities: ['custom'],
+          author: this.currentProject.metadata.author,
+          created: Date.now()
+        };
+        
+        this.currentProject.plugins.push(pluginData);
+        console.log('✅ Added plugin with default ID:', defaultPluginId);
+        this.showNotification(`Plugin added as ${defaultPluginId}`, 'success');
         return;
       }
       
@@ -780,13 +945,24 @@ export class ProjectManager {
         created: Date.now()
       };
       
-      // 重複チェック
-      const existingIndex = this.currentProject.plugins.findIndex(p => p.id === pluginId);
+      // 重複チェック（IDと名前の両方をチェック）
+      const existingIndexById = this.currentProject.plugins.findIndex(p => p.id === pluginId);
+      const existingIndexByName = this.currentProject.plugins.findIndex(p => p.name === pluginStructure.name);
+      
+      let existingIndex = existingIndexById;
+      if (existingIndex === -1 && existingIndexByName !== -1) {
+        // IDは違うが名前が同じ場合は、名前ベースで更新
+        existingIndex = existingIndexByName;
+        console.log('🔄 Plugin found by name, updating:', pluginStructure.name);
+      }
+      
       if (existingIndex !== -1) {
         this.currentProject.plugins[existingIndex] = pluginData;
+        console.log('🔄 Plugin updated:', pluginId);
         this.showNotification('Plugin updated!', 'success');
       } else {
         this.currentProject.plugins.push(pluginData);
+        console.log('✅ Plugin added:', pluginId, 'Total plugins:', this.currentProject.plugins.length);
         this.showNotification('Plugin added!', 'success');
       }
       

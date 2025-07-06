@@ -8,6 +8,18 @@
     <!-- Monaco Editor CDN -->
     <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
     
+    <!-- JSZip Library (AMD競合回避のため事前読み込み) -->
+    <script>
+        // AMD競合を一時的に回避
+        const originalDefine = window.define;
+        window.define = undefined;
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        // defineを復元
+        window.define = originalDefine;
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -460,6 +472,9 @@
                 <button onclick="saveCode()" title="Save project to localStorage (use Projects→Export ZIP for file)">
                     💾 Save
                 </button>
+                <button onclick="loadProject()" title="Load project from ZIP file">
+                    📂 Load
+                </button>
                 <button onclick="formatCode()">
                     🎨 Format
                 </button>
@@ -634,6 +649,10 @@
                 bracketPairColorization: { enabled: true },
                 guides: { bracketPairs: true, indentation: true }
             });
+            
+            // グローバルアクセス用に window に代入
+            window.monacoEditor = monacoEditor;
+            console.log('🎨 Monaco Editor assigned to window.monacoEditor');
 
             // 高度なコード補完設定
             setupAdvancedCodeCompletion();
@@ -676,7 +695,17 @@
 
                 // プロジェクト管理システム
                 projectManager = new ProjectManager(voidCore);
-                await projectManager.initialize(document.getElementById('projectManagerContainer'));
+                console.log('🔧 Initializing ProjectManager...');
+                const projectManagerInit = await projectManager.initialize(document.getElementById('projectManagerContainer'));
+                console.log('🔧 ProjectManager initialized:', projectManagerInit);
+                console.log('🔧 ProjectManager currentProject:', projectManager.currentProject);
+                
+                // 初期化が失敗した場合、手動で currentProject を設定
+                if (!projectManager.currentProject) {
+                    console.log('⚠️ Manual currentProject initialization...');
+                    projectManager.currentProject = { ...projectManager.defaultProject };
+                    console.log('🔧 Manual currentProject set:', projectManager.currentProject);
+                }
 
                 log('🎨 Advanced visualization systems initialized', 'success');
 
@@ -728,16 +757,21 @@
         async function executeCode() {
             const runButton = document.getElementById('runButton');
             const stopButton = document.getElementById('stopButton');
+            let skipStopButtonUpdate = false;
             
             if (isExecuting) {
                 showNotification('Code is already executing...', 'warning');
                 return;
             }
             
+            // 連打防止のため、短時間だけRunボタンを無効に
+            runButton.disabled = true;
+            setTimeout(() => {
+                runButton.disabled = false;
+            }, 1000); // 1秒後に再有効化
+            
             try {
                 isExecuting = true;
-                runButton.disabled = true;
-                stopButton.disabled = false;
                 updateStatus('Executing...', 'running');
                 
                 // AbortController for cancellation
@@ -753,11 +787,33 @@
                     
                     if (result.plugin) {
                         pluginCount++;
+                        
+                        // 同じIDのプラグインが複数実行される場合、ユニークIDを作成
+                        let uniquePluginId = result.plugin.pluginId;
+                        let counter = 1;
+                        while (runningPlugins.has(uniquePluginId)) {
+                            uniquePluginId = `${result.plugin.pluginId}-${counter}`;
+                            counter++;
+                        }
+                        
+                        // ユニークIDを設定
+                        result.plugin.uniqueId = uniquePluginId;
+                        
                         // 実行中プラグインとして追跡
-                        runningPlugins.set(result.plugin.pluginId, result.plugin);
-                        log(`🔧 Plugin created: ${result.plugin.pluginId}`, 'success');
+                        runningPlugins.set(uniquePluginId, result.plugin);
+                        log(`🔧 Plugin created: ${result.plugin.pluginId} (unique: ${uniquePluginId})`, 'success');
                         updatePluginsList();
                         showNotification(`Plugin ${result.plugin.pluginId} created successfully!`, 'success');
+                        
+                        // プラグインが実行開始される時にStopボタンを有効に
+                        updateStatus('Plugin Running', 'running');
+                        stopButton.disabled = false;
+                        
+                        // プラグインが実行中の場合、finallyでStopボタン状態を変更しない
+                        if (result.plugin.running) {
+                            log('🎯 Plugin is running, Skip stop button update in finally', 'info');
+                            skipStopButtonUpdate = true;
+                        }
                     }
                     
                     updateStatus('Success', 'idle');
@@ -784,38 +840,64 @@
                     showNotification(`Execution failed: ${error.message}`, 'error');
                 }
             } finally {
-                // プラグインが実行中でない場合のみボタン状態をリセット
-                if (runningPlugins.size === 0) {
-                    isExecuting = false;
-                    runButton.disabled = false;
-                    stopButton.disabled = true;
-                    currentExecutionAbortController = null;
+                // 実行状態をリセット
+                isExecuting = false;
+                
+                // プラグインが実行中の場合はStopボタン状態を変更しない
+                if (!skipStopButtonUpdate) {
+                    setTimeout(() => {
+                        updateStopButtonState();
+                    }, 100);
                 } else {
-                    // プラグインが実行中の場合、Stopボタンは有効のまま
-                    isExecuting = false;
-                    runButton.disabled = false;
-                    stopButton.disabled = false;
+                    log('⏭️ Skipping stop button update (plugin still running)', 'info');
                 }
+            }
+        }
+        
+        function updateStopButtonState() {
+            const stopButton = document.getElementById('stopButton');
+            
+            // デバッグ: 現在の実行中プラグインを表示
+            const runningPluginsList = Array.from(runningPlugins.keys());
+            log(`🔍 Current running plugins: [${runningPluginsList.join(', ')}] (${runningPluginsList.length} total)`, 'info');
+            
+            // プラグインが実行中かどうかチェック
+            const hasRunningPlugins = Array.from(runningPlugins.values()).some(plugin => plugin.running);
+            
+            if (hasRunningPlugins) {
+                // プラグインが実行中の場合、Stopボタンは有効
+                stopButton.disabled = false;
+                log('🔄 Plugin(s) still running, Stop button remains active', 'info');
+            } else {
+                // プラグインが実行中でない場合、Stopボタンを無効に
+                stopButton.disabled = true;
+                currentExecutionAbortController = null;
+                log('⏸️ No running plugins, Stop button disabled', 'info');
             }
         }
 
         async function stopExecution() {
-            if (!isExecuting) {
-                showNotification('No execution in progress', 'info');
-                return;
-            }
+            log('⏹️ Stop button pressed...', 'warn');
             
-            log('⏹️ Stopping execution...', 'warn');
-            
-            // 実行中の処理を中断
+            // 現在の実行を中止
             if (currentExecutionAbortController) {
                 currentExecutionAbortController.abort();
+                log('🚫 Current execution aborted', 'warn');
             }
             
             // 実行中のプラグインを停止
-            await stopRunningPlugins();
+            const runningCount = runningPlugins.size;
+            if (runningCount > 0) {
+                log(`🛑 Stopping ${runningCount} running plugin(s)...`, 'warn');
+                await stopRunningPlugins();
+            } else {
+                log('ℹ️ No running plugins to stop', 'info');
+            }
             
-            showNotification('Execution stopped successfully', 'success');
+            // ボタン状態を更新
+            document.getElementById('stopButton').disabled = true;
+            updateStatus('Stopped', 'idle');
+            showNotification('All plugins stopped', 'success');
         }
 
         async function stopRunningPlugins() {
@@ -826,7 +908,7 @@
                     // プラグインに停止通知を送信
                     if (typeof plugin.shutdown === 'function') {
                         await plugin.shutdown('User requested stop');
-                        log(`🛑 Plugin stopped: ${plugin.pluginId}`, 'info');
+                        log(`🛑 Plugin stopped: ${plugin.pluginId} (${plugin.uniqueId || plugin.pluginId})`, 'info');
                     }
                     
                     // VoidCoreから削除
@@ -834,8 +916,9 @@
                         voidCore.unregisterPlugin(plugin.pluginId);
                     }
                     
-                    // 追跡リストから削除
-                    runningPlugins.delete(plugin.pluginId);
+                    // 追跡リストから削除（uniqueIdを使用）
+                    const uniqueId = plugin.uniqueId || plugin.pluginId;
+                    runningPlugins.delete(uniqueId);
                     
                 } catch (error) {
                     log(`❌ Error stopping plugin ${plugin.pluginId}: ${error.message}`, 'error');
@@ -1033,9 +1116,15 @@ const analyticsPlugin = createPlugin({
     let counter = 0;
     this.running = true;
     
-    while (this.running) {
+    // setIntervalを使って停止可能にする
+    this.intervalId = setInterval(async () => {
+      if (!this.running) {
+        clearInterval(this.intervalId);
+        this.log('🛑 Processing stopped');
+        return;
+      }
+      
       this.log(\`💫 Processing... \${counter++}\`);
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // 10回ごとにメッセージ送信
       if (counter % 10 === 0) {
@@ -1044,7 +1133,7 @@ const analyticsPlugin = createPlugin({
           timestamp: Date.now()
         });
       }
-    }
+    }, 1000);
     
     // 高度なメッセージ分析
     this.messageAnalytics = {
@@ -1229,6 +1318,15 @@ const analyticsPlugin = createPlugin({
   async shutdown(reason) {
     this.log(\`🛑 Shutting down: \${reason}\`);
     this.running = false;
+    
+    // インターバルをクリア
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+    
+    // クリーンアップ
+    this.messageAnalytics = null;
+    this.analytics = null;
   }
 });
 
@@ -1442,17 +1540,342 @@ return monitorPlugin;`;
             }, 3000);
         }
 
+        // カスタム確認ダイアログ
+        function showCustomConfirm(message) {
+            return new Promise((resolve) => {
+                // 既存のダイアログがあれば削除
+                const existingDialog = document.getElementById('customConfirmDialog');
+                if (existingDialog) {
+                    existingDialog.remove();
+                }
+                
+                // ダイアログを作成
+                const dialog = document.createElement('div');
+                dialog.id = 'customConfirmDialog';
+                dialog.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 10000;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                `;
+                
+                const content = document.createElement('div');
+                content.style.cssText = `
+                    background: #2d2d30;
+                    color: #d4d4d4;
+                    padding: 30px;
+                    border-radius: 8px;
+                    max-width: 400px;
+                    text-align: center;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+                `;
+                
+                const messageEl = document.createElement('p');
+                messageEl.textContent = message;
+                messageEl.style.cssText = `
+                    margin: 0 0 20px 0;
+                    line-height: 1.5;
+                    white-space: pre-line;
+                `;
+                
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.cssText = `
+                    display: flex;
+                    gap: 10px;
+                    justify-content: center;
+                `;
+                
+                const yesButton = document.createElement('button');
+                yesButton.textContent = 'Yes, Export ZIP';
+                yesButton.style.cssText = `
+                    background: #0e639c;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 14px;
+                `;
+                
+                const noButton = document.createElement('button');
+                noButton.textContent = 'No, Just Save';
+                noButton.style.cssText = `
+                    background: #6c6c6c;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 14px;
+                `;
+                
+                yesButton.onclick = () => {
+                    dialog.remove();
+                    resolve(true);
+                };
+                
+                noButton.onclick = () => {
+                    dialog.remove();
+                    resolve(false);
+                };
+                
+                // Escapeキーで閉じる
+                dialog.onkeydown = (e) => {
+                    if (e.key === 'Escape') {
+                        dialog.remove();
+                        resolve(false);
+                    }
+                };
+                
+                buttonContainer.appendChild(yesButton);
+                buttonContainer.appendChild(noButton);
+                content.appendChild(messageEl);
+                content.appendChild(buttonContainer);
+                dialog.appendChild(content);
+                document.body.appendChild(dialog);
+                
+                // フォーカスを設定
+                yesButton.focus();
+            });
+        }
+
         // グローバル関数
         window.executeCode = executeCode;
         window.stopExecution = stopExecution;
-        window.saveCode = () => {
+        window.saveCode = async () => {
+            console.log('💾 Save button clicked, projectManager:', projectManager);
             if (projectManager) {
+                log('💾 Saving project to localStorage...', 'info');
+                
+                // 現在のコードをプロジェクトに追加
+                try {
+                    // ProjectManagerの状態を確認
+                    if (!projectManager.currentProject) {
+                        log('⚠️ ProjectManager currentProject is null, reinitializing...', 'warn');
+                        projectManager.currentProject = { ...projectManager.defaultProject };
+                        log('🔧 ProjectManager reinitialized with default project', 'info');
+                    }
+                    
+                    projectManager.addCurrentPlugin();
+                    log(`🔧 Current plugins in project: ${projectManager.currentProject.plugins.length}`, 'info');
+                } catch (error) {
+                    log(`❌ Failed to add current plugin: ${error.message}`, 'error');
+                    
+                    // 再試行のための修復
+                    if (error.message.includes('currentProject is null')) {
+                        log('🔧 Attempting to fix currentProject...', 'info');
+                        try {
+                            projectManager.currentProject = { ...projectManager.defaultProject };
+                            log('🔧 Fixed currentProject, retrying...', 'info');
+                            projectManager.addCurrentPlugin();
+                            log('✅ Plugin added successfully after fix', 'success');
+                        } catch (retryError) {
+                            log(`❌ Retry failed: ${retryError.message}`, 'error');
+                        }
+                    }
+                }
+                
+                // LocalStorageに保存
                 projectManager.saveProject();
+                
+                // 必ず確認ダイアログを表示
+                log('💬 Showing export confirmation dialog...', 'info');
+                
+                // カスタムダイアログを作成
+                const exportZip = await showCustomConfirm('Project saved to localStorage!\n\nDo you want to export as ZIP file for download?');
+                log(`💬 User selected: ${exportZip ? 'Yes' : 'No'}`, 'info');
+                
+                if (exportZip) {
+                    log('📦 Exporting project as ZIP...', 'info');
+                    log(`🔍 Project state: ${projectManager.currentProject.plugins.length} plugins, name: "${projectManager.currentProject.metadata.name}"`, 'info');
+                    
+                    // プラグインが0個の場合、強制的に現在のエディタコードを追加
+                    if (projectManager.currentProject.plugins.length === 0) {
+                        log('⚠️ No plugins in project, adding current editor content...', 'warn');
+                        try {
+                            await projectManager.addCurrentEditorPlugin();
+                            log(`🔧 After adding editor plugin: ${projectManager.currentProject.plugins.length} plugins`, 'info');
+                        } catch (error) {
+                            log(`❌ Failed to add editor plugin: ${error.message}`, 'error');
+                        }
+                    }
+                    
+                    try {
+                        await projectManager.exportProjectZip();
+                        log('✅ ZIP export completed', 'success');
+                    } catch (error) {
+                        log(`❌ ZIP export failed: ${error.message}`, 'error');
+                    }
+                }
             } else {
-                log('💾 Code saved to local storage', 'success');
-                showNotification('Code saved to local storage', 'success');
+                log('💾 ProjectManager not available, saving to localStorage fallback', 'warn');
+                
+                // 基本的なLocalStorage保存
+                const currentCode = monacoEditor ? monacoEditor.getValue() : '';
+                const saveData = {
+                    code: currentCode,
+                    timestamp: Date.now(),
+                    version: '2.0'
+                };
+                
+                localStorage.setItem('voidide-current-code', JSON.stringify(saveData));
+                log('💾 Code saved to localStorage', 'success');
+                showNotification('Code saved to localStorage', 'success');
             }
         };
+        
+        window.loadProject = async () => {
+            log('📂 Load project button clicked', 'info');
+            
+            // ファイル選択ダイアログを作成
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.zip,.voidproj.json';
+            input.style.display = 'none';
+            
+            input.onchange = async (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                log(`📂 Loading file: ${file.name}`, 'info');
+                
+                try {
+                    if (file.name.endsWith('.zip')) {
+                        await loadZipProject(file);
+                    } else if (file.name.endsWith('.voidproj.json')) {
+                        await loadJsonProject(file);
+                    } else {
+                        throw new Error('Unsupported file format');
+                    }
+                } catch (error) {
+                    log(`❌ Failed to load project: ${error.message}`, 'error');
+                    showNotification(`Load failed: ${error.message}`, 'error');
+                }
+            };
+            
+            document.body.appendChild(input);
+            input.click();
+            document.body.removeChild(input);
+        };
+        
+        // ZIP プロジェクト読み込み
+        async function loadZipProject(file) {
+            if (!window.JSZip) {
+                throw new Error('JSZip not available');
+            }
+            
+            log('📦 Parsing ZIP file...', 'info');
+            const zip = new JSZip();
+            const zipData = await zip.loadAsync(file);
+            
+            // プロジェクトメタデータを読み込み
+            const projectFile = zipData.file('voidcore.project.json');
+            if (!projectFile) {
+                throw new Error('Invalid project file: missing voidcore.project.json');
+            }
+            
+            const projectMeta = JSON.parse(await projectFile.async('string'));
+            log(`📦 Loading project: ${projectMeta.projectName}`, 'info');
+            
+            // プラグインファイルを読み込み
+            const plugins = [];
+            for (const pluginFileName of projectMeta.plugins || []) {
+                const pluginJsonFile = zipData.file(pluginFileName);
+                const pluginJsFile = zipData.file(pluginFileName.replace('.plugin.json', '.plugin.js'));
+                
+                if (pluginJsonFile && pluginJsFile) {
+                    const pluginMeta = JSON.parse(await pluginJsonFile.async('string'));
+                    const pluginSource = await pluginJsFile.async('string');
+                    
+                    // ファイル名からプラグインIDを抽出
+                    const pluginId = pluginFileName.replace('.plugin.json', '');
+                    
+                    plugins.push({
+                        id: pluginId, // ファイル名ベースのIDを使用
+                        name: pluginMeta.name || pluginId,
+                        version: pluginMeta.version,
+                        sourceCode: pluginSource,
+                        messageTypes: pluginMeta.messageTypes || { subscribes: [], publishes: [] },
+                        dependencies: pluginMeta.dependencies || [],
+                        settings: pluginMeta.settings || {},
+                        capabilities: pluginMeta.capabilities || [],
+                        author: pluginMeta.author,
+                        created: pluginMeta.created
+                    });
+                }
+            }
+            
+            log(`📦 Loaded ${plugins.length} plugins`, 'info');
+            
+            // プロジェクトをProjectManagerに設定
+            if (projectManager) {
+                projectManager.currentProject = {
+                    metadata: {
+                        name: projectMeta.projectName,
+                        description: projectMeta.description || '',
+                        createdWith: projectMeta.voidcoreVersion || '14.0',
+                        created: projectMeta.created || Date.now(),
+                        lastModified: Date.now(),
+                        author: projectMeta.author || 'Unknown',
+                        version: projectMeta.version || '1.0.0'
+                    },
+                    plugins: plugins,
+                    messageFlow: {},
+                    settings: {
+                        autoSave: true,
+                        autoRun: false,
+                        format: 'zip-separated'
+                    }
+                };
+                
+                // 最初のプラグインをエディタに読み込み
+                if (plugins.length > 0) {
+                    const firstPlugin = plugins[0];
+                    if (window.monacoEditor) {
+                        window.monacoEditor.setValue(firstPlugin.sourceCode);
+                        log(`📝 Loaded ${firstPlugin.name} into editor`, 'info');
+                    }
+                }
+                
+                log('✅ Project loaded successfully', 'success');
+                showNotification(`Project "${projectMeta.projectName}" loaded successfully!`, 'success');
+            } else {
+                throw new Error('ProjectManager not available');
+            }
+        }
+        
+        // JSON プロジェクト読み込み (フォールバック)
+        async function loadJsonProject(file) {
+            log('📄 Parsing JSON file...', 'info');
+            const text = await file.text();
+            const projectData = JSON.parse(text);
+            
+            if (projectManager) {
+                projectManager.currentProject = projectData;
+                
+                // 最初のプラグインをエディタに読み込み
+                if (projectData.plugins && projectData.plugins.length > 0) {
+                    const firstPlugin = projectData.plugins[0];
+                    if (window.monacoEditor && firstPlugin.sourceCode) {
+                        window.monacoEditor.setValue(firstPlugin.sourceCode);
+                        log(`📝 Loaded ${firstPlugin.name || firstPlugin.id} into editor`, 'info');
+                    }
+                }
+                
+                log('✅ JSON project loaded successfully', 'success');
+                showNotification(`Project "${projectData.metadata?.name || 'Unnamed'}" loaded successfully!`, 'success');
+            } else {
+                throw new Error('ProjectManager not available');
+            }
+        }
+        
         window.formatCode = () => {
             monacoEditor.getAction('editor.action.formatDocument').run();
             log('🎨 Code formatted', 'info');

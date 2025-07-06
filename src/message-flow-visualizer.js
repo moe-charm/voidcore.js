@@ -277,6 +277,11 @@ export class MessageFlowVisualizer {
   animate(currentTime = performance.now()) {
     if (!this.isRunning) return;
     
+    // 初回実行時のlastFrame初期化
+    if (this.lastFrame === 0) {
+      this.lastFrame = currentTime;
+    }
+    
     const deltaTime = currentTime - this.lastFrame;
     this.lastFrame = currentTime;
     
@@ -285,6 +290,9 @@ export class MessageFlowVisualizer {
     
     // メッセージアニメーション更新
     this.updateMessages(deltaTime);
+    
+    // FPS情報を保存
+    this.currentDeltaTime = deltaTime;
     
     // レンダリング
     this.render();
@@ -481,7 +489,7 @@ export class MessageFlowVisualizer {
       `Nodes: ${this.nodes.size}`,
       `Active Messages: ${this.messages.length}`,
       `Message History: ${this.messageHistory.length}`,
-      `FPS: ${Math.round(1000 / (performance.now() - this.lastFrame))}`,
+      `FPS: ${Math.round(1000 / Math.max(this.currentDeltaTime || 16.67, 1))}`, // 異常値防止
       `Filters: ${this.filters.messageTypes.join(', ')}`
     ];
     
