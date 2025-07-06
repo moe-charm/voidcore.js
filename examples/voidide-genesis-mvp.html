@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 VoidIDE Genesis - Self-Creating IDE MVP</title>
+    
+    <!-- Monaco Editor CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #252526;
+            border-right: 1px solid #3e3e42;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            height: 50px;
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 10px;
+        }
+
+        .toolbar button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #1177bb;
+        }
+
+        .toolbar button:disabled {
+            background: #5a5a5a;
+            cursor: not-allowed;
+        }
+
+        .toolbar .status {
+            margin-left: auto;
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .editor-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .bottom-panel {
+            height: 200px;
+            background: #1e1e1e;
+            border-top: 1px solid #3e3e42;
+            display: flex;
+        }
+
+        .output-panel {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .plugins-panel {
+            width: 300px;
+            background: #252526;
+            border-left: 1px solid #3e3e42;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .sidebar h3, .plugins-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #cccccc;
+            border-bottom: 1px solid #3e3e42;
+            padding-bottom: 5px;
+        }
+
+        .project-tree {
+            font-size: 12px;
+        }
+
+        .project-tree .file {
+            padding: 2px 0;
+            cursor: pointer;
+            border-radius: 3px;
+            padding-left: 20px;
+        }
+
+        .project-tree .file:hover {
+            background: #2a2d2e;
+        }
+
+        .project-tree .file.active {
+            background: #094771;
+        }
+
+        .plugin-item {
+            background: #2d2d30;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .plugin-item .name {
+            font-weight: bold;
+            color: #4fc1ff;
+        }
+
+        .plugin-item .status {
+            color: #73c991;
+            font-size: 10px;
+        }
+
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+
+        .log-entry.info {
+            color: #d4d4d4;
+        }
+
+        .log-entry.success {
+            color: #73c991;
+        }
+
+        .log-entry.error {
+            color: #f48771;
+        }
+
+        .log-entry.warn {
+            color: #dcdcaa;
+        }
+
+        .header {
+            background: #007acc;
+            color: white;
+            padding: 10px 15px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .execution-status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .execution-status.idle {
+            background: #888;
+        }
+
+        .execution-status.running {
+            background: #73c991;
+            animation: pulse 1s infinite;
+        }
+
+        .execution-status.error {
+            background: #f48771;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .welcome-message {
+            background: #0e639c;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 12px;
+            border-left: 4px solid #1177bb;
+        }
+
+        .stats-panel {
+            background: #2d2d30;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+
+        .monaco-editor-container {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- サイドバー -->
+        <div class="sidebar">
+            <div class="header">🌟 VoidIDE Genesis</div>
+            
+            <div class="welcome-message">
+                <strong>自己創造システム</strong><br>
+                VoidCoreでVoidCoreを育てる革命的IDE
+            </div>
+
+            <h3>📁 Project Explorer</h3>
+            <div class="project-tree">
+                <div class="file active" data-file="main.js">
+                    📄 main.js (current)
+                </div>
+                <div class="file" data-file="template">
+                    📋 Plugin Template
+                </div>
+            </div>
+
+            <div class="stats-panel">
+                <h3>📊 Statistics</h3>
+                <div class="stats-item">
+                    <span>Plugins Created:</span>
+                    <span id="pluginCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span>Executions:</span>
+                    <span id="executionCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span>Uptime:</span>
+                    <span id="uptime">0s</span>
+                </div>
+            </div>
+
+            <h3>🎯 Quick Actions</h3>
+            <button class="toolbar" onclick="loadTemplate()" style="width: 100%; margin: 5px 0;">
+                📋 Load Template
+            </button>
+            <button class="toolbar" onclick="clearOutput()" style="width: 100%; margin: 5px 0;">
+                🧹 Clear Output
+            </button>
+            <button class="toolbar" onclick="showHelp()" style="width: 100%; margin: 5px 0;">
+                ❓ Show Help
+            </button>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="main-content">
+            <!-- ツールバー -->
+            <div class="toolbar">
+                <button id="runButton" onclick="executeCode()">
+                    ▶️ Run Code (Ctrl+Enter)
+                </button>
+                <button onclick="saveCode()">
+                    💾 Save
+                </button>
+                <button onclick="formatCode()">
+                    🎨 Format
+                </button>
+                <div class="status">
+                    <span class="execution-status idle" id="executionStatus"></span>
+                    <span id="statusText">Ready</span>
+                </div>
+            </div>
+
+            <!-- エディタ -->
+            <div class="editor-container">
+                <div id="monaco-editor" class="monaco-editor-container"></div>
+            </div>
+
+            <!-- ボトムパネル -->
+            <div class="bottom-panel">
+                <div class="output-panel">
+                    <h3>📝 Output & Logs</h3>
+                    <div id="output"></div>
+                </div>
+                <div class="plugins-panel">
+                    <h3>🔧 Active Plugins</h3>
+                    <div id="pluginsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { voidCore, createPlugin, Message } from '../src/index.js';
+
+        // グローバル変数
+        let monacoEditor = null;
+        let voidIDEPlugin = null;
+        let startTime = Date.now();
+        let executionCount = 0;
+        let pluginCount = 0;
+
+        // Monaco Editorの初期化
+        require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' }});
+        
+        require(['vs/editor/editor.main'], function() {
+            initializeVoidIDE();
+        });
+
+        async function initializeVoidIDE() {
+            try {
+                log('🚀 Initializing VoidIDE Genesis...', 'info');
+
+                // VoidIDEプラグインを作成
+                voidIDEPlugin = createPlugin({
+                    pluginId: 'void-ide-genesis-mvp',
+                    name: 'VoidIDE Genesis MVP',
+                    version: '1.0.0-mvp',
+                    capabilities: ['code-editor', 'plugin-builder', 'runtime-eval']
+                }, {
+                    async run() {
+                        await this.initialize();
+                        this.log('🌟 VoidIDE Genesis MVP initialized!');
+
+                        // メッセージ監視
+                        this.on('Notice', 'plugin.created', (message) => {
+                            updatePluginsList();
+                        });
+                    }
+                });
+
+                // VoidCoreに登録して実行
+                voidCore.registerPlugin(voidIDEPlugin);
+                await voidIDEPlugin.run();
+
+                // Monaco Editorを初期化
+                monacoEditor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                    value: getDefaultTemplate(),
+                    language: 'javascript',
+                    theme: 'vs-dark',
+                    fontSize: 14,
+                    automaticLayout: true,
+                    minimap: { enabled: true },
+                    wordWrap: 'on'
+                });
+
+                // VoidCore API補完の設定
+                setupCodeCompletion();
+
+                // エディタイベントの設定
+                monacoEditor.onDidChangeModelContent(() => {
+                    updateStatus('Modified', 'idle');
+                });
+
+                // キーボードショートカット
+                monacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+                    executeCode();
+                });
+
+                log('✅ VoidIDE Genesis MVP ready!', 'success');
+                updateStatus('Ready', 'idle');
+
+                // 統計更新開始
+                setInterval(updateStats, 1000);
+
+            } catch (error) {
+                log(`❌ Initialization error: ${error.message}`, 'error');
+            }
+        }
+
+        // コード実行
+        async function executeCode() {
+            const runButton = document.getElementById('runButton');
+            const statusElement = document.getElementById('executionStatus');
+            
+            try {
+                runButton.disabled = true;
+                updateStatus('Executing...', 'running');
+                
+                const code = monacoEditor.getValue();
+                log('🚀 Executing code...', 'info');
+                
+                // セキュアなコード実行
+                const result = await safeExecuteCode(code);
+                
+                if (result.success) {
+                    log('✅ Code executed successfully!', 'success');
+                    
+                    if (result.plugin) {
+                        pluginCount++;
+                        log(`🔧 Plugin created: ${result.plugin.pluginId}`, 'success');
+                        updatePluginsList();
+                    }
+                    
+                    updateStatus('Success', 'idle');
+                } else {
+                    log(`❌ Execution error: ${result.error}`, 'error');
+                    updateStatus('Error', 'error');
+                }
+                
+                executionCount++;
+                
+            } catch (error) {
+                log(`❌ Execution failed: ${error.message}`, 'error');
+                updateStatus('Error', 'error');
+            } finally {
+                runButton.disabled = false;
+            }
+        }
+
+        // セキュアなコード実行
+        async function safeExecuteCode(code) {
+            try {
+                // VoidCoreプラグイン作成のためのラッパーコード
+                const wrappedCode = `
+                    // VoidCore API
+                    const { createPlugin, voidCore, Message } = voidcoreAPI;
+                    
+                    // ユーザーコード実行
+                    const result = (function() {
+                        ${code}
+                    })();
+                    
+                    return result;
+                `;
+                
+                // セキュアな実行環境
+                const sandboxGlobals = {
+                    console: {
+                        log: (...args) => log(`[User] ${args.join(' ')}`, 'info'),
+                        warn: (...args) => log(`[User] ${args.join(' ')}`, 'warn'),
+                        error: (...args) => log(`[User] ${args.join(' ')}`, 'error')
+                    },
+                    voidcoreAPI: {
+                        createPlugin,
+                        voidCore,
+                        Message
+                    },
+                    setTimeout,
+                    setInterval,
+                    Date,
+                    Math,
+                    JSON
+                };
+                
+                // Function constructorで安全に実行
+                const executor = new Function(
+                    ...Object.keys(sandboxGlobals),
+                    wrappedCode
+                );
+                
+                const result = executor(...Object.values(sandboxGlobals));
+                
+                // プラグインかどうか確認
+                if (result && typeof result === 'object' && result.pluginId) {
+                    // VoidCoreに登録
+                    const registered = voidCore.registerPlugin(result);
+                    
+                    if (registered && typeof result.run === 'function') {
+                        await result.run();
+                    }
+                    
+                    return { success: true, plugin: result };
+                } else {
+                    return { success: true, value: result };
+                }
+                
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        // VoidCore API補完の設定
+        function setupCodeCompletion() {
+            monaco.languages.registerCompletionItemProvider('javascript', {
+                provideCompletionItems: (model, position) => {
+                    const word = model.getWordUntilPosition(position);
+                    const range = {
+                        startLineNumber: position.lineNumber,
+                        endLineNumber: position.lineNumber,
+                        startColumn: word.startColumn,
+                        endColumn: word.endColumn
+                    };
+                    
+                    const suggestions = [
+                        {
+                            label: 'createPlugin',
+                            kind: monaco.languages.CompletionItemKind.Function,
+                            insertText: [
+                                'createPlugin({',
+                                '  pluginId: \'${1:my-plugin}\',',
+                                '  name: \'${2:My Plugin}\',',
+                                '  version: \'${3:1.0.0}\'',
+                                '}, {',
+                                '  async run() {',
+                                '    await this.initialize();',
+                                '    $0',
+                                '  }',
+                                '})'
+                            ].join('\n'),
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                            documentation: 'Create a new VoidCore plugin',
+                            range: range
+                        },
+                        {
+                            label: 'voidcore-template',
+                            kind: monaco.languages.CompletionItemKind.Snippet,
+                            insertText: getDefaultTemplate(),
+                            documentation: 'Complete VoidCore plugin template',
+                            range: range
+                        }
+                    ];
+                    
+                    return { suggestions };
+                }
+            });
+        }
+
+        // デフォルトテンプレート
+        function getDefaultTemplate() {
+            return `// 🌟 VoidCore Plugin - Created in VoidIDE Genesis!
+// This is a self-creating system - VoidCore creating VoidCore
+
+const myPlugin = createPlugin({
+  pluginId: 'my-genesis-plugin',
+  name: 'My Genesis Plugin',
+  version: '1.0.0',
+  capabilities: ['demo', 'self-creation']
+}, {
+  async run() {
+    await this.initialize();
+    
+    this.log('🎉 Hello from VoidIDE Genesis!');
+    this.log('🧠 This plugin was created inside VoidIDE itself!');
+    
+    // Listen for messages
+    this.on('Notice', 'user.hello', (message) => {
+      this.log('👋 Received hello:', message.payload);
+      
+      // Send a response
+      this.notice('plugin.response', {
+        message: 'Hello back from Genesis!',
+        timestamp: Date.now(),
+        createdIn: 'VoidIDE Genesis'
+      });
+    });
+    
+    // Send a welcome message
+    await this.notice('plugin.genesis.welcome', {
+      pluginId: this.pluginId,
+      message: 'Self-creation successful!',
+      philosophy: 'VoidCore creating VoidCore',
+      timestamp: Date.now()
+    });
+    
+    // Demonstrate self-awareness
+    const coreStats = voidCore.getStats();
+    this.log('🔍 Current VoidCore stats:', coreStats);
+    this.log('🌟 I am plugin #' + (coreStats.pluginCount || 'unknown'));
+    
+    this.log('✅ Genesis plugin ready for self-creation!');
+  }
+});
+
+// Return the plugin for VoidIDE to register
+return myPlugin;`;
+        }
+
+        // ログ出力
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : type === 'success' ? '✅' : '📝';
+            
+            entry.textContent = `[${timestamp}] ${icon} ${message}`;
+            output.appendChild(entry);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // ステータス更新
+        function updateStatus(text, status) {
+            document.getElementById('statusText').textContent = text;
+            const statusElement = document.getElementById('executionStatus');
+            statusElement.className = `execution-status ${status}`;
+        }
+
+        // 統計更新
+        function updateStats() {
+            const uptime = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('uptime').textContent = `${uptime}s`;
+            document.getElementById('executionCount').textContent = executionCount;
+            document.getElementById('pluginCount').textContent = pluginCount;
+        }
+
+        // プラグインリスト更新
+        function updatePluginsList() {
+            const pluginsList = document.getElementById('pluginsList');
+            const plugins = voidCore.getAllPlugins();
+            
+            pluginsList.innerHTML = '';
+            
+            if (plugins.length === 0) {
+                pluginsList.innerHTML = '<div style="color: #888; font-size: 12px;">No plugins yet</div>';
+                return;
+            }
+            
+            plugins.forEach(plugin => {
+                const item = document.createElement('div');
+                item.className = 'plugin-item';
+                item.innerHTML = `
+                    <div class="name">${plugin.name || plugin.pluginId}</div>
+                    <div class="status">✅ Active</div>
+                    <div style="font-size: 10px; color: #888;">v${plugin.version || '1.0.0'}</div>
+                `;
+                pluginsList.appendChild(item);
+            });
+        }
+
+        // グローバル関数（HTML onclick用）
+        window.executeCode = executeCode;
+        window.saveCode = () => {
+            log('💾 Code saved (local storage)', 'info');
+            updateStatus('Saved', 'idle');
+        };
+        window.formatCode = () => {
+            monacoEditor.getAction('editor.action.formatDocument').run();
+            log('🎨 Code formatted', 'info');
+        };
+        window.loadTemplate = () => {
+            monacoEditor.setValue(getDefaultTemplate());
+            log('📋 Template loaded', 'info');
+        };
+        window.clearOutput = () => {
+            document.getElementById('output').innerHTML = '';
+            log('🧹 Output cleared', 'info');
+        };
+        window.showHelp = () => {
+            log('🎯 VoidIDE Genesis Help:', 'info');
+            log('• Ctrl+Enter: Execute code', 'info');
+            log('• Ctrl+S: Save (planned)', 'info');
+            log('• F5: Execute code', 'info');
+            log('• Create VoidCore plugins with createPlugin()', 'info');
+            log('• Return your plugin to auto-register it', 'info');
+            log('• This IDE itself is a VoidCore plugin!', 'info');
+        };
+
+    </script>
+</body>
+</html>

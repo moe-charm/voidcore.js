@@ -1,6 +1,6 @@
 {
   "name": "voidcore-network",
-  "version": "13.0.0",
+  "version": "14.0.0",
   "description": "🌟 The Vessel of Silence - Pure message routing with heart-swappable transports",
   "main": "src/voidcore.js",
   "type": "module",

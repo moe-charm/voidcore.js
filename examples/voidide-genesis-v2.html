@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 VoidIDE Genesis v2.0 - Complete Self-Creating IDE</title>
+    
+    <!-- Monaco Editor CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .ide-container {
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            grid-template-rows: 40px 1fr 250px;
+            height: 100vh;
+            gap: 1px;
+            background: #3e3e42;
+        }
+
+        .title-bar {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .title-bar .version {
+            margin-left: auto;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .sidebar {
+            background: #252526;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-editor {
+            background: #1e1e1e;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            background: #252526;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bottom-panel {
+            grid-column: 1 / -1;
+            background: #1e1e1e;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1px;
+            background: #3e3e42;
+        }
+
+        .toolbar {
+            height: 40px;
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 10px;
+        }
+
+        .toolbar button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #1177bb;
+            transform: translateY(-1px);
+        }
+
+        .toolbar button:disabled {
+            background: #5a5a5a;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .toolbar .status {
+            margin-left: auto;
+            font-size: 12px;
+            color: #cccccc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #888;
+        }
+
+        .status-indicator.running {
+            background: #73c991;
+            animation: pulse 1s infinite;
+        }
+
+        .status-indicator.error {
+            background: #f48771;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .editor-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .monaco-editor-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .panel {
+            background: #252526;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .panel h3 {
+            margin: 0 0 15px 0;
+            font-size: 14px;
+            color: #cccccc;
+            border-bottom: 1px solid #3e3e42;
+            padding-bottom: 8px;
+        }
+
+        .file-tree {
+            list-style: none;
+        }
+
+        .file-item {
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: #2a2d2e;
+        }
+
+        .file-item.active {
+            background: #094771;
+            color: #4fc1ff;
+        }
+
+        .plugin-list {
+            list-style: none;
+        }
+
+        .plugin-item {
+            background: #2d2d30;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            border-left: 3px solid #4fc1ff;
+        }
+
+        .plugin-item.error {
+            border-left-color: #f48771;
+        }
+
+        .plugin-item.warning {
+            border-left-color: #dcdcaa;
+        }
+
+        .plugin-name {
+            font-weight: bold;
+            color: #4fc1ff;
+            margin-bottom: 4px;
+        }
+
+        .plugin-status {
+            color: #cccccc;
+            font-size: 11px;
+        }
+
+        .tab-container {
+            display: flex;
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            border-right: 1px solid #3e3e42;
+            font-size: 12px;
+            color: #cccccc;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background: #3e3e42;
+        }
+
+        .tab.active {
+            background: #094771;
+            color: #4fc1ff;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .visualization-container {
+            height: 100%;
+            position: relative;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .welcome-panel {
+            padding: 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #0e639c, #1177bb);
+            color: white;
+            margin: 15px;
+            border-radius: 8px;
+        }
+
+        .welcome-panel h2 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+
+        .welcome-panel p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 13px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 15px;
+        }
+
+        .quick-action {
+            background: #2d2d30;
+            border: 1px solid #3e3e42;
+            color: #cccccc;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .quick-action:hover {
+            background: #3e3e42;
+            border-color: #4fc1ff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px;
+        }
+
+        .stat-card {
+            background: #2d2d30;
+            padding: 12px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4fc1ff;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #cccccc;
+            text-transform: uppercase;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2d2d30;
+            color: #cccccc;
+            padding: 12px 16px;
+            border-radius: 6px;
+            border-left: 3px solid #4fc1ff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            border-left-color: #f48771;
+        }
+
+        .notification.success {
+            border-left-color: #73c991;
+        }
+
+        .scrollbar-thin {
+            scrollbar-width: thin;
+            scrollbar-color: #3e3e42 #252526;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #252526;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #3e3e42;
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #4e4e52;
+        }
+    </style>
+</head>
+<body>
+    <div class="ide-container">
+        <!-- タイトルバー -->
+        <div class="title-bar">
+            🌟 VoidIDE Genesis v2.0 - Self-Creating IDE with Advanced Analytics
+            <div class="version">Phase 2 Complete | Build 2025.07.06</div>
+        </div>
+
+        <!-- 左サイドバー -->
+        <div class="sidebar scrollbar-thin">
+            <div class="welcome-panel">
+                <h2>🧠 Genesis v2.0</h2>
+                <p>自己創造システム + 高度解析</p>
+            </div>
+
+            <div class="panel">
+                <h3>📁 Project Explorer</h3>
+                <ul class="file-tree">
+                    <li class="file-item active" data-file="main.js" onclick="selectFile('main.js')">
+                        📄 main.js
+                    </li>
+                    <li class="file-item" data-file="template" onclick="selectFile('template')">
+                        📋 Plugin Template
+                    </li>
+                    <li class="file-item" data-file="advanced" onclick="selectFile('advanced')">
+                        🚀 Advanced Template
+                    </li>
+                </ul>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="pluginCount">0</div>
+                    <div class="stat-label">Plugins</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="messageCount">0</div>
+                    <div class="stat-label">Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="uptime">0s</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="performance">100%</div>
+                    <div class="stat-label">Performance</div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <button class="quick-action" onclick="loadBasicTemplate()">
+                    📋 Basic Template
+                </button>
+                <button class="quick-action" onclick="loadAdvancedTemplate()">
+                    🚀 Advanced Template
+                </button>
+                <button class="quick-action" onclick="showCodeHelper()">
+                    💡 Code Helper
+                </button>
+                <button class="quick-action" onclick="openSettings()">
+                    ⚙️ Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- メインエディタ -->
+        <div class="main-editor">
+            <div class="toolbar">
+                <button id="runButton" onclick="executeCode()">
+                    ▶️ Run (Ctrl+Enter)
+                </button>
+                <button id="stopButton" onclick="stopExecution()" disabled>
+                    ⏹️ Stop
+                </button>
+                <button onclick="saveCode()" title="Save project to localStorage (use Projects→Export ZIP for file)">
+                    💾 Save
+                </button>
+                <button onclick="formatCode()">
+                    🎨 Format
+                </button>
+                <button onclick="toggleAnalytics()">
+                    📊 Analytics
+                </button>
+                <div class="status">
+                    <span class="status-indicator" id="statusIndicator"></span>
+                    <span id="statusText">Ready</span>
+                </div>
+            </div>
+            <div class="editor-container">
+                <div id="monaco-editor" class="monaco-editor-container"></div>
+            </div>
+        </div>
+
+        <!-- 右パネル -->
+        <div class="right-panel scrollbar-thin">
+            <div class="tab-container">
+                <div class="tab active" data-tab="plugins">🔧 Plugins</div>
+                <div class="tab" data-tab="analytics">📊 Analytics</div>
+                <div class="tab" data-tab="projects">🗂️ Projects</div>
+            </div>
+            
+            <div class="tab-content">
+                <div id="pluginsTab" class="panel">
+                    <h3>🔧 Active Plugins</h3>
+                    <ul class="plugin-list" id="pluginsList">
+                        <li class="plugin-item">
+                            <div class="plugin-name">VoidIDE Genesis</div>
+                            <div class="plugin-status">✅ System Plugin - Always Active</div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div id="analyticsTab" class="panel" style="display: none;">
+                    <h3>📊 Real-time Analytics</h3>
+                    <div id="analyticsContent">
+                        <div class="loading">Loading analytics...</div>
+                    </div>
+                </div>
+                
+                <div id="projectsTab" class="panel" style="display: none;">
+                    <h3>🗂️ Project Manager</h3>
+                    <div id="projectManagerContainer" class="visualization-container">
+                        <div class="loading">Loading project manager...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ボトムパネル -->
+        <div class="bottom-panel">
+            <!-- 出力・ログ -->
+            <div class="panel">
+                <h3>📝 Output & Logs</h3>
+                <div id="output" class="scrollbar-thin" style="height: 180px; overflow-y: auto; font-family: monospace; font-size: 12px; line-height: 1.4;"></div>
+            </div>
+            
+            <!-- メッセージフロー可視化 -->
+            <div class="panel">
+                <h3>🌊 Message Flow</h3>
+                <div id="messageVisualization" class="visualization-container">
+                    <div class="loading">Initializing visualization...</div>
+                </div>
+            </div>
+            
+            <!-- パフォーマンス監視 -->
+            <div class="panel">
+                <h3>⚡ Performance Monitor</h3>
+                <div id="performanceMonitor" class="visualization-container">
+                    <div class="loading">Starting performance monitoring...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知システム -->
+    <div id="notification" class="notification"></div>
+
+    <script type="module">
+        import { voidCore, createPlugin, Message } from '../src/index.js';
+        import { MessageFlowVisualizer } from '../src/message-flow-visualizer.js';
+        import { PluginMonitorDashboard } from '../src/plugin-monitor-dashboard.js';
+        import { PerformanceMetricsSystem } from '../src/performance-metrics-system.js';
+        import { ProjectManager } from '../src/project-manager.js';
+
+        // グローバル変数
+        let monacoEditor = null;
+        let voidIDEPlugin = null;
+        let messageVisualizer = null;
+        let pluginMonitor = null;
+        let performanceMonitor = null;
+        let projectManager = null;
+        let startTime = Date.now();
+        let executionCount = 0;
+        let pluginCount = 0;
+        let messageCount = 0;
+        let isExecuting = false;
+        let currentExecutionAbortController = null;
+        let runningPlugins = new Map(); // 実行中のプラグインを追跡
+
+        // Monaco Editorの初期化
+        require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' }});
+        
+        require(['vs/editor/editor.main'], function() {
+            initializeVoidIDE();
+        });
+
+        async function initializeVoidIDE() {
+            try {
+                showNotification('🚀 Initializing VoidIDE Genesis v2.0...', 'info');
+
+                // VoidIDEプラグインを作成
+                voidIDEPlugin = createPlugin({
+                    pluginId: 'void-ide-genesis-v2',
+                    name: 'VoidIDE Genesis v2.0',
+                    version: '2.0.0',
+                    capabilities: ['code-editor', 'plugin-builder', 'runtime-eval', 'analytics', 'visualization']
+                }, {
+                    async run() {
+                        await this.initialize();
+                        this.log('🌟 VoidIDE Genesis v2.0 initialized!');
+
+                        // 高度なメッセージ監視
+                        this.on('Notice', '*', (message) => {
+                            messageCount++;
+                            updateStats();
+                        });
+
+                        this.on('Notice', 'plugin.created', (message) => {
+                            updatePluginsList();
+                            showNotification(`🔧 Plugin created: ${message.payload.pluginId}`, 'success');
+                        });
+                    }
+                });
+
+                // VoidCoreに登録して実行
+                voidCore.registerPlugin(voidIDEPlugin);
+                await voidIDEPlugin.run();
+
+                // Monaco Editorを初期化
+                await initializeMonacoEditor();
+
+                // 高度な可視化システムを初期化
+                await initializeVisualizationSystems();
+
+                // UI イベントリスナー設定
+                setupUIEventListeners();
+
+                showNotification('✅ VoidIDE Genesis v2.0 ready!', 'success');
+                updateStatus('Ready', 'idle');
+
+                // 統計更新開始
+                setInterval(updateStats, 1000);
+
+            } catch (error) {
+                log(`❌ Initialization error: ${error.message}`, 'error');
+                showNotification(`Initialization failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function initializeMonacoEditor() {
+            monacoEditor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                value: getAdvancedTemplate(),
+                language: 'javascript',
+                theme: 'vs-dark',
+                fontSize: 14,
+                automaticLayout: true,
+                minimap: { enabled: true },
+                wordWrap: 'on',
+                bracketPairColorization: { enabled: true },
+                guides: { bracketPairs: true, indentation: true }
+            });
+
+            // 高度なコード補完設定
+            setupAdvancedCodeCompletion();
+
+            // エディタイベント
+            monacoEditor.onDidChangeModelContent(() => {
+                updateStatus('Modified', 'idle');
+            });
+
+            // キーボードショートカット
+            monacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+                executeCode();
+            });
+
+            monacoEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
+                saveCode();
+            });
+        }
+
+        async function initializeVisualizationSystems() {
+            try {
+                // メッセージフロー可視化
+                messageVisualizer = new MessageFlowVisualizer(
+                    document.getElementById('messageVisualization'),
+                    voidCore
+                );
+                await messageVisualizer.initialize();
+                messageVisualizer.start();
+
+                // プラグイン監視ダッシュボード
+                pluginMonitor = new PluginMonitorDashboard(
+                    document.getElementById('analyticsContent'),
+                    voidCore
+                );
+                await pluginMonitor.initialize();
+
+                // パフォーマンス監視システム
+                performanceMonitor = new PerformanceMetricsSystem(voidCore);
+                await performanceMonitor.initialize(document.getElementById('performanceMonitor'));
+
+                // プロジェクト管理システム
+                projectManager = new ProjectManager(voidCore);
+                await projectManager.initialize(document.getElementById('projectManagerContainer'));
+
+                log('🎨 Advanced visualization systems initialized', 'success');
+
+            } catch (error) {
+                log(`❌ Visualization initialization error: ${error.message}`, 'error');
+            }
+        }
+
+        function setupAdvancedCodeCompletion() {
+            monaco.languages.registerCompletionItemProvider('javascript', {
+                provideCompletionItems: (model, position) => {
+                    const word = model.getWordUntilPosition(position);
+                    const range = {
+                        startLineNumber: position.lineNumber,
+                        endLineNumber: position.lineNumber,
+                        startColumn: word.startColumn,
+                        endColumn: word.endColumn
+                    };
+                    
+                    const suggestions = [
+                        {
+                            label: 'voidcore-analytics-plugin',
+                            kind: monaco.languages.CompletionItemKind.Snippet,
+                            insertText: getAnalyticsPluginTemplate(),
+                            documentation: 'Advanced analytics plugin template',
+                            range: range
+                        },
+                        {
+                            label: 'voidcore-visualizer-plugin',
+                            kind: monaco.languages.CompletionItemKind.Snippet,
+                            insertText: getVisualizerPluginTemplate(),
+                            documentation: 'Visualization plugin template',
+                            range: range
+                        },
+                        {
+                            label: 'voidcore-monitor-plugin',
+                            kind: monaco.languages.CompletionItemKind.Snippet,
+                            insertText: getMonitorPluginTemplate(),
+                            documentation: 'Monitoring plugin template',
+                            range: range
+                        }
+                    ];
+                    
+                    return { suggestions };
+                }
+            });
+        }
+
+        async function executeCode() {
+            const runButton = document.getElementById('runButton');
+            const stopButton = document.getElementById('stopButton');
+            
+            if (isExecuting) {
+                showNotification('Code is already executing...', 'warning');
+                return;
+            }
+            
+            try {
+                isExecuting = true;
+                runButton.disabled = true;
+                stopButton.disabled = false;
+                updateStatus('Executing...', 'running');
+                
+                // AbortController for cancellation
+                currentExecutionAbortController = new AbortController();
+                
+                const code = monacoEditor.getValue();
+                log('🚀 Executing advanced code...', 'info');
+                
+                const result = await safeExecuteCode(code, currentExecutionAbortController.signal);
+                
+                if (result.success) {
+                    log('✅ Code executed successfully!', 'success');
+                    
+                    if (result.plugin) {
+                        pluginCount++;
+                        // 実行中プラグインとして追跡
+                        runningPlugins.set(result.plugin.pluginId, result.plugin);
+                        log(`🔧 Plugin created: ${result.plugin.pluginId}`, 'success');
+                        updatePluginsList();
+                        showNotification(`Plugin ${result.plugin.pluginId} created successfully!`, 'success');
+                    }
+                    
+                    updateStatus('Success', 'idle');
+                } else if (result.aborted) {
+                    log('⏹️ Execution stopped by user', 'warn');
+                    updateStatus('Stopped', 'idle');
+                    showNotification('Execution stopped', 'info');
+                } else {
+                    log(`❌ Execution error: ${result.error}`, 'error');
+                    updateStatus('Error', 'error');
+                    showNotification(`Execution failed: ${result.error}`, 'error');
+                }
+                
+                executionCount++;
+                
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    log('⏹️ Execution aborted', 'warn');
+                    updateStatus('Stopped', 'idle');
+                    showNotification('Execution stopped', 'info');
+                } else {
+                    log(`❌ Execution failed: ${error.message}`, 'error');
+                    updateStatus('Error', 'error');
+                    showNotification(`Execution failed: ${error.message}`, 'error');
+                }
+            } finally {
+                // プラグインが実行中でない場合のみボタン状態をリセット
+                if (runningPlugins.size === 0) {
+                    isExecuting = false;
+                    runButton.disabled = false;
+                    stopButton.disabled = true;
+                    currentExecutionAbortController = null;
+                } else {
+                    // プラグインが実行中の場合、Stopボタンは有効のまま
+                    isExecuting = false;
+                    runButton.disabled = false;
+                    stopButton.disabled = false;
+                }
+            }
+        }
+
+        async function stopExecution() {
+            if (!isExecuting) {
+                showNotification('No execution in progress', 'info');
+                return;
+            }
+            
+            log('⏹️ Stopping execution...', 'warn');
+            
+            // 実行中の処理を中断
+            if (currentExecutionAbortController) {
+                currentExecutionAbortController.abort();
+            }
+            
+            // 実行中のプラグインを停止
+            await stopRunningPlugins();
+            
+            showNotification('Execution stopped successfully', 'success');
+        }
+
+        async function stopRunningPlugins() {
+            const pluginsToStop = Array.from(runningPlugins.values());
+            
+            for (const plugin of pluginsToStop) {
+                try {
+                    // プラグインに停止通知を送信
+                    if (typeof plugin.shutdown === 'function') {
+                        await plugin.shutdown('User requested stop');
+                        log(`🛑 Plugin stopped: ${plugin.pluginId}`, 'info');
+                    }
+                    
+                    // VoidCoreから削除
+                    if (voidCore.unregisterPlugin) {
+                        voidCore.unregisterPlugin(plugin.pluginId);
+                    }
+                    
+                    // 追跡リストから削除
+                    runningPlugins.delete(plugin.pluginId);
+                    
+                } catch (error) {
+                    log(`❌ Error stopping plugin ${plugin.pluginId}: ${error.message}`, 'error');
+                }
+            }
+            
+            // プラグインリスト更新
+            updatePluginsList();
+            pluginCount = Math.max(0, pluginCount - pluginsToStop.length);
+        }
+
+        async function stopSpecificPlugin(pluginId) {
+            const plugin = runningPlugins.get(pluginId);
+            if (!plugin) {
+                showNotification(`Plugin ${pluginId} not found`, 'error');
+                return;
+            }
+            
+            try {
+                if (typeof plugin.shutdown === 'function') {
+                    await plugin.shutdown('Manual stop');
+                }
+                
+                if (voidCore.unregisterPlugin) {
+                    voidCore.unregisterPlugin(pluginId);
+                }
+                
+                runningPlugins.delete(pluginId);
+                updatePluginsList();
+                pluginCount--;
+                
+                log(`🛑 Plugin stopped: ${pluginId}`, 'success');
+                showNotification(`Plugin ${pluginId} stopped`, 'success');
+                
+            } catch (error) {
+                log(`❌ Error stopping plugin ${pluginId}: ${error.message}`, 'error');
+                showNotification(`Failed to stop plugin: ${error.message}`, 'error');
+            }
+        }
+
+        async function safeExecuteCode(code, abortSignal = null) {
+            try {
+                // 中断チェック
+                if (abortSignal && abortSignal.aborted) {
+                    return { success: false, aborted: true };
+                }
+                
+                const wrappedCode = `
+                    const { createPlugin, voidCore, Message } = voidcoreAPI;
+                    
+                    const result = (function() {
+                        ${code}
+                    })();
+                    
+                    return result;
+                `;
+                
+                const sandboxGlobals = {
+                    console: {
+                        log: (...args) => log(`[User] ${args.join(' ')}`, 'info'),
+                        warn: (...args) => log(`[User] ${args.join(' ')}`, 'warn'),
+                        error: (...args) => log(`[User] ${args.join(' ')}`, 'error')
+                    },
+                    voidcoreAPI: {
+                        createPlugin,
+                        voidCore,
+                        Message
+                    },
+                    setTimeout,
+                    setInterval,
+                    clearTimeout,
+                    clearInterval,
+                    Date,
+                    Math,
+                    JSON
+                };
+                
+                // 中断チェック
+                if (abortSignal && abortSignal.aborted) {
+                    return { success: false, aborted: true };
+                }
+                
+                const executor = new Function(
+                    ...Object.keys(sandboxGlobals),
+                    wrappedCode
+                );
+                
+                const result = executor(...Object.values(sandboxGlobals));
+                
+                // 中断チェック
+                if (abortSignal && abortSignal.aborted) {
+                    return { success: false, aborted: true };
+                }
+                
+                if (result && typeof result === 'object' && result.pluginId) {
+                    const registered = voidCore.registerPlugin(result);
+                    
+                    if (registered && typeof result.run === 'function') {
+                        // プラグイン実行前の中断チェック
+                        if (abortSignal && abortSignal.aborted) {
+                            return { success: false, aborted: true };
+                        }
+                        
+                        await result.run();
+                    }
+                    
+                    return { success: true, plugin: result };
+                } else {
+                    return { success: true, value: result };
+                }
+                
+            } catch (error) {
+                if (error.name === 'AbortError' || (abortSignal && abortSignal.aborted)) {
+                    return { success: false, aborted: true };
+                }
+                return { success: false, error: error.message };
+            }
+        }
+
+        function setupUIEventListeners() {
+            // タブ切り替え
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+
+            // ファイルツリー
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('File item clicked:', item.dataset.file);
+                    selectFile(item.dataset.file);
+                });
+            });
+        }
+
+        function switchTab(tabName) {
+            // タブ状態更新
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            // コンテンツ切り替え
+            document.getElementById('pluginsTab').style.display = tabName === 'plugins' ? 'block' : 'none';
+            document.getElementById('analyticsTab').style.display = tabName === 'analytics' ? 'block' : 'none';
+            document.getElementById('projectsTab').style.display = tabName === 'projects' ? 'block' : 'none';
+        }
+
+        function selectFile(filename) {
+            if (!monacoEditor) {
+                showNotification('Editor not ready', 'warning');
+                return;
+            }
+            
+            // アクティブ状態を更新
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.file === filename) {
+                    item.classList.add('active');
+                }
+            });
+
+            switch(filename) {
+                case 'main.js':
+                    monacoEditor.setValue(getAdvancedTemplate());
+                    break;
+                case 'template':
+                    monacoEditor.setValue(getBasicTemplate());
+                    break;
+                case 'advanced':
+                    monacoEditor.setValue(getAnalyticsPluginTemplate());
+                    break;
+            }
+
+            log(`📁 Loaded ${filename}`, 'info');
+            showNotification(`Loaded ${filename}`, 'success');
+        }
+
+        function getAdvancedTemplate() {
+            return `// 🌟 VoidIDE Genesis v2.0 - Advanced Plugin Template
+// Self-creating system with analytics and visualization
+
+const analyticsPlugin = createPlugin({
+  pluginId: 'advanced-analytics-plugin',
+  name: 'Advanced Analytics Plugin',
+  version: '2.0.0',
+  capabilities: ['analytics', 'monitoring', 'visualization', 'ai-insights']
+}, {
+  async run() {
+    await this.initialize();
+    
+    this.log('🧠 Advanced Analytics Plugin starting...');
+    
+    // 無限ループの例（Stopボタンテスト用）
+    let counter = 0;
+    this.running = true;
+    
+    while (this.running) {
+      this.log(\`💫 Processing... \${counter++}\`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 10回ごとにメッセージ送信
+      if (counter % 10 === 0) {
+        await this.notice('analytics.update', {
+          count: counter,
+          timestamp: Date.now()
+        });
+      }
+    }
+    
+    // 高度なメッセージ分析
+    this.messageAnalytics = {
+      patterns: new Map(),
+      anomalies: [],
+      predictions: []
+    };
+    
+    // すべてのメッセージを監視・分析
+    this.on('Notice', '*', (message) => {
+      this.analyzeMessage(message);
+    });
+    
+    // システム健康状態の監視
+    this.on('Notice', 'plugin.health', (message) => {
+      this.assessSystemHealth(message);
+    });
+    
+    // パフォーマンス異常検出
+    setInterval(() => {
+      this.detectPerformanceAnomalies();
+    }, 5000);
+    
+    // AI予測分析（簡易版）
+    setInterval(() => {
+      this.generatePredictions();
+    }, 10000);
+    
+    this.log('🎯 Advanced analytics initialized!');
+    
+    // システム分析開始の通知
+    await this.notice('analytics.started', {
+      pluginId: this.pluginId,
+      capabilities: this.capabilities,
+      analysisMode: 'real-time',
+      features: ['pattern-detection', 'anomaly-detection', 'predictive-analytics']
+    });
+  },
+  
+  // メッセージパターン分析
+  analyzeMessage(message) {
+    const pattern = this.extractPattern(message);
+    
+    if (this.messageAnalytics.patterns.has(pattern)) {
+      this.messageAnalytics.patterns.set(pattern, 
+        this.messageAnalytics.patterns.get(pattern) + 1);
+    } else {
+      this.messageAnalytics.patterns.set(pattern, 1);
+    }
+    
+    // 異常パターン検出
+    if (this.isAnomalousPattern(pattern)) {
+      this.detectAnomaly(message, pattern);
+    }
+  },
+  
+  extractPattern(message) {
+    return \`\${message.type}:\${message.event_name || message.action || 'unknown'}\`;
+  },
+  
+  isAnomalousPattern(pattern) {
+    // 簡易異常検出ロジック
+    const count = this.messageAnalytics.patterns.get(pattern) || 0;
+    return count === 1 || count % 100 === 0; // 初回または100の倍数で異常とみなす
+  },
+  
+  async detectAnomaly(message, pattern) {
+    const anomaly = {
+      timestamp: Date.now(),
+      pattern: pattern,
+      message: message,
+      severity: this.calculateSeverity(pattern),
+      description: \`Unusual pattern detected: \${pattern}\`
+    };
+    
+    this.messageAnalytics.anomalies.push(anomaly);
+    
+    // 重要な異常は即座に通知
+    if (anomaly.severity === 'high') {
+      await this.notice('analytics.anomaly.critical', anomaly);
+      this.log(\`🚨 Critical anomaly detected: \${pattern}\`, 'error');
+    }
+  },
+  
+  calculateSeverity(pattern) {
+    // パターンベースの重要度判定
+    if (pattern.includes('error') || pattern.includes('failed')) return 'high';
+    if (pattern.includes('warning') || pattern.includes('timeout')) return 'medium';
+    return 'low';
+  },
+  
+  assessSystemHealth(message) {
+    // システム健康状態の総合評価
+    const health = {
+      timestamp: Date.now(),
+      overall: 'healthy',
+      components: {
+        messageFlow: this.assessMessageFlow(),
+        pluginStatus: this.assessPluginStatus(),
+        performance: this.assessPerformance()
+      }
+    };
+    
+    this.log(\`💊 System health: \${health.overall}\`);
+  },
+  
+  assessMessageFlow() {
+    const recentPatterns = Array.from(this.messageAnalytics.patterns.entries())
+      .filter(([pattern, count]) => count > 0);
+    
+    return recentPatterns.length > 0 ? 'active' : 'idle';
+  },
+  
+  assessPluginStatus() {
+    // 簡易プラグイン状態評価
+    return 'stable';
+  },
+  
+  assessPerformance() {
+    const anomalyCount = this.messageAnalytics.anomalies.length;
+    if (anomalyCount > 10) return 'degraded';
+    if (anomalyCount > 5) return 'warning';
+    return 'optimal';
+  },
+  
+  detectPerformanceAnomalies() {
+    // パフォーマンス異常の検出
+    const now = Date.now();
+    const recentAnomalies = this.messageAnalytics.anomalies
+      .filter(a => now - a.timestamp < 60000); // 1分以内
+    
+    if (recentAnomalies.length > 5) {
+      this.log('⚠️ High anomaly rate detected', 'warn');
+    }
+  },
+  
+  async generatePredictions() {
+    // AI予測分析（簡易版）
+    const topPatterns = Array.from(this.messageAnalytics.patterns.entries())
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5);
+    
+    const prediction = {
+      timestamp: Date.now(),
+      nextLikelyEvents: topPatterns.map(([pattern, count]) => ({
+        pattern,
+        probability: Math.min(count / 100, 1),
+        confidence: 'medium'
+      })),
+      systemLoad: this.predictSystemLoad(),
+      recommendations: this.generateRecommendations()
+    };
+    
+    this.messageAnalytics.predictions.push(prediction);
+    
+    // 重要な予測は通知
+    await this.notice('analytics.prediction', prediction);
+  },
+  
+  predictSystemLoad() {
+    const patternCount = this.messageAnalytics.patterns.size;
+    if (patternCount > 50) return 'high';
+    if (patternCount > 20) return 'medium';
+    return 'low';
+  },
+  
+  generateRecommendations() {
+    const recommendations = [];
+    
+    if (this.messageAnalytics.patterns.size > 30) {
+      recommendations.push('Consider implementing message batching for better performance');
+    }
+    
+    if (this.messageAnalytics.anomalies.length > 10) {
+      recommendations.push('Review error handling and implement circuit breakers');
+    }
+    
+    return recommendations;
+  },
+  
+  // Stopボタン用のシャットダウンメソッド
+  async shutdown(reason) {
+    this.log(\`🛑 Shutting down: \${reason}\`);
+    this.running = false;
+  }
+});
+
+// プラグインを返してVoidIDEに自動登録
+return analyticsPlugin;`;
+        }
+
+        function getBasicTemplate() {
+            return `// 🌟 VoidCore Plugin - Basic Template
+const myPlugin = createPlugin({
+  pluginId: 'my-basic-plugin',
+  name: 'My Basic Plugin',
+  version: '1.0.0'
+}, {
+  async run() {
+    await this.initialize();
+    
+    this.log('🎉 Hello from VoidIDE Genesis!');
+    
+    // メッセージを監視
+    this.on('Notice', 'user.hello', (message) => {
+      this.log('👋 Received:', message.payload);
+    });
+    
+    // 歓迎メッセージを送信
+    await this.notice('plugin.ready', {
+      pluginId: this.pluginId,
+      timestamp: Date.now()
+    });
+    
+    this.log('✅ Plugin ready!');
+  }
+});
+
+return myPlugin;`;
+        }
+
+        function getAnalyticsPluginTemplate() {
+            return `// 📊 Analytics Plugin Template
+const analyticsPlugin = createPlugin({
+  pluginId: 'analytics-plugin',
+  name: 'Analytics Plugin',
+  capabilities: ['analytics', 'monitoring']
+}, {
+  async run() {
+    await this.initialize();
+    
+    this.analytics = {
+      events: [],
+      metrics: new Map()
+    };
+    
+    // すべてのイベントを記録
+    this.on('Notice', '*', (message) => {
+      this.recordEvent(message);
+    });
+    
+    this.log('📊 Analytics plugin ready!');
+  },
+  
+  recordEvent(message) {
+    this.analytics.events.push({
+      timestamp: Date.now(),
+      type: message.type,
+      event: message.event_name || message.action
+    });
+    
+    // 統計更新
+    const key = message.type;
+    this.analytics.metrics.set(key, 
+      (this.analytics.metrics.get(key) || 0) + 1);
+  }
+});
+
+return analyticsPlugin;`;
+        }
+
+        function getVisualizerPluginTemplate() {
+            return `// 🎨 Visualizer Plugin Template
+const visualizerPlugin = createPlugin({
+  pluginId: 'visualizer-plugin',
+  name: 'Visualizer Plugin',
+  capabilities: ['visualization', 'graphics']
+}, {
+  async run() {
+    await this.initialize();
+    
+    this.canvas = document.createElement('canvas');
+    this.ctx = this.canvas.getContext('2d');
+    
+    // メッセージの可視化
+    this.on('Notice', '*', (message) => {
+      this.visualizeMessage(message);
+    });
+    
+    this.log('🎨 Visualizer ready!');
+  },
+  
+  visualizeMessage(message) {
+    // 簡単な可視化
+    this.log(\`🎨 Visualizing: \${message.type}\`);
+  }
+});
+
+return visualizerPlugin;`;
+        }
+
+        function getMonitorPluginTemplate() {
+            return `// 🔍 Monitor Plugin Template
+const monitorPlugin = createPlugin({
+  pluginId: 'monitor-plugin',
+  name: 'Monitor Plugin',
+  capabilities: ['monitoring', 'health-check']
+}, {
+  async run() {
+    await this.initialize();
+    
+    this.stats = {
+      messages: 0,
+      errors: 0,
+      uptime: Date.now()
+    };
+    
+    // システム監視
+    setInterval(() => {
+      this.checkSystemHealth();
+    }, 5000);
+    
+    this.log('🔍 Monitor ready!');
+  },
+  
+  async checkSystemHealth() {
+    this.stats.messages++;
+    
+    await this.notice('system.health', {
+      uptime: Date.now() - this.stats.uptime,
+      messages: this.stats.messages,
+      status: 'healthy'
+    });
+  }
+});
+
+return monitorPlugin;`;
+        }
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const entry = document.createElement('div');
+            entry.style.marginBottom = '4px';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const icons = { info: '📝', success: '✅', error: '❌', warn: '⚠️' };
+            const colors = { info: '#d4d4d4', success: '#73c991', error: '#f48771', warn: '#dcdcaa' };
+            
+            entry.style.color = colors[type] || colors.info;
+            entry.textContent = `[${timestamp}] ${icons[type] || '📝'} ${message}`;
+            
+            output.appendChild(entry);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function updateStatus(text, status) {
+            document.getElementById('statusText').textContent = text;
+            const indicator = document.getElementById('statusIndicator');
+            indicator.className = `status-indicator ${status}`;
+        }
+
+        function updateStats() {
+            const uptime = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('uptime').textContent = `${uptime}s`;
+            document.getElementById('pluginCount').textContent = pluginCount;
+            document.getElementById('messageCount').textContent = messageCount;
+            
+            // パフォーマンス計算
+            const performance = Math.max(0, 100 - (executionCount * 2));
+            document.getElementById('performance').textContent = `${performance}%`;
+        }
+
+        function updatePluginsList() {
+            const pluginsList = document.getElementById('pluginsList');
+            const plugins = voidCore.getAllPlugins ? voidCore.getAllPlugins() : [];
+            
+            // システムプラグインを除く
+            const userPlugins = plugins.filter(p => !p.pluginId.includes('void-ide-genesis'));
+            
+            // ユーザープラグインのみ表示
+            const userPluginItems = userPlugins.map(plugin => `
+                <li class="plugin-item">
+                    <div class="plugin-name">${plugin.name || plugin.pluginId}</div>
+                    <div class="plugin-status">✅ Active | v${plugin.version || '1.0.0'}</div>
+                </li>
+            `).join('');
+            
+            const systemPlugin = `
+                <li class="plugin-item">
+                    <div class="plugin-name">VoidIDE Genesis v2.0</div>
+                    <div class="plugin-status">✅ System Plugin - Always Active</div>
+                </li>
+            `;
+            
+            pluginsList.innerHTML = systemPlugin + userPluginItems;
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // グローバル関数
+        window.executeCode = executeCode;
+        window.stopExecution = stopExecution;
+        window.saveCode = () => {
+            if (projectManager) {
+                projectManager.saveProject();
+            } else {
+                log('💾 Code saved to local storage', 'success');
+                showNotification('Code saved to local storage', 'success');
+            }
+        };
+        window.formatCode = () => {
+            monacoEditor.getAction('editor.action.formatDocument').run();
+            log('🎨 Code formatted', 'info');
+        };
+        window.toggleAnalytics = () => {
+            switchTab('analytics');
+            showNotification('Analytics panel opened', 'info');
+        };
+        window.loadBasicTemplate = () => {
+            if (monacoEditor) {
+                monacoEditor.setValue(getBasicTemplate());
+                log('📋 Basic template loaded', 'info');
+                showNotification('Basic template loaded', 'success');
+            } else {
+                showNotification('Editor not ready', 'warning');
+            }
+        };
+        window.loadAdvancedTemplate = () => {
+            if (monacoEditor) {
+                monacoEditor.setValue(getAdvancedTemplate());
+                log('🚀 Advanced template loaded', 'info');
+                showNotification('Advanced template loaded', 'success');
+            } else {
+                showNotification('Editor not ready', 'warning');
+            }
+        };
+        window.showCodeHelper = () => {
+            showNotification('Code helper: Use Ctrl+Space for suggestions', 'info');
+        };
+        window.openSettings = () => {
+            showNotification('Settings panel coming in Phase 3', 'info');
+        };
+        
+        // ファイル選択関数もグローバルに
+        window.selectFile = selectFile;
+
+    </script>
+</body>
+</html>

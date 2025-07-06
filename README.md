@@ -155,6 +155,8 @@ Experience VoidCore in action:
 - **🌌 [Galaxy Viewer](https://moe-charm.github.io/voidcore.js/examples/legacy/galaxy-viewer-simple.html)** - Beautiful space physics
 
 ### 🚀 **Advanced Examples**  
+- **🧠 [VoidIDE Genesis v2.0](./examples/voidide-genesis-v2.html)** - **NEW!** Complete IDE with analytics & visualization
+- **🌟 [VoidIDE Genesis MVP](./examples/voidide-genesis-mvp.html)** - Self-creating IDE that runs on VoidCore
 - **🌟 [Message City](https://moe-charm.github.io/voidcore.js/examples/message-city-modern.html)** - Pure v14.0 system with traffic simulation
 - **💓 [Heart Transplant Demo](https://moe-charm.github.io/voidcore.js/challenge/voidcore-v13-transport-demo.html)** - Transport swapping live
 - **📚 [All Examples](https://moe-charm.github.io/voidcore.js/examples/)** - Complete demo collection
@@ -304,7 +306,14 @@ const myPlugin = createPlugin(config, {
 
 ## ✨ Key Features
 
+- 🧠 **VoidIDE Genesis v2.0** - Complete IDE with real-time analytics & visualization (v14.0 Phase 2)
+- 🌊 **Message Flow Visualization** - Real-time message flow with animated particle effects
+- 📊 **Plugin Monitor Dashboard** - Advanced plugin status monitoring & health checks  
+- ⚡ **Performance Metrics System** - Comprehensive performance analysis & optimization
+- 🌟 **VoidIDE Genesis** - Self-creating IDE that runs on VoidCore itself (v14.0)
 - 🚀 **Pure Message System** - No inheritance, pure composition (v14.0)
+- 🧩 **CoreFusion v1.2** - Merge multiple VoidCore instances seamlessly (v14.0)
+- ⚡ **SimpleMessagePool** - 16-20x faster batch processing (v14.0)
 - 💓 **Heart Transplant** - Swap transport layers at runtime (v13.0)
 - 🚀 **Multi-Channel Performance** - 40% faster with dedicated channels (v12.0)
 - 🔄 **Perfect Backward Compatibility** - All versions work together
