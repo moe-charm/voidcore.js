@@ -398,13 +398,13 @@
 
             <div class="level-section">
                 <div class="level-title">🌀 レベル3: メタへの昇華</div>
-                <div class="node-item" data-node-type="core.plugin-lister" style="opacity: 0.3;">
+                <div class="node-item" data-node-type="core.plugin-lister">
                     <div class="node-name">Core: Plugin Lister</div>
-                    <div class="node-description">宇宙の自己観測 (Future)</div>
+                    <div class="node-description">宇宙の自己観測</div>
                 </div>
-                <div class="node-item" data-node-type="flow.connector" style="opacity: 0.3;">
+                <div class="node-item" data-node-type="flow.connector">
                     <div class="node-name">Flow: Connector</div>
-                    <div class="node-description">自己編集＝創造の完成 (Future)</div>
+                    <div class="node-description">自己編集＝創造の完成</div>
                 </div>
             </div>
         </div>
@@ -476,7 +476,13 @@
                     'output.console': [{ id: 'input', name: 'Data', dataType: 'any' }],
                     'web.fetch': [{ id: 'trigger', name: 'Trigger', dataType: 'signal' }],
                     'json.parser': [{ id: 'input', name: 'JSON', dataType: 'string' }],
-                    'ui.card': [{ id: 'input', name: 'Data', dataType: 'any' }]
+                    'ui.card': [{ id: 'input', name: 'Data', dataType: 'any' }],
+                    'core.plugin-lister': [{ id: 'trigger', name: 'Trigger', dataType: 'signal' }],
+                    'flow.connector': [
+                        { id: 'plugin-list', name: 'Plugin List', dataType: 'array' },
+                        { id: 'source-node', name: 'Source Node ID', dataType: 'string' },
+                        { id: 'target-node', name: 'Target Node ID', dataType: 'string' }
+                    ]
                 };
                 return portDefs[type] || [];
             }
@@ -489,7 +495,9 @@
                     'output.console': [],
                     'web.fetch': [{ id: 'output', name: 'Response', dataType: 'string' }],
                     'json.parser': [{ id: 'output', name: 'Parsed', dataType: 'any' }],
-                    'ui.card': []
+                    'ui.card': [],
+                    'core.plugin-lister': [{ id: 'output', name: 'Plugin List', dataType: 'array' }],
+                    'flow.connector': [{ id: 'output', name: 'Connection Result', dataType: 'object' }]
                 };
                 return portDefs[type] || [];
             }
@@ -647,6 +655,39 @@
                             result = this.createVoidPacket(cardData, { sourceNodeId: nodeId });
                             this.log(`🎨 UIカード表示: ${title}`);
                             break;
+
+                        case 'core.plugin-lister':
+                            // Triggerシグナルを受信した場合のみ実行
+                            if (inputPacket && inputPacket.payload === 'signal') {
+                                this.updateNodeOutput(nodeId, `🔍 VoidCore自己観測中...`);
+                                
+                                // VoidCore自己観測: 現在利用可能なすべてのノードタイプを取得
+                                const availablePlugins = this.getAvailablePlugins();
+                                
+                                result = this.createVoidPacket(availablePlugins, { sourceNodeId: nodeId });
+                                this.updateNodeOutput(nodeId, `🌟 発見: ${availablePlugins.length}個のプラグイン`);
+                                this.log(`🔍 Plugin Lister実行: ${availablePlugins.length}個のプラグインを発見`);
+                                
+                                // 詳細ログ
+                                this.log(`📋 発見されたプラグイン: ${availablePlugins.map(p => p.type).join(', ')}`);
+                            } else {
+                                // Triggerなしでは実行しない
+                                throw new Error('Trigger signal required');
+                            }
+                            break;
+
+                        case 'flow.connector':
+                            if (!inputPacket) throw new Error('Input required');
+                            
+                            this.updateNodeOutput(nodeId, `🔗 フロー自己編集実行中...`);
+                            
+                            // Flow Connectorは複数の入力を統合する必要がある
+                            const connectorResult = await this.executeFlowConnector(nodeId, inputPacket);
+                            
+                            result = this.createVoidPacket(connectorResult, { sourceNodeId: nodeId });
+                            this.updateNodeOutput(nodeId, `✨ 自己編集完了: ${connectorResult.action}`);
+                            this.log(`🔗 Flow Connector実行: ${connectorResult.action}`);
+                            break;
                             
                         default:
                             throw new Error(`Unknown node type: ${node.type}`);
@@ -771,6 +812,241 @@
                 }
             }
 
+            // VoidCore自己観測: 利用可能なプラグインを取得
+            getAvailablePlugins() {
+                // 現在実装されているすべてのノードタイプを自己観測
+                const pluginList = [
+                    {
+                        type: 'button.send',
+                        name: 'Button: Send',
+                        description: '自律プラグインを刺激する',
+                        level: 1,
+                        category: 'trigger',
+                        inputPorts: this.getInputPorts('button.send'),
+                        outputPorts: this.getOutputPorts('button.send'),
+                        properties: {}
+                    },
+                    {
+                        type: 'input.text',
+                        name: 'Input: Text',
+                        description: '宇宙の起源、意志の表明',
+                        level: 1,
+                        category: 'input',
+                        inputPorts: this.getInputPorts('input.text'),
+                        outputPorts: this.getOutputPorts('input.text'),
+                        properties: { text: 'string' }
+                    },
+                    {
+                        type: 'string.uppercase',
+                        name: 'String: UpperCase',
+                        description: '意志が変化する様を体感',
+                        level: 1,
+                        category: 'transform',
+                        inputPorts: this.getInputPorts('string.uppercase'),
+                        outputPorts: this.getOutputPorts('string.uppercase'),
+                        properties: {}
+                    },
+                    {
+                        type: 'output.console',
+                        name: 'Output: Console',
+                        description: '観測手段＝現実の確定',
+                        level: 1,
+                        category: 'output',
+                        inputPorts: this.getInputPorts('output.console'),
+                        outputPorts: this.getOutputPorts('output.console'),
+                        properties: {}
+                    },
+                    {
+                        type: 'web.fetch',
+                        name: 'Web: Fetch API',
+                        description: '外宇宙に扉を開ける',
+                        level: 2,
+                        category: 'network',
+                        inputPorts: this.getInputPorts('web.fetch'),
+                        outputPorts: this.getOutputPorts('web.fetch'),
+                        properties: { url: 'string' }
+                    },
+                    {
+                        type: 'json.parser',
+                        name: 'JSON: Parser',
+                        description: '混沌に意味を与える',
+                        level: 2,
+                        category: 'transform',
+                        inputPorts: this.getInputPorts('json.parser'),
+                        outputPorts: this.getOutputPorts('json.parser'),
+                        properties: { path: 'string' }
+                    },
+                    {
+                        type: 'ui.card',
+                        name: 'UI: Simple Card',
+                        description: '美しさは意味の完成',
+                        level: 2,
+                        category: 'ui',
+                        inputPorts: this.getInputPorts('ui.card'),
+                        outputPorts: this.getOutputPorts('ui.card'),
+                        properties: { title: 'string' }
+                    },
+                    {
+                        type: 'core.plugin-lister',
+                        name: 'Core: Plugin Lister',
+                        description: '宇宙の自己観測',
+                        level: 3,
+                        category: 'meta',
+                        inputPorts: this.getInputPorts('core.plugin-lister'),
+                        outputPorts: this.getOutputPorts('core.plugin-lister'),
+                        properties: {}
+                    },
+                    {
+                        type: 'flow.connector',
+                        name: 'Flow: Connector',
+                        description: '自己編集＝創造の完成',
+                        level: 3,
+                        category: 'meta',
+                        inputPorts: this.getInputPorts('flow.connector'),
+                        outputPorts: this.getOutputPorts('flow.connector'),
+                        properties: {
+                            sourceNodeType: 'string',
+                            targetNodeType: 'string',
+                            connectionMode: 'string'
+                        }
+                    }
+                ];
+                
+                return pluginList;
+            }
+
+            // Flow Connector実行（フロー自己編集システム）
+            async executeFlowConnector(nodeId, inputPacket) {
+                const node = this.nodes.get(nodeId);
+                const sourceNodeType = node.properties.sourceNodeType || 'input.text';
+                const targetNodeType = node.properties.targetNodeType || 'output.console';
+                const connectionMode = node.properties.connectionMode || 'auto-connect';
+                
+                this.log(`🔗 自己編集開始: ${sourceNodeType} → ${targetNodeType} (${connectionMode})`);
+                
+                // Plugin Listerからのデータを解析
+                let availablePlugins = [];
+                if (Array.isArray(inputPacket.payload)) {
+                    availablePlugins = inputPacket.payload;
+                    this.log(`📋 利用可能プラグイン: ${availablePlugins.length}個`);
+                }
+                
+                // 自己編集：新しいノードを動的作成
+                const result = await this.performSelfEdit(sourceNodeType, targetNodeType, connectionMode, availablePlugins);
+                
+                return result;
+            }
+            
+            // 自己編集実行
+            async performSelfEdit(sourceNodeType, targetNodeType, connectionMode, availablePlugins) {
+                try {
+                    switch (connectionMode) {
+                        case 'auto-connect':
+                            return await this.autoConnectNodes(sourceNodeType, targetNodeType);
+                        
+                        case 'create-nodes':
+                            return await this.createAndConnectNodes(sourceNodeType, targetNodeType);
+                        
+                        case 'analyze-flow':
+                            return await this.analyzeCurrentFlow(availablePlugins);
+                        
+                        default:
+                            throw new Error(`Unknown connection mode: ${connectionMode}`);
+                    }
+                } catch (error) {
+                    this.log(`❌ 自己編集エラー: ${error.message}`);
+                    return { action: 'error', error: error.message };
+                }
+            }
+            
+            // 自動接続モード
+            async autoConnectNodes(sourceType, targetType) {
+                const sourceNodes = Array.from(this.nodes.values()).filter(n => n.type === sourceType);
+                const targetNodes = Array.from(this.nodes.values()).filter(n => n.type === targetType);
+                
+                if (sourceNodes.length === 0 || targetNodes.length === 0) {
+                    return { 
+                        action: 'no-nodes-found', 
+                        sourceType, 
+                        targetType,
+                        sourceCount: sourceNodes.length,
+                        targetCount: targetNodes.length
+                    };
+                }
+                
+                // 最初の組み合わせを自動接続
+                const sourceNode = sourceNodes[0];
+                const targetNode = targetNodes[0];
+                
+                const edge = this.createEdge(sourceNode.id, 'output', targetNode.id, 'input');
+                this.renderConnection(edge);
+                
+                this.log(`🔗 自動接続完了: ${sourceNode.type} → ${targetNode.type}`);
+                
+                return {
+                    action: 'auto-connected',
+                    sourceNodeId: sourceNode.id,
+                    targetNodeId: targetNode.id,
+                    edgeId: edge.id
+                };
+            }
+            
+            // ノード作成＆接続モード
+            async createAndConnectNodes(sourceType, targetType) {
+                const canvas = document.querySelector('.canvas-area');
+                const rect = canvas.getBoundingClientRect();
+                
+                // 新しいノードを作成
+                const sourcePos = { x: Math.random() * 300 + 100, y: Math.random() * 200 + 100 };
+                const targetPos = { x: sourcePos.x + 250, y: sourcePos.y };
+                
+                const sourceNode = this.createNode(sourceType, sourcePos);
+                const targetNode = this.createNode(targetType, targetPos);
+                
+                // UIに追加
+                const sourceElement = createNodeElement(sourceNode);
+                const targetElement = createNodeElement(targetNode);
+                canvas.appendChild(sourceElement);
+                canvas.appendChild(targetElement);
+                
+                // 接続作成
+                const edge = this.createEdge(sourceNode.id, 'output', targetNode.id, 'input');
+                this.renderConnection(edge);
+                
+                this.log(`🎯 ノード作成＆接続完了: ${sourceType} → ${targetType}`);
+                
+                return {
+                    action: 'created-and-connected',
+                    sourceNodeId: sourceNode.id,
+                    targetNodeId: targetNode.id,
+                    edgeId: edge.id
+                };
+            }
+            
+            // フロー分析モード
+            async analyzeCurrentFlow(availablePlugins) {
+                const nodeCount = this.nodes.size;
+                const edgeCount = this.edges.size;
+                const nodeTypes = Array.from(this.nodes.values()).map(n => n.type);
+                const typeDistribution = {};
+                
+                nodeTypes.forEach(type => {
+                    typeDistribution[type] = (typeDistribution[type] || 0) + 1;
+                });
+                
+                this.log(`📊 フロー分析: ${nodeCount}ノード, ${edgeCount}接続`);
+                this.log(`📈 タイプ分布: ${JSON.stringify(typeDistribution)}`);
+                
+                return {
+                    action: 'flow-analyzed',
+                    nodeCount,
+                    edgeCount,
+                    typeDistribution,
+                    availablePlugins: availablePlugins.length,
+                    complexity: nodeCount + edgeCount * 2
+                };
+            }
+
             // ログ出力
             log(message) {
                 const logElement = document.getElementById('executionLog');
@@ -872,7 +1148,9 @@
                 'output.console': 'Output: Console',
                 'web.fetch': 'Web: Fetch API',
                 'json.parser': 'JSON: Parser',
-                'ui.card': 'UI: Simple Card'
+                'ui.card': 'UI: Simple Card',
+                'core.plugin-lister': 'Core: Plugin Lister',
+                'flow.connector': 'Flow: Connector'
             };
             return names[type] || type;
         }
@@ -924,6 +1202,53 @@
                                value="${defaultTitle}">
                         <div class="node-output">🎨 表示待機中...</div>
                     `;
+                case 'core.plugin-lister':
+                    return `
+                        <div style="padding: 10px 0; text-align: center;">
+                            🔍 <strong>VoidCore自己観測</strong><br>
+                            <small style="color: #888;">利用可能なプラグインを発見</small>
+                        </div>
+                        <div class="node-output">🌟 自己観測待機中...</div>
+                    `;
+                case 'flow.connector':
+                    const sourceType = node.properties.sourceNodeType || 'input.text';
+                    const targetType = node.properties.targetNodeType || 'output.console';
+                    const mode = node.properties.connectionMode || 'auto-connect';
+                    return `
+                        <div style="padding: 5px 0; font-size: 11px;">
+                            <div style="margin-bottom: 8px;">
+                                <label style="color: #888;">Source:</label>
+                                <select onchange="updateNodeProperty('${node.id}', 'sourceNodeType', this.value)" 
+                                        style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                               border-radius: 3px; padding: 4px; color: #fff; font-size: 10px;">
+                                    <option value="input.text" ${sourceType === 'input.text' ? 'selected' : ''}>Input: Text</option>
+                                    <option value="web.fetch" ${sourceType === 'web.fetch' ? 'selected' : ''}>Web: Fetch</option>
+                                    <option value="json.parser" ${sourceType === 'json.parser' ? 'selected' : ''}>JSON: Parser</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <label style="color: #888;">Target:</label>
+                                <select onchange="updateNodeProperty('${node.id}', 'targetNodeType', this.value)" 
+                                        style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                               border-radius: 3px; padding: 4px; color: #fff; font-size: 10px;">
+                                    <option value="output.console" ${targetType === 'output.console' ? 'selected' : ''}>Output: Console</option>
+                                    <option value="ui.card" ${targetType === 'ui.card' ? 'selected' : ''}>UI: Card</option>
+                                    <option value="string.uppercase" ${targetType === 'string.uppercase' ? 'selected' : ''}>String: UpperCase</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <label style="color: #888;">Mode:</label>
+                                <select onchange="updateNodeProperty('${node.id}', 'connectionMode', this.value)" 
+                                        style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                               border-radius: 3px; padding: 4px; color: #fff; font-size: 10px;">
+                                    <option value="auto-connect" ${mode === 'auto-connect' ? 'selected' : ''}>Auto Connect</option>
+                                    <option value="create-nodes" ${mode === 'create-nodes' ? 'selected' : ''}>Create & Connect</option>
+                                    <option value="analyze-flow" ${mode === 'analyze-flow' ? 'selected' : ''}>Analyze Flow</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="node-output">🔗 自己編集待機中...</div>
+                    `;
                 default:
                     return '<div class="node-output">処理中...</div>';
             }
@@ -949,6 +1274,15 @@
                         break;
                     case 'ui.card':
                         voidFlowEngine.updateNodeOutput(nodeId, `🎨 タイトル: "${value}"`);
+                        break;
+                    case 'flow.connector':
+                        if (property === 'sourceNodeType') {
+                            voidFlowEngine.updateNodeOutput(nodeId, `🔗 Source: ${value}`);
+                        } else if (property === 'targetNodeType') {
+                            voidFlowEngine.updateNodeOutput(nodeId, `🔗 Target: ${value}`);
+                        } else if (property === 'connectionMode') {
+                            voidFlowEngine.updateNodeOutput(nodeId, `🔗 Mode: ${value}`);
+                        }
                         break;
                 }
             }
@@ -1278,6 +1612,30 @@
                                    onchange="updateNodeProperty('${node.id}', 'title', this.value)"
                                    style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
                                           border-radius: 4px; padding: 8px; color: #fff; font-size: 12px;">
+                        </div>
+                    `;
+                case 'core.plugin-lister':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <p style="color: #aaa; font-size: 12px; line-height: 1.5;">
+                                🔍 <strong>VoidCore自己観測システム</strong><br><br>
+                                このノードは、VoidFlowが現在利用可能なすべてのプラグインを<br>
+                                自分自身で発見し、配列として出力します。<br><br>
+                                <span style="color: #4a90e2;">メタシステムの始まり</span> - 
+                                システムが自分を理解する瞬間
+                            </p>
+                        </div>
+                    `;
+                case 'flow.connector':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <p style="color: #aaa; font-size: 12px; line-height: 1.5;">
+                                🔗 <strong>フロー自己編集システム</strong><br><br>
+                                このノードは、VoidFlowが自分自身のフロー構造を<br>
+                                動的に変更・拡張できる究極のメタシステムです。<br><br>
+                                <span style="color: #7b68ee;">創造性の永久機関</span> - 
+                                システムが自分を創造し続ける
+                            </p>
                         </div>
                     `;
                 default:
