@@ -292,6 +292,26 @@
             transform: translateY(-2px);
         }
 
+        .start-button {
+            background: linear-gradient(145deg, #00ff88, #00cc6a);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+            width: 100%;
+        }
+
+        .start-button:hover {
+            background: linear-gradient(145deg, #00ff88, #00ee80);
+            box-shadow: 0 2px 10px rgba(0, 255, 136, 0.4);
+            transform: translateY(-1px);
+        }
+
         .footer {
             grid-column: 1 / -1;
             background: rgba(0, 0, 0, 0.8);
@@ -342,6 +362,10 @@
         <div class="node-palette">
             <div class="level-section">
                 <div class="level-title">🎒 レベル1: 動くよろこびセット</div>
+                <div class="node-item" data-node-type="button.send">
+                    <div class="node-name">Button: Send</div>
+                    <div class="node-description">自律プラグインを刺激する</div>
+                </div>
                 <div class="node-item" data-node-type="input.text">
                     <div class="node-name">Input: Text</div>
                     <div class="node-description">宇宙の起源、意志の表明</div>
@@ -358,17 +382,17 @@
 
             <div class="level-section">
                 <div class="level-title">✨ レベル2: 世界とつながる</div>
-                <div class="node-item" data-node-type="web.fetch" style="opacity: 0.5;">
+                <div class="node-item" data-node-type="web.fetch">
                     <div class="node-name">Web: Fetch API</div>
-                    <div class="node-description">外宇宙に扉を開ける (Soon)</div>
+                    <div class="node-description">外宇宙に扉を開ける</div>
                 </div>
-                <div class="node-item" data-node-type="json.parser" style="opacity: 0.5;">
+                <div class="node-item" data-node-type="json.parser">
                     <div class="node-name">JSON: Parser</div>
-                    <div class="node-description">混沌に意味を与える (Soon)</div>
+                    <div class="node-description">混沌に意味を与える</div>
                 </div>
-                <div class="node-item" data-node-type="ui.card" style="opacity: 0.5;">
+                <div class="node-item" data-node-type="ui.card">
                     <div class="node-name">UI: Simple Card</div>
-                    <div class="node-description">美しさは意味の完成 (Soon)</div>
+                    <div class="node-description">美しさは意味の完成</div>
                 </div>
             </div>
 
@@ -446,18 +470,26 @@
             // ノードタイプ別のポート定義
             getInputPorts(type) {
                 const portDefs = {
-                    'input.text': [],
+                    'button.send': [],
+                    'input.text': [{ id: 'trigger', name: 'Trigger', dataType: 'signal' }],
                     'string.uppercase': [{ id: 'input', name: 'Text', dataType: 'string' }],
-                    'output.console': [{ id: 'input', name: 'Data', dataType: 'any' }]
+                    'output.console': [{ id: 'input', name: 'Data', dataType: 'any' }],
+                    'web.fetch': [{ id: 'trigger', name: 'Trigger', dataType: 'signal' }],
+                    'json.parser': [{ id: 'input', name: 'JSON', dataType: 'string' }],
+                    'ui.card': [{ id: 'input', name: 'Data', dataType: 'any' }]
                 };
                 return portDefs[type] || [];
             }
 
             getOutputPorts(type) {
                 const portDefs = {
+                    'button.send': [{ id: 'signal', name: 'Signal', dataType: 'signal' }],
                     'input.text': [{ id: 'output', name: 'Text', dataType: 'string' }],
                     'string.uppercase': [{ id: 'output', name: 'Result', dataType: 'string' }],
-                    'output.console': []
+                    'output.console': [],
+                    'web.fetch': [{ id: 'output', name: 'Response', dataType: 'string' }],
+                    'json.parser': [{ id: 'output', name: 'Parsed', dataType: 'any' }],
+                    'ui.card': []
                 };
                 return portDefs[type] || [];
             }
@@ -498,10 +530,24 @@
                     let result;
                     
                     switch (node.type) {
+                        case 'button.send':
+                            // Signalパケットを生成（接続されたノードにのみ送信される）
+                            result = this.createVoidPacket('signal', { sourceNodeId: nodeId });
+                            this.updateNodeOutput(nodeId, `🚀 Signal送信完了`);
+                            this.log(`📡 Signal送信: 接続されたプラグインを刺激`);
+                            break;
+                            
                         case 'input.text':
-                            const textValue = node.properties.text || 'Hello VoidFlow!';
-                            result = this.createVoidPacket(textValue, { sourceNodeId: nodeId });
-                            this.updateNodeOutput(nodeId, `📤 "${textValue}"`);
+                            // Triggerシグナルを受信した場合のみ実行
+                            if (inputPacket && inputPacket.payload === 'signal') {
+                                const textValue = node.properties.text || 'Hello VoidFlow!';
+                                result = this.createVoidPacket(textValue, { sourceNodeId: nodeId });
+                                this.updateNodeOutput(nodeId, `📤 "${textValue}" (Trigger受信)`);
+                                this.log(`📤 Input:Text実行: "${textValue}"`);
+                            } else {
+                                // Triggerなしでは実行しない
+                                throw new Error('Trigger signal required');
+                            }
                             break;
                             
                         case 'string.uppercase':
@@ -519,6 +565,87 @@
                             console.log(`📦 VoidPacket:`, inputPacket);
                             result = this.createVoidPacket(inputPacket.payload, { sourceNodeId: nodeId });
                             this.updateNodeOutput(nodeId, `📺 "${inputPacket.payload}" (→ブラウザコンソール)`);
+                            break;
+
+                        case 'web.fetch':
+                            // Triggerシグナルを受信した場合のみ実行
+                            if (inputPacket && inputPacket.payload === 'signal') {
+                                const url = node.properties.url || 'https://httpbin.org/json';
+                                this.updateNodeOutput(nodeId, `🌐 取得中... ${url}`);
+                                
+                                try {
+                                    const response = await fetch(url);
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                                    }
+                                    const data = await response.text();
+                                    result = this.createVoidPacket(data, { sourceNodeId: nodeId });
+                                    this.updateNodeOutput(nodeId, `✅ 成功 (${data.length}文字)`);
+                                    this.log(`🌐 Fetch成功: ${url} → ${data.length}文字`);
+                                } catch (error) {
+                                    // CORSエラーの場合、モック データを返す
+                                    if (error.message.includes('CORS') || error.message.includes('fetch')) {
+                                        this.log(`⚠️ CORS制限によりモックデータを使用: ${url}`);
+                                        const mockData = JSON.stringify({
+                                            message: "VoidFlow Demo Data",
+                                            timestamp: new Date().toISOString(),
+                                            source: "VoidFlow Mock API",
+                                            data: {
+                                                title: "創造性の永久機関",
+                                                version: "v14.0",
+                                                philosophy: "すべての存在は、メッセージで生まれ、メッセージで終わる"
+                                            }
+                                        });
+                                        result = this.createVoidPacket(mockData, { sourceNodeId: nodeId });
+                                        this.updateNodeOutput(nodeId, `🎭 モックデータ (${mockData.length}文字)`);
+                                        break;
+                                    }
+                                    throw new Error(`Fetch失敗: ${error.message}`);
+                                }
+                            } else {
+                                // Triggerなしでは実行しない
+                                throw new Error('Trigger signal required');
+                            }
+                            break;
+
+                        case 'json.parser':
+                            if (!inputPacket) throw new Error('Input required');
+                            
+                            try {
+                                const jsonData = JSON.parse(inputPacket.payload);
+                                const path = node.properties.path || '';
+                                
+                                let extractedData = jsonData;
+                                if (path) {
+                                    // JSONパス解析 (簡易版)
+                                    const pathParts = path.split('.');
+                                    for (const part of pathParts) {
+                                        if (part && extractedData != null) {
+                                            extractedData = extractedData[part];
+                                        }
+                                    }
+                                }
+                                
+                                result = this.createVoidPacket(extractedData, { sourceNodeId: nodeId });
+                                this.updateNodeOutput(nodeId, `📊 解析完了: ${JSON.stringify(extractedData).substring(0, 50)}...`);
+                                this.log(`📊 JSON解析成功: パス "${path}" → ${typeof extractedData}`);
+                            } catch (error) {
+                                throw new Error(`JSON解析失敗: ${error.message}`);
+                            }
+                            break;
+
+                        case 'ui.card':
+                            if (!inputPacket) throw new Error('Input required');
+                            
+                            const cardData = inputPacket.payload;
+                            const title = node.properties.title || 'VoidFlow Card';
+                            
+                            // UIカードをノード内に表示
+                            const cardHtml = this.createCardHtml(title, cardData);
+                            this.updateNodeOutput(nodeId, '', cardHtml);
+                            
+                            result = this.createVoidPacket(cardData, { sourceNodeId: nodeId });
+                            this.log(`🎨 UIカード表示: ${title}`);
                             break;
                             
                         default:
@@ -538,13 +665,17 @@
             }
 
             // ノード出力表示を更新
-            updateNodeOutput(nodeId, outputText) {
+            updateNodeOutput(nodeId, outputText, htmlContent = null) {
                 const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
                 if (!nodeElement) return;
 
                 const outputElement = nodeElement.querySelector('.node-output');
                 if (outputElement) {
-                    outputElement.textContent = outputText;
+                    if (htmlContent) {
+                        outputElement.innerHTML = htmlContent;
+                    } else {
+                        outputElement.textContent = outputText;
+                    }
                     
                     // 更新アニメーション
                     outputElement.style.background = 'rgba(0, 255, 136, 0.2)';
@@ -557,15 +688,47 @@
                 }
             }
 
+            // UIカードHTML作成
+            createCardHtml(title, data) {
+                return `
+                    <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); 
+                               border: 1px solid #4a90e2; border-radius: 8px; 
+                               padding: 12px; margin: 5px 0; min-height: 80px;">
+                        <div style="color: #4a90e2; font-weight: bold; font-size: 12px; margin-bottom: 8px;">
+                            🎨 ${title}
+                        </div>
+                        <div style="color: #fff; font-size: 11px; line-height: 1.4;">
+                            ${typeof data === 'object' ? 
+                                Object.entries(data).slice(0, 3).map(([key, value]) => 
+                                    `<div><span style="color: #80c0ff;">${key}:</span> ${String(value).substring(0, 30)}${String(value).length > 30 ? '...' : ''}</div>`
+                                ).join('') :
+                                String(data).substring(0, 100) + (String(data).length > 100 ? '...' : '')
+                            }
+                        </div>
+                    </div>
+                `;
+            }
+
             // フロー全体実行
             async executeFlow() {
                 this.log('🚀 フロー実行開始...');
                 
-                // 入力ノードから開始
-                const inputNodes = Array.from(this.nodes.values()).filter(n => n.type === 'input.text');
+                // Button:Sendノードを探して実行
+                const buttonNodes = Array.from(this.nodes.values()).filter(node => {
+                    return node.type === 'button.send';
+                });
                 
-                for (const inputNode of inputNodes) {
-                    await this.executeFromNode(inputNode.id);
+                if (buttonNodes.length === 0) {
+                    this.log('⚠️ Button:Sendノードが見つかりません');
+                    this.log('💡 Button:Sendノードを配置して、Input:TextやWeb:FetchAPIに接続してください');
+                    return;
+                }
+                
+                this.log(`🎯 Button:Sendノード発見: ${buttonNodes.length}個`);
+                
+                for (const buttonNode of buttonNodes) {
+                    this.log(`🚀 実行: ${getNodeDisplayName(buttonNode.type)}`);
+                    await this.executeFromNode(buttonNode.id);
                 }
                 
                 this.log('✨ フロー実行完了!');
@@ -577,12 +740,20 @@
                 
                 if (!result || result.error) return;
 
-                // 接続先ノードを実行
+                // 接続先ノードを実行（同時並列実行！）
                 const connectedEdges = Array.from(this.edges.values()).filter(e => e.sourceNodeId === nodeId);
                 
-                for (const edge of connectedEdges) {
-                    await new Promise(resolve => setTimeout(resolve, 500)); // 視覚効果のための遅延
-                    await this.executeFromNode(edge.targetNodeId, result);
+                if (connectedEdges.length > 0) {
+                    this.log(`🚀 ${connectedEdges.length}個のノードに同時送信開始`);
+                    
+                    // Promise.allで同時実行！
+                    const promises = connectedEdges.map(async (edge) => {
+                        await new Promise(resolve => setTimeout(resolve, 200)); // 少しだけ視覚遅延
+                        return this.executeFromNode(edge.targetNodeId, result);
+                    });
+                    
+                    await Promise.all(promises);
+                    this.log(`✨ ${connectedEdges.length}個のノード同時実行完了`);
                 }
             }
 
@@ -695,9 +866,13 @@
         // ノード表示名取得
         function getNodeDisplayName(type) {
             const names = {
+                'button.send': 'Button: Send',
                 'input.text': 'Input: Text',
                 'string.uppercase': 'String: UpperCase',
-                'output.console': 'Output: Console'
+                'output.console': 'Output: Console',
+                'web.fetch': 'Web: Fetch API',
+                'json.parser': 'JSON: Parser',
+                'ui.card': 'UI: Simple Card'
             };
             return names[type] || type;
         }
@@ -705,6 +880,14 @@
         // ノードコンテンツ作成
         function createNodeContent(node) {
             switch (node.type) {
+                case 'button.send':
+                    return `
+                        <button class="execute-button" onclick="startFromNode('${node.id}')" 
+                                style="margin: 10px 0; padding: 15px; font-size: 16px;">
+                            🚀 Send Signal
+                        </button>
+                        <div class="node-output">📡 プラグイン刺激待機中</div>
+                    `;
                 case 'input.text':
                     const currentValue = node.properties.text || 'Hello VoidFlow!';
                     return `
@@ -717,6 +900,30 @@
                     return `<div class="node-output">🔄 変換待機中...</div>`;
                 case 'output.console':
                     return `<div class="node-output">📺 出力待機中...</div>`;
+                case 'web.fetch':
+                    const defaultUrl = node.properties.url || 'https://httpbin.org/json';
+                    return `
+                        <input type="text" class="node-input" placeholder="URL を入力..." 
+                               onchange="updateNodeProperty('${node.id}', 'url', this.value)" 
+                               value="${defaultUrl}">
+                        <div class="node-output">🌐 send信号待機中...</div>
+                    `;
+                case 'json.parser':
+                    const defaultPath = node.properties.path || '';
+                    return `
+                        <input type="text" class="node-input" placeholder="JSONパス (例: data.name)" 
+                               onchange="updateNodeProperty('${node.id}', 'path', this.value)" 
+                               value="${defaultPath}">
+                        <div class="node-output">📊 解析待機中...</div>
+                    `;
+                case 'ui.card':
+                    const defaultTitle = node.properties.title || 'VoidFlow Card';
+                    return `
+                        <input type="text" class="node-input" placeholder="カードタイトル" 
+                               onchange="updateNodeProperty('${node.id}', 'title', this.value)" 
+                               value="${defaultTitle}">
+                        <div class="node-output">🎨 表示待機中...</div>
+                    `;
                 default:
                     return '<div class="node-output">処理中...</div>';
             }
@@ -729,9 +936,20 @@
                 node.properties[property] = value;
                 voidFlowEngine.log(`⚙️ プロパティ更新: ${getNodeDisplayName(node.type)}.${property} = "${value}"`);
                 
-                // Input: Textノードの場合、即座に出力を更新
-                if (node.type === 'input.text') {
-                    voidFlowEngine.updateNodeOutput(nodeId, `📤 "${value}"`);
+                // 各ノードタイプに応じた即座の出力更新
+                switch (node.type) {
+                    case 'input.text':
+                        voidFlowEngine.updateNodeOutput(nodeId, `📤 "${value}"`);
+                        break;
+                    case 'web.fetch':
+                        voidFlowEngine.updateNodeOutput(nodeId, `🌐 準備完了: ${value}`);
+                        break;
+                    case 'json.parser':
+                        voidFlowEngine.updateNodeOutput(nodeId, `📊 パス設定: "${value}"`);
+                        break;
+                    case 'ui.card':
+                        voidFlowEngine.updateNodeOutput(nodeId, `🎨 タイトル: "${value}"`);
+                        break;
                 }
             }
         }
@@ -1009,12 +1227,55 @@
         // プロパティコントロール作成
         function createPropertyControls(node) {
             switch (node.type) {
+                case 'button.send':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <p style="color: #aaa; font-size: 12px;">
+                                このボタンは'send'メッセージをブロードキャストして、<br>
+                                Input:TextとWeb:FetchAPIプラグインを刺激します。
+                            </p>
+                        </div>
+                    `;
                 case 'input.text':
                     return `
                         <div style="margin-bottom: 15px;">
                             <label style="color: #aaa; font-size: 12px;">テキスト:</label><br>
                             <input type="text" value="${node.properties.text || 'Hello VoidFlow!'}" 
                                    onchange="updateNodeProperty('${node.id}', 'text', this.value)"
+                                   style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                          border-radius: 4px; padding: 8px; color: #fff; font-size: 12px;">
+                            <small style="color: #666; font-size: 10px;">'send'メッセージで自動送信されます</small>
+                        </div>
+                    `;
+                case 'web.fetch':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <label style="color: #aaa; font-size: 12px;">URL:</label><br>
+                            <input type="text" value="${node.properties.url || 'https://httpbin.org/json'}" 
+                                   onchange="updateNodeProperty('${node.id}', 'url', this.value)"
+                                   style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                          border-radius: 4px; padding: 8px; color: #fff; font-size: 12px;">
+                            <small style="color: #666; font-size: 10px;">'send'メッセージで自動実行されます</small>
+                        </div>
+                    `;
+                case 'json.parser':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <label style="color: #aaa; font-size: 12px;">JSONパス:</label><br>
+                            <input type="text" value="${node.properties.path || ''}" 
+                                   onchange="updateNodeProperty('${node.id}', 'path', this.value)"
+                                   placeholder="例: data.name"
+                                   style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                          border-radius: 4px; padding: 8px; color: #fff; font-size: 12px;">
+                            <small style="color: #666; font-size: 10px;">空白の場合は全体を出力</small>
+                        </div>
+                    `;
+                case 'ui.card':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <label style="color: #aaa; font-size: 12px;">カードタイトル:</label><br>
+                            <input type="text" value="${node.properties.title || 'VoidFlow Card'}" 
+                                   onchange="updateNodeProperty('${node.id}', 'title', this.value)"
                                    style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
                                           border-radius: 4px; padding: 8px; color: #fff; font-size: 12px;">
                         </div>
@@ -1027,6 +1288,16 @@
         // フロー実行（グローバル関数）
         window.executeFlow = async function() {
             await voidFlowEngine.executeFlow();
+        };
+
+        // 特定ノードから開始（グローバル関数）
+        window.startFromNode = async function(nodeId) {
+            const node = voidFlowEngine.nodes.get(nodeId);
+            if (node) {
+                voidFlowEngine.log(`🎯 手動開始: ${getNodeDisplayName(node.type)}`);
+                await voidFlowEngine.executeFromNode(nodeId);
+                voidFlowEngine.log('✨ 実行完了!');
+            }
         };
 
         // 初期化
