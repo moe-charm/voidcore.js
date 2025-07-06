@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌟 VoidFlow - Constellation Zero | 創造性の永久機関</title>
+    
     <style>
         * {
             margin: 0;
@@ -388,6 +389,31 @@
             to { opacity: 1; }
         }
 
+        /* Phase 5.1: Monaco Editor and Context Menu Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0; 
+                transform: translateX(100px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateX(0); 
+            }
+        }
+
+        .node-context-menu {
+            animation: fadeIn 0.2s ease;
+        }
+
+        .voidflow-editor-modal {
+            animation: fadeIn 0.3s ease;
+        }
+
         .zen-subtitle {
             font-size: 14px;
             opacity: 0.8;
@@ -486,6 +512,7 @@
 
     <script type="module">
         import { voidCore, Message, createPlugin } from '../src/index.js';
+        import { VoidFlowMonacoIntegration } from '../src/voidflow-monaco-integration.js';
 
         // VoidFlow Engine - ヘッドレス型フロー実行エンジン
         class VoidFlowEngine {
@@ -495,6 +522,10 @@
                 this.executionState = new Map();
                 this.nodeCounter = 0;
                 this.selectedNode = null;
+                
+                // Phase 5.1: Monaco Editor integration
+                this.monacoIntegration = null;
+                this.isMonacoInitialized = false;
             }
 
             // ノード作成
@@ -589,7 +620,37 @@
                 try {
                     let result;
                     
-                    switch (node.type) {
+                    // Phase 5.1: Check for custom plugin code first
+                    if (this.customPluginCodes && this.customPluginCodes.has(node.type)) {
+                        try {
+                            const customCode = this.customPluginCodes.get(node.type);
+                            const self = this; // Save reference to VoidFlowEngine
+                            
+                            const customFunction = function(inputPacket, nodeId) {
+                                let result;
+                                
+                                // Make VoidFlowEngine methods available
+                                const updateNodeOutput = (id, content) => self.updateNodeOutput(id, content);
+                                const createVoidPacket = (data, meta) => self.createVoidPacket(data, meta);
+                                const log = (msg) => self.log(msg);
+                                
+                                // Execute custom plugin code
+                                eval(customCode);
+                                
+                                return result;
+                            };
+                            
+                            result = customFunction(inputPacket, nodeId);
+                            this.log(`🎨 Custom plugin executed: ${node.type}`);
+                            
+                        } catch (error) {
+                            this.log(`❌ Custom plugin error in ${node.type}: ${error.message}`);
+                            this.updateNodeOutput(nodeId, `❌ Custom plugin error: ${error.message}`);
+                            return this.createVoidPacket(null, { sourceNodeId: nodeId, error: error.message });
+                        }
+                    } else {
+                        // Default plugin execution
+                        switch (node.type) {
                         case 'button.send':
                             // Signalパケットを生成（接続されたノードにのみ送信される）
                             result = this.createVoidPacket('signal', { sourceNodeId: nodeId });
@@ -759,7 +820,8 @@
                             
                         default:
                             throw new Error(`Unknown node type: ${node.type}`);
-                    }
+                        }
+                    } // End of else block for default plugin execution
 
                     this.setNodeStatus(nodeId, 'success');
                     this.executionState.get(nodeId).result = result;
@@ -1397,6 +1459,53 @@
                 logElement.innerHTML += `<div>[${timestamp}] ${message}</div>`;
                 logElement.scrollTop = logElement.scrollHeight;
             }
+
+            // Phase 5.1: Monaco Editor initialization
+            async initializeMonacoIntegration() {
+                try {
+                    if (this.isMonacoInitialized) return;
+                    
+                    this.log('🎨 Initializing Monaco Editor for VoidFlow plugin editing...');
+                    
+                    this.monacoIntegration = new VoidFlowMonacoIntegration(this);
+                    await this.monacoIntegration.initialize();
+                    
+                    this.isMonacoInitialized = true;
+                    this.log('✅ Monaco Editor integration ready! 🚀');
+                    
+                } catch (error) {
+                    this.log(`❌ Monaco Editor initialization failed: ${error.message}`);
+                    console.error('Monaco initialization error:', error);
+                }
+            }
+
+            // Phase 5.1: Edit plugin in Monaco Editor
+            async editPluginCode(nodeId) {
+                try {
+                    this.log(`🎨 editPluginCode called for node: ${nodeId}`);
+                    const node = this.nodes.get(nodeId);
+                    if (!node) {
+                        this.log(`❌ Node not found: ${nodeId}`);
+                        return;
+                    }
+                    
+                    this.log(`📝 Node found: ${node.type}`);
+                    
+                    // Initialize Monaco if not ready
+                    if (!this.isMonacoInitialized) {
+                        this.log(`🔧 Initializing Monaco integration...`);
+                        await this.initializeMonacoIntegration();
+                    }
+                    
+                    this.log(`🚀 Opening Monaco Editor for plugin: ${node.type}`);
+                    // Open Monaco Editor for plugin editing
+                    await this.monacoIntegration.editPlugin(nodeId, node.type);
+                    
+                } catch (error) {
+                    this.log(`❌ Failed to open plugin editor: ${error.message}`);
+                    console.error('editPluginCode error:', error);
+                }
+            }
         }
 
         // グローバルVoidFlowEngineインスタンス
@@ -1461,6 +1570,12 @@
             // ドラッグ機能とイベント
             element.addEventListener('mousedown', startDrag);
             element.addEventListener('click', selectNode);
+            
+            // Phase 5.1: Right-click context menu for plugin editing
+            element.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                showNodeContextMenu(node.id, e.clientX, e.clientY);
+            });
             
             // カーソル管理イベント
             element.addEventListener('mouseenter', () => {
@@ -2863,6 +2978,87 @@
             });
         }
         
+        // Phase 5.1: Node Context Menu for Plugin Editing
+        window.showNodeContextMenu = function(nodeId, x, y) {
+            // Remove existing context menu
+            const existingMenu = document.querySelector('.node-context-menu');
+            if (existingMenu) existingMenu.remove();
+            
+            const node = voidFlowEngine.nodes.get(nodeId);
+            if (!node) return;
+            
+            const menu = document.createElement('div');
+            menu.className = 'node-context-menu';
+            menu.style.cssText = `
+                position: fixed;
+                top: ${y}px;
+                left: ${x}px;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                border: 2px solid #4a90e2;
+                border-radius: 8px;
+                padding: 10px;
+                z-index: 10001;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+                min-width: 200px;
+                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            `;
+            
+            menu.innerHTML = `
+                <div style="color: #4a90e2; font-weight: bold; margin-bottom: 10px; text-align: center;">
+                    🔧 ${getNodeDisplayName(node.type)}
+                </div>
+                <div style="border-bottom: 1px solid #333; margin-bottom: 8px;"></div>
+                
+                <div class="context-menu-item" onclick="voidFlowEngine.editPluginCode('${nodeId}'); document.querySelector('.node-context-menu').remove();"
+                     style="padding: 8px; margin: 4px 0; border-radius: 4px; cursor: pointer; 
+                            background: rgba(0,0,0,0.3); border: 1px solid #333; text-align: center;
+                            transition: all 0.2s ease;">
+                    <span style="color: #00ff88;">🎨 Edit Plugin Code</span>
+                </div>
+                
+                <div class="context-menu-item" onclick="startFromNode('${nodeId}'); document.querySelector('.node-context-menu').remove();"
+                     style="padding: 8px; margin: 4px 0; border-radius: 4px; cursor: pointer; 
+                            background: rgba(0,0,0,0.3); border: 1px solid #333; text-align: center;
+                            transition: all 0.2s ease;">
+                    <span style="color: #ffa502;">🚀 Execute Node</span>
+                </div>
+                
+                <div style="border-bottom: 1px solid #333; margin: 8px 0 4px 0;"></div>
+                
+                <div class="context-menu-item" onclick="document.querySelector('.node-context-menu').remove();"
+                     style="padding: 6px; margin: 4px 0; border-radius: 4px; cursor: pointer; 
+                            background: rgba(0,0,0,0.2); border: 1px solid #555; text-align: center;
+                            color: #aaa; font-size: 12px;">
+                    ❌ Cancel
+                </div>
+            `;
+            
+            // Add hover effects
+            const items = menu.querySelectorAll('.context-menu-item');
+            items.forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    item.style.background = 'rgba(74, 144, 226, 0.2)';
+                    item.style.borderColor = '#4a90e2';
+                });
+                item.addEventListener('mouseleave', () => {
+                    item.style.background = 'rgba(0,0,0,0.3)';
+                    item.style.borderColor = '#333';
+                });
+            });
+            
+            document.body.appendChild(menu);
+            
+            // Close menu when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', function closeContextMenu(e) {
+                    if (!menu.contains(e.target)) {
+                        menu.remove();
+                        document.removeEventListener('click', closeContextMenu);
+                    }
+                });
+            }, 100);
+        };
+
         // 定期的にカーソルを修正（バグ防止）- 軽量化のため停止
         // setInterval(fixAllNodeCursors, 5000);
 
