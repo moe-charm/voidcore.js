@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏋️ Phase R統合ストレステスト</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .test-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .test-section {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #e74c3c;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .test-title {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 8px;
+            text-align: center;
+        }
+        
+        .button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: inherit;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            width: calc(50% - 10px);
+        }
+        
+        .button:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+        
+        .button.load-test {
+            background: #9b59b6;
+        }
+        
+        .button.load-test:hover {
+            background: #8e44ad;
+        }
+        
+        .button.memory-test {
+            background: #f39c12;
+        }
+        
+        .button.memory-test:hover {
+            background: #e67e22;
+        }
+        
+        .button.concurrent-test {
+            background: #27ae60;
+        }
+        
+        .button.concurrent-test:hover {
+            background: #229954;
+        }
+        
+        .log-area {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 10px;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+        
+        .stats-panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 11px;
+        }
+        
+        .stats-label {
+            color: #bbb;
+        }
+        
+        .stats-value {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            grid-column: 1 / -1;
+        }
+        
+        .header h1 {
+            color: #e74c3c;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .stress-indicator {
+            background: linear-gradient(90deg, #e74c3c, #9b59b6, #f39c12);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        .performance-chart {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            height: 150px;
+            position: relative;
+        }
+        
+        .chart-bar {
+            position: absolute;
+            bottom: 15px;
+            background: linear-gradient(to top, #e74c3c, #c0392b);
+            border-radius: 2px;
+            transition: height 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏋️ Phase R統合ストレステスト</h1>
+        <p class="stress-indicator">高負荷時のIntent処理・パフォーマンス劣化チェック</p>
+    </div>
+
+    <div class="test-container">
+        <!-- Intent負荷テスト -->
+        <div class="test-section">
+            <div class="test-title">⚡ Intent処理負荷テスト</div>
+            
+            <button class="button load-test" onclick="testIntentLoad()">Intent大量処理</button>
+            <button class="button load-test" onclick="testConcurrentIntents()">同時Intent処理</button>
+            <button class="button load-test" onclick="testDeepHierarchy()">深い階層Intent</button>
+            <button class="button load-test" onclick="testIntentTimeout()">Intent応答性能</button>
+            
+            <div class="log-area" id="intentLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">Intent処理統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">処理済みIntent:</span>
+                    <span class="stats-value" id="intentCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">平均処理時間:</span>
+                    <span class="stats-value" id="avgIntentTime">0ms</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">エラー率:</span>
+                    <span class="stats-value" id="intentErrorRate">0%</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">スループット:</span>
+                    <span class="stats-value" id="intentThroughput">0/秒</span>
+                </div>
+            </div>
+            
+            <div class="performance-chart" id="intentChart">
+                <div style="position: absolute; top: 5px; left: 10px; font-size: 10px; color: #bbb;">Intent/秒</div>
+            </div>
+        </div>
+
+        <!-- メモリ・リソーステスト -->
+        <div class="test-section">
+            <div class="test-title">💾 メモリ・リソーステスト</div>
+            
+            <button class="button memory-test" onclick="testMemoryUsage()">メモリ使用量監視</button>
+            <button class="button memory-test" onclick="testPluginLeakage()">プラグインメモリリーク</button>
+            <button class="button memory-test" onclick="testMessagePoolStress()">メッセージプール負荷</button>
+            <button class="button memory-test" onclick="testResourceLimits()">リソース制限テスト</button>
+            
+            <div class="log-area" id="memoryLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">リソース使用状況</div>
+                <div class="stats-item">
+                    <span class="stats-label">メモリ使用量:</span>
+                    <span class="stats-value" id="memoryUsage">0MB</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">プラグイン数:</span>
+                    <span class="stats-value" id="pluginCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">メッセージプール:</span>
+                    <span class="stats-value" id="messagePoolSize">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">リソースコスト:</span>
+                    <span class="stats-value" id="resourceCost">0</span>
+                </div>
+            </div>
+            
+            <div class="performance-chart" id="memoryChart">
+                <div style="position: absolute; top: 5px; left: 10px; font-size: 10px; color: #bbb;">メモリMB</div>
+            </div>
+        </div>
+
+        <!-- 並行処理テスト -->
+        <div class="test-section">
+            <div class="test-title">🔄 並行処理・競合テスト</div>
+            
+            <button class="button concurrent-test" onclick="testConcurrentPlugins()">同時プラグイン実行</button>
+            <button class="button concurrent-test" onclick="testRaceConditions()">競合状態テスト</button>
+            <button class="button concurrent-test" onclick="testDeadlockPrevention()">デッドロック検出</button>
+            <button class="button concurrent-test" onclick="testAsyncMessageFlow()">非同期メッセージ流</button>
+            
+            <div class="log-area" id="concurrentLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">並行処理統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">同時実行数:</span>
+                    <span class="stats-value" id="concurrentCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">競合検出:</span>
+                    <span class="stats-value" id="raceConditions">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">デッドロック:</span>
+                    <span class="stats-value" id="deadlocks">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">成功率:</span>
+                    <span class="stats-value" id="concurrentSuccessRate">100%</span>
+                </div>
+            </div>
+            
+            <div class="performance-chart" id="concurrentChart">
+                <div style="position: absolute; top: 5px; left: 10px; font-size: 10px; color: #bbb;">同時実行</div>
+            </div>
+        </div>
+
+        <!-- 統合パフォーマンステスト -->
+        <div class="test-section">
+            <div class="test-title">📊 統合パフォーマンステスト</div>
+            
+            <button class="button" onclick="runComprehensiveStressTest()">総合ストレステスト</button>
+            <button class="button" onclick="testUnderExtremeLaod()">極限負荷テスト</button>
+            <button class="button" onclick="testLongRunningStability()">長時間安定性テスト</button>
+            <button class="button" onclick="clearAllTests()">テストクリア</button>
+            
+            <div class="log-area" id="performanceLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">総合パフォーマンス</div>
+                <div class="stats-item">
+                    <span class="stats-label">総合スコア:</span>
+                    <span class="stats-value" id="overallScore">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">安定性指標:</span>
+                    <span class="stats-value" id="stabilityIndex">100%</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">性能劣化:</span>
+                    <span class="stats-value" id="performanceDegradation">0%</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">推奨負荷:</span>
+                    <span class="stats-value" id="recommendedLoad">未測定</span>
+                </div>
+            </div>
+            
+            <div class="performance-chart" id="performanceChart">
+                <div style="position: absolute; top: 5px; left: 10px; font-size: 10px; color: #bbb;">性能指標</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // VoidCore v14.0とプラグインシステムをインポート
+        import { voidCore } from './src/voidcore.js';
+        import { createVoidFlowNodePlugin } from './src/voidflow-node-plugin.js';
+        import { voidFlowAdapter } from './src/universal-message-adapter.js';
+
+        // グローバル変数
+        window.voidCore = voidCore;
+        
+        let stressTestStats = {
+            intentCount: 0,
+            intentErrors: 0,
+            totalIntentTime: 0,
+            memoryBaseline: 0,
+            pluginCount: 0,
+            concurrentOperations: 0,
+            raceConditions: 0,
+            deadlocks: 0,
+            testStartTime: Date.now()
+        };
+
+        let performanceHistory = {
+            intent: [],
+            memory: [],
+            concurrent: []
+        };
+
+        // ログ機能
+        function logToArea(areaId, message) {
+            const area = document.getElementById(areaId);
+            if (area) {
+                const timestamp = new Date().toLocaleTimeString();
+                area.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                area.scrollTop = area.scrollHeight;
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('intentCount').textContent = stressTestStats.intentCount;
+            document.getElementById('avgIntentTime').textContent = 
+                stressTestStats.intentCount > 0 ? 
+                Math.round(stressTestStats.totalIntentTime / stressTestStats.intentCount) + 'ms' : '0ms';
+            document.getElementById('intentErrorRate').textContent = 
+                stressTestStats.intentCount > 0 ?
+                Math.round((stressTestStats.intentErrors / stressTestStats.intentCount) * 100) + '%' : '0%';
+            document.getElementById('intentThroughput').textContent = 
+                Math.round(stressTestStats.intentCount / ((Date.now() - stressTestStats.testStartTime) / 1000)) + '/秒';
+                
+            document.getElementById('pluginCount').textContent = stressTestStats.pluginCount;
+            document.getElementById('concurrentCount').textContent = stressTestStats.concurrentOperations;
+            document.getElementById('raceConditions').textContent = stressTestStats.raceConditions;
+            document.getElementById('deadlocks').textContent = stressTestStats.deadlocks;
+            
+            // メモリ使用量推定
+            if (performance && performance.memory) {
+                const memoryMB = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
+                document.getElementById('memoryUsage').textContent = memoryMB + 'MB';
+            }
+        }
+
+        function updatePerformanceChart(chartId, value, max = 100) {
+            const chart = document.getElementById(chartId);
+            const bars = chart.querySelectorAll('.chart-bar');
+            
+            // 新しいバーを追加
+            const bar = document.createElement('div');
+            bar.className = 'chart-bar';
+            bar.style.width = '4px';
+            bar.style.height = Math.min((value / max) * 100, 100) + '%';
+            bar.style.left = (bars.length * 6) + 'px';
+            chart.appendChild(bar);
+            
+            // 古いバーを削除（50個以上なら）
+            if (bars.length > 50) {
+                chart.removeChild(bars[0]);
+                // 残りのバーを左にシフト
+                chart.querySelectorAll('.chart-bar').forEach((b, i) => {
+                    b.style.left = (i * 6) + 'px';
+                });
+            }
+        }
+
+        // ==========================================
+        // Intent処理負荷テスト
+        // ==========================================
+
+        window.testIntentLoad = async function() {
+            logToArea('intentLog', '⚡ Intent大量処理テスト開始');
+            
+            const intentCount = 1000;
+            const startTime = Date.now();
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                const promises = [];
+                for (let i = 0; i < intentCount; i++) {
+                    const promise = voidCore.sendIntent('test.intent', {
+                        testId: i,
+                        payload: `test-data-${i}`,
+                        timestamp: Date.now()
+                    }).catch(error => {
+                        stressTestStats.intentErrors++;
+                        return { error: error.message };
+                    });
+                    
+                    promises.push(promise);
+                }
+                
+                const results = await Promise.all(promises);
+                const totalTime = Date.now() - startTime;
+                
+                stressTestStats.intentCount += intentCount;
+                stressTestStats.totalIntentTime += totalTime;
+                
+                const successCount = results.filter(r => !r.error).length;
+                
+                logToArea('intentLog', `✅ ${intentCount}件のIntent処理完了`);
+                logToArea('intentLog', `   総時間: ${totalTime}ms`);
+                logToArea('intentLog', `   成功率: ${Math.round((successCount / intentCount) * 100)}%`);
+                logToArea('intentLog', `   スループット: ${Math.round(intentCount / (totalTime / 1000))}/秒`);
+                
+                updatePerformanceChart('intentChart', Math.round(intentCount / (totalTime / 1000)), 500);
+                
+            } catch (error) {
+                logToArea('intentLog', `❌ Intent負荷テスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testConcurrentIntents = async function() {
+            logToArea('intentLog', '🔄 同時Intent処理テスト開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                const concurrency = 50;
+                const iterations = 20;
+                
+                for (let i = 0; i < iterations; i++) {
+                    const startTime = Date.now();
+                    
+                    const concurrentPromises = Array.from({ length: concurrency }, (_, j) => 
+                        voidCore.sendIntent('concurrent.test', {
+                            iteration: i,
+                            concurrent: j,
+                            timestamp: Date.now()
+                        }).catch(error => ({ error: error.message }))
+                    );
+                    
+                    const results = await Promise.all(concurrentPromises);
+                    const iterationTime = Date.now() - startTime;
+                    
+                    stressTestStats.intentCount += concurrency;
+                    stressTestStats.totalIntentTime += iterationTime;
+                    stressTestStats.concurrentOperations = Math.max(stressTestStats.concurrentOperations, concurrency);
+                    
+                    const errors = results.filter(r => r.error).length;
+                    stressTestStats.intentErrors += errors;
+                    
+                    if (i % 5 === 0) {
+                        logToArea('intentLog', `   反復 ${i + 1}/${iterations}: ${iterationTime}ms (${concurrency}並行)`);
+                    }
+                }
+                
+                logToArea('intentLog', `✅ 同時Intent処理テスト完了`);
+                logToArea('intentLog', `   最大並行数: ${concurrency}`);
+                logToArea('intentLog', `   総反復数: ${iterations}`);
+                
+            } catch (error) {
+                logToArea('intentLog', `❌ 同時Intent処理テスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testDeepHierarchy = async function() {
+            logToArea('intentLog', '🏗️ 深い階層Intentテスト開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                // 深い階層のIntent連鎖をテスト
+                const maxDepth = 20;
+                
+                for (let depth = 1; depth <= maxDepth; depth++) {
+                    const startTime = Date.now();
+                    
+                    try {
+                        await voidCore.sendIntent('hierarchy.test', {
+                            depth: depth,
+                            maxDepth: maxDepth,
+                            chainData: `level-${depth}`
+                        });
+                        
+                        const executionTime = Date.now() - startTime;
+                        stressTestStats.intentCount++;
+                        stressTestStats.totalIntentTime += executionTime;
+                        
+                        if (depth % 5 === 0 || depth === maxDepth) {
+                            logToArea('intentLog', `   深度 ${depth}: ${executionTime}ms`);
+                        }
+                        
+                    } catch (error) {
+                        stressTestStats.intentErrors++;
+                        logToArea('intentLog', `   深度 ${depth} エラー: ${error.message}`);
+                    }
+                }
+                
+                logToArea('intentLog', `✅ 深い階層Intentテスト完了 (最大深度: ${maxDepth})`);
+                
+            } catch (error) {
+                logToArea('intentLog', `❌ 深い階層Intentテスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testIntentTimeout = async function() {
+            logToArea('intentLog', '⏱️ Intent応答性能テスト開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                const timeoutTests = [100, 500, 1000, 2000, 5000]; // ms
+                
+                for (const timeout of timeoutTests) {
+                    const promises = [];
+                    const testCount = 10;
+                    
+                    for (let i = 0; i < testCount; i++) {
+                        const promise = Promise.race([
+                            voidCore.sendIntent('timeout.test', {
+                                expectedDelay: timeout / 2,
+                                testIndex: i
+                            }),
+                            new Promise((_, reject) => 
+                                setTimeout(() => reject(new Error('Timeout')), timeout)
+                            )
+                        ]).catch(error => ({ error: error.message }));
+                        
+                        promises.push(promise);
+                    }
+                    
+                    const results = await Promise.all(promises);
+                    const timeouts = results.filter(r => r.error && r.error === 'Timeout').length;
+                    const successRate = Math.round(((testCount - timeouts) / testCount) * 100);
+                    
+                    stressTestStats.intentCount += testCount;
+                    stressTestStats.intentErrors += timeouts;
+                    
+                    logToArea('intentLog', `   ${timeout}ms制限: 成功率${successRate}% (${testCount - timeouts}/${testCount})`);
+                }
+                
+                logToArea('intentLog', `✅ Intent応答性能テスト完了`);
+                
+            } catch (error) {
+                logToArea('intentLog', `❌ Intent応答性能テスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        // ==========================================
+        // メモリ・リソーステスト
+        // ==========================================
+
+        window.testMemoryUsage = async function() {
+            logToArea('memoryLog', '💾 メモリ使用量監視開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                if (!performance.memory) {
+                    logToArea('memoryLog', '⚠️ ブラウザがメモリ監視をサポートしていません');
+                    return;
+                }
+                
+                const baseline = performance.memory.usedJSHeapSize;
+                stressTestStats.memoryBaseline = baseline;
+                
+                logToArea('memoryLog', `📊 ベースラインメモリ: ${Math.round(baseline / 1024 / 1024)}MB`);
+                
+                // メモリ使用量を増加させるテスト
+                const memoryTestData = [];
+                
+                for (let i = 0; i < 100; i++) {
+                    // 大きなデータ構造を作成
+                    const testPlugin = await createVoidFlowNodePlugin('memory.test', {
+                        pluginId: `memory-test-${i}`,
+                        displayName: `Memory Test Plugin ${i}`,
+                        testData: new Array(10000).fill(0).map((_, j) => ({
+                            id: j,
+                            data: `test-data-${i}-${j}`,
+                            timestamp: Date.now()
+                        }))
+                    });
+                    
+                    voidCore.registerPlugin(testPlugin);
+                    memoryTestData.push(testPlugin);
+                    
+                    if (i % 20 === 0) {
+                        const currentMemory = performance.memory.usedJSHeapSize;
+                        const memoryIncrease = currentMemory - baseline;
+                        
+                        logToArea('memoryLog', `   プラグイン ${i + 1}/100: +${Math.round(memoryIncrease / 1024 / 1024)}MB`);
+                        updatePerformanceChart('memoryChart', Math.round(currentMemory / 1024 / 1024), 200);
+                    }
+                }
+                
+                stressTestStats.pluginCount = memoryTestData.length;
+                
+                const finalMemory = performance.memory.usedJSHeapSize;
+                const totalIncrease = finalMemory - baseline;
+                
+                logToArea('memoryLog', `✅ メモリテスト完了`);
+                logToArea('memoryLog', `   総メモリ増加: ${Math.round(totalIncrease / 1024 / 1024)}MB`);
+                logToArea('memoryLog', `   プラグイン当たり: ${Math.round(totalIncrease / memoryTestData.length / 1024)}KB`);
+                
+            } catch (error) {
+                logToArea('memoryLog', `❌ メモリ使用量監視失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testPluginLeakage = async function() {
+            logToArea('memoryLog', '🔍 プラグインメモリリークテスト開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                const cycles = 10;
+                const pluginsPerCycle = 50;
+                
+                for (let cycle = 0; cycle < cycles; cycle++) {
+                    const cyclePlugins = [];
+                    
+                    // プラグイン作成
+                    for (let i = 0; i < pluginsPerCycle; i++) {
+                        const plugin = await createVoidFlowNodePlugin('leak.test', {
+                            pluginId: `leak-test-${cycle}-${i}`,
+                            displayName: `Leak Test ${cycle}-${i}`,
+                            leakTestData: new Array(1000).fill(0).map(() => Math.random())
+                        });
+                        
+                        voidCore.registerPlugin(plugin);
+                        cyclePlugins.push(plugin);
+                    }
+                    
+                    // プラグイン削除
+                    for (const plugin of cyclePlugins) {
+                        voidCore.unregisterPlugin(plugin.pluginId);
+                    }
+                    
+                    // ガベージコレクション促進
+                    if (window.gc) {
+                        window.gc();
+                    }
+                    
+                    if (performance.memory) {
+                        const currentMemory = performance.memory.usedJSHeapSize;
+                        logToArea('memoryLog', `   サイクル ${cycle + 1}/${cycles}: ${Math.round(currentMemory / 1024 / 1024)}MB`);
+                    }
+                }
+                
+                logToArea('memoryLog', `✅ プラグインメモリリークテスト完了`);
+                logToArea('memoryLog', `   サイクル数: ${cycles}`);
+                logToArea('memoryLog', `   サイクル当たりプラグイン: ${pluginsPerCycle}`);
+                
+            } catch (error) {
+                logToArea('memoryLog', `❌ メモリリークテスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testMessagePoolStress = async function() {
+            logToArea('memoryLog', '📮 メッセージプール負荷テスト開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                const messageCount = 10000;
+                const batchSize = 100;
+                
+                for (let batch = 0; batch < messageCount / batchSize; batch++) {
+                    const messages = [];
+                    
+                    for (let i = 0; i < batchSize; i++) {
+                        const message = voidCore.messagePool.borrowMessage();
+                        if (message) {
+                            message.category = 'Notice';
+                            message.event_name = 'stress.test';
+                            message.payload = {
+                                batchId: batch,
+                                messageId: i,
+                                data: new Array(100).fill(0).map(() => Math.random()),
+                                timestamp: Date.now()
+                            };
+                            messages.push(message);
+                        }
+                    }
+                    
+                    // メッセージを返却
+                    for (const message of messages) {
+                        voidCore.messagePool.returnMessage(message);
+                    }
+                    
+                    if (batch % 20 === 0) {
+                        const poolStats = voidCore.messagePool.getStats();
+                        logToArea('memoryLog', `   バッチ ${batch + 1}/${messageCount / batchSize}: プール${poolStats.poolSize}個`);
+                        document.getElementById('messagePoolSize').textContent = poolStats.poolSize;
+                    }
+                }
+                
+                const finalStats = voidCore.messagePool.getStats();
+                
+                logToArea('memoryLog', `✅ メッセージプール負荷テスト完了`);
+                logToArea('memoryLog', `   処理メッセージ数: ${messageCount}`);
+                logToArea('memoryLog', `   最終プールサイズ: ${finalStats.poolSize}`);
+                logToArea('memoryLog', `   リサイクル効率: ${Math.round((finalStats.recycledCount / messageCount) * 100)}%`);
+                
+            } catch (error) {
+                logToArea('memoryLog', `❌ メッセージプール負荷テスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testResourceLimits = async function() {
+            logToArea('memoryLog', '⚖️ リソース制限テスト開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                // 階層深度制限テスト
+                const maxDepth = voidCore.maxDepth || 10;
+                logToArea('memoryLog', `📏 最大階層深度: ${maxDepth}`);
+                
+                // リソースコスト制限テスト
+                let totalResourceCost = 0;
+                const maxResourceCost = 1000;
+                
+                for (let i = 0; i < 100; i++) {
+                    const resourceCost = Math.floor(Math.random() * 20) + 1;
+                    totalResourceCost += resourceCost;
+                    
+                    if (totalResourceCost > maxResourceCost) {
+                        logToArea('memoryLog', `⚠️ リソースコスト制限到達: ${totalResourceCost}/${maxResourceCost}`);
+                        break;
+                    }
+                    
+                    const plugin = await createVoidFlowNodePlugin('resource.test', {
+                        pluginId: `resource-test-${i}`,
+                        displayName: `Resource Test ${i}`,
+                        resourceCost: resourceCost
+                    });
+                    
+                    voidCore.registerPlugin(plugin);
+                    
+                    if (i % 20 === 0) {
+                        logToArea('memoryLog', `   プラグイン ${i + 1}: コスト${totalResourceCost}`);
+                    }
+                }
+                
+                document.getElementById('resourceCost').textContent = totalResourceCost;
+                
+                logToArea('memoryLog', `✅ リソース制限テスト完了`);
+                logToArea('memoryLog', `   総リソースコスト: ${totalResourceCost}`);
+                
+            } catch (error) {
+                logToArea('memoryLog', `❌ リソース制限テスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        // ==========================================
+        // 並行処理・競合テスト
+        // ==========================================
+
+        window.testConcurrentPlugins = async function() {
+            logToArea('concurrentLog', '🔄 同時プラグイン実行テスト開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                const concurrency = 20;
+                const iterations = 10;
+                
+                for (let iter = 0; iter < iterations; iter++) {
+                    const promises = [];
+                    
+                    for (let i = 0; i < concurrency; i++) {
+                        const promise = (async () => {
+                            const plugin = await createVoidFlowNodePlugin('concurrent.test', {
+                                pluginId: `concurrent-${iter}-${i}`,
+                                displayName: `Concurrent Test ${iter}-${i}`
+                            });
+                            
+                            voidCore.registerPlugin(plugin);
+                            
+                            // 同時実行
+                            await voidCore.sendIntent('concurrent.execute', {
+                                pluginId: plugin.pluginId,
+                                iteration: iter,
+                                index: i
+                            });
+                            
+                            return plugin.pluginId;
+                        })().catch(error => ({ error: error.message }));
+                        
+                        promises.push(promise);
+                    }
+                    
+                    const results = await Promise.all(promises);
+                    const errors = results.filter(r => r.error).length;
+                    const successful = concurrency - errors;
+                    
+                    stressTestStats.concurrentOperations = Math.max(stressTestStats.concurrentOperations, successful);
+                    
+                    logToArea('concurrentLog', `   反復 ${iter + 1}/${iterations}: ${successful}/${concurrency} 成功`);
+                }
+                
+                logToArea('concurrentLog', `✅ 同時プラグイン実行テスト完了`);
+                logToArea('concurrentLog', `   最大同時実行数: ${stressTestStats.concurrentOperations}`);
+                
+            } catch (error) {
+                logToArea('concurrentLog', `❌ 同時プラグイン実行テスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testRaceConditions = async function() {
+            logToArea('concurrentLog', '🏃 競合状態テスト開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                const sharedResource = { counter: 0, lastModified: null };
+                const concurrency = 50;
+                const iterations = 20;
+                
+                for (let iter = 0; iter < iterations; iter++) {
+                    sharedResource.counter = 0;
+                    const expectedValue = concurrency;
+                    
+                    const promises = Array.from({ length: concurrency }, async (_, i) => {
+                        // 競合状態を意図的に作成
+                        const currentValue = sharedResource.counter;
+                        await new Promise(resolve => setTimeout(resolve, Math.random() * 10));
+                        sharedResource.counter = currentValue + 1;
+                        sharedResource.lastModified = Date.now();
+                        
+                        return i;
+                    });
+                    
+                    await Promise.all(promises);
+                    
+                    if (sharedResource.counter !== expectedValue) {
+                        stressTestStats.raceConditions++;
+                        logToArea('concurrentLog', `⚠️ 競合検出 反復${iter + 1}: 期待値${expectedValue}, 実際${sharedResource.counter}`);
+                    }
+                }
+                
+                const successRate = Math.round(((iterations - stressTestStats.raceConditions) / iterations) * 100);
+                document.getElementById('concurrentSuccessRate').textContent = successRate + '%';
+                
+                logToArea('concurrentLog', `✅ 競合状態テスト完了`);
+                logToArea('concurrentLog', `   競合検出数: ${stressTestStats.raceConditions}/${iterations}`);
+                logToArea('concurrentLog', `   成功率: ${successRate}%`);
+                
+            } catch (error) {
+                logToArea('concurrentLog', `❌ 競合状態テスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testDeadlockPrevention = async function() {
+            logToArea('concurrentLog', '🔒 デッドロック検出テスト開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                // 人工的なデッドロック状況を作成
+                const resource1 = { locked: false, lockHolder: null };
+                const resource2 = { locked: false, lockHolder: null };
+                
+                const deadlockTests = 10;
+                
+                for (let test = 0; test < deadlockTests; test++) {
+                    const timeout = 5000; // 5秒タイムアウト
+                    
+                    const task1 = (async () => {
+                        resource1.locked = true;
+                        resource1.lockHolder = 'task1';
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                        // resource2の取得を試行
+                        const startTime = Date.now();
+                        while (resource2.locked && (Date.now() - startTime < timeout)) {
+                            await new Promise(resolve => setTimeout(resolve, 10));
+                        }
+                        
+                        if (resource2.locked) {
+                            throw new Error('Deadlock detected in task1');
+                        }
+                        
+                        resource2.locked = true;
+                        resource2.lockHolder = 'task1';
+                        
+                        // リソース解放
+                        resource1.locked = false;
+                        resource2.locked = false;
+                        resource1.lockHolder = null;
+                        resource2.lockHolder = null;
+                    })();
+                    
+                    const task2 = (async () => {
+                        resource2.locked = true;
+                        resource2.lockHolder = 'task2';
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                        // resource1の取得を試行
+                        const startTime = Date.now();
+                        while (resource1.locked && (Date.now() - startTime < timeout)) {
+                            await new Promise(resolve => setTimeout(resolve, 10));
+                        }
+                        
+                        if (resource1.locked) {
+                            throw new Error('Deadlock detected in task2');
+                        }
+                        
+                        resource1.locked = true;
+                        resource1.lockHolder = 'task2';
+                        
+                        // リソース解放
+                        resource1.locked = false;
+                        resource2.locked = false;
+                        resource1.lockHolder = null;
+                        resource2.lockHolder = null;
+                    })();
+                    
+                    try {
+                        await Promise.all([task1, task2]);
+                        logToArea('concurrentLog', `   テスト ${test + 1}: デッドロック回避成功`);
+                    } catch (error) {
+                        if (error.message.includes('Deadlock')) {
+                            stressTestStats.deadlocks++;
+                            logToArea('concurrentLog', `   テスト ${test + 1}: デッドロック検出`);
+                        }
+                    }
+                    
+                    // リソースリセット
+                    resource1.locked = false;
+                    resource2.locked = false;
+                    resource1.lockHolder = null;
+                    resource2.lockHolder = null;
+                }
+                
+                logToArea('concurrentLog', `✅ デッドロック検出テスト完了`);
+                logToArea('concurrentLog', `   デッドロック発生数: ${stressTestStats.deadlocks}/${deadlockTests}`);
+                
+            } catch (error) {
+                logToArea('concurrentLog', `❌ デッドロック検出テスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testAsyncMessageFlow = async function() {
+            logToArea('concurrentLog', '📨 非同期メッセージ流テスト開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                const messageFlows = 10;
+                const messagesPerFlow = 100;
+                
+                const flowPromises = Array.from({ length: messageFlows }, async (_, flowId) => {
+                    const messages = [];
+                    
+                    for (let i = 0; i < messagesPerFlow; i++) {
+                        const messagePromise = voidCore.sendMessage('async.flow.test', {
+                            flowId: flowId,
+                            messageId: i,
+                            data: `async-message-${flowId}-${i}`,
+                            timestamp: Date.now()
+                        });
+                        
+                        messages.push(messagePromise);
+                        
+                        // ランダムな遅延
+                        await new Promise(resolve => setTimeout(resolve, Math.random() * 10));
+                    }
+                    
+                    const results = await Promise.all(messages);
+                    return { flowId, messageCount: results.length };
+                });
+                
+                const flows = await Promise.all(flowPromises);
+                const totalMessages = flows.reduce((sum, flow) => sum + flow.messageCount, 0);
+                
+                logToArea('concurrentLog', `✅ 非同期メッセージ流テスト完了`);
+                logToArea('concurrentLog', `   フロー数: ${messageFlows}`);
+                logToArea('concurrentLog', `   総メッセージ数: ${totalMessages}`);
+                logToArea('concurrentLog', `   フロー当たり: ${Math.round(totalMessages / messageFlows)}メッセージ`);
+                
+            } catch (error) {
+                logToArea('concurrentLog', `❌ 非同期メッセージ流テスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        // ==========================================
+        // 統合パフォーマンステスト
+        // ==========================================
+
+        window.runComprehensiveStressTest = async function() {
+            logToArea('performanceLog', '🚀 総合ストレステスト開始');
+            
+            const testStartTime = Date.now();
+            
+            try {
+                // 段階的にテストを実行
+                logToArea('performanceLog', '📋 フェーズ1: Intent処理テスト');
+                await testIntentLoad();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                logToArea('performanceLog', '📋 フェーズ2: メモリテスト');
+                await testMemoryUsage();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                logToArea('performanceLog', '📋 フェーズ3: 並行処理テスト');
+                await testConcurrentPlugins();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                logToArea('performanceLog', '📋 フェーズ4: 統合負荷テスト');
+                await testConcurrentIntents();
+                
+                const totalTime = Date.now() - testStartTime;
+                
+                // 総合スコア計算
+                const intentScore = Math.min(100, (stressTestStats.intentCount / 1000) * 100);
+                const errorScore = Math.max(0, 100 - (stressTestStats.intentErrors / Math.max(stressTestStats.intentCount, 1)) * 100);
+                const concurrentScore = Math.min(100, (stressTestStats.concurrentOperations / 50) * 100);
+                
+                const overallScore = Math.round((intentScore + errorScore + concurrentScore) / 3);
+                document.getElementById('overallScore').textContent = overallScore;
+                
+                // 安定性指標
+                const stabilityIndex = Math.round(errorScore);
+                document.getElementById('stabilityIndex').textContent = stabilityIndex + '%';
+                
+                // 性能劣化計算
+                const expectedBaseTime = 5000; // 期待される基準時間
+                const degradation = Math.max(0, Math.round(((totalTime - expectedBaseTime) / expectedBaseTime) * 100));
+                document.getElementById('performanceDegradation').textContent = degradation + '%';
+                
+                logToArea('performanceLog', `✅ 総合ストレステスト完了`);
+                logToArea('performanceLog', `   実行時間: ${Math.round(totalTime / 1000)}秒`);
+                logToArea('performanceLog', `   総合スコア: ${overallScore}/100`);
+                logToArea('performanceLog', `   安定性: ${stabilityIndex}%`);
+                logToArea('performanceLog', `   性能劣化: ${degradation}%`);
+                
+                updatePerformanceChart('performanceChart', overallScore, 100);
+                
+            } catch (error) {
+                logToArea('performanceLog', `❌ 総合ストレステスト失敗: ${error.message}`);
+            }
+        };
+
+        window.testUnderExtremeLaod = async function() {
+            logToArea('performanceLog', '🔥 極限負荷テスト開始');
+            
+            try {
+                await voidCore._ensureInitialized();
+                
+                const extremeIntentCount = 5000;
+                const extremeConcurrency = 100;
+                
+                logToArea('performanceLog', `⚡ 極限Intent処理: ${extremeIntentCount}件`);
+                
+                const startTime = Date.now();
+                const batchSize = 100;
+                let totalProcessed = 0;
+                
+                for (let batch = 0; batch < extremeIntentCount / batchSize; batch++) {
+                    const batchPromises = Array.from({ length: batchSize }, (_, i) =>
+                        voidCore.sendIntent('extreme.load.test', {
+                            batchId: batch,
+                            itemId: i,
+                            payload: new Array(1000).fill(0).map(() => Math.random())
+                        }).catch(error => ({ error: error.message }))
+                    );
+                    
+                    const batchResults = await Promise.all(batchPromises);
+                    const batchSuccesses = batchResults.filter(r => !r.error).length;
+                    totalProcessed += batchSuccesses;
+                    
+                    if (batch % 10 === 0) {
+                        const elapsed = Date.now() - startTime;
+                        const rate = Math.round(totalProcessed / (elapsed / 1000));
+                        logToArea('performanceLog', `   バッチ ${batch + 1}/${extremeIntentCount / batchSize}: ${rate}/秒`);
+                    }
+                }
+                
+                const totalTime = Date.now() - startTime;
+                const finalRate = Math.round(totalProcessed / (totalTime / 1000));
+                
+                // 推奨負荷の計算
+                const recommendedLoad = Math.round(finalRate * 0.8); // 80%の安全マージン
+                document.getElementById('recommendedLoad').textContent = recommendedLoad + '/秒';
+                
+                logToArea('performanceLog', `✅ 極限負荷テスト完了`);
+                logToArea('performanceLog', `   処理件数: ${totalProcessed}/${extremeIntentCount}`);
+                logToArea('performanceLog', `   最大スループット: ${finalRate}/秒`);
+                logToArea('performanceLog', `   推奨負荷: ${recommendedLoad}/秒`);
+                
+                stressTestStats.intentCount += totalProcessed;
+                
+            } catch (error) {
+                logToArea('performanceLog', `❌ 極限負荷テスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testLongRunningStability = async function() {
+            logToArea('performanceLog', '⏳ 長時間安定性テスト開始');
+            
+            const testDuration = 60000; // 1分間
+            const interval = 5000; // 5秒間隔
+            const testStartTime = Date.now();
+            
+            let stabilityMetrics = {
+                samples: 0,
+                errors: 0,
+                memoryBaseline: performance.memory ? performance.memory.usedJSHeapSize : 0,
+                maxMemory: 0,
+                minResponseTime: Infinity,
+                maxResponseTime: 0
+            };
+            
+            logToArea('performanceLog', `🕐 ${testDuration / 1000}秒間の安定性監視開始`);
+            
+            const stabilityInterval = setInterval(async () => {
+                try {
+                    const sampleStart = Date.now();
+                    
+                    await voidCore.sendIntent('stability.test', {
+                        sampleId: stabilityMetrics.samples,
+                        timestamp: Date.now(),
+                        uptime: Date.now() - testStartTime
+                    });
+                    
+                    const responseTime = Date.now() - sampleStart;
+                    stabilityMetrics.minResponseTime = Math.min(stabilityMetrics.minResponseTime, responseTime);
+                    stabilityMetrics.maxResponseTime = Math.max(stabilityMetrics.maxResponseTime, responseTime);
+                    stabilityMetrics.samples++;
+                    
+                    if (performance.memory) {
+                        const currentMemory = performance.memory.usedJSHeapSize;
+                        stabilityMetrics.maxMemory = Math.max(stabilityMetrics.maxMemory, currentMemory);
+                    }
+                    
+                    const elapsed = Date.now() - testStartTime;
+                    if (elapsed % 15000 === 0) { // 15秒ごとにログ
+                        logToArea('performanceLog', `   ${Math.round(elapsed / 1000)}秒経過: 応答時間${responseTime}ms`);
+                    }
+                    
+                } catch (error) {
+                    stabilityMetrics.errors++;
+                    logToArea('performanceLog', `⚠️ 安定性テストエラー: ${error.message}`);
+                }
+                
+                // テスト終了判定
+                if (Date.now() - testStartTime >= testDuration) {
+                    clearInterval(stabilityInterval);
+                    
+                    const memoryGrowth = stabilityMetrics.maxMemory - stabilityMetrics.memoryBaseline;
+                    const errorRate = (stabilityMetrics.errors / stabilityMetrics.samples) * 100;
+                    const avgResponseTime = (stabilityMetrics.minResponseTime + stabilityMetrics.maxResponseTime) / 2;
+                    
+                    logToArea('performanceLog', `✅ 長時間安定性テスト完了`);
+                    logToArea('performanceLog', `   サンプル数: ${stabilityMetrics.samples}`);
+                    logToArea('performanceLog', `   エラー率: ${Math.round(errorRate)}%`);
+                    logToArea('performanceLog', `   応答時間: ${stabilityMetrics.minResponseTime}-${stabilityMetrics.maxResponseTime}ms`);
+                    logToArea('performanceLog', `   メモリ増加: ${Math.round(memoryGrowth / 1024 / 1024)}MB`);
+                    
+                    // 安定性指標更新
+                    const stabilityScore = Math.max(0, 100 - errorRate - (memoryGrowth / 1024 / 1024));
+                    document.getElementById('stabilityIndex').textContent = Math.round(stabilityScore) + '%';
+                }
+            }, interval);
+        };
+
+        window.clearAllTests = function() {
+            document.getElementById('intentLog').innerHTML = '';
+            document.getElementById('memoryLog').innerHTML = '';
+            document.getElementById('concurrentLog').innerHTML = '';
+            document.getElementById('performanceLog').innerHTML = '';
+            
+            // パフォーマンスチャートクリア
+            ['intentChart', 'memoryChart', 'concurrentChart', 'performanceChart'].forEach(chartId => {
+                const chart = document.getElementById(chartId);
+                const bars = chart.querySelectorAll('.chart-bar');
+                bars.forEach(bar => chart.removeChild(bar));
+            });
+            
+            stressTestStats = {
+                intentCount: 0,
+                intentErrors: 0,
+                totalIntentTime: 0,
+                memoryBaseline: 0,
+                pluginCount: 0,
+                concurrentOperations: 0,
+                raceConditions: 0,
+                deadlocks: 0,
+                testStartTime: Date.now()
+            };
+            
+            updateStats();
+            
+            logToArea('intentLog', '🧹 Intentテストログクリア完了');
+            logToArea('memoryLog', '🧹 メモリテストログクリア完了');
+            logToArea('concurrentLog', '🧹 並行処理テストログクリア完了');
+            logToArea('performanceLog', '🧹 パフォーマンステストログクリア完了');
+        };
+
+        // 初期化
+        updateStats();
+        
+        logToArea('intentLog', '⚡ Intent処理負荷テストシステム準備完了');
+        logToArea('memoryLog', '💾 メモリ・リソーステストシステム準備完了');
+        logToArea('concurrentLog', '🔄 並行処理・競合テストシステム準備完了');
+        logToArea('performanceLog', '🏋️ Phase R統合ストレステストシステム準備完了');
+        
+        // VoidCore確認
+        if (voidCore) {
+            logToArea('performanceLog', '✅ VoidCore v14.0 検出完了');
+            logToArea('performanceLog', '✅ Phase R統合システム準備完了');
+            logToArea('performanceLog', '🚀 ストレステスト実行可能状態');
+        }
+    </script>
+</body>
+</html>

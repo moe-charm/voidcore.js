@@ -280,8 +280,9 @@
 
     <script type="module">
         import { voidCore } from './src/voidcore.js';
-        import { voidFlowAdapter } from './src/voidflow-message-adapter.js';
-        import { VoidFlowIntegrationWrapper } from './src/voidflow-integration-wrapper.js';
+        import { voidFlowAdapter } from './src/universal-message-adapter.js';
+        // import { VoidFlowIntegrationWrapper } from './src/voidflow-integration-wrapper.js'; // 削除済み
+        import { UniversalNodeIntegration } from './src/universal-node-integration.js';
 
         // テスト状態
         let testStats = {

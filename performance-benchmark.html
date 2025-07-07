@@ -472,7 +472,8 @@
     <script type="module">
         // VoidCore v14.0とプラグインシステムをインポート
         import { voidCore } from './src/voidcore.js';
-        import { createVoidFlowNodePlugin } from './src/voidflow-node-plugin.js';
+        // import { createVoidFlowNodePlugin } from './src/voidflow-node-plugin.js'; // 削除済み
+        import { createPlugin } from './src/pure_plugin_system.js';
         import { voidFlowAdapter } from './src/universal-message-adapter.js';
 
         // グローバル変数

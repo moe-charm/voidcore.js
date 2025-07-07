@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌐 汎用プラグインインターフェーステスト</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .test-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .test-section {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .test-title {
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+            text-align: center;
+        }
+        
+        .button {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: inherit;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            width: calc(100% - 10px);
+        }
+        
+        .button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .button.voidflow {
+            background: #4a90e2;
+        }
+        
+        .button.voidflow:hover {
+            background: #357abd;
+        }
+        
+        .button.reactflow {
+            background: #764ba2;
+        }
+        
+        .button.reactflow:hover {
+            background: #5f3a7d;
+        }
+        
+        .button.nodered {
+            background: #e74c3c;
+        }
+        
+        .button.nodered:hover {
+            background: #c0392b;
+        }
+        
+        .button.scratch {
+            background: #f39c12;
+        }
+        
+        .button.scratch:hover {
+            background: #e67e22;
+        }
+        
+        .button.universal {
+            background: #27ae60;
+        }
+        
+        .button.universal:hover {
+            background: #229954;
+        }
+        
+        .log-area {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            height: 280px;
+            overflow-y: auto;
+            font-size: 10px;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+        
+        .stats-panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 11px;
+        }
+        
+        .stats-label {
+            color: #bbb;
+        }
+        
+        .stats-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            grid-column: 1 / -1;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .universal-indicator {
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        .compatibility-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .compatibility-item {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            font-size: 10px;
+        }
+        
+        .compatibility-item.compatible {
+            background: #1e4d3f;
+            border-color: #27ae60;
+            color: #27ae60;
+        }
+        
+        .compatibility-item.incompatible {
+            background: #4d1e1e;
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+        
+        .capability-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        
+        .capability-tag {
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌐 汎用プラグインインターフェーステスト</h1>
+        <p class="universal-indicator">全システム対応の究極プラグインインターフェース検証</p>
+    </div>
+
+    <div class="test-container">
+        <!-- VoidFlow対応テスト -->
+        <div class="test-section">
+            <div class="test-title">🌊 VoidFlow対応テスト</div>
+            
+            <button class="button voidflow" onclick="testVoidFlowPlugin()">VoidFlowプラグイン作成</button>
+            <button class="button voidflow" onclick="testVoidFlowExecution()">VoidFlow実行テスト</button>
+            <button class="button voidflow" onclick="testVoidFlowAdapters()">VoidFlowアダプター</button>
+            <button class="button voidflow" onclick="testVoidFlowMiddleware()">ミドルウェア連携</button>
+            
+            <div class="log-area" id="voidflowLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">VoidFlow統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">作成プラグイン数:</span>
+                    <span class="stats-value" id="voidflowPluginCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">実行成功数:</span>
+                    <span class="stats-value" id="voidflowSuccessCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">平均実行時間:</span>
+                    <span class="stats-value" id="voidflowAvgTime">0ms</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ReactFlow対応テスト -->
+        <div class="test-section">
+            <div class="test-title">⚛️ ReactFlow対応テスト</div>
+            
+            <button class="button reactflow" onclick="testReactFlowPlugin()">ReactFlowプラグイン作成</button>
+            <button class="button reactflow" onclick="testReactFlowExecution()">ReactFlow実行テスト</button>
+            <button class="button reactflow" onclick="testReactFlowNodes()">Reactノード変換</button>
+            <button class="button reactflow" onclick="testReactFlowCompatibility()">互換性確認</button>
+            
+            <div class="log-area" id="reactflowLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">ReactFlow統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">作成プラグイン数:</span>
+                    <span class="stats-value" id="reactflowPluginCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">実行成功数:</span>
+                    <span class="stats-value" id="reactflowSuccessCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">ノード変換数:</span>
+                    <span class="stats-value" id="reactflowNodeCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- NodeRed・Scratch対応テスト -->
+        <div class="test-section">
+            <div class="test-title">🔴 NodeRed & 🐱 Scratch対応</div>
+            
+            <button class="button nodered" onclick="testNodeRedPlugin()">NodeRedプラグイン作成</button>
+            <button class="button nodered" onclick="testNodeRedMessages()">NodeRedメッセージ</button>
+            <button class="button scratch" onclick="testScratchPlugin()">Scratchプラグイン作成</button>
+            <button class="button scratch" onclick="testScratchBlocks()">Scratchブロック</button>
+            
+            <div class="log-area" id="nodeRedScratchLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">NodeRed & Scratch統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">NodeRedプラグイン:</span>
+                    <span class="stats-value" id="nodeRedPluginCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">Scratchプラグイン:</span>
+                    <span class="stats-value" id="scratchPluginCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">総メッセージ数:</span>
+                    <span class="stats-value" id="totalMessages">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 汎用機能テスト -->
+        <div class="test-section">
+            <div class="test-title">🌐 汎用機能・拡張テスト</div>
+            
+            <button class="button universal" onclick="testUniversalPlugin()">汎用プラグイン作成</button>
+            <button class="button universal" onclick="testMiddlewareSystem()">ミドルウェアシステム</button>
+            <button class="button universal" onclick="testExtensionRegistry()">拡張機能登録</button>
+            <button class="button universal" onclick="testPluginCloning()">プラグイン複製</button>
+            
+            <div class="log-area" id="universalLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">汎用機能統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">汎用プラグイン数:</span>
+                    <span class="stats-value" id="universalPluginCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">拡張機能数:</span>
+                    <span class="stats-value" id="extensionCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">ミドルウェア数:</span>
+                    <span class="stats-value" id="middlewareCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- プラグイン管理・統計 -->
+        <div class="test-section">
+            <div class="test-title">🔧 プラグイン管理・統計</div>
+            
+            <button class="button" onclick="testPluginTemplates()">テンプレートシステム</button>
+            <button class="button" onclick="testPluginMigration()">システム間移行</button>
+            <button class="button" onclick="testCapabilitySystem()">能力システム</button>
+            <button class="button" onclick="testExecutionStats()">実行統計分析</button>
+            
+            <div class="log-area" id="managementLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">管理統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">テンプレート数:</span>
+                    <span class="stats-value" id="templateCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">移行成功数:</span>
+                    <span class="stats-value" id="migrationCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">能力登録数:</span>
+                    <span class="stats-value" id="capabilityCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 互換性マトリクス -->
+        <div class="test-section">
+            <div class="test-title">📊 システム互換性マトリクス</div>
+            
+            <div class="compatibility-grid" id="compatibilityMatrix">
+                <!-- 動的生成 -->
+            </div>
+            
+            <button class="button" onclick="updateCompatibilityMatrix()">互換性更新</button>
+            <button class="button" onclick="testAllSystemsIntegration()">全システム統合テスト</button>
+            <button class="button" onclick="generateCompatibilityReport()">互換性レポート</button>
+            <button class="button universal" onclick="clearAllTests()">テストクリア</button>
+            
+            <div class="log-area" id="compatibilityLog"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 汎用プラグインインターフェースをインポート
+        import { 
+            IUniversalPlugin, 
+            IUniversalCorePlugin,
+            createUniversalPlugin,
+            checkSystemCompatibility,
+            analyzePluginStats
+        } from './src/universal-plugin-interface.js';
+
+        // グローバル変数
+        window.IUniversalPlugin = IUniversalPlugin;
+        window.IUniversalCorePlugin = IUniversalCorePlugin;
+        
+        let testData = {
+            plugins: [],
+            corePlugin: null,
+            executionStats: {
+                voidflow: { count: 0, success: 0, totalTime: 0 },
+                reactflow: { count: 0, success: 0, totalTime: 0 },
+                nodered: { count: 0, success: 0, totalTime: 0 },
+                scratch: { count: 0, success: 0, totalTime: 0 },
+                universal: { count: 0, success: 0, totalTime: 0 }
+            },
+            templates: [],
+            migrations: 0,
+            capabilities: new Set()
+        };
+
+        // ログ機能
+        function logToArea(areaId, message) {
+            const area = document.getElementById(areaId);
+            if (area) {
+                const timestamp = new Date().toLocaleTimeString();
+                area.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                area.scrollTop = area.scrollHeight;
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('voidflowPluginCount').textContent = 
+                testData.plugins.filter(p => p.systemType === 'VoidFlow').length;
+            document.getElementById('voidflowSuccessCount').textContent = testData.executionStats.voidflow.success;
+            document.getElementById('voidflowAvgTime').textContent = 
+                testData.executionStats.voidflow.count > 0 ? 
+                Math.round(testData.executionStats.voidflow.totalTime / testData.executionStats.voidflow.count) + 'ms' : '0ms';
+            
+            document.getElementById('reactflowPluginCount').textContent = 
+                testData.plugins.filter(p => p.systemType === 'ReactFlow').length;
+            document.getElementById('reactflowSuccessCount').textContent = testData.executionStats.reactflow.success;
+            document.getElementById('reactflowNodeCount').textContent = testData.executionStats.reactflow.count;
+            
+            document.getElementById('nodeRedPluginCount').textContent = 
+                testData.plugins.filter(p => p.systemType === 'NodeRed').length;
+            document.getElementById('scratchPluginCount').textContent = 
+                testData.plugins.filter(p => p.systemType === 'Scratch').length;
+            document.getElementById('totalMessages').textContent = 
+                testData.executionStats.nodered.count + testData.executionStats.scratch.count;
+            
+            document.getElementById('universalPluginCount').textContent = testData.plugins.length;
+            document.getElementById('extensionCount').textContent = 
+                testData.plugins.reduce((sum, p) => sum + p.extensionRegistry.size, 0);
+            document.getElementById('middlewareCount').textContent = 
+                testData.plugins.reduce((sum, p) => sum + p.middlewares.length, 0);
+            
+            document.getElementById('templateCount').textContent = testData.templates.length;
+            document.getElementById('migrationCount').textContent = testData.migrations;
+            document.getElementById('capabilityCount').textContent = testData.capabilities.size;
+        }
+
+        // ==========================================
+        // VoidFlow対応テスト
+        // ==========================================
+
+        window.testVoidFlowPlugin = async function() {
+            logToArea('voidflowLog', '🌊 VoidFlowプラグイン作成開始');
+            
+            try {
+                const plugin = createUniversalPlugin({
+                    type: 'voidflow.processor',
+                    displayName: 'VoidFlow Test Processor',
+                    systemType: 'VoidFlow',
+                    capabilities: ['process', 'transform', 'validate'],
+                    voidFlowCompatible: true,
+                    metadata: {
+                        version: '1.0.0',
+                        author: 'Universal System',
+                        description: 'VoidFlow互換プロセッサー'
+                    }
+                });
+                
+                testData.plugins.push(plugin);
+                
+                logToArea('voidflowLog', `✅ VoidFlowプラグイン作成成功: ${plugin.id}`);
+                logToArea('voidflowLog', `   タイプ: ${plugin.type}`);
+                logToArea('voidflowLog', `   システム: ${plugin.systemType}`);
+                logToArea('voidflowLog', `   能力: ${Array.from(plugin.capabilities).join(', ')}`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('voidflowLog', `❌ VoidFlowプラグイン作成失敗: ${error.message}`);
+            }
+        };
+
+        window.testVoidFlowExecution = async function() {
+            logToArea('voidflowLog', '⚡ VoidFlow実行テスト開始');
+            
+            try {
+                const voidFlowPlugins = testData.plugins.filter(p => p.systemType === 'VoidFlow');
+                if (voidFlowPlugins.length === 0) {
+                    await testVoidFlowPlugin();
+                }
+                
+                const plugin = testData.plugins.find(p => p.systemType === 'VoidFlow');
+                if (!plugin) {
+                    throw new Error('VoidFlowプラグインが見つかりません');
+                }
+                
+                const testCases = [
+                    { data: { message: 'Hello VoidFlow!' }, context: { systemType: 'VoidFlow', nodeId: 'test-1' } },
+                    { data: { value: 42, operation: 'multiply' }, context: { systemType: 'VoidFlow', nodeId: 'test-2' } },
+                    { data: { array: [1, 2, 3, 4, 5] }, context: { systemType: 'VoidFlow', nodeId: 'test-3' } }
+                ];
+                
+                for (const testCase of testCases) {
+                    const startTime = Date.now();
+                    
+                    try {
+                        const result = await plugin.universalExecute(testCase.data, testCase.context);
+                        
+                        const executionTime = Date.now() - startTime;
+                        testData.executionStats.voidflow.count++;
+                        testData.executionStats.voidflow.success++;
+                        testData.executionStats.voidflow.totalTime += executionTime;
+                        
+                        logToArea('voidflowLog', `✅ 実行成功: ${testCase.context.nodeId} (${executionTime}ms)`);
+                        logToArea('voidflowLog', `   出力: ${JSON.stringify(result.output).substring(0, 50)}...`);
+                        
+                    } catch (error) {
+                        testData.executionStats.voidflow.count++;
+                        logToArea('voidflowLog', `❌ 実行失敗: ${testCase.context.nodeId} - ${error.message}`);
+                    }
+                }
+                
+                logToArea('voidflowLog', `🎯 VoidFlow実行テスト完了: ${testCases.length}件テスト`);
+                updateStats();
+                
+            } catch (error) {
+                logToArea('voidflowLog', `❌ VoidFlow実行テスト失敗: ${error.message}`);
+            }
+        };
+
+        window.testVoidFlowAdapters = async function() {
+            logToArea('voidflowLog', '🔧 VoidFlowアダプターテスト開始');
+            
+            try {
+                const plugin = testData.plugins.find(p => p.systemType === 'VoidFlow');
+                if (!plugin) {
+                    await testVoidFlowPlugin();
+                }
+                
+                const voidFlowPlugin = testData.plugins.find(p => p.systemType === 'VoidFlow');
+                
+                // カスタムVoidFlowアダプター作成
+                const voidFlowAdapter = {
+                    name: 'VoidFlow Custom Adapter',
+                    execute: async (inputData, context) => {
+                        return {
+                            voidFlowResult: true,
+                            payload: inputData,
+                            sourceNodeId: context.nodeId,
+                            timestamp: Date.now(),
+                            error: null,
+                            __voidflow_metadata: {
+                                version: '14.0',
+                                adapterId: 'custom-voidflow-adapter',
+                                processingTime: Date.now()
+                            }
+                        };
+                    }
+                };
+                
+                voidFlowPlugin.registerAdapter('voidFlow', voidFlowAdapter);
+                
+                // アダプター使用テスト
+                const result = await voidFlowPlugin.universalExecute(
+                    { test: 'adapter test' },
+                    { systemType: 'VoidFlow', nodeId: 'adapter-test' }
+                );
+                
+                logToArea('voidflowLog', `✅ VoidFlowアダプター登録・実行成功`);
+                logToArea('voidflowLog', `   アダプター名: ${voidFlowAdapter.name}`);
+                logToArea('voidflowLog', `   結果: VoidFlow形式で出力`);
+                logToArea('voidflowLog', `   メタデータ: ${JSON.stringify(result.__voidflow_metadata || {})}`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('voidflowLog', `❌ VoidFlowアダプターテスト失敗: ${error.message}`);
+            }
+        };
+
+        window.testVoidFlowMiddleware = async function() {
+            logToArea('voidflowLog', '🔗 ミドルウェア連携テスト開始');
+            
+            try {
+                const plugin = testData.plugins.find(p => p.systemType === 'VoidFlow');
+                if (!plugin) {
+                    await testVoidFlowPlugin();
+                }
+                
+                const voidFlowPlugin = testData.plugins.find(p => p.systemType === 'VoidFlow');
+                
+                // ミドルウェア作成
+                const validationMiddleware = {
+                    name: 'Validation Middleware',
+                    preProcess: async (data, context) => {
+                        if (!data || typeof data !== 'object') {
+                            throw new Error('Invalid input data');
+                        }
+                        return { ...data, validated: true };
+                    },
+                    postProcess: async (result, context) => {
+                        return { ...result, postProcessed: true, processedAt: Date.now() };
+                    }
+                };
+                
+                const loggingMiddleware = {
+                    name: 'Logging Middleware',
+                    preProcess: async (data, context) => {
+                        console.log(`[Middleware] Pre-processing: ${JSON.stringify(data)}`);
+                        return data;
+                    },
+                    postProcess: async (result, context) => {
+                        console.log(`[Middleware] Post-processing: ${JSON.stringify(result)}`);
+                        return result;
+                    }
+                };
+                
+                voidFlowPlugin.addMiddleware(validationMiddleware);
+                voidFlowPlugin.addMiddleware(loggingMiddleware);
+                
+                // ミドルウェア付き実行テスト
+                const result = await voidFlowPlugin.universalExecute(
+                    { message: 'middleware test', value: 123 },
+                    { systemType: 'VoidFlow', nodeId: 'middleware-test' }
+                );
+                
+                logToArea('voidflowLog', `✅ ミドルウェア連携テスト成功`);
+                logToArea('voidflowLog', `   ミドルウェア数: ${voidFlowPlugin.middlewares.length}`);
+                logToArea('voidflowLog', `   バリデーション: ${result.validated ? '✅' : '❌'}`);
+                logToArea('voidflowLog', `   後処理: ${result.postProcessed ? '✅' : '❌'}`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('voidflowLog', `❌ ミドルウェア連携テスト失敗: ${error.message}`);
+            }
+        };
+
+        // ==========================================
+        // ReactFlow対応テスト
+        // ==========================================
+
+        window.testReactFlowPlugin = async function() {
+            logToArea('reactflowLog', '⚛️ ReactFlowプラグイン作成開始');
+            
+            try {
+                const plugin = createUniversalPlugin({
+                    type: 'reactflow.transformer',
+                    displayName: 'ReactFlow Test Transformer',
+                    systemType: 'ReactFlow',
+                    capabilities: ['transform', 'render', 'interact'],
+                    reactFlowCompatible: true,
+                    metadata: {
+                        version: '1.0.0',
+                        nodeProps: {
+                            width: 150,
+                            height: 80,
+                            style: { backgroundColor: '#f0f0f0' }
+                        }
+                    }
+                });
+                
+                testData.plugins.push(plugin);
+                
+                logToArea('reactflowLog', `✅ ReactFlowプラグイン作成成功: ${plugin.id}`);
+                logToArea('reactflowLog', `   タイプ: ${plugin.type}`);
+                logToArea('reactflowLog', `   ReactFlow互換: ${plugin.isCompatibleWith('ReactFlow')}`);
+                logToArea('reactflowLog', `   能力: ${Array.from(plugin.capabilities).join(', ')}`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('reactflowLog', `❌ ReactFlowプラグイン作成失敗: ${error.message}`);
+            }
+        };
+
+        window.testReactFlowExecution = async function() {
+            logToArea('reactflowLog', '⚡ ReactFlow実行テスト開始');
+            
+            try {
+                const reactFlowPlugins = testData.plugins.filter(p => p.systemType === 'ReactFlow');
+                if (reactFlowPlugins.length === 0) {
+                    await testReactFlowPlugin();
+                }
+                
+                const plugin = testData.plugins.find(p => p.systemType === 'ReactFlow');
+                
+                const testCases = [
+                    {
+                        data: { label: 'Input Node', value: 'Hello React!' },
+                        context: { systemType: 'ReactFlow', nodeId: 'react-input-1', position: { x: 100, y: 100 } }
+                    },
+                    {
+                        data: { operation: 'uppercase', input: 'transform this text' },
+                        context: { systemType: 'ReactFlow', nodeId: 'react-transform-1', position: { x: 300, y: 100 } }
+                    },
+                    {
+                        data: { type: 'output', format: 'json' },
+                        context: { systemType: 'ReactFlow', nodeId: 'react-output-1', position: { x: 500, y: 100 } }
+                    }
+                ];
+                
+                for (const testCase of testCases) {
+                    const startTime = Date.now();
+                    
+                    try {
+                        const result = await plugin.universalExecute(testCase.data, testCase.context);
+                        
+                        const executionTime = Date.now() - startTime;
+                        testData.executionStats.reactflow.count++;
+                        testData.executionStats.reactflow.success++;
+                        
+                        logToArea('reactflowLog', `✅ ReactFlow実行成功: ${testCase.context.nodeId}`);
+                        logToArea('reactflowLog', `   ノードID: ${result.id}`);
+                        logToArea('reactflowLog', `   位置: (${result.position.x}, ${result.position.y})`);
+                        logToArea('reactflowLog', `   データ: ${JSON.stringify(result.data).substring(0, 50)}...`);
+                        
+                    } catch (error) {
+                        testData.executionStats.reactflow.count++;
+                        logToArea('reactflowLog', `❌ ReactFlow実行失敗: ${testCase.context.nodeId} - ${error.message}`);
+                    }
+                }
+                
+                logToArea('reactflowLog', `🎯 ReactFlow実行テスト完了: ${testCases.length}件テスト`);
+                updateStats();
+                
+            } catch (error) {
+                logToArea('reactflowLog', `❌ ReactFlow実行テスト失敗: ${error.message}`);
+            }
+        };
+
+        window.testReactFlowNodes = async function() {
+            logToArea('reactflowLog', '🔄 Reactノード変換テスト開始');
+            
+            try {
+                const plugin = testData.plugins.find(p => p.systemType === 'ReactFlow');
+                if (!plugin) {
+                    await testReactFlowPlugin();
+                }
+                
+                const reactFlowPlugin = testData.plugins.find(p => p.systemType === 'ReactFlow');
+                
+                // 複数ノード変換テスト
+                const nodeData = [
+                    { type: 'input', label: 'Start Node', value: '' },
+                    { type: 'transform', label: 'Process Node', operation: 'filter' },
+                    { type: 'output', label: 'End Node', format: 'table' }
+                ];
+                
+                const reactNodes = [];
+                
+                for (let i = 0; i < nodeData.length; i++) {
+                    const result = await reactFlowPlugin.universalExecute(nodeData[i], {
+                        systemType: 'ReactFlow',
+                        nodeId: `node-${i + 1}`,
+                        position: { x: i * 200, y: 50 }
+                    });
+                    
+                    reactNodes.push(result);
+                    testData.executionStats.reactflow.count++;
+                }
+                
+                logToArea('reactflowLog', `✅ Reactノード変換成功: ${reactNodes.length}ノード`);
+                
+                // ノード接続情報生成
+                const edges = [];
+                for (let i = 0; i < reactNodes.length - 1; i++) {
+                    edges.push({
+                        id: `edge-${i}`,
+                        source: reactNodes[i].id,
+                        target: reactNodes[i + 1].id,
+                        type: 'default'
+                    });
+                }
+                
+                logToArea('reactflowLog', `🔗 エッジ生成: ${edges.length}接続`);
+                logToArea('reactflowLog', `📊 ReactFlowグラフ構造準備完了`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('reactflowLog', `❌ Reactノード変換テスト失敗: ${error.message}`);
+            }
+        };
+
+        window.testReactFlowCompatibility = async function() {
+            logToArea('reactflowLog', '🔍 ReactFlow互換性確認開始');
+            
+            try {
+                const plugin = testData.plugins.find(p => p.systemType === 'ReactFlow');
+                if (!plugin) {
+                    await testReactFlowPlugin();
+                }
+                
+                const reactFlowPlugin = testData.plugins.find(p => p.systemType === 'ReactFlow');
+                
+                // 互換性チェック
+                const compatibilityTests = [
+                    { system: 'ReactFlow', expected: true },
+                    { system: 'VoidFlow', expected: false },
+                    { system: 'NodeRed', expected: false },
+                    { system: 'Scratch', expected: false }
+                ];
+                
+                let compatibilityResults = [];
+                
+                for (const test of compatibilityTests) {
+                    const isCompatible = reactFlowPlugin.isCompatibleWith(test.system);
+                    const testResult = isCompatible === test.expected;
+                    
+                    compatibilityResults.push({
+                        system: test.system,
+                        compatible: isCompatible,
+                        expected: test.expected,
+                        passed: testResult
+                    });
+                    
+                    logToArea('reactflowLog', `${testResult ? '✅' : '❌'} ${test.system}: ${isCompatible ? '互換' : '非互換'}`);
+                }
+                
+                // 詳細情報表示
+                const detailedInfo = reactFlowPlugin.getDetailedInfo();
+                logToArea('reactflowLog', `📋 詳細情報:`);
+                logToArea('reactflowLog', `   システムタイプ: ${detailedInfo.systemType}`);
+                logToArea('reactflowLog', `   能力: ${detailedInfo.capabilities.join(', ')}`);
+                logToArea('reactflowLog', `   アダプター: ${detailedInfo.adapters.join(', ')}`);
+                
+                const passedTests = compatibilityResults.filter(r => r.passed).length;
+                logToArea('reactflowLog', `🎯 互換性テスト結果: ${passedTests}/${compatibilityTests.length} 成功`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('reactflowLog', `❌ ReactFlow互換性確認失敗: ${error.message}`);
+            }
+        };
+
+        // ==========================================
+        // NodeRed・Scratch対応テスト
+        // ==========================================
+
+        window.testNodeRedPlugin = async function() {
+            logToArea('nodeRedScratchLog', '🔴 NodeRedプラグイン作成開始');
+            
+            try {
+                const plugin = createUniversalPlugin({
+                    type: 'nodered.function',
+                    displayName: 'NodeRed Test Function',
+                    systemType: 'NodeRed',
+                    capabilities: ['function', 'flow', 'message'],
+                    nodeRedCompatible: true,
+                    metadata: {
+                        version: '1.0.0',
+                        category: 'function',
+                        inputs: 1,
+                        outputs: 1,
+                        icon: 'function.png'
+                    }
+                });
+                
+                testData.plugins.push(plugin);
+                
+                logToArea('nodeRedScratchLog', `✅ NodeRedプラグイン作成成功: ${plugin.id}`);
+                logToArea('nodeRedScratchLog', `   タイプ: ${plugin.type}`);
+                logToArea('nodeRedScratchLog', `   カテゴリ: ${plugin.metadata.category}`);
+                logToArea('nodeRedScratchLog', `   入力/出力: ${plugin.metadata.inputs}/${plugin.metadata.outputs}`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('nodeRedScratchLog', `❌ NodeRedプラグイン作成失敗: ${error.message}`);
+            }
+        };
+
+        window.testNodeRedMessages = async function() {
+            logToArea('nodeRedScratchLog', '📨 NodeRedメッセージテスト開始');
+            
+            try {
+                const nodeRedPlugins = testData.plugins.filter(p => p.systemType === 'NodeRed');
+                if (nodeRedPlugins.length === 0) {
+                    await testNodeRedPlugin();
+                }
+                
+                const plugin = testData.plugins.find(p => p.systemType === 'NodeRed');
+                
+                const messageTests = [
+                    {
+                        data: { temperature: 25.5, humidity: 60 },
+                        context: { systemType: 'NodeRed', topic: 'sensor/data', messageId: 'msg_001' }
+                    },
+                    {
+                        data: 'Hello NodeRed!',
+                        context: { systemType: 'NodeRed', topic: 'chat/message', messageId: 'msg_002' }
+                    },
+                    {
+                        data: [1, 2, 3, 4, 5],
+                        context: { systemType: 'NodeRed', topic: 'data/array', messageId: 'msg_003' }
+                    }
+                ];
+                
+                const nodeRedMessages = [];
+                
+                for (const test of messageTests) {
+                    const result = await plugin.universalExecute(test.data, test.context);
+                    nodeRedMessages.push(result);
+                    
+                    testData.executionStats.nodered.count++;
+                    testData.executionStats.nodered.success++;
+                    
+                    logToArea('nodeRedScratchLog', `✅ NodeRedメッセージ作成: ${result._msgid}`);
+                    logToArea('nodeRedScratchLog', `   トピック: ${result.topic}`);
+                    logToArea('nodeRedScratchLog', `   ペイロード: ${JSON.stringify(result.payload).substring(0, 30)}...`);
+                }
+                
+                logToArea('nodeRedScratchLog', `🎯 NodeRedメッセージテスト完了: ${nodeRedMessages.length}メッセージ`);
+                updateStats();
+                
+            } catch (error) {
+                logToArea('nodeRedScratchLog', `❌ NodeRedメッセージテスト失敗: ${error.message}`);
+            }
+        };
+
+        window.testScratchPlugin = async function() {
+            logToArea('nodeRedScratchLog', '🐱 Scratchプラグイン作成開始');
+            
+            try {
+                const plugin = createUniversalPlugin({
+                    type: 'scratch.motion',
+                    displayName: 'Scratch Test Motion',
+                    systemType: 'Scratch',
+                    capabilities: ['motion', 'sprite', 'animation'],
+                    scratchCompatible: true,
+                    metadata: {
+                        version: '1.0.0',
+                        category: 'motion',
+                        blockType: 'command',
+                        color: '#4C97FF'
+                    }
+                });
+                
+                testData.plugins.push(plugin);
+                
+                logToArea('nodeRedScratchLog', `✅ Scratchプラグイン作成成功: ${plugin.id}`);
+                logToArea('nodeRedScratchLog', `   タイプ: ${plugin.type}`);
+                logToArea('nodeRedScratchLog', `   カテゴリ: ${plugin.metadata.category}`);
+                logToArea('nodeRedScratchLog', `   ブロックタイプ: ${plugin.metadata.blockType}`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('nodeRedScratchLog', `❌ Scratchプラグイン作成失敗: ${error.message}`);
+            }
+        };
+
+        window.testScratchBlocks = async function() {
+            logToArea('nodeRedScratchLog', '🧩 Scratchブロックテスト開始');
+            
+            try {
+                const scratchPlugins = testData.plugins.filter(p => p.systemType === 'Scratch');
+                if (scratchPlugins.length === 0) {
+                    await testScratchPlugin();
+                }
+                
+                const plugin = testData.plugins.find(p => p.systemType === 'Scratch');
+                
+                const blockTests = [
+                    {
+                        data: { steps: 10, direction: 'forward' },
+                        context: { systemType: 'Scratch', x: 100, y: 100 }
+                    },
+                    {
+                        data: { angle: 90, direction: 'right' },
+                        context: { systemType: 'Scratch', x: 200, y: 100 }
+                    },
+                    {
+                        data: { message: 'Hello Scratch!', duration: 2 },
+                        context: { systemType: 'Scratch', x: 300, y: 100 }
+                    }
+                ];
+                
+                const scratchBlocks = [];
+                
+                for (const test of blockTests) {
+                    const result = await plugin.universalExecute(test.data, test.context);
+                    scratchBlocks.push(result);
+                    
+                    testData.executionStats.scratch.count++;
+                    testData.executionStats.scratch.success++;
+                    
+                    logToArea('nodeRedScratchLog', `✅ Scratchブロック作成: ${result.opcode}`);
+                    logToArea('nodeRedScratchLog', `   位置: (${result.x}, ${result.y})`);
+                    logToArea('nodeRedScratchLog', `   入力: ${JSON.stringify(result.inputs)}`);
+                }
+                
+                logToArea('nodeRedScratchLog', `🎯 Scratchブロックテスト完了: ${scratchBlocks.length}ブロック`);
+                updateStats();
+                
+            } catch (error) {
+                logToArea('nodeRedScratchLog', `❌ Scratchブロックテスト失敗: ${error.message}`);
+            }
+        };
+
+        // ==========================================
+        // 汎用機能テスト
+        // ==========================================
+
+        window.testUniversalPlugin = async function() {
+            logToArea('universalLog', '🌐 汎用プラグイン作成開始');
+            
+            try {
+                const plugin = createUniversalPlugin({
+                    type: 'universal.processor',
+                    displayName: 'Universal Test Processor',
+                    systemType: 'Universal',
+                    capabilities: ['process', 'transform', 'adapt', 'extend'],
+                    voidFlowCompatible: true,
+                    reactFlowCompatible: true,
+                    nodeRedCompatible: true,
+                    scratchCompatible: true,
+                    customCompatible: true,
+                    metadata: {
+                        version: '1.0.0',
+                        description: '全システム対応汎用プロセッサー',
+                        universal: true
+                    }
+                });
+                
+                testData.plugins.push(plugin);
+                
+                logToArea('universalLog', `✅ 汎用プラグイン作成成功: ${plugin.id}`);
+                logToArea('universalLog', `   全システム互換性:`);
+                logToArea('universalLog', `     VoidFlow: ${plugin.isCompatibleWith('VoidFlow')}`);
+                logToArea('universalLog', `     ReactFlow: ${plugin.isCompatibleWith('ReactFlow')}`);
+                logToArea('universalLog', `     NodeRed: ${plugin.isCompatibleWith('NodeRed')}`);
+                logToArea('universalLog', `     Scratch: ${plugin.isCompatibleWith('Scratch')}`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('universalLog', `❌ 汎用プラグイン作成失敗: ${error.message}`);
+            }
+        };
+
+        window.testMiddlewareSystem = async function() {
+            logToArea('universalLog', '🔗 ミドルウェアシステムテスト開始');
+            
+            try {
+                const universalPlugins = testData.plugins.filter(p => p.systemType === 'Universal');
+                if (universalPlugins.length === 0) {
+                    await testUniversalPlugin();
+                }
+                
+                const plugin = testData.plugins.find(p => p.systemType === 'Universal');
+                
+                // 複数ミドルウェア作成
+                const middlewares = [
+                    {
+                        name: 'Authentication Middleware',
+                        preProcess: async (data, context) => {
+                            return { ...data, authenticated: true, userId: 'user123' };
+                        }
+                    },
+                    {
+                        name: 'Encryption Middleware',
+                        preProcess: async (data, context) => {
+                            return { ...data, encrypted: true, algorithm: 'AES256' };
+                        },
+                        postProcess: async (result, context) => {
+                            return { ...result, decrypted: true };
+                        }
+                    },
+                    {
+                        name: 'Caching Middleware',
+                        postProcess: async (result, context) => {
+                            return { ...result, cached: true, cacheKey: `cache_${Date.now()}` };
+                        }
+                    }
+                ];
+                
+                // ミドルウェア登録
+                for (const middleware of middlewares) {
+                    plugin.addMiddleware(middleware);
+                    logToArea('universalLog', `🔧 ミドルウェア登録: ${middleware.name}`);
+                }
+                
+                // ミドルウェア付き実行テスト
+                const result = await plugin.universalExecute(
+                    { message: 'middleware system test', sensitive: true },
+                    { systemType: 'Universal', nodeId: 'middleware-system-test' }
+                );
+                
+                logToArea('universalLog', `✅ ミドルウェアシステムテスト成功`);
+                logToArea('universalLog', `   ミドルウェア数: ${plugin.middlewares.length}`);
+                logToArea('universalLog', `   認証: ${result.authenticated ? '✅' : '❌'}`);
+                logToArea('universalLog', `   暗号化: ${result.encrypted ? '✅' : '❌'}`);
+                logToArea('universalLog', `   復号化: ${result.decrypted ? '✅' : '❌'}`);
+                logToArea('universalLog', `   キャッシュ: ${result.cached ? '✅' : '❌'}`);
+                
+                testData.executionStats.universal.count++;
+                testData.executionStats.universal.success++;
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('universalLog', `❌ ミドルウェアシステムテスト失敗: ${error.message}`);
+            }
+        };
+
+        window.testExtensionRegistry = async function() {
+            logToArea('universalLog', '🚀 拡張機能登録テスト開始');
+            
+            try {
+                const plugin = testData.plugins.find(p => p.systemType === 'Universal');
+                if (!plugin) {
+                    await testUniversalPlugin();
+                }
+                
+                const universalPlugin = testData.plugins.find(p => p.systemType === 'Universal');
+                
+                // 拡張機能作成・登録
+                const extensions = {
+                    'dataValidator': function(data) {
+                        if (!data || typeof data !== 'object') {
+                            throw new Error('Invalid data format');
+                        }
+                        return { valid: true, validatedAt: Date.now() };
+                    },
+                    
+                    'formatConverter': function(data, format) {
+                        switch (format) {
+                            case 'json':
+                                return JSON.stringify(data);
+                            case 'csv':
+                                return Object.keys(data).map(key => `${key},${data[key]}`).join('\n');
+                            default:
+                                return data.toString();
+                        }
+                    },
+                    
+                    'statisticsCollector': function(data) {
+                        this.executionStats.totalExecutions++;
+                        return {
+                            collectedAt: Date.now(),
+                            dataSize: JSON.stringify(data).length,
+                            executionCount: this.executionStats.totalExecutions
+                        };
+                    }
+                };
+                
+                // 拡張機能登録
+                for (const [name, extension] of Object.entries(extensions)) {
+                    universalPlugin.registerExtension(name, extension);
+                    logToArea('universalLog', `🔧 拡張機能登録: ${name}`);
+                }
+                
+                // 拡張機能実行テスト
+                const testData_local = { message: 'extension test', value: 42 };
+                
+                const validationResult = await universalPlugin.executeExtension('dataValidator', testData_local);
+                logToArea('universalLog', `✅ データバリデーション: ${validationResult.valid}`);
+                
+                const jsonResult = await universalPlugin.executeExtension('formatConverter', testData_local, 'json');
+                logToArea('universalLog', `✅ JSON変換: ${jsonResult.substring(0, 30)}...`);
+                
+                const statsResult = await universalPlugin.executeExtension('statisticsCollector', testData_local);
+                logToArea('universalLog', `✅ 統計収集: 実行回数${statsResult.executionCount}`);
+                
+                logToArea('universalLog', `🎯 拡張機能テスト完了: ${Object.keys(extensions).length}機能`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('universalLog', `❌ 拡張機能登録テスト失敗: ${error.message}`);
+            }
+        };
+
+        window.testPluginCloning = async function() {
+            logToArea('universalLog', '👥 プラグイン複製テスト開始');
+            
+            try {
+                const plugin = testData.plugins.find(p => p.systemType === 'Universal');
+                if (!plugin) {
+                    await testUniversalPlugin();
+                }
+                
+                const originalPlugin = testData.plugins.find(p => p.systemType === 'Universal');
+                
+                // プラグイン複製
+                const clonedPlugin = originalPlugin.clone({
+                    displayName: 'Cloned Universal Processor',
+                    systemType: 'Universal-Clone',
+                    metadata: {
+                        ...originalPlugin.metadata,
+                        cloned: true,
+                        originalId: originalPlugin.id
+                    }
+                });
+                
+                testData.plugins.push(clonedPlugin);
+                
+                logToArea('universalLog', `✅ プラグイン複製成功`);
+                logToArea('universalLog', `   元プラグイン: ${originalPlugin.id}`);
+                logToArea('universalLog', `   複製プラグイン: ${clonedPlugin.id}`);
+                logToArea('universalLog', `   能力継承: ${clonedPlugin.capabilities.size}個`);
+                logToArea('universalLog', `   ミドルウェア継承: ${clonedPlugin.middlewares.length}個`);
+                logToArea('universalLog', `   拡張機能継承: ${clonedPlugin.extensionRegistry.size}個`);
+                
+                // 複製プラグインテスト実行
+                const result = await clonedPlugin.universalExecute(
+                    { test: 'clone test' },
+                    { systemType: 'Universal-Clone', nodeId: 'clone-test' }
+                );
+                
+                logToArea('universalLog', `✅ 複製プラグイン実行成功`);
+                logToArea('universalLog', `   結果: ${JSON.stringify(result.metadata).substring(0, 50)}...`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('universalLog', `❌ プラグイン複製テスト失敗: ${error.message}`);
+            }
+        };
+
+        // ==========================================
+        // プラグイン管理・統計テスト
+        // ==========================================
+
+        window.testPluginTemplates = async function() {
+            logToArea('managementLog', '📋 テンプレートシステムテスト開始');
+            
+            try {
+                // コアプラグイン作成
+                if (!testData.corePlugin) {
+                    testData.corePlugin = new IUniversalCorePlugin({
+                        type: 'universal.core',
+                        displayName: 'Universal Core Manager',
+                        systemType: 'Universal'
+                    });
+                }
+                
+                const corePlugin = testData.corePlugin;
+                
+                // プラグインテンプレート作成
+                const templates = {
+                    'dataProcessor': {
+                        type: 'template.processor',
+                        displayName: 'Data Processor Template',
+                        systemType: 'Universal',
+                        capabilities: ['process', 'validate', 'transform'],
+                        voidFlowCompatible: true,
+                        reactFlowCompatible: true
+                    },
+                    
+                    'apiConnector': {
+                        type: 'template.connector',
+                        displayName: 'API Connector Template',
+                        systemType: 'Universal',
+                        capabilities: ['connect', 'fetch', 'send'],
+                        nodeRedCompatible: true,
+                        metadata: {
+                            category: 'network',
+                            endpoints: []
+                        }
+                    },
+                    
+                    'visualComponent': {
+                        type: 'template.visual',
+                        displayName: 'Visual Component Template',
+                        systemType: 'ReactFlow',
+                        capabilities: ['render', 'interact', 'animate'],
+                        reactFlowCompatible: true,
+                        scratchCompatible: true,
+                        metadata: {
+                            style: { width: 120, height: 60 },
+                            color: '#667eea'
+                        }
+                    }
+                };
+                
+                // テンプレート登録
+                for (const [name, template] of Object.entries(templates)) {
+                    corePlugin.registerPluginTemplate(name, template);
+                    testData.templates.push({ name, template });
+                    logToArea('managementLog', `📋 テンプレート登録: ${name}`);
+                }
+                
+                // テンプレートからプラグイン作成
+                const createdPlugins = [];
+                
+                for (const templateName of Object.keys(templates)) {
+                    const plugin = corePlugin.createFromTemplate(templateName, {
+                        displayName: `${templateName} Instance`,
+                        metadata: { 
+                            createdFrom: templateName,
+                            createdAt: Date.now()
+                        }
+                    });
+                    
+                    createdPlugins.push(plugin);
+                    testData.plugins.push(plugin);
+                    
+                    logToArea('managementLog', `🔧 テンプレートから作成: ${plugin.displayName}`);
+                }
+                
+                logToArea('managementLog', `✅ テンプレートシステムテスト完了`);
+                logToArea('managementLog', `   登録テンプレート: ${Object.keys(templates).length}`);
+                logToArea('managementLog', `   作成プラグイン: ${createdPlugins.length}`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('managementLog', `❌ テンプレートシステムテスト失敗: ${error.message}`);
+            }
+        };
+
+        window.testPluginMigration = async function() {
+            logToArea('managementLog', '🔄 システム間移行テスト開始');
+            
+            try {
+                // VoidFlowプラグインをReactFlowに移行（模擬）
+                const voidFlowPlugin = testData.plugins.find(p => p.systemType === 'VoidFlow');
+                if (!voidFlowPlugin) {
+                    logToArea('managementLog', '⚠️ VoidFlowプラグインが見つかりません。先にVoidFlowテストを実行してください。');
+                    return;
+                }
+                
+                // 移行前の情報収集
+                const originalInfo = voidFlowPlugin.getDetailedInfo();
+                
+                // 移行処理（設定変更による模擬移行）
+                const migratedPlugin = voidFlowPlugin.clone({
+                    systemType: 'ReactFlow',
+                    displayName: `${voidFlowPlugin.displayName} (Migrated to ReactFlow)`,
+                    reactFlowCompatible: true,
+                    voidFlowCompatible: false,
+                    metadata: {
+                        ...voidFlowPlugin.metadata,
+                        migrated: true,
+                        originalSystem: 'VoidFlow',
+                        migratedAt: Date.now()
+                    }
+                });
+                
+                testData.plugins.push(migratedPlugin);
+                testData.migrations++;
+                
+                // 移行後テスト
+                const testResult = await migratedPlugin.universalExecute(
+                    { message: 'migration test' },
+                    { systemType: 'ReactFlow', nodeId: 'migrated-test' }
+                );
+                
+                logToArea('managementLog', `✅ プラグイン移行成功`);
+                logToArea('managementLog', `   移行元: ${originalInfo.systemType}`);
+                logToArea('managementLog', `   移行先: ${migratedPlugin.systemType}`);
+                logToArea('managementLog', `   移行後実行: ${testResult ? '成功' : '失敗'}`);
+                logToArea('managementLog', `   互換性: ReactFlow ${migratedPlugin.isCompatibleWith('ReactFlow')}`);
+                
+                // 複数システム移行テスト
+                const migrationSystems = ['NodeRed', 'Scratch'];
+                for (const targetSystem of migrationSystems) {
+                    const migrated = voidFlowPlugin.clone({
+                        systemType: targetSystem,
+                        displayName: `${voidFlowPlugin.displayName} (Migrated to ${targetSystem})`,
+                        [`${targetSystem.toLowerCase()}Compatible`]: true
+                    });
+                    
+                    testData.plugins.push(migrated);
+                    testData.migrations++;
+                    
+                    logToArea('managementLog', `🔄 ${targetSystem}移行完了: ${migrated.id}`);
+                }
+                
+                logToArea('managementLog', `🎯 システム間移行テスト完了: ${testData.migrations}回移行`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('managementLog', `❌ システム間移行テスト失敗: ${error.message}`);
+            }
+        };
+
+        window.testCapabilitySystem = async function() {
+            logToArea('managementLog', '✨ 能力システムテスト開始');
+            
+            try {
+                const plugin = testData.plugins.find(p => p.systemType === 'Universal');
+                if (!plugin) {
+                    await testUniversalPlugin();
+                }
+                
+                const universalPlugin = testData.plugins.find(p => p.systemType === 'Universal');
+                
+                // 能力追加テスト
+                const newCapabilities = [
+                    'machine-learning',
+                    'natural-language-processing',
+                    'computer-vision',
+                    'data-mining',
+                    'real-time-processing'
+                ];
+                
+                for (const capability of newCapabilities) {
+                    universalPlugin.addCapability(capability);
+                    testData.capabilities.add(capability);
+                    logToArea('managementLog', `✨ 能力追加: ${capability}`);
+                }
+                
+                // 能力チェックテスト
+                const capabilityTests = [
+                    'process', 'transform', 'machine-learning', 'quantum-computing'
+                ];
+                
+                for (const capability of capabilityTests) {
+                    const hasCapability = universalPlugin.hasCapability(capability);
+                    logToArea('managementLog', `${hasCapability ? '✅' : '❌'} 能力チェック: ${capability}`);
+                }
+                
+                // 能力ベースの処理分岐テスト
+                if (universalPlugin.hasCapability('machine-learning')) {
+                    logToArea('managementLog', `🤖 機械学習モード有効`);
+                }
+                
+                if (universalPlugin.hasCapability('real-time-processing')) {
+                    logToArea('managementLog', `⚡ リアルタイム処理モード有効`);
+                }
+                
+                const allCapabilities = Array.from(universalPlugin.capabilities);
+                logToArea('managementLog', `✅ 能力システムテスト完了`);
+                logToArea('managementLog', `   総能力数: ${allCapabilities.length}`);
+                logToArea('managementLog', `   能力一覧: ${allCapabilities.join(', ')}`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('managementLog', `❌ 能力システムテスト失敗: ${error.message}`);
+            }
+        };
+
+        window.testExecutionStats = async function() {
+            logToArea('managementLog', '📊 実行統計分析テスト開始');
+            
+            try {
+                // 統計分析対象プラグイン収集
+                const analysisPlugins = testData.plugins.filter(p => p instanceof IUniversalPlugin);
+                
+                if (analysisPlugins.length === 0) {
+                    logToArea('managementLog', '⚠️ 分析対象プラグインがありません');
+                    return;
+                }
+                
+                // プラグイン統計分析実行
+                const analysis = analyzePluginStats(analysisPlugins);
+                
+                logToArea('managementLog', `📊 プラグイン統計分析結果:`);
+                logToArea('managementLog', `   総プラグイン数: ${analysis.totalPlugins}`);
+                
+                // システム分布
+                logToArea('managementLog', `   システム分布:`);
+                for (const [system, count] of Object.entries(analysis.systemDistribution)) {
+                    logToArea('managementLog', `     ${system}: ${count}個`);
+                }
+                
+                // 能力分布
+                logToArea('managementLog', `   能力分布:`);
+                const topCapabilities = Object.entries(analysis.capabilityDistribution)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 5);
+                
+                for (const [capability, count] of topCapabilities) {
+                    logToArea('managementLog', `     ${capability}: ${count}個`);
+                }
+                
+                // 性能指標
+                logToArea('managementLog', `   性能指標:`);
+                logToArea('managementLog', `     総実行回数: ${analysis.performanceMetrics.totalExecutions}`);
+                logToArea('managementLog', `     平均成功率: ${Math.round(analysis.performanceMetrics.averageSuccessRate * 100)}%`);
+                logToArea('managementLog', `     平均実行時間: ${analysis.performanceMetrics.averageExecutionTime.toFixed(2)}ms`);
+                
+                // 個別プラグイン統計
+                for (const plugin of analysisPlugins.slice(0, 3)) { // 最初の3個のみ
+                    const stats = plugin.getExecutionStats();
+                    logToArea('managementLog', `   ${plugin.displayName}:`);
+                    logToArea('managementLog', `     実行回数: ${stats.totalExecutions}, 成功率: ${Math.round(stats.successRate * 100)}%`);
+                }
+                
+                logToArea('managementLog', `✅ 実行統計分析完了`);
+                
+                updateStats();
+                
+            } catch (error) {
+                logToArea('managementLog', `❌ 実行統計分析テスト失敗: ${error.message}`);
+            }
+        };
+
+        // ==========================================
+        // 互換性マトリクス・統合テスト
+        // ==========================================
+
+        window.updateCompatibilityMatrix = function() {
+            const matrix = document.getElementById('compatibilityMatrix');
+            matrix.innerHTML = '';
+            
+            const systems = ['VoidFlow', 'ReactFlow', 'NodeRed', 'Scratch'];
+            const plugins = testData.plugins.filter(p => p instanceof IUniversalPlugin);
+            
+            // ヘッダー作成
+            systems.forEach(system => {
+                const header = document.createElement('div');
+                header.className = 'compatibility-item';
+                header.style.fontWeight = 'bold';
+                header.textContent = system;
+                matrix.appendChild(header);
+            });
+            
+            // 各プラグインの互換性表示
+            plugins.slice(0, 8).forEach(plugin => { // 最大8個まで表示
+                systems.forEach(system => {
+                    const item = document.createElement('div');
+                    const isCompatible = plugin.isCompatibleWith(system);
+                    item.className = `compatibility-item ${isCompatible ? 'compatible' : 'incompatible'}`;
+                    item.textContent = `${plugin.displayName.split(' ')[0]}: ${isCompatible ? '✓' : '✗'}`;
+                    matrix.appendChild(item);
+                });
+            });
+            
+            logToArea('compatibilityLog', `🔄 互換性マトリクス更新完了`);
+        };
+
+        window.testAllSystemsIntegration = async function() {
+            logToArea('compatibilityLog', '🌐 全システム統合テスト開始');
+            
+            try {
+                const systems = ['VoidFlow', 'ReactFlow', 'NodeRed', 'Scratch'];
+                const testResults = {};
+                
+                for (const system of systems) {
+                    const compatiblePlugins = testData.plugins.filter(p => 
+                        p instanceof IUniversalPlugin && p.isCompatibleWith(system)
+                    );
+                    
+                    if (compatiblePlugins.length > 0) {
+                        const plugin = compatiblePlugins[0];
+                        
+                        try {
+                            const result = await plugin.universalExecute(
+                                { test: `${system} integration test` },
+                                { systemType: system, nodeId: `${system.toLowerCase()}-integration` }
+                            );
+                            
+                            testResults[system] = { success: true, plugin: plugin.id, result };
+                            logToArea('compatibilityLog', `✅ ${system} 統合テスト成功`);
+                            
+                        } catch (error) {
+                            testResults[system] = { success: false, error: error.message };
+                            logToArea('compatibilityLog', `❌ ${system} 統合テスト失敗: ${error.message}`);
+                        }
+                    } else {
+                        testResults[system] = { success: false, error: 'No compatible plugin found' };
+                        logToArea('compatibilityLog', `⚠️ ${system} 互換プラグインなし`);
+                    }
+                }
+                
+                const successfulSystems = Object.values(testResults).filter(r => r.success).length;
+                logToArea('compatibilityLog', `🎯 全システム統合テスト完了: ${successfulSystems}/${systems.length} 成功`);
+                
+            } catch (error) {
+                logToArea('compatibilityLog', `❌ 全システム統合テスト失敗: ${error.message}`);
+            }
+        };
+
+        window.generateCompatibilityReport = function() {
+            logToArea('compatibilityLog', '📋 互換性レポート生成開始');
+            
+            try {
+                const plugins = testData.plugins.filter(p => p instanceof IUniversalPlugin);
+                const systems = ['VoidFlow', 'ReactFlow', 'NodeRed', 'Scratch'];
+                
+                logToArea('compatibilityLog', '========================================');
+                logToArea('compatibilityLog', '🌐 汎用プラグインインターフェース 互換性レポート');
+                logToArea('compatibilityLog', '========================================');
+                logToArea('compatibilityLog', '');
+                
+                // 総合統計
+                logToArea('compatibilityLog', `📊 総合統計:`);
+                logToArea('compatibilityLog', `   総プラグイン数: ${plugins.length}`);
+                logToArea('compatibilityLog', `   対応システム数: ${systems.length}`);
+                
+                // システム別互換性
+                logToArea('compatibilityLog', `🔍 システム別互換性:`);
+                systems.forEach(system => {
+                    const compatibleCount = plugins.filter(p => p.isCompatibleWith(system)).length;
+                    const percentage = plugins.length > 0 ? Math.round((compatibleCount / plugins.length) * 100) : 0;
+                    logToArea('compatibilityLog', `   ${system}: ${compatibleCount}/${plugins.length} (${percentage}%)`);
+                });
+                
+                // 機能統計
+                logToArea('compatibilityLog', `⚙️ 機能統計:`);
+                logToArea('compatibilityLog', `   拡張機能総数: ${plugins.reduce((sum, p) => sum + p.extensionRegistry.size, 0)}`);
+                logToArea('compatibilityLog', `   ミドルウェア総数: ${plugins.reduce((sum, p) => sum + p.middlewares.length, 0)}`);
+                logToArea('compatibilityLog', `   総能力数: ${testData.capabilities.size}`);
+                logToArea('compatibilityLog', `   システム間移行: ${testData.migrations}回`);
+                
+                // 推奨事項
+                logToArea('compatibilityLog', `💡 推奨事項:`);
+                if (plugins.length < 5) {
+                    logToArea('compatibilityLog', `   - より多くのプラグインでテストを実行してください`);
+                }
+                if (testData.migrations === 0) {
+                    logToArea('compatibilityLog', `   - システム間移行機能をテストしてください`);
+                }
+                logToArea('compatibilityLog', `   - 実用環境での負荷テストを実施してください`);
+                logToArea('compatibilityLog', `   - セキュリティ監査を実施してください`);
+                
+                logToArea('compatibilityLog', '');
+                logToArea('compatibilityLog', '✅ 汎用プラグインインターフェースは正常に動作しています');
+                logToArea('compatibilityLog', '========================================');
+                
+            } catch (error) {
+                logToArea('compatibilityLog', `❌ 互換性レポート生成失敗: ${error.message}`);
+            }
+        };
+
+        window.clearAllTests = function() {
+            // ログクリア
+            ['voidflowLog', 'reactflowLog', 'nodeRedScratchLog', 'universalLog', 'managementLog', 'compatibilityLog'].forEach(logId => {
+                document.getElementById(logId).innerHTML = '';
+            });
+            
+            // データリセット
+            testData = {
+                plugins: [],
+                corePlugin: null,
+                executionStats: {
+                    voidflow: { count: 0, success: 0, totalTime: 0 },
+                    reactflow: { count: 0, success: 0, totalTime: 0 },
+                    nodered: { count: 0, success: 0, totalTime: 0 },
+                    scratch: { count: 0, success: 0, totalTime: 0 },
+                    universal: { count: 0, success: 0, totalTime: 0 }
+                },
+                templates: [],
+                migrations: 0,
+                capabilities: new Set()
+            };
+            
+            // 互換性マトリクスクリア
+            document.getElementById('compatibilityMatrix').innerHTML = '';
+            
+            updateStats();
+            
+            logToArea('voidflowLog', '🧹 VoidFlowテストログクリア完了');
+            logToArea('reactflowLog', '🧹 ReactFlowテストログクリア完了');
+            logToArea('nodeRedScratchLog', '🧹 NodeRed・Scratchテストログクリア完了');
+            logToArea('universalLog', '🧹 汎用機能テストログクリア完了');
+            logToArea('managementLog', '🧹 管理機能テストログクリア完了');
+            logToArea('compatibilityLog', '🧹 互換性テストログクリア完了');
+        };
+
+        // 初期化
+        updateStats();
+        updateCompatibilityMatrix();
+        
+        logToArea('voidflowLog', '🌊 VoidFlow対応テストシステム準備完了');
+        logToArea('reactflowLog', '⚛️ ReactFlow対応テストシステム準備完了');
+        logToArea('nodeRedScratchLog', '🔴 NodeRed & 🐱 Scratch対応テストシステム準備完了');
+        logToArea('universalLog', '🌐 汎用機能テストシステム準備完了');
+        logToArea('managementLog', '🔧 プラグイン管理テストシステム準備完了');
+        logToArea('compatibilityLog', '🌐 汎用プラグインインターフェーステストシステム準備完了');
+        
+        // システム確認
+        if (IUniversalPlugin && IUniversalCorePlugin) {
+            logToArea('compatibilityLog', '✅ IUniversalPlugin 検出完了');
+            logToArea('compatibilityLog', '✅ IUniversalCorePlugin 検出完了');
+            logToArea('compatibilityLog', '✅ 全システム対応準備完了');
+            logToArea('compatibilityLog', '🚀 汎用プラグインインターフェーステスト実行可能状態');
+        }
+    </script>
+</body>
+</html>

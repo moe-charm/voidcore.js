@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌊 VoidFlow + Phase R 簡易テスト</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #1a2e4a, #2e1a4a);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .test-section {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #666;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .test-title {
+            color: #4a90e2;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 5px;
+        }
+        
+        .button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: inherit;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .button:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+        
+        .button.success {
+            background: #27ae60;
+        }
+        
+        .button.danger {
+            background: #e74c3c;
+        }
+        
+        .log-area {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+        
+        .stats-panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        
+        .stats-label {
+            color: #bbb;
+        }
+        
+        .stats-value {
+            color: #4a90e2;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #4a90e2;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌊 VoidFlow + Phase R 簡易テスト</h1>
+        <p>VoidCore v14.0 ChatGPT統一Intentアーキテクチャ 動作確認</p>
+    </div>
+
+    <div class="test-container">
+        <!-- Phase R Intent テスト -->
+        <div class="test-section">
+            <div class="test-title">🎯 Phase R Intent テスト</div>
+            
+            <button class="button" onclick="testBasicIntent()">基本Intent動作確認</button>
+            <button class="button" onclick="testIntentAPI()">sendIntent API テスト</button>
+            <button class="button success" onclick="testMessageIntent()">Message.intent() テスト</button>
+            <button class="button" onclick="testMultipleIntents()">複数Intent実行</button>
+            
+            <div class="log-area" id="intentLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">Intent統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">送信済みIntent:</span>
+                    <span class="stats-value" id="intentCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">成功処理:</span>
+                    <span class="stats-value" id="successCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">エラー処理:</span>
+                    <span class="stats-value" id="errorCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- VoidFlow 統合テスト -->
+        <div class="test-section">
+            <div class="test-title">🌊 VoidFlow 統合テスト</div>
+            
+            <button class="button" onclick="testVoidFlowBasic()">VoidFlow基本動作</button>
+            <button class="button" onclick="testVoidFlowIntent()">VoidFlow + Intent</button>
+            <button class="button success" onclick="testWorkflowDemo()">ワークフローデモ</button>
+            <button class="button danger" onclick="clearAllLogs()">ログクリア</button>
+            
+            <div class="log-area" id="voidflowLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">VoidFlow統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">実行ワークフロー:</span>
+                    <span class="stats-value" id="workflowCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">処理時間 (平均):</span>
+                    <span class="stats-value" id="avgTime">0ms</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">Phase R統合:</span>
+                    <span class="stats-value" id="integration">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 既存のvoidCoreインスタンスを使用
+        import { voidCore } from './src/voidcore.js';
+        import { Message } from './src/message.js';
+
+        // グローバル変数
+        window.voidCore = voidCore;
+        window.Message = Message;
+        
+        let testStats = {
+            intentCount: 0,
+            successCount: 0,
+            errorCount: 0,
+            workflowCount: 0,
+            executionTimes: []
+        };
+
+        // ログ機能
+        function logToArea(areaId, message) {
+            const area = document.getElementById(areaId);
+            if (area) {
+                const timestamp = new Date().toLocaleTimeString();
+                area.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                area.scrollTop = area.scrollHeight;
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('intentCount').textContent = testStats.intentCount;
+            document.getElementById('successCount').textContent = testStats.successCount;
+            document.getElementById('errorCount').textContent = testStats.errorCount;
+            document.getElementById('workflowCount').textContent = testStats.workflowCount;
+            
+            if (testStats.executionTimes.length > 0) {
+                const avgTime = testStats.executionTimes.reduce((a, b) => a + b, 0) / testStats.executionTimes.length;
+                document.getElementById('avgTime').textContent = Math.round(avgTime) + 'ms';
+            }
+            
+            // Phase R統合度
+            const hasAPI = typeof voidCore.sendIntent === 'function';
+            const hasMessage = typeof Message.intent === 'function';
+            const integration = hasAPI && hasMessage ? 100 : (hasAPI || hasMessage ? 50 : 0);
+            document.getElementById('integration').textContent = integration + '%';
+        }
+
+        // ==========================================
+        // Phase R Intent テスト関数
+        // ==========================================
+
+        window.testBasicIntent = async function() {
+            logToArea('intentLog', '🎯 基本Intent動作確認開始');
+            
+            try {
+                const startTime = Date.now();
+                
+                // VoidCoreの基本確認
+                logToArea('intentLog', `VoidCore準備完了: sendIntent = ${typeof voidCore.sendIntent}`);
+                
+                // system.getStats Intent実行
+                const result = await voidCore.sendIntent('system.getStats');
+                
+                const elapsed = Date.now() - startTime;
+                testStats.intentCount++;
+                testStats.successCount++;
+                testStats.executionTimes.push(elapsed);
+                
+                logToArea('intentLog', `✅ system.getStats 成功: ${elapsed}ms`);
+                logToArea('intentLog', `📊 結果: ${JSON.stringify(result).substring(0, 100)}...`);
+                
+            } catch (error) {
+                testStats.intentCount++;
+                testStats.errorCount++;
+                logToArea('intentLog', `❌ 基本Intent失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testIntentAPI = async function() {
+            logToArea('intentLog', '🔧 sendIntent API テスト開始');
+            
+            const intents = [
+                { name: 'system.getStats', data: {} },
+                { name: 'system.createPlugin', data: { type: 'test.plugin' } }
+            ];
+            
+            for (const intent of intents) {
+                try {
+                    const startTime = Date.now();
+                    const result = await voidCore.sendIntent(intent.name, intent.data);
+                    
+                    const elapsed = Date.now() - startTime;
+                    testStats.intentCount++;
+                    testStats.successCount++;
+                    testStats.executionTimes.push(elapsed);
+                    
+                    logToArea('intentLog', `✅ ${intent.name}: ${elapsed}ms`);
+                    
+                } catch (error) {
+                    testStats.intentCount++;
+                    testStats.errorCount++;
+                    logToArea('intentLog', `❌ ${intent.name}: ${error.message}`);
+                }
+            }
+            
+            updateStats();
+        };
+
+        window.testMessageIntent = async function() {
+            logToArea('intentLog', '📨 Message.intent() テスト開始');
+            
+            try {
+                // Message.intent() ファクトリテスト
+                const intentMessage = Message.intent('system.getStats', {
+                    testData: 'message-factory-test'
+                });
+                
+                logToArea('intentLog', `✅ Message.intent() 作成成功: ${intentMessage.intent}`);
+                logToArea('intentLog', `📝 メッセージID: ${intentMessage.id}`);
+                logToArea('intentLog', `🏷️ カテゴリ: ${intentMessage.category}`);
+                
+                // 作成したメッセージでIntent実行
+                const result = await voidCore.sendIntent(intentMessage.intent, intentMessage.payload);
+                
+                testStats.intentCount++;
+                testStats.successCount++;
+                
+                logToArea('intentLog', `✅ Message.intent() → sendIntent 成功`);
+                
+            } catch (error) {
+                testStats.intentCount++;
+                testStats.errorCount++;
+                logToArea('intentLog', `❌ Message.intent() テスト失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testMultipleIntents = async function() {
+            logToArea('intentLog', '⚡ 複数Intent並列実行テスト開始');
+            
+            try {
+                const startTime = Date.now();
+                
+                // 複数のIntentを並列実行
+                const intentPromises = [];
+                for (let i = 0; i < 5; i++) {
+                    intentPromises.push(
+                        voidCore.sendIntent('system.getStats', { iteration: i })
+                    );
+                }
+                
+                const results = await Promise.all(intentPromises);
+                
+                const elapsed = Date.now() - startTime;
+                testStats.intentCount += 5;
+                testStats.successCount += results.length;
+                testStats.executionTimes.push(elapsed);
+                
+                logToArea('intentLog', `✅ 並列Intent実行成功: ${results.length}個 / ${elapsed}ms`);
+                logToArea('intentLog', `📊 平均処理時間: ${Math.round(elapsed / results.length)}ms/intent`);
+                
+            } catch (error) {
+                testStats.intentCount += 5;
+                testStats.errorCount++;
+                logToArea('intentLog', `❌ 複数Intent実行失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        // ==========================================
+        // VoidFlow 統合テスト関数
+        // ==========================================
+
+        window.testVoidFlowBasic = async function() {
+            logToArea('voidflowLog', '🌊 VoidFlow基本動作テスト開始');
+            
+            try {
+                // VoidCoreの基本機能確認
+                const stats = await voidCore.sendIntent('system.getStats');
+                
+                logToArea('voidflowLog', `✅ VoidCore基本動作確認`);
+                logToArea('voidflowLog', `📊 登録プラグイン数: ${stats.pluginCount || 0}`);
+                logToArea('voidflowLog', `🔄 発行メッセージ数: ${stats.publishedMessages || 0}`);
+                
+                testStats.workflowCount++;
+                
+            } catch (error) {
+                logToArea('voidflowLog', `❌ VoidFlow基本動作失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testVoidFlowIntent = async function() {
+            logToArea('voidflowLog', '🎯 VoidFlow + Intent統合テスト開始');
+            
+            try {
+                const startTime = Date.now();
+                
+                // VoidFlow想定のIntent連続実行
+                const workflow = [
+                    'system.getStats',
+                    'system.createPlugin', 
+                    'system.getStats'
+                ];
+                
+                let stepCount = 0;
+                for (const step of workflow) {
+                    try {
+                        const result = await voidCore.sendIntent(step, {
+                            workflowStep: stepCount,
+                            stepName: step
+                        });
+                        
+                        stepCount++;
+                        logToArea('voidflowLog', `✅ Step ${stepCount}: ${step} 成功`);
+                        
+                    } catch (error) {
+                        logToArea('voidflowLog', `⚠️ Step ${stepCount + 1}: ${step} - ${error.message}`);
+                    }
+                }
+                
+                const elapsed = Date.now() - startTime;
+                testStats.workflowCount++;
+                testStats.executionTimes.push(elapsed);
+                
+                logToArea('voidflowLog', `✅ ワークフロー完了: ${stepCount}/${workflow.length} steps, ${elapsed}ms`);
+                
+            } catch (error) {
+                logToArea('voidflowLog', `❌ VoidFlow + Intent統合失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.testWorkflowDemo = async function() {
+            logToArea('voidflowLog', '🚀 ワークフローデモ実行開始');
+            
+            try {
+                const startTime = Date.now();
+                
+                // 実用的なワークフローシミュレーション
+                logToArea('voidflowLog', '📋 ワークフロー: データ処理パイプライン');
+                
+                // Step 1: データ入力
+                logToArea('voidflowLog', '📥 Step 1: データ入力');
+                const inputData = { users: ['Alice', 'Bob', 'Charlie'], count: 3 };
+                
+                // Step 2: 処理
+                logToArea('voidflowLog', '⚙️ Step 2: データ処理');
+                const processedData = inputData.users.map(name => ({
+                    name: name,
+                    id: Math.random().toString(36).substr(2, 8),
+                    timestamp: Date.now()
+                }));
+                
+                // Step 3: システム統計確認
+                logToArea('voidflowLog', '📊 Step 3: システム統計確認');
+                const stats = await voidCore.sendIntent('system.getStats');
+                
+                // Step 4: 結果出力
+                logToArea('voidflowLog', '📤 Step 4: 結果出力');
+                logToArea('voidflowLog', `✅ 処理結果: ${processedData.length}件のデータ処理完了`);
+                
+                const elapsed = Date.now() - startTime;
+                testStats.workflowCount++;
+                testStats.executionTimes.push(elapsed);
+                
+                logToArea('voidflowLog', `🎉 ワークフローデモ完了: ${elapsed}ms`);
+                logToArea('voidflowLog', `📊 最終結果: ${JSON.stringify(processedData).substring(0, 100)}...`);
+                
+            } catch (error) {
+                logToArea('voidflowLog', `❌ ワークフローデモ失敗: ${error.message}`);
+            }
+            
+            updateStats();
+        };
+
+        window.clearAllLogs = function() {
+            document.getElementById('intentLog').innerHTML = '';
+            document.getElementById('voidflowLog').innerHTML = '';
+            
+            testStats = {
+                intentCount: 0,
+                successCount: 0,
+                errorCount: 0,
+                workflowCount: 0,
+                executionTimes: []
+            };
+            
+            updateStats();
+            
+            logToArea('intentLog', '🧹 ログクリア完了');
+            logToArea('voidflowLog', '🧹 ログクリア完了');
+        };
+
+        // 初期化
+        voidCore.setLogElement(document.createElement('div')); // ダミーログ要素
+        updateStats();
+        
+        logToArea('intentLog', '🎯 Phase R Intent テストシステム準備完了');
+        logToArea('voidflowLog', '🌊 VoidFlow 統合テストシステム準備完了');
+        
+        // Phase R機能確認
+        if (voidCore.sendIntent && Message.intent) {
+            logToArea('intentLog', '✅ Phase R統一Intentシステム検出');
+            logToArea('voidflowLog', '✅ VoidFlow + Phase R統合環境準備完了');
+        }
+    </script>
+</body>
+</html>
