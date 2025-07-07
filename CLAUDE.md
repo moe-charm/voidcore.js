@@ -11,8 +11,8 @@
 # 1. 既存サーバー全停止（競合回避）
 pkill -f "python3.*http.server" 2>/dev/null || true
 
-# 2. バックグラウンドでサーバー起動（出力抑制）
-python3 -m http.server 8000 --bind localhost > /dev/null 2>&1 &
+# 2. バックグラウンドでサーバー起動（WSL2対応・全インターフェイス）
+python3 -m http.server 8000 --bind 0.0.0.0 > /dev/null 2>&1 &
 
 # 3. 起動確認（2秒待機）
 sleep 2
@@ -53,8 +53,8 @@ pkill -f "python3.*http.server.*8000" 2>/dev/null; python3 -m http.server 8000 -
 
 ### **🐱 にゃー専用ワンライナー**
 ```bash
-# 📡 サーバー立て直し（確実版）
-pkill -f "python3.*http.server" 2>/dev/null || true; python3 -m http.server 8000 --bind localhost > /dev/null 2>&1 & sleep 2; curl -s http://localhost:8000 > /dev/null && echo "✅ Server ready on port 8000" || echo "❌ Server failed"
+# 📡 サーバー立て直し（WSL2対応版）
+pkill -f "python3.*http.server" 2>/dev/null || true; python3 -m http.server 8000 --bind 0.0.0.0 > /dev/null 2>&1 & sleep 2; echo "✅ Server ready: http://$(ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'):8000"
 
 # 🧪 テストページ直接アクセス
 # Phase S3テスト: http://localhost:8000/test-voidflow-phase-s3-integration.html

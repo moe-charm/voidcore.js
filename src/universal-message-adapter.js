@@ -168,10 +168,20 @@ export class UniversalMessageAdapter {
   /**
    * ネストした値の取得
    * @param {Object} obj - オブジェクト
-   * @param {string} path - パス (例: "payload.data.value")
+   * @param {string|Function} path - パス (例: "payload.data.value") または関数
    * @returns {*} 値
    */
   getNestedValue(obj, path) {
+    // 関数の場合は実行
+    if (typeof path === 'function') {
+      return path(obj);
+    }
+    
+    // 文字列でない場合は直接返す
+    if (typeof path !== 'string') {
+      return path;
+    }
+    
     return path.split('.').reduce((current, key) => {
       return current && current[key] !== undefined ? current[key] : undefined;
     }, obj);
@@ -283,8 +293,6 @@ export function createVoidFlowAdapterConfig() {
     transformRules: {
       // フィールドマッピング
       fieldMapping: {
-        'category': () => 'Notice',
-        'event_name': () => 'voidflow.data',
         'payload.payload': 'payload',
         'payload.sourceNodeId': 'sourceNodeId',
         'payload.timestamp': 'timestamp',
@@ -294,6 +302,8 @@ export function createVoidFlowAdapterConfig() {
       // 計算フィールド
       computedFields: {
         'id': { type: 'id', prefix: 'voidflow-msg' },
+        'category': () => 'Notice',
+        'event_name': () => 'voidflow.data',
         'payload.adapterId': (source, metadata, adapter) => adapter.adapterId,
         'payload.originalFormat': () => 'VoidPacket',
         'payload.convertedAt': { type: 'timestamp' },
@@ -317,7 +327,7 @@ export function createVoidFlowAdapterConfig() {
         'error': 'payload.error',
         '__voidflow_metadata.flowId': 'payload.flowId',
         '__voidflow_metadata.adapterId': 'payload.adapterId',
-        '__voidflow_metadata.originalFormat': () => 'VoidCoreMessage'
+        '__voidflow_metadata.originalFormat': 'VoidCoreMessage'
       }
     },
 
