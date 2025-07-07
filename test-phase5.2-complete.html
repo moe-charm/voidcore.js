@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Phase 5.2 Complete Test - 戸籍異動届＆親子関係API</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .test-section {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .test-title {
+            color: #4a90e2;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 5px;
+        }
+        
+        .button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: inherit;
+            font-size: 12px;
+        }
+        
+        .button:hover {
+            background: #357abd;
+        }
+        
+        .button.success {
+            background: #27ae60;
+        }
+        
+        .button.danger {
+            background: #e74c3c;
+        }
+        
+        #log {
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.4;
+            grid-column: 1 / -1;
+        }
+        
+        .result-box {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Phase 5.2 完全機能テスト</h1>
+    
+    <div class="test-container">
+        <div class="test-section">
+            <div class="test-title">🚀 基本プラグイン作成テスト</div>
+            <button class="button" onclick="testBasicPluginCreation()">基本プラグイン作成</button>
+            <button class="button" onclick="testHierarchicalCreation()">階層プラグイン作成</button>
+            <button class="button" onclick="testDisplayNamePlugins()">displayName付きプラグイン作成</button>
+            <div id="creationResults" class="result-box">結果表示エリア</div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🏘️ 戸籍異動届テスト</div>
+            <button class="button" onclick="testSimpleReparenting()">単純な親子移動</button>
+            <button class="button" onclick="testRootToChild()">ルート→子への移動</button>
+            <button class="button" onclick="testCircularPrevention()">循環参照防止テスト</button>
+            <div id="reparentResults" class="result-box">結果表示エリア</div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🏗️ 親子関係APIテスト</div>
+            <button class="button" onclick="testGetChildren()">getChildren()</button>
+            <button class="button" onclick="testGetDescendants()">getDescendants()</button>
+            <button class="button" onclick="testGetAncestors()">getAncestors()</button>
+            <button class="button" onclick="testGetPluginTree()">getPluginTree()</button>
+            <div id="apiResults" class="result-box">結果表示エリア</div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🔍 整合性チェックテスト</div>
+            <button class="button" onclick="testHierarchyValidation()">階層構造検証</button>
+            <button class="button" onclick="testCircularDetection()">循環参照検出</button>
+            <button class="button success" onclick="clearAllPlugins()">全プラグイン削除</button>
+            <div id="validationResults" class="result-box">結果表示エリア</div>
+        </div>
+        
+        <div id="log"></div>
+    </div>
+
+    <script type="module">
+        import { voidCore } from './src/pure_plugin_system.js';
+
+        // ログ要素の設定
+        voidCore.setLogElement(document.getElementById('log'));
+        
+        // テスト用変数
+        let testPlugins = [];
+        
+        // グローバル関数定義
+        window.voidCore = voidCore;
+        window.testBasicPluginCreation = testBasicPluginCreation;
+        window.testHierarchicalCreation = testHierarchicalCreation;
+        window.testDisplayNamePlugins = testDisplayNamePlugins;
+        window.testSimpleReparenting = testSimpleReparenting;
+        window.testRootToChild = testRootToChild;
+        window.testCircularPrevention = testCircularPrevention;
+        window.testGetChildren = testGetChildren;
+        window.testGetDescendants = testGetDescendants;
+        window.testGetAncestors = testGetAncestors;
+        window.testGetPluginTree = testGetPluginTree;
+        window.testHierarchyValidation = testHierarchyValidation;
+        window.testCircularDetection = testCircularDetection;
+        window.clearAllPlugins = clearAllPlugins;
+        
+        // 🚀 基本プラグイン作成テスト
+        async function testBasicPluginCreation() {
+            voidCore.log('🧪 Test: Basic Plugin Creation');
+            
+            const types = ['test.root1', 'test.root2', 'test.root3'];
+            
+            for (const type of types) {
+                await createTestPlugin(type, null);
+                await sleep(200);
+            }
+            
+            const stats = voidCore.getSystemStats();
+            document.getElementById('creationResults').innerHTML = 
+                `✅ 作成完了: ${stats.pluginCount}個のプラグイン、${stats.hierarchyStats.rootPlugins}個のルート`;
+        }
+        
+        // 🏗️ 階層プラグイン作成テスト
+        async function testHierarchicalCreation() {
+            voidCore.log('🧪 Test: Hierarchical Plugin Creation');
+            
+            // ルートプラグイン作成
+            const rootId = await createTestPlugin('test.parent', null);
+            await sleep(300);
+            
+            // 子プラグイン作成
+            const child1Id = await createTestPlugin('test.child1', rootId);
+            const child2Id = await createTestPlugin('test.child2', rootId);
+            await sleep(300);
+            
+            // 孫プラグイン作成
+            await createTestPlugin('test.grandchild1', child1Id);
+            await createTestPlugin('test.grandchild2', child1Id);
+            
+            const stats = voidCore.getSystemStats();
+            document.getElementById('creationResults').innerHTML = 
+                `✅ 階層作成完了: 最大レベル${stats.hierarchyStats.maxHierarchyLevel}`;
+        }
+        
+        // 🏷️ displayName付きプラグイン作成テスト
+        async function testDisplayNamePlugins() {
+            voidCore.log('🧪 Test: DisplayName Plugin Creation');
+            
+            await createTestPlugin('test.named', null, 'ボス戦闘AI');
+            await createTestPlugin('test.named', null, 'プレイヤーコア');
+            await createTestPlugin('test.named', null, 'ログシステム');
+            
+            document.getElementById('creationResults').innerHTML = 
+                `✅ displayName付きプラグイン作成完了`;
+        }
+        
+        // 🏘️ 単純な親子移動テスト
+        async function testSimpleReparenting() {
+            voidCore.log('🧪 Test: Simple Reparenting');
+            
+            // テスト用プラグイン作成
+            const parentA = await createTestPlugin('test.parentA', null);
+            const parentB = await createTestPlugin('test.parentB', null);
+            const child = await createTestPlugin('test.movingChild', parentA);
+            
+            await sleep(500);
+            
+            // 親を変更
+            await reparentPlugin(child, parentB);
+            
+            await sleep(500);
+            
+            const childPlugin = voidCore.getPlugin(child);
+            const success = childPlugin && childPlugin.parentId === parentB;
+            
+            document.getElementById('reparentResults').innerHTML = 
+                success ? `✅ 戸籍異動成功: ${child} → ${parentB}` : `❌ 戸籍異動失敗`;
+        }
+        
+        // 🏘️ ルート→子への移動テスト
+        async function testRootToChild() {
+            voidCore.log('🧪 Test: Root to Child Reparenting');
+            
+            const root = await createTestPlugin('test.rootToChild', null);
+            const newParent = await createTestPlugin('test.newParent', null);
+            
+            await sleep(500);
+            
+            // ルートプラグインを子に変更
+            await reparentPlugin(root, newParent);
+            
+            const plugin = voidCore.getPlugin(root);
+            const success = plugin && plugin.parentId === newParent;
+            
+            document.getElementById('reparentResults').innerHTML = 
+                success ? `✅ ルート→子移動成功` : `❌ ルート→子移動失敗`;
+        }
+        
+        // 🔄 循環参照防止テスト
+        async function testCircularPrevention() {
+            voidCore.log('🧪 Test: Circular Reference Prevention');
+            
+            const parent = await createTestPlugin('test.circularParent', null);
+            const child = await createTestPlugin('test.circularChild', parent);
+            
+            await sleep(500);
+            
+            // 循環参照を作ろうとする（parent を child の子にする）
+            await reparentPlugin(parent, child);
+            
+            const parentPlugin = voidCore.getPlugin(parent);
+            const preventedCircular = parentPlugin.parentId !== child;
+            
+            document.getElementById('reparentResults').innerHTML = 
+                preventedCircular ? `✅ 循環参照防止成功` : `❌ 循環参照防止失敗`;
+        }
+        
+        // 🏗️ getChildren()テスト
+        async function testGetChildren() {
+            voidCore.log('🧪 Test: getChildren() API');
+            
+            const parent = await createTestPlugin('test.parentForChildren', null);
+            await createTestPlugin('test.child1', parent);
+            await createTestPlugin('test.child2', parent);
+            await createTestPlugin('test.child3', parent);
+            
+            const children = voidCore.getChildren(parent);
+            document.getElementById('apiResults').innerHTML = 
+                `✅ getChildren(): ${children.length}個の子プラグイン発見`;
+        }
+        
+        // 🏗️ getDescendants()テスト
+        async function testGetDescendants() {
+            voidCore.log('🧪 Test: getDescendants() API');
+            
+            const root = await createTestPlugin('test.rootForDescendants', null);
+            const child = await createTestPlugin('test.child', root);
+            await createTestPlugin('test.grandchild1', child);
+            await createTestPlugin('test.grandchild2', child);
+            
+            const descendants = voidCore.getDescendants(root);
+            document.getElementById('apiResults').innerHTML = 
+                `✅ getDescendants(): ${descendants.length}個の子孫プラグイン発見`;
+        }
+        
+        // 🏗️ getAncestors()テスト
+        async function testGetAncestors() {
+            voidCore.log('🧪 Test: getAncestors() API');
+            
+            const root = await createTestPlugin('test.rootForAncestors', null);
+            const child = await createTestPlugin('test.child', root);
+            const grandchild = await createTestPlugin('test.grandchild', child);
+            
+            const ancestors = voidCore.getAncestors(grandchild);
+            document.getElementById('apiResults').innerHTML = 
+                `✅ getAncestors(): ${ancestors.length}個の祖先プラグイン発見`;
+        }
+        
+        // 🏗️ getPluginTree()テスト
+        async function testGetPluginTree() {
+            voidCore.log('🧪 Test: getPluginTree() API');
+            
+            const tree = voidCore.getPluginTree();
+            const totalNodes = countTreeNodes(tree);
+            
+            document.getElementById('apiResults').innerHTML = 
+                `✅ getPluginTree(): ${tree.length}個のルート、合計${totalNodes}ノード`;
+        }
+        
+        // 🔍 階層構造検証テスト
+        async function testHierarchyValidation() {
+            voidCore.log('🧪 Test: Hierarchy Validation');
+            
+            const validation = voidCore.validateHierarchyIntegrity();
+            
+            document.getElementById('validationResults').innerHTML = 
+                validation.isValid ? 
+                `✅ 階層構造整合性OK` : 
+                `❌ 階層構造に${validation.issues.length}個の問題`;
+        }
+        
+        // 🔄 循環参照検出テスト
+        async function testCircularDetection() {
+            voidCore.log('🧪 Test: Circular Detection');
+            
+            const pluginA = await createTestPlugin('test.circularA', null);
+            const pluginB = await createTestPlugin('test.circularB', pluginA);
+            
+            const wouldBeCircular = voidCore._wouldCreateCircularReference(pluginA, pluginB);
+            
+            document.getElementById('validationResults').innerHTML = 
+                wouldBeCircular ? 
+                `✅ 循環参照正しく検出` : 
+                `❌ 循環参照検出失敗`;
+        }
+        
+        // 🗑️ 全プラグイン削除
+        async function clearAllPlugins() {
+            voidCore.log('🧪 Clear: All Plugins');
+            
+            const plugins = voidCore.getAllPlugins();
+            for (const plugin of plugins) {
+                await destroyTestPlugin(plugin.pluginId);
+                await sleep(100);
+            }
+            
+            document.getElementById('validationResults').innerHTML = 
+                `🗑️ 全プラグイン削除完了`;
+        }
+        
+        // ヘルパー関数
+        async function createTestPlugin(type, parentId, displayName = null) {
+            const correlationId = `test-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+            
+            const payload = {
+                type,
+                displayName,
+                config: { testMode: true },
+                parent: parentId,
+                correlationId,
+                maxDepth: 10,
+                resourceCost: 1
+            };
+            
+            await voidCore.publish({
+                type: 'IntentRequest',
+                action: 'system.createPlugin',
+                payload,
+                timestamp: Date.now()
+            });
+            
+            // 短時間待機してIDを取得
+            await sleep(100);
+            const plugins = voidCore.getAllPlugins();
+            const newPlugin = plugins.find(p => p.metadata?.correlationId === correlationId);
+            return newPlugin ? newPlugin.pluginId : null;
+        }
+        
+        async function reparentPlugin(pluginId, newParentId) {
+            const correlationId = `reparent-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+            
+            await voidCore.publish({
+                type: 'IntentRequest',
+                action: 'system.reparentPlugin',
+                payload: {
+                    pluginId,
+                    newParentId,
+                    correlationId
+                },
+                timestamp: Date.now()
+            });
+        }
+        
+        async function destroyTestPlugin(pluginId) {
+            const correlationId = `destroy-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+            
+            await voidCore.publish({
+                type: 'IntentRequest',
+                action: 'system.destroyPlugin',
+                payload: {
+                    pluginId,
+                    correlationId
+                },
+                timestamp: Date.now()
+            });
+        }
+        
+        function countTreeNodes(tree) {
+            let count = 0;
+            tree.forEach(node => {
+                count += 1 + (node.children ? countTreeNodes(node.children) : 0);
+            });
+            return count;
+        }
+        
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // 初期化
+        voidCore.log('🧪 Phase 5.2 Complete Test Suite Initialized');
+        voidCore.log('🎯 全機能テスト用デモが準備できました');
+    </script>
+</body>
+</html>

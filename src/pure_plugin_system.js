@@ -59,7 +59,7 @@ export async function declareProcess(pluginId, processInfo = {}) {
   };
 
   // プロセス宣言メッセージを送信
-  voidCore.publish(Message.notice('system.process.declared', declaration));
+  await voidCore.publish(Message.notice('system.process.declared', declaration));
 
   // 終了要求の監視（紳士協定）
   await voidCore.subscribe('IntentRequest', 'system.process.terminate', async (message) => {
@@ -137,9 +137,9 @@ export function createComfortablePlugin(config) {
     // === 🤝 紳士協定 自動セットアップ ===
     
     // ヘルスチェック応答（必要なら残す、いらなければ削除可能）
-    setupHealthCheck() {
+    async setupHealthCheck() {
       if (autoHealth) {
-        registerHealthCheck(pluginId, {
+        await registerHealthCheck(pluginId, {
           name: name,
           version: version,
           capabilities: Array.from(this.capabilities),
@@ -150,9 +150,9 @@ export function createComfortablePlugin(config) {
     },
     
     // プロセス宣言（必要なら残す、いらなければ削除可能）
-    setupProcessDeclaration() {
+    async setupProcessDeclaration() {
       if (autoProcess) {
-        declareProcess(pluginId, {
+        await declareProcess(pluginId, {
           name: name,
           version: version,
           ...processInfo
@@ -233,8 +233,8 @@ export function createComfortablePlugin(config) {
       console.log(`🚀 Initializing ${pluginId}...`);
       
       // 自動セットアップ
-      this.setupHealthCheck();
-      this.setupProcessDeclaration();
+      await this.setupHealthCheck();
+      await this.setupProcessDeclaration();
       
       // 初期化完了通知
       await this.notice('plugin.initialized', {
@@ -356,7 +356,7 @@ export async function spawnPlugin(parentPlugin, type, config = {}, options = {})
       voidCore.unsubscribe('IntentResponse', responseHandler)
     }
     
-    await voidCore.subscribe('IntentResponse', responseHandler)
+    voidCore.subscribe('IntentResponse', responseHandler)
   })
 }
 
@@ -399,7 +399,7 @@ export async function destroyPlugin(parentPlugin, targetPluginId, options = {}) 
       voidCore.unsubscribe('IntentResponse', responseHandler)
     }
     
-    await voidCore.subscribe('IntentResponse', responseHandler)
+    voidCore.subscribe('IntentResponse', responseHandler)
   })
 }
 
@@ -446,7 +446,7 @@ export async function connectPlugins(parentPlugin, source, target, options = {})
       voidCore.unsubscribe('IntentResponse', responseHandler)
     }
     
-    await voidCore.subscribe('IntentResponse', responseHandler)
+    voidCore.subscribe('IntentResponse', responseHandler)
   })
 }
 

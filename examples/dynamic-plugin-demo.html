@@ -205,6 +205,11 @@
                 </div>
                 
                 <div class="input-group">
+                    <label>Display Name (ChatGPT案):</label>
+                    <input type="text" id="displayName" placeholder="例: logger42, enemy1, boss-core">
+                </div>
+                
+                <div class="input-group">
                     <label>Parent Plugin ID:</label>
                     <input type="text" id="parentId" placeholder="Leave empty for root">
                 </div>
@@ -231,6 +236,27 @@
                 </div>
                 
                 <button class="button danger" onclick="destroyDynamicPlugin()">🗑️ Delete Plugin</button>
+            </div>
+            
+            <div class="control-section">
+                <div class="control-title">🏘️ 戸籍異動届 (ChatGPT案)</div>
+                
+                <div class="input-group">
+                    <label>移動するプラグインID:</label>
+                    <input type="text" id="reparentPluginId" placeholder="plugin-id">
+                </div>
+                
+                <div class="input-group">
+                    <label>新しい親ID:</label>
+                    <input type="text" id="newParentId" placeholder="新しい親のID (空で最上位)">
+                </div>
+                
+                <div class="input-group">
+                    <label>現在の親ID (確認用):</label>
+                    <input type="text" id="oldParentId" placeholder="省略可・確認用">
+                </div>
+                
+                <button class="button" onclick="reparentPlugin()">🏘️ 戸籍異動実行</button>
             </div>
             
             <div class="control-section">
@@ -261,12 +287,21 @@
                         <span class="stats-value" id="dynamicPlugins">0</span>
                     </div>
                     <div class="stats-item">
+                        <span class="stats-label">Root Plugins:</span>
+                        <span class="stats-value" id="rootPlugins">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-label">Max Hierarchy:</span>
+                        <span class="stats-value" id="maxHierarchy">0</span>
+                    </div>
+                    <div class="stats-item">
                         <span class="stats-label">Pending Requests:</span>
                         <span class="stats-value" id="pendingRequests">0</span>
                     </div>
                 </div>
                 
                 <button class="button" onclick="updateStats()">📊 Refresh Stats</button>
+                <button class="button" onclick="validateHierarchy()">🔍 Validate Hierarchy</button>
             </div>
             
             <div class="control-section">
@@ -290,13 +325,16 @@
         window.voidCore = voidCore;
         window.createDynamicPlugin = createDynamicPlugin;
         window.destroyDynamicPlugin = destroyDynamicPlugin;
+        window.reparentPlugin = reparentPlugin;
         window.connectDynamicPlugins = connectDynamicPlugins;
         window.updateStats = updateStats;
         window.updatePluginList = updatePluginList;
+        window.validateHierarchy = validateHierarchy;
 
         // 🚀 動的プラグイン作成
         async function createDynamicPlugin() {
             const type = document.getElementById('pluginType').value;
+            const displayName = document.getElementById('displayName').value.trim();
             const parentId = document.getElementById('parentId').value.trim();
             const maxDepth = parseInt(document.getElementById('maxDepth').value);
             const resourceCost = parseInt(document.getElementById('resourceCost').value);
@@ -306,6 +344,7 @@
                 
                 const payload = {
                     type,
+                    displayName: displayName || null,  // ChatGPT案: displayName追加
                     config: {
                         demoMode: true,
                         createdBy: 'demo-interface'
@@ -372,6 +411,48 @@
             }
         }
 
+        // 🏘️ 戸籍異動届 (ChatGPT案) - プラグイン親子関係変更
+        async function reparentPlugin() {
+            const pluginId = document.getElementById('reparentPluginId').value.trim();
+            const newParentId = document.getElementById('newParentId').value.trim();
+            const oldParentId = document.getElementById('oldParentId').value.trim();
+            
+            if (!pluginId) {
+                voidCore.log('⚠️ Please enter a plugin ID to reparent');
+                return;
+            }
+
+            try {
+                const correlationId = `reparent-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+                
+                const payload = {
+                    pluginId,
+                    newParentId: newParentId || null,  // 空文字列はnullに変換
+                    oldParentId: oldParentId || null,  // 確認用（省略可）
+                    correlationId
+                };
+
+                // system.reparentPlugin IntentRequest送信
+                await voidCore.publish({
+                    type: 'IntentRequest',
+                    action: 'system.reparentPlugin',
+                    payload,
+                    timestamp: Date.now()
+                });
+
+                voidCore.log(`📤 Plugin reparenting request sent: ${pluginId} -> ${newParentId || 'root'}`);
+                
+                // UI更新
+                setTimeout(() => {
+                    updateStats();
+                    updatePluginList();
+                }, 500);
+
+            } catch (error) {
+                voidCore.log(`❌ Plugin reparenting failed: ${error.message}`);
+            }
+        }
+
         // 🔗 動的接続
         async function connectDynamicPlugins() {
             const source = document.getElementById('sourcePlugin').value.trim();
@@ -411,12 +492,30 @@
             
             document.getElementById('totalPlugins').textContent = stats.pluginCount || 0;
             document.getElementById('dynamicPlugins').textContent = stats.dynamicPlugins || 0;
+            document.getElementById('rootPlugins').textContent = stats.hierarchyStats?.rootPlugins || 0;
+            document.getElementById('maxHierarchy').textContent = stats.hierarchyStats?.maxHierarchyLevel || 0;
             document.getElementById('pendingRequests').textContent = stats.pendingRequests || 0;
             
-            voidCore.log(`📊 Stats updated: ${stats.pluginCount} plugins, ${stats.dynamicPlugins} dynamic`);
+            voidCore.log(`📊 Stats updated: ${stats.pluginCount} plugins, ${stats.dynamicPlugins} dynamic, hierarchy: ${stats.hierarchyStats?.maxHierarchyLevel || 0}`);
+        }
+        
+        // 🔍 階層構造整合性チェック
+        function validateHierarchy() {
+            const validation = voidCore.validateHierarchyIntegrity();
+            
+            if (validation.isValid) {
+                voidCore.log('✅ Hierarchy validation passed - No issues found');
+            } else {
+                voidCore.log(`❌ Hierarchy validation failed - ${validation.issues.length} issues found:`);
+                validation.issues.forEach(issue => {
+                    voidCore.log(`   ${issue.type}: ${issue.message}`);
+                });
+            }
+            
+            return validation;
         }
 
-        // 📋 プラグインリスト更新
+        // 📋 プラグインリスト更新（階層構造対応）
         function updatePluginList() {
             const plugins = voidCore.getAllPlugins();
             const listElement = document.getElementById('pluginList');
@@ -426,16 +525,49 @@
                 return;
             }
             
-            listElement.innerHTML = plugins.map(plugin => `
-                <div class="plugin-item">
-                    <div class="plugin-type">${plugin.type || 'unknown'}</div>
-                    <div class="plugin-id">${plugin.pluginId}</div>
-                    ${plugin.parent ? `<div style="color: #888; font-size: 10px;">Parent: ${plugin.parent}</div>` : ''}
-                    ${plugin.correlationId ? `<div style="color: #4a90e2; font-size: 10px;">Dynamic (${plugin.correlationId})</div>` : ''}
-                </div>
-            `).join('');
+            // 階層構造でソート
+            const pluginTree = voidCore.getPluginTree();
             
-            voidCore.log(`📋 Plugin list updated: ${plugins.length} total`);
+            const renderPlugin = (plugin, level = 0) => {
+                const displayLabel = voidCore.getPluginLabel(plugin);
+                const indent = '&nbsp;&nbsp;'.repeat(level * 2);
+                const levelIndicator = level > 0 ? `L${level}` : 'ROOT';
+                const children = voidCore.getChildren(plugin.pluginId);
+                
+                let html = `
+                <div class="plugin-item" style="margin-left: ${level * 15}px; ${level > 0 ? 'border-left: 2px solid #333;' : ''}">
+                    <div class="plugin-type">
+                        ${indent}${levelIndicator} ${plugin.type || 'unknown'}
+                        ${children.length > 0 ? ` (${children.length} children)` : ''}
+                    </div>
+                    <div class="plugin-id">
+                        <strong>${displayLabel}</strong>
+                        ${plugin.displayName ? `<div style="color: #888; font-size: 10px;">(${plugin.pluginId})</div>` : ''}
+                    </div>
+                    ${plugin.parentId ? `<div style="color: #888; font-size: 10px;">Parent: ${voidCore.getPluginLabel(voidCore.getPlugin(plugin.parentId))}</div>` : ''}
+                    ${plugin.metadata?.correlationId ? `<div style="color: #4a90e2; font-size: 10px;">Dynamic (${plugin.metadata.correlationId})</div>` : ''}
+                </div>
+                `;
+                
+                // 子プラグインを再帰的に表示
+                if (plugin.children) {
+                    plugin.children.forEach(child => {
+                        html += renderPlugin(child, level + 1);
+                    });
+                }
+                
+                return html;
+            };
+            
+            let html = '';
+            pluginTree.forEach(rootPlugin => {
+                html += renderPlugin(rootPlugin, 0);
+            });
+            
+            listElement.innerHTML = html;
+            
+            const hierarchyStats = voidCore.getSystemStats().hierarchyStats;
+            voidCore.log(`📋 Plugin list updated: ${plugins.length} total, ${hierarchyStats.rootPlugins} roots, max level: ${hierarchyStats.maxHierarchyLevel}`);
         }
 
         // 初期化（修正版: 非同期対応）
@@ -449,7 +581,7 @@
             updatePluginList();
 
             // レスポンス監視（修正版: async/await対応）
-            await voidCore.subscribe('IntentResponse', (message) => {
+            const unsubscribeResponseMonitor = voidCore.subscribe('IntentResponse', (message) => {
                 if (message.action && message.action.startsWith('system.')) {
                     voidCore.log(`📨 System response: ${message.action} - ${message.payload.success ? '✅ Success' : '❌ Failed'}`);
                     if (!message.payload.success) {

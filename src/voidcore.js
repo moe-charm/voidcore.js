@@ -5,6 +5,7 @@
 import { ChannelManager } from './channel-manager.js'
 import { CoreFusion } from './core-fusion.js'
 import { SimpleMessagePool } from './simple-message-pool.js'
+import { Message } from './message.js'
 
 class VoidCore {
   constructor(transport = null) {
@@ -30,8 +31,10 @@ class VoidCore {
     this.maxDepth = 10 // Default maximum hierarchy depth
     this.resourceCost = new Map() // coreId -> resource consumption
     
-    // システムメッセージハンドラーの初期化
-    this._initializeSystemMessageHandlers()
+    // システムメッセージハンドラーの初期化（非同期）
+    this._initializeSystemMessageHandlers().catch(error => {
+      console.error('System message handlers initialization failed:', error)
+    })
   }
 
   setLogElement(element) {
@@ -291,14 +294,16 @@ class VoidCore {
   // === Phase 5.2: DYNAMIC PLUGIN MANAGEMENT SYSTEM ===
   
   // 🚀 システムメッセージハンドラー初期化
-  _initializeSystemMessageHandlers() {
+  async _initializeSystemMessageHandlers() {
     // 統一システムメッセージハンドラー
-    this.subscribe('IntentRequest', async (message) => {
+    await this.subscribe('IntentRequest', async (message) => {
       try {
         if (message.action === 'system.createPlugin') {
           await this._handleCreatePlugin(message)
         } else if (message.action === 'system.destroyPlugin') {
           await this._handleDestroyPlugin(message)
+        } else if (message.action === 'system.reparentPlugin') {
+          await this._handleReparentPlugin(message)
         } else if (message.action === 'system.connect') {
           await this._handleConnect(message)
         }
@@ -311,7 +316,7 @@ class VoidCore {
   
   // 🔧 system.createPlugin ハンドラー
   async _handleCreatePlugin(message) {
-    const { type, config, parent, correlationId, maxDepth, resourceCost } = message.payload
+    const { type, config, parent, correlationId, maxDepth, resourceCost, displayName } = message.payload
     
     try {
       // 階層深度チェック
@@ -334,7 +339,8 @@ class VoidCore {
         config: config || {},
         parent,
         createdAt: Date.now(),
-        correlationId
+        correlationId,
+        displayName  // ChatGPT案: displayName追加
       })
       
       // プラグイン登録
@@ -434,15 +440,76 @@ class VoidCore {
     }
   }
   
+  // 🏘️ system.reparentPlugin ハンドラー（戸籍異動届）
+  async _handleReparentPlugin(message) {
+    const { pluginId, newParentId, oldParentId, correlationId } = message.payload
+    
+    try {
+      // プラグインの存在確認
+      const plugin = this.getPlugin(pluginId)
+      if (!plugin) {
+        throw new Error(`Plugin not found: ${pluginId}`)
+      }
+      
+      // 旧親の確認（オプション）
+      if (oldParentId && plugin.parentId !== oldParentId) {
+        throw new Error(`Parent mismatch: expected ${oldParentId}, got ${plugin.parentId}`)
+      }
+      
+      // 循環参照チェック
+      if (newParentId && this._wouldCreateCircularReference(pluginId, newParentId)) {
+        throw new Error(`Circular reference detected: ${pluginId} -> ${newParentId}`)
+      }
+      
+      // 戸籍異動実行
+      const oldParent = plugin.parentId
+      plugin.parentId = newParentId
+      
+      // 成功レスポンス
+      await this._sendSystemResponse('system.reparentPlugin', {
+        success: true,
+        pluginId,
+        oldParentId: oldParent,
+        newParentId,
+        correlationId,
+        timestamp: Date.now()
+      }, correlationId)
+      
+      // 戸籍異動通知（Notice発行）
+      await this.publish(Message.notice('plugin.reparented', {
+        pluginId,
+        oldParentId: oldParent,
+        newParentId,
+        timestamp: Date.now()
+      }))
+      
+      this.log(`🏘️ Plugin reparented: ${pluginId} moved from ${oldParent || 'null'} to ${newParentId || 'null'}`)
+      
+    } catch (error) {
+      // エラーレスポンス
+      await this._sendSystemResponse('system.reparentPlugin', {
+        success: false,
+        error: error.message,
+        correlationId,
+        timestamp: Date.now()
+      }, correlationId)
+      
+      this.log(`❌ System: Reparenting failed - ${error.message}`)
+    }
+  }
+  
   // 🏭 プラグインオブジェクト作成
-  _createPluginObject({ pluginId, type, config, parent, createdAt, correlationId }) {
+  _createPluginObject({ pluginId, type, config, parent, createdAt, correlationId, displayName }) {
     return {
       pluginId,
+      displayName: displayName || null,  // ChatGPT案: 人間用の短い名前
       type,
-      config,
-      parent,
-      createdAt,
-      correlationId,
+      parentId: parent,                  // ChatGPT案: parent → parentId統一
+      metadata: {                        // ChatGPT案: メタデータ分離
+        createdAt,
+        correlationId,
+        config: config || {}
+      },
       core: this,
       
       // 基本的なプラグインAPI
@@ -461,22 +528,17 @@ class VoidCore {
       },
       
       notice: async (eventName, payload) => {
-        const noticeMessage = {
-          type: 'Notice',
-          event: eventName,
-          payload: {
-            ...payload,
-            sourcePlugin: pluginId,
-            causationId: correlationId
-          },
-          timestamp: Date.now()
-        }
+        const noticeMessage = Message.notice(eventName, {
+          ...payload,
+          sourcePlugin: pluginId,
+          causationId: correlationId
+        })
         return await this.publish(noticeMessage)
       },
       
-      observe: (eventName, handler) => {
-        return this.subscribe('Notice', (message) => {
-          if (message.event === eventName) {
+      observe: async (eventName, handler) => {
+        return await this.subscribe('Notice', (message) => {
+          if (message.event_name === eventName) {  // FIX: event → event_name
             handler(message)
           }
         })
@@ -507,11 +569,99 @@ class VoidCore {
       const parentPlugin = this.getPlugin(currentParent)
       if (!parentPlugin) break
       
-      currentParent = parentPlugin.parent
+      currentParent = parentPlugin.parentId
       depth++
     }
     
     return depth
+  }
+  
+  // 🔄 循環参照チェック（戸籍異動届で使用）- 強化版
+  _wouldCreateCircularReference(pluginId, newParentId) {
+    if (!newParentId) return false  // parentId が null なら問題なし
+    if (pluginId === newParentId) return true  // 自分自身を親にはできない
+    
+    // 新しい親が、移動対象プラグインの子孫かどうかをチェック
+    const descendants = this.getDescendants(pluginId);
+    const isDescendant = descendants.some(plugin => plugin.pluginId === newParentId);
+    
+    if (isDescendant) {
+      this.log(`🔄 Circular reference detected: ${newParentId} is a descendant of ${pluginId}`);
+      return true;
+    }
+    
+    // 従来の親を辿る方式も併用（二重チェック）
+    const visited = new Set();
+    let current = newParentId;
+    let depth = 0;
+    
+    while (current && depth < 100) {  // 無限ループ防止
+      if (visited.has(current)) {
+        this.log(`🔄 Circular reference detected: loop found at ${current}`);
+        return true;  // 循環参照発見！
+      }
+      
+      if (current === pluginId) {
+        this.log(`🔄 Circular reference detected: ${current} === ${pluginId}`);
+        return true;  // 循環参照発見！
+      }
+      
+      visited.add(current);
+      const parent = this.getPlugin(current);
+      if (!parent) break;
+      
+      current = parent.parentId;
+      depth++;
+    }
+    
+    return false;  // 循環参照なし
+  }
+  
+  // 🔍 階層構造の整合性チェック
+  validateHierarchyIntegrity() {
+    const issues = [];
+    
+    for (const plugin of this.plugins) {
+      // 親プラグインの存在チェック
+      if (plugin.parentId) {
+        const parent = this.getPlugin(plugin.parentId);
+        if (!parent) {
+          issues.push({
+            type: 'missing_parent',
+            pluginId: plugin.pluginId,
+            parentId: plugin.parentId,
+            message: `Plugin ${plugin.pluginId} has non-existent parent ${plugin.parentId}`
+          });
+        }
+      }
+      
+      // 循環参照チェック
+      if (plugin.parentId && this._wouldCreateCircularReference(plugin.pluginId, plugin.parentId)) {
+        issues.push({
+          type: 'circular_reference',
+          pluginId: plugin.pluginId,
+          parentId: plugin.parentId,
+          message: `Circular reference detected for plugin ${plugin.pluginId}`
+        });
+      }
+      
+      // 階層深度チェック
+      const level = this.getPluginLevel(plugin.pluginId);
+      if (level > this.maxDepth) {
+        issues.push({
+          type: 'max_depth_exceeded',
+          pluginId: plugin.pluginId,
+          currentLevel: level,
+          maxDepth: this.maxDepth,
+          message: `Plugin ${plugin.pluginId} exceeds maximum depth (${level} > ${this.maxDepth})`
+        });
+      }
+    }
+    
+    return {
+      isValid: issues.length === 0,
+      issues: issues
+    };
   }
   
   // 💰 リソース可用性チェック
@@ -534,15 +684,124 @@ class VoidCore {
     this.resourceCost.set(coreId, Math.max(0, currentCost - cost))
   }
   
+  // 🏷️ ChatGPT案: UIヘルパー関数
+  getPluginLabel(plugin) {
+    if (plugin.displayName) {
+      return plugin.displayName;
+    }
+    
+    // pluginIdを短縮表示 (例: "util.logger-1751849234289-p676za" → "logger#p676")
+    const parts = plugin.pluginId.split('-');
+    const typeShort = plugin.type.split('.').pop();
+    const randomShort = parts[parts.length - 1].substring(0, 4);
+    return `${typeShort}#${randomShort}`;
+  }
+  
+  // 🏗️ 親子関係API - 階層構造探索機能
+  
+  // 指定プラグインの直接の子プラグインを取得
+  getChildren(pluginId) {
+    return this.plugins.filter(plugin => plugin.parentId === pluginId);
+  }
+  
+  // 指定プラグインの全ての子孫プラグインを取得（階層すべて）
+  getDescendants(pluginId) {
+    const descendants = [];
+    const visited = new Set(); // 循環参照防止
+    
+    const collectDescendants = (currentPluginId) => {
+      if (visited.has(currentPluginId)) return; // 循環参照防止
+      visited.add(currentPluginId);
+      
+      const children = this.getChildren(currentPluginId);
+      for (const child of children) {
+        descendants.push(child);
+        collectDescendants(child.pluginId); // 再帰的に子孫を探索
+      }
+    };
+    
+    collectDescendants(pluginId);
+    return descendants;
+  }
+  
+  // 指定プラグインの全ての祖先プラグインを取得（ルートまで）
+  getAncestors(pluginId) {
+    const ancestors = [];
+    const visited = new Set(); // 循環参照防止
+    let currentPlugin = this.getPlugin(pluginId);
+    
+    while (currentPlugin && currentPlugin.parentId && !visited.has(currentPlugin.parentId)) {
+      visited.add(currentPlugin.parentId);
+      const parent = this.getPlugin(currentPlugin.parentId);
+      if (parent) {
+        ancestors.push(parent);
+        currentPlugin = parent;
+      } else {
+        break; // 親が見つからない場合は終了
+      }
+    }
+    
+    return ancestors;
+  }
+  
+  // 指定プラグインの兄弟プラグインを取得（同じ親を持つ）
+  getSiblings(pluginId) {
+    const plugin = this.getPlugin(pluginId);
+    if (!plugin) return [];
+    
+    return this.plugins.filter(p => 
+      p.pluginId !== pluginId && // 自分自身は除外
+      p.parentId === plugin.parentId // 同じ親を持つ
+    );
+  }
+  
+  // 指定プラグインがルートプラグインかどうか
+  isRootPlugin(pluginId) {
+    const plugin = this.getPlugin(pluginId);
+    return plugin ? !plugin.parentId : false;
+  }
+  
+  // 指定プラグインの階層レベルを取得（ルートが0）
+  getPluginLevel(pluginId) {
+    const ancestors = this.getAncestors(pluginId);
+    return ancestors.length;
+  }
+  
+  // 階層構造をツリー形式で取得
+  getPluginTree() {
+    const rootPlugins = this.plugins.filter(p => !p.parentId);
+    
+    const buildTree = (plugin) => {
+      const children = this.getChildren(plugin.pluginId);
+      return {
+        ...plugin,
+        children: children.map(child => buildTree(child))
+      };
+    };
+    
+    return rootPlugins.map(root => buildTree(root));
+  }
+  
   // 📊 システム統計情報
   getSystemStats() {
+    const rootPlugins = this.plugins.filter(p => !p.parentId);
+    const maxLevel = Math.max(0, ...this.plugins.map(p => this.getPluginLevel(p.pluginId)));
+    
     return {
       ...this.getStats(),
       pendingRequests: this.pendingRequests.size,
       maxDepth: this.maxDepth,
       resourceUsage: Object.fromEntries(this.resourceCost),
       systemPlugins: this.plugins.filter(p => p.type && p.type.startsWith('system')).length,
-      dynamicPlugins: this.plugins.filter(p => p.correlationId).length
+      dynamicPlugins: this.plugins.filter(p => p.metadata?.correlationId).length,
+      // 新しい親子関係統計
+      hierarchyStats: {
+        rootPlugins: rootPlugins.length,
+        maxHierarchyLevel: maxLevel,
+        averageChildren: rootPlugins.length > 0 ? 
+          rootPlugins.reduce((sum, p) => sum + this.getChildren(p.pluginId).length, 0) / rootPlugins.length : 0,
+        totalHierarchyLevels: maxLevel + 1
+      }
     }
   }
 }

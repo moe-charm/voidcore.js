@@ -108,9 +108,9 @@ export class ChannelManager {
     if (this.multiChannelEnabled) {
       // Subscribe to all channels - we don't know which channel a type will use
       const channelNames = ['default', 'intentRequest', 'intentResponse', 'notice', 'proposal']
-      const unsubscribeFunctions = channelNames.map(channelName => 
-        this.transport.subscribe(this.createTypeHandler(type, handler), channelName)
-      )
+      const unsubscribeFunctions = await Promise.all(channelNames.map(async channelName => 
+        await this.transport.subscribe(this.createTypeHandler(type, handler), channelName)
+      ))
       
       // Return unified unsubscribe function
       return () => {
@@ -122,7 +122,7 @@ export class ChannelManager {
       }
     } else {
       // Single-channel mode - use default channel only
-      const unsubscribe = this.transport.subscribe(
+      const unsubscribe = await this.transport.subscribe(
         this.createTypeHandler(type, handler), 
         'default'
       )
