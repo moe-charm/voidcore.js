@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌉 VoidFlow-VoidCore統合テスト Phase 1</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .test-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .test-section {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .test-title {
+            color: #4a90e2;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 5px;
+        }
+        
+        .button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: inherit;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .button:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+        
+        .button.success {
+            background: #27ae60;
+        }
+        
+        .button.warning {
+            background: #f39c12;
+        }
+        
+        .button.danger {
+            background: #e74c3c;
+        }
+        
+        .log-area {
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+        
+        .stats-panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        
+        .stats-label {
+            color: #bbb;
+        }
+        
+        .stats-value {
+            color: #4a90e2;
+            font-weight: bold;
+        }
+        
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #4a90e2;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .phase-indicator {
+            background: linear-gradient(45deg, #4a90e2, #27ae60);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-block;
+        }
+        
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        
+        .test-result.success {
+            background: rgba(39, 174, 96, 0.2);
+            border-color: #27ae60;
+        }
+        
+        .test-result.error {
+            background: rgba(231, 76, 60, 0.2);
+            border-color: #e74c3c;
+        }
+        
+        .test-result.info {
+            background: rgba(74, 144, 226, 0.2);
+            border-color: #4a90e2;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="header">
+            <h1>🌉 VoidFlow-VoidCore統合テスト</h1>
+            <div class="phase-indicator">Phase 1: メッセージ統一</div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🔧 VoidFlowMessageAdapter テスト</div>
+            
+            <button class="button" onclick="testAdapterBasic()">基本機能テスト</button>
+            <button class="button" onclick="testVoidPacketConversion()">VoidPacket変換テスト</button>
+            <button class="button" onclick="testFlowMessageCreation()">FlowMessage作成テスト</button>
+            <button class="button success" onclick="testMessageMonitoring()">メッセージ監視テスト</button>
+            
+            <div class="log-area" id="adapterLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">Adapter統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">変換済みメッセージ:</span>
+                    <span class="stats-value" id="adaptedMessages">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">VoidPacket変換:</span>
+                    <span class="stats-value" id="voidPacketsConverted">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">FlowMessage作成:</span>
+                    <span class="stats-value" id="flowMessagesCreated">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">エラー数:</span>
+                    <span class="stats-value" id="adapterErrors">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🎭 IntegrationWrapper テスト</div>
+            
+            <button class="button" onclick="testWrapperBasic()">ラッパー基本テスト</button>
+            <button class="button" onclick="testMethodOverride()">メソッドオーバーライドテスト</button>
+            <button class="button" onclick="testCompatibilityMode()">互換性モードテスト</button>
+            <button class="button warning" onclick="testErrorHandling()">エラーハンドリングテスト</button>
+            
+            <div class="log-area" id="wrapperLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">Wrapper統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">統合呼び出し:</span>
+                    <span class="stats-value" id="unifiedCalls">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">レガシー呼び出し:</span>
+                    <span class="stats-value" id="legacyCalls">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">統合率:</span>
+                    <span class="stats-value" id="unificationRate">0%</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">エラー率:</span>
+                    <span class="stats-value" id="errorRate">0%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🔗 VoidCore統合テスト</div>
+            
+            <button class="button" onclick="testVoidCorePublish()">VoidCoreメッセージ発行</button>
+            <button class="button" onclick="testVoidCoreSubscribe()">VoidCoreメッセージ購読</button>
+            <button class="button success" onclick="testBidirectionalFlow()">双方向フロー</button>
+            <button class="button danger" onclick="clearAllTests()">テストクリア</button>
+            
+            <div class="log-area" id="voidcoreLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">VoidCore統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">発行メッセージ:</span>
+                    <span class="stats-value" id="publishedMessages">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">受信メッセージ:</span>
+                    <span class="stats-value" id="receivedMessages">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">アクティブ購読:</span>
+                    <span class="stats-value" id="activeSubscriptions">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">総プラグイン数:</span>
+                    <span class="stats-value" id="totalPlugins">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📊 統合結果サマリー</div>
+            
+            <button class="button" onclick="runFullTestSuite()">全テスト実行</button>
+            <button class="button" onclick="updateAllStats()">統計更新</button>
+            <button class="button success" onclick="exportTestResults()">結果エクスポート</button>
+            
+            <div id="testResults"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">Phase 1統合状況</div>
+                <div class="stats-item">
+                    <span class="stats-label">テスト実行数:</span>
+                    <span class="stats-value" id="totalTests">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">成功テスト:</span>
+                    <span class="stats-value" id="successfulTests">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">統合レベル:</span>
+                    <span class="stats-value" id="integrationLevel">0%</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">パフォーマンス:</span>
+                    <span class="stats-value" id="performanceScore">100%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { voidCore } from './src/voidcore.js';
+        import { voidFlowAdapter } from './src/voidflow-message-adapter.js';
+        import { VoidFlowIntegrationWrapper } from './src/voidflow-integration-wrapper.js';
+
+        // テスト状態
+        let testStats = {
+            totalTests: 0,
+            successfulTests: 0,
+            publishedMessages: 0,
+            receivedMessages: 0,
+            activeSubscriptions: 0
+        };
+
+        // モックVoidFlowEngine
+        const mockVoidFlowEngine = {
+            flowId: 'test-flow-001',
+            nodes: new Map(),
+            edges: new Map(),
+            
+            createVoidPacket: (payload, metadata = {}) => ({
+                payload: payload,
+                timestamp: new Date(),
+                sourceNodeId: metadata.sourceNodeId || 'test-node',
+                error: metadata.error || null
+            }),
+            
+            executeNode: async (nodeId, inputPacket) => {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                return {
+                    payload: `Executed ${nodeId}`,
+                    timestamp: new Date(),
+                    sourceNodeId: nodeId
+                };
+            },
+            
+            executeFromNode: async (nodeId, inputPacket) => {
+                return await this.executeNode(nodeId, inputPacket);
+            },
+            
+            log: (message) => {
+                console.log(`MockEngine: ${message}`);
+            }
+        };
+
+        // 統合ラッパー作成
+        const integrationWrapper = new VoidFlowIntegrationWrapper(mockVoidFlowEngine);
+
+        // グローバル関数定義
+        window.testAdapterBasic = testAdapterBasic;
+        window.testVoidPacketConversion = testVoidPacketConversion;
+        window.testFlowMessageCreation = testFlowMessageCreation;
+        window.testMessageMonitoring = testMessageMonitoring;
+        window.testWrapperBasic = testWrapperBasic;
+        window.testMethodOverride = testMethodOverride;
+        window.testCompatibilityMode = testCompatibilityMode;
+        window.testErrorHandling = testErrorHandling;
+        window.testVoidCorePublish = testVoidCorePublish;
+        window.testVoidCoreSubscribe = testVoidCoreSubscribe;
+        window.testBidirectionalFlow = testBidirectionalFlow;
+        window.clearAllTests = clearAllTests;
+        window.runFullTestSuite = runFullTestSuite;
+        window.updateAllStats = updateAllStats;
+        window.exportTestResults = exportTestResults;
+
+        // ==========================================
+        // 🔧 VoidFlowMessageAdapter テスト
+        // ==========================================
+
+        async function testAdapterBasic() {
+            logToArea('adapterLog', '🔧 Adapter基本機能テスト開始');
+            
+            try {
+                const stats = voidFlowAdapter.getAdapterStats();
+                logToArea('adapterLog', `✅ Adapter統計取得成功: ${JSON.stringify(stats)}`);
+                
+                const correlationId = voidFlowAdapter.generateCorrelationId('test');
+                logToArea('adapterLog', `✅ 相関ID生成成功: ${correlationId}`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'Adapter基本機能テスト成功');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('adapterLog', `❌ テスト失敗: ${error.message}`);
+                addTestResult('error', `Adapter基本機能テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testVoidPacketConversion() {
+            logToArea('adapterLog', '📦 VoidPacket変換テスト開始');
+            
+            try {
+                const testPacket = {
+                    payload: { test: 'data', count: 42 },
+                    timestamp: new Date(),
+                    sourceNodeId: 'test-node-001',
+                    error: null
+                };
+                
+                const converted = voidFlowAdapter.adaptVoidPacketToMessage(testPacket, {
+                    flowId: 'test-flow',
+                    nodeType: 'test.converter'
+                });
+                
+                logToArea('adapterLog', `✅ VoidPacket→Message変換成功`);
+                logToArea('adapterLog', `   📄 変換結果: ${converted.category}/${converted.event_name}`);
+                
+                // 逆変換テスト
+                const reversed = voidFlowAdapter.adaptMessageToVoidPacket(converted);
+                logToArea('adapterLog', `✅ Message→VoidPacket逆変換成功`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'VoidPacket変換テスト成功');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('adapterLog', `❌ 変換テスト失敗: ${error.message}`);
+                addTestResult('error', `VoidPacket変換テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testFlowMessageCreation() {
+            logToArea('adapterLog', '🌟 FlowMessage作成テスト開始');
+            
+            try {
+                const flowMessage = voidFlowAdapter.createFlowMessage('test.event', {
+                    data: 'test payload',
+                    value: 123
+                }, {
+                    sourceNodeId: 'creator-node',
+                    flowId: 'test-flow-creation',
+                    nodeType: 'test.creator'
+                });
+                
+                logToArea('adapterLog', `✅ FlowMessage作成成功: ${flowMessage.event_name}`);
+                
+                // VoidCoreに発行テスト
+                await voidCore.publish(flowMessage);
+                logToArea('adapterLog', `✅ VoidCoreへの発行成功`);
+                
+                testStats.publishedMessages++;
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'FlowMessage作成・発行テスト成功');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('adapterLog', `❌ FlowMessage作成失敗: ${error.message}`);
+                addTestResult('error', `FlowMessage作成テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testMessageMonitoring() {
+            logToArea('adapterLog', '👁️ メッセージ監視テスト開始');
+            
+            try {
+                let receivedCount = 0;
+                
+                // 監視開始
+                const unsubscribe = await voidFlowAdapter.startFlowMessageMonitoring('test-monitoring', (message) => {
+                    receivedCount++;
+                    logToArea('adapterLog', `📨 監視メッセージ受信: ${message.event_name}`);
+                });
+                
+                testStats.activeSubscriptions++;
+                
+                // テストメッセージ送信
+                for (let i = 0; i < 3; i++) {
+                    const testMessage = voidFlowAdapter.createFlowMessage('monitoring.test', {
+                        iteration: i
+                    }, {
+                        flowId: 'test-monitoring',
+                        sourceNodeId: `test-sender-${i}`
+                    });
+                    
+                    await voidCore.publish(testMessage);
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                // 少し待って結果確認
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                logToArea('adapterLog', `✅ 監視テスト完了: ${receivedCount}/3 メッセージ受信`);
+                
+                // 監視停止
+                voidFlowAdapter.stopFlowMessageMonitoring('test-monitoring');
+                testStats.activeSubscriptions--;
+                
+                testStats.receivedMessages += receivedCount;
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `メッセージ監視テスト成功 (${receivedCount}/3)`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('adapterLog', `❌ 監視テスト失敗: ${error.message}`);
+                addTestResult('error', `メッセージ監視テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        // ==========================================
+        // 🎭 IntegrationWrapper テスト
+        // ==========================================
+
+        async function testWrapperBasic() {
+            logToArea('wrapperLog', '🎭 Wrapper基本テスト開始');
+            
+            try {
+                const stats = integrationWrapper.getIntegrationStats();
+                logToArea('wrapperLog', `✅ Wrapper統計取得成功`);
+                
+                integrationWrapper.setCompatibilityMode(true);
+                logToArea('wrapperLog', `✅ 互換性モード設定成功`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'Wrapper基本テスト成功');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('wrapperLog', `❌ 基本テスト失敗: ${error.message}`);
+                addTestResult('error', `Wrapper基本テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testMethodOverride() {
+            logToArea('wrapperLog', '🔄 メソッドオーバーライドテスト開始');
+            
+            try {
+                // createVoidPacketテスト
+                const packet = mockVoidFlowEngine.createVoidPacket({ test: 'override' }, { 
+                    sourceNodeId: 'override-test' 
+                });
+                
+                logToArea('wrapperLog', `✅ createVoidPacket オーバーライド成功`);
+                logToArea('wrapperLog', `   📦 統合機能: ${packet.__voidcore_integration ? 'あり' : 'なし'}`);
+                
+                // executeNodeテスト
+                const result = await mockVoidFlowEngine.executeNode('test-node', packet);
+                logToArea('wrapperLog', `✅ executeNode オーバーライド成功`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'メソッドオーバーライドテスト成功');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('wrapperLog', `❌ オーバーライドテスト失敗: ${error.message}`);
+                addTestResult('error', `メソッドオーバーライドテスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testCompatibilityMode() {
+            logToArea('wrapperLog', '🏛️ 互換性モードテスト開始');
+            
+            try {
+                // 互換性モード有効
+                integrationWrapper.setCompatibilityMode(true);
+                integrationWrapper.setLegacySupport(true);
+                
+                const packet1 = mockVoidFlowEngine.createVoidPacket({ mode: 'compat' });
+                logToArea('wrapperLog', `✅ 互換性モード動作確認`);
+                
+                // 互換性モード無効
+                integrationWrapper.setCompatibilityMode(false);
+                const packet2 = mockVoidFlowEngine.createVoidPacket({ mode: 'modern' });
+                logToArea('wrapperLog', `✅ モダンモード動作確認`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', '互換性モードテスト成功');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('wrapperLog', `❌ 互換性テスト失敗: ${error.message}`);
+                addTestResult('error', `互換性モードテスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testErrorHandling() {
+            logToArea('wrapperLog', '⚠️ エラーハンドリングテスト開始');
+            
+            try {
+                // 意図的エラー発生
+                try {
+                    await mockVoidFlowEngine.executeNode('invalid-node', null);
+                } catch (error) {
+                    logToArea('wrapperLog', `✅ エラーキャッチ成功: ${error.message}`);
+                }
+                
+                // 無効なパケット
+                try {
+                    const invalidPacket = mockVoidFlowEngine.createVoidPacket(null);
+                    logToArea('wrapperLog', `✅ 無効パケット処理成功`);
+                } catch (error) {
+                    logToArea('wrapperLog', `✅ 無効パケットエラー処理: ${error.message}`);
+                }
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'エラーハンドリングテスト成功');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('wrapperLog', `❌ エラーハンドリングテスト失敗: ${error.message}`);
+                addTestResult('error', `エラーハンドリングテスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        // ==========================================
+        // 🔗 VoidCore統合テスト
+        // ==========================================
+
+        async function testVoidCorePublish() {
+            logToArea('voidcoreLog', '📤 VoidCoreメッセージ発行テスト開始');
+            
+            try {
+                const testMessage = voidFlowAdapter.createFlowMessage('voidcore.test', {
+                    testData: 'VoidCore integration test',
+                    timestamp: Date.now()
+                }, {
+                    sourceNodeId: 'voidcore-tester',
+                    flowId: 'voidcore-test-flow'
+                });
+                
+                const deliveredCount = await voidCore.publish(testMessage);
+                logToArea('voidcoreLog', `✅ メッセージ発行成功: ${deliveredCount} 配信`);
+                
+                testStats.publishedMessages++;
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `VoidCoreメッセージ発行成功 (${deliveredCount}配信)`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('voidcoreLog', `❌ 発行テスト失敗: ${error.message}`);
+                addTestResult('error', `VoidCore発行テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testVoidCoreSubscribe() {
+            logToArea('voidcoreLog', '📥 VoidCoreメッセージ購読テスト開始');
+            
+            try {
+                let subscriptionCount = 0;
+                
+                // 購読開始
+                const unsubscribe = await voidCore.subscribe('Notice', (message) => {
+                    if (message.event_name && message.event_name.startsWith('voidflow.subscribe.test')) {
+                        subscriptionCount++;
+                        testStats.receivedMessages++;
+                        logToArea('voidcoreLog', `📨 購読メッセージ受信: ${message.event_name}`);
+                    }
+                });
+                
+                testStats.activeSubscriptions++;
+                
+                // テストメッセージ発行
+                for (let i = 0; i < 2; i++) {
+                    const testMessage = voidFlowAdapter.createFlowMessage('subscribe.test', {
+                        iteration: i
+                    }, {
+                        sourceNodeId: 'subscription-tester',
+                        flowId: 'subscription-test-flow'
+                    });
+                    
+                    await voidCore.publish(testMessage);
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                // 結果確認待機
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                logToArea('voidcoreLog', `✅ 購読テスト完了: ${subscriptionCount}/2 メッセージ受信`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `VoidCore購読テスト成功 (${subscriptionCount}/2)`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('voidcoreLog', `❌ 購読テスト失敗: ${error.message}`);
+                addTestResult('error', `VoidCore購読テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testBidirectionalFlow() {
+            logToArea('voidcoreLog', '🔄 双方向フローテスト開始');
+            
+            try {
+                let flowMessages = [];
+                
+                // フローメッセージ監視
+                const unsubscribe = await voidCore.subscribe('Notice', (message) => {
+                    if (message.event_name && message.event_name.startsWith('voidflow.bidirectional')) {
+                        flowMessages.push(message);
+                        logToArea('voidcoreLog', `🔄 フローメッセージ: ${message.event_name}`);
+                    }
+                });
+                
+                // VoidFlow → VoidCore → VoidFlow フロー
+                const originalPacket = mockVoidFlowEngine.createVoidPacket({
+                    step: 1,
+                    direction: 'VoidFlow→VoidCore'
+                }, { sourceNodeId: 'bidirectional-source' });
+                
+                const voidCoreMessage = voidFlowAdapter.adaptVoidPacketToMessage(originalPacket, {
+                    flowId: 'bidirectional-test'
+                });
+                
+                // VoidCoreで処理
+                await voidCore.publish(voidCoreMessage);
+                
+                // 応答メッセージ作成・発行
+                const responseMessage = voidFlowAdapter.createFlowMessage('bidirectional.response', {
+                    step: 2,
+                    direction: 'VoidCore→VoidFlow',
+                    originalCorrelationId: voidCoreMessage.payload.correlationId
+                }, {
+                    flowId: 'bidirectional-test',
+                    causationId: voidCoreMessage.payload.correlationId
+                });
+                
+                await voidCore.publish(responseMessage);
+                
+                // 結果確認
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                logToArea('voidcoreLog', `✅ 双方向フロー完了: ${flowMessages.length} メッセージ`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `双方向フローテスト成功 (${flowMessages.length}メッセージ)`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('voidcoreLog', `❌ 双方向フローテスト失敗: ${error.message}`);
+                addTestResult('error', `双方向フローテスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        // ==========================================
+        // 🛠️ ユーティリティ
+        // ==========================================
+
+        function logToArea(areaId, message) {
+            const area = document.getElementById(areaId);
+            const timestamp = new Date().toLocaleTimeString();
+            area.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function addTestResult(type, message) {
+            const resultsArea = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = message;
+            resultsArea.appendChild(resultDiv);
+        }
+
+        function updateAllStats() {
+            // Adapter統計
+            const adapterStats = voidFlowAdapter.getAdapterStats();
+            document.getElementById('adaptedMessages').textContent = adapterStats.adaptedMessages;
+            document.getElementById('voidPacketsConverted').textContent = adapterStats.voidPacketsConverted;
+            document.getElementById('flowMessagesCreated').textContent = adapterStats.flowMessagesCreated;
+            document.getElementById('adapterErrors').textContent = adapterStats.errorCount;
+            
+            // Wrapper統計
+            const wrapperStats = integrationWrapper.getIntegrationStats();
+            document.getElementById('unifiedCalls').textContent = wrapperStats.unifiedCalls;
+            document.getElementById('legacyCalls').textContent = wrapperStats.legacyCalls;
+            document.getElementById('unificationRate').textContent = Math.round(wrapperStats.unificationRate * 100) + '%';
+            document.getElementById('errorRate').textContent = Math.round(wrapperStats.errorRate * 100) + '%';
+            
+            // VoidCore統計
+            document.getElementById('publishedMessages').textContent = testStats.publishedMessages;
+            document.getElementById('receivedMessages').textContent = testStats.receivedMessages;
+            document.getElementById('activeSubscriptions').textContent = testStats.activeSubscriptions;
+            
+            const voidCoreStats = voidCore.getSystemStats();
+            document.getElementById('totalPlugins').textContent = voidCoreStats.pluginCount || 0;
+            
+            // 統合統計
+            document.getElementById('totalTests').textContent = testStats.totalTests;
+            document.getElementById('successfulTests').textContent = testStats.successfulTests;
+            
+            const successRate = testStats.totalTests > 0 ? (testStats.successfulTests / testStats.totalTests) * 100 : 0;
+            document.getElementById('integrationLevel').textContent = Math.round(successRate) + '%';
+            
+            const performanceScore = Math.max(0, 100 - (wrapperStats.errorRate * 100));
+            document.getElementById('performanceScore').textContent = Math.round(performanceScore) + '%';
+        }
+
+        async function runFullTestSuite() {
+            addTestResult('info', '🚀 Phase 1 全テストスイート開始');
+            
+            // 順次実行
+            await testAdapterBasic();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            await testVoidPacketConversion();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            await testFlowMessageCreation();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            await testMessageMonitoring();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testWrapperBasic();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            await testMethodOverride();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            await testCompatibilityMode();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            await testVoidCorePublish();
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            await testVoidCoreSubscribe();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testBidirectionalFlow();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            addTestResult('success', '🎉 Phase 1 全テストスイート完了');
+            updateAllStats();
+        }
+
+        function clearAllTests() {
+            document.getElementById('adapterLog').innerHTML = '';
+            document.getElementById('wrapperLog').innerHTML = '';
+            document.getElementById('voidcoreLog').innerHTML = '';
+            document.getElementById('testResults').innerHTML = '';
+            
+            testStats = {
+                totalTests: 0,
+                successfulTests: 0,
+                publishedMessages: 0,
+                receivedMessages: 0,
+                activeSubscriptions: 0
+            };
+            
+            voidFlowAdapter.resetAdapterStats();
+            updateAllStats();
+            
+            addTestResult('info', '🧹 全テストクリア完了');
+        }
+
+        function exportTestResults() {
+            const results = {
+                phase: 'Phase 1: メッセージ統一',
+                timestamp: new Date().toISOString(),
+                testStats: testStats,
+                adapterStats: voidFlowAdapter.getAdapterStats(),
+                wrapperStats: integrationWrapper.getIntegrationStats(),
+                voidCoreStats: voidCore.getSystemStats()
+            };
+            
+            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `voidflow-integration-phase1-results-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            addTestResult('success', '📄 テスト結果エクスポート完了');
+        }
+
+        // 初期化
+        updateAllStats();
+        logToArea('adapterLog', '🌉 VoidFlow-VoidCore統合テスト Phase 1 初期化完了');
+        logToArea('wrapperLog', '🎭 統合ラッパー準備完了');
+        logToArea('voidcoreLog', '🔗 VoidCore統合準備完了');
+        
+        addTestResult('info', '🚀 Phase 1統合テスト環境準備完了');
+    </script>
+</body>
+</html>

