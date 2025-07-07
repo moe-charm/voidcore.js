@@ -513,6 +513,7 @@
     <script type="module">
         import { voidCore, Message, createPlugin } from '../src/index.js';
         import { VoidFlowMonacoIntegration } from '../src/voidflow-monaco-integration.js';
+        import { UniversalNodeIntegration } from '../src/universal-node-integration.js';
 
         // VoidFlow Engine - ヘッドレス型フロー実行エンジン
         class VoidFlowEngine {
@@ -526,6 +527,10 @@
                 // Phase 5.1: Monaco Editor integration
                 this.monacoIntegration = null;
                 this.isMonacoInitialized = false;
+                
+                // Phase R Integration: Universal Node Integration
+                this.universalIntegration = null;
+                this.initializeUniversalIntegration();
             }
 
             // ノード作成
@@ -770,6 +775,8 @@
                             break;
 
                         case 'core.plugin-lister':
+                            // デバッグ: 受信データ確認
+                            this.log(`🔍 Plugin Lister受信: ${JSON.stringify(inputPacket)}`);
                             // Triggerシグナルを受信した場合のみ実行
                             if (inputPacket && inputPacket.payload === 'signal') {
                                 this.updateNodeOutput(nodeId, `🔍 VoidCore自己観測中...`);
@@ -805,12 +812,31 @@
                         case 'core.connection-manager':
                             if (!inputPacket) throw new Error('Input required');
                             
+                            // デバッグ: 受信データ確認
+                            this.log(`🔗 Connection Manager受信: ${JSON.stringify(inputPacket)}`);
                             this.updateNodeOutput(nodeId, `🔗 接続管理実行中...`);
+                            
+                            // データ形式変換: Flow Connector結果 → Connection Manager期待形式
+                            let connectionData = inputPacket.payload;
+                            
+                            // Flow Connectorの結果を変換
+                            if (connectionData.action === 'created-and-connected' && connectionData.sourceNodeId && connectionData.targetNodeId) {
+                                connectionData = {
+                                    source: { nodeId: connectionData.sourceNodeId },
+                                    target: { nodeId: connectionData.targetNodeId },
+                                    connectionType: 'flow-connector-created',
+                                    metadata: {
+                                        originalAction: connectionData.action,
+                                        edgeId: connectionData.edgeId
+                                    }
+                                };
+                                this.log(`🔄 データ変換完了: Flow Connector → Connection Manager`);
+                            }
                             
                             // 参照プラグイン: VoidCoreの接続管理に委譲
                             const connectionResult = await this.handleCoreFunction('connection-manager', {
                                 action: 'connect',
-                                data: inputPacket.payload
+                                data: connectionData
                             });
                             
                             result = this.createVoidPacket(connectionResult, { sourceNodeId: nodeId });
@@ -1094,6 +1120,8 @@
                 const sourceNodes = Array.from(this.nodes.values()).filter(n => n.type === sourceType);
                 const targetNodes = Array.from(this.nodes.values()).filter(n => n.type === targetType);
                 
+                this.log(`🔍 探索中: source='${sourceType}' (${sourceNodes.length}個), target='${targetType}' (${targetNodes.length}個)`);
+                
                 if (sourceNodes.length === 0 || targetNodes.length === 0) {
                     return { 
                         action: 'no-nodes-found', 
@@ -1256,6 +1284,8 @@
             
             // メッセージベース接続確立
             async establishConnection(connectionData) {
+                // デバッグ: 接続データ確認
+                this.log(`🔗 establishConnection受信: ${JSON.stringify(connectionData)}`);
                 const { source, target, connectionType = 'data-flow', schema } = connectionData;
                 
                 // 接続ID生成
@@ -1458,6 +1488,52 @@
                 const timestamp = new Date().toLocaleTimeString();
                 logElement.innerHTML += `<div>[${timestamp}] ${message}</div>`;
                 logElement.scrollTop = logElement.scrollHeight;
+            }
+
+            // Phase R: Universal Node Integration initialization
+            async initializeUniversalIntegration() {
+                try {
+                    this.log('🌍 Initializing Phase R Universal Node Integration...');
+                    
+                    // Create VoidFlow config for Universal system
+                    const voidFlowConfig = {
+                        engineType: 'VoidFlow',
+                        engine: this,
+                        messageConfig: {
+                            sourceFormat: 'voidflow',
+                            targetFormat: 'universal',
+                            version: '14.0',
+                            transformRules: {
+                                'voidflow->universal': {
+                                    payloadKey: 'payload',
+                                    metadataKey: 'metadata',
+                                    timestampKey: 'timestamp'
+                                },
+                                'universal->voidflow': {
+                                    payloadKey: 'data',
+                                    metadataKey: 'meta',
+                                    timestampKey: 'time'
+                                }
+                            }
+                        },
+                        executionMode: 'unified',
+                        sandboxConfig: {
+                            enabled: true,
+                            timeout: 5000
+                        },
+                        loggerConfig: {
+                            level: 'info',
+                            output: (msg) => this.log(msg)
+                        }
+                    };
+                    
+                    this.universalIntegration = new UniversalNodeIntegration(voidFlowConfig);
+                    this.log('✅ Phase R Universal Integration ready! 🚀');
+                    
+                } catch (error) {
+                    this.log(`❌ Universal Integration initialization failed: ${error.message}`);
+                    console.error('Universal Integration error:', error);
+                }
             }
 
             // Phase 5.1: Monaco Editor initialization
@@ -2968,6 +3044,7 @@
 
         // 初期化
         voidFlowEngine.log('🌟 VoidFlow - Constellation Zero 初期化完了');
+        voidFlowEngine.log('🚀 Phase R Integration: VoidCore v14.0統合システム作動中');
         voidFlowEngine.log('💫 レベル1: 動くよろこびセット 準備完了');
         voidFlowEngine.log('🎯 ノードをキャンバスに配置して、創造性の永久機関を開始してください');
         
@@ -3062,12 +3139,40 @@
         // 定期的にカーソルを修正（バグ防止）- 軽量化のため停止
         // setInterval(fixAllNodeCursors, 5000);
 
-        // デモ用の初期ノード配置（開発時のみ）- 画面崩れの原因になるため停止
-        // setTimeout(() => {
-        //     createNodeOnCanvas('input.text', { x: 100, y: 150 });
-        //     createNodeOnCanvas('string.uppercase', { x: 350, y: 150 });
-        //     createNodeOnCanvas('output.console', { x: 600, y: 150 });
-        // }, 1000);
+        // 🔧 デバッグ用LV3チェーン自動配置
+        setTimeout(() => {
+            // ノード作成
+            createNodeOnCanvas('button.send', { x: 50, y: 150 });
+            createNodeOnCanvas('core.plugin-lister', { x: 250, y: 150 });
+            createNodeOnCanvas('flow.connector', { x: 450, y: 150 });
+            createNodeOnCanvas('core.connection-manager', { x: 650, y: 150 });
+            
+            // 0.5秒後に接続作成
+            setTimeout(() => {
+                const button = Array.from(voidFlowEngine.nodes.values()).find(n => n.type === 'button.send');
+                const lister = Array.from(voidFlowEngine.nodes.values()).find(n => n.type === 'core.plugin-lister');
+                const connector = Array.from(voidFlowEngine.nodes.values()).find(n => n.type === 'flow.connector');
+                const manager = Array.from(voidFlowEngine.nodes.values()).find(n => n.type === 'core.connection-manager');
+                
+                if (button && lister && connector && manager) {
+                    // Flow Connectorのモード設定
+                    connector.properties.connectionMode = 'create-nodes';
+                    
+                    // 接続作成
+                    const edge1 = voidFlowEngine.createEdge(button.id, 'output', lister.id, 'input');
+                    const edge2 = voidFlowEngine.createEdge(lister.id, 'output', connector.id, 'input');
+                    const edge3 = voidFlowEngine.createEdge(connector.id, 'output', manager.id, 'input');
+                    
+                    // 接続線描画
+                    window.drawConnection(edge1);
+                    window.drawConnection(edge2);
+                    window.drawConnection(edge3);
+                    
+                    voidFlowEngine.log('🔧 デバッグ用LV3チェーン自動配置完了');
+                    voidFlowEngine.log('🎯 Button: Sendをクリックしてテストにゃー！');
+                }
+            }, 500);
+        }, 1000);
     </script>
 </body>
 </html>

@@ -2,24 +2,25 @@
 
 ## 📡 ローカルサーバー管理ルール
 
-### **ポート固定: 8000番**
-- **必須**: テスト時は常に`http://localhost:8000`を使用
-- **理由**: ポート番号決め打ちでにゃーがチェックしやすく
+### **環境情報（Ubuntu環境）**
+- **IPアドレス**: 192.168.0.150
+- **ポート**: 10000（8000番は既に使用中）
+- **テストURL**: `http://192.168.0.150:10000`
 
 ### **サーバー起動手順**
 ```bash
 # 1. 既存サーバー全停止（競合回避）
 pkill -f "python3.*http.server" 2>/dev/null || true
 
-# 2. バックグラウンドでサーバー起動（WSL2対応・全インターフェイス）
-python3 -m http.server 8000 --bind 0.0.0.0 > /dev/null 2>&1 &
+# 2. バックグラウンドでサーバー起動（Ubuntu・全インターフェイス）
+python3 -m http.server 10000 --bind 0.0.0.0 > /dev/null 2>&1 &
 
 # 3. 起動確認（2秒待機）
 sleep 2
-ps aux | grep "python3.*http.server.*8000" | grep -v grep
+ps aux | grep "python3.*http.server.*10000" | grep -v grep
 
 # 4. 接続テスト
-curl -s http://localhost:8000 > /dev/null && echo "✅ Server ready on port 8000" || echo "❌ Server failed"
+curl -s http://localhost:10000 > /dev/null && echo "✅ Server ready on port 10000" || echo "❌ Server failed"
 ```
 
 ### **📋 実際の実行例（2025-01-07確認済み）**
@@ -53,13 +54,31 @@ pkill -f "python3.*http.server.*8000" 2>/dev/null; python3 -m http.server 8000 -
 
 ### **🐱 にゃー専用ワンライナー**
 ```bash
-# 📡 サーバー立て直し（WSL2対応版）
-pkill -f "python3.*http.server" 2>/dev/null || true; python3 -m http.server 8000 --bind 0.0.0.0 > /dev/null 2>&1 & sleep 2; echo "✅ Server ready: http://$(ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'):8000"
+# 📡 サーバー立て直し（Ubuntu版・ポート10000）
+pkill -f "python3.*http.server" 2>/dev/null || true; python3 -m http.server 10000 --bind 0.0.0.0 > /dev/null 2>&1 & sleep 2; echo "✅ Server ready: http://192.168.0.150:10000"
 
-# 🧪 テストページ直接アクセス
-# Phase S3テスト: http://localhost:8000/test-voidflow-phase-s3-integration.html
-# Phase Rテスト: http://localhost:8000/test-voidflow-phase-r-integration-fixed.html
-# 簡易テスト: http://localhost:8000/test-voidflow-simple.html
+# 🧪 テストページ直接アクセス（IPアドレス: 192.168.0.150）
+# Phase S3テスト: http://192.168.0.150:10000/test-voidflow-phase-s3-integration.html
+# Phase Rテスト: http://192.168.0.150:10000/test-voidflow-phase-r-integration-fixed.html
+# 簡易テスト: http://192.168.0.150:10000/test-voidflow-simple.html
+```
+
+### **📋 Ubuntu環境での実行手順（2025-01-07確認済み）**
+```bash
+# Step 1: ポート使用状況確認
+$ ss -tuln | grep -E ':(8000|10000)'
+tcp   LISTEN 0      4096                0.0.0.0:8000       0.0.0.0:*          
+
+# Step 2: ポート10000でサーバー起動
+$ python3 -m http.server 10000 --bind 0.0.0.0 > /dev/null 2>&1 &
+
+# Step 3: プロセス確認
+$ sleep 2; ps aux | grep "python3.*http.server.*10000" | grep -v grep
+tomoaki  2799008  0.6  0.1  31220 17664 ?        S    21:02   0:00 python3 -m http.server 10000 --bind 0.0.0.0
+
+# Step 4: 接続確認
+$ curl -s http://localhost:10000 > /dev/null && echo "✅ Server ready on port 10000" || echo "❌ Server failed"
+✅ Server ready on port 10000
 ```
 
 ### **⚠️ トラブル時の対処法**

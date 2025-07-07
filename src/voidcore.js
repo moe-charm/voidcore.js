@@ -53,18 +53,10 @@ class VoidCore {
 
   // Ensure ChannelManager is initialized with proper Promise pattern
   async _ensureInitialized() {
-    // 既に初期化済みなら即座に返す
-    if (this.initialized) {
-      return;
-    }
-    
-    // 初期化Promiseがない場合のみ作成
-    if (!this.initPromise) {
-      this.initPromise = this._performInitialization();
-    }
-    
-    // 必ずPromiseを待つ
-    await this.initPromise;
+    // Phase S4: 早期return + 三項演算子でif文削減
+    if (this.initialized) return
+    this.initPromise = this.initPromise || this._performInitialization()
+    await this.initPromise
   }
   
   // 実際の初期化処理
@@ -94,14 +86,11 @@ class VoidCore {
   }
 
   log(msg) {
-    if (this.logElement) {
-      this.logElement.innerHTML += msg + "<br>"
-      setTimeout(() => {
-        this.logElement.scrollTop = this.logElement.scrollHeight
-      }, 0)
-    } else {
+    // Phase S4: 三項演算子でif文削減
+    this.logElement ? 
+      (this.logElement.innerHTML += msg + "<br>", 
+       setTimeout(() => this.logElement.scrollTop = this.logElement.scrollHeight, 0)) :
       console.log(msg)
-    }
   }
 
   // メッセージ購読（typeのみを知る） with proper async
@@ -203,18 +192,16 @@ class VoidCore {
     }
     
     try {
-      // システムIntent処理
-      if (intent.startsWith('system.')) {
-        return await this._handleSystemIntent(intentMessage)
-      }
+      // Phase S4: Intent prefix HandlerMapパターン
+      const intentPrefixHandlers = [
+        { prefix: 'system.', handler: (msg) => this._handleSystemIntent(msg) },
+        { prefix: 'plugin.', handler: (msg) => this._handlePluginIntent(msg) }
+      ]
       
-      // プラグインIntent処理
-      if (intent.startsWith('plugin.')) {
-        return await this._handlePluginIntent(intentMessage)
-      }
-      
-      // カスタムIntent処理（後で拡張）
-      return await this._handleCustomIntent(intentMessage)
+      const prefixHandler = intentPrefixHandlers.find(h => intent.startsWith(h.prefix))
+      return prefixHandler ? 
+        await prefixHandler.handler(intentMessage) : 
+        await this._handleCustomIntent(intentMessage)
       
     } catch (error) {
       this.log(`❌ Intent processing failed: ${intent} - ${error.message}`)
@@ -227,28 +214,23 @@ class VoidCore {
    * @param {Object} intentMessage - システムIntent
    * @returns {Promise<Object>} 処理結果
    */
+  // Phase S4: HandlerMapパターンでif文撲滅運動
+  static SYSTEM_INTENT_HANDLERS = {
+    'system.createPlugin': async (payload, ctx) => await ctx._handleCreatePluginIntent(payload),
+    'system.reparentPlugin': async (payload, ctx) => await ctx._handleReparentPluginIntent(payload),
+    'system.destroyPlugin': async (payload, ctx) => await ctx._handleDestroyPluginIntent(payload),
+    'system.getStats': async (payload, ctx) => ctx.getSystemStats()
+  }
+
   async _handleSystemIntent(intentMessage) {
     const intent = intentMessage.intent
     const payload = intentMessage.payload
     
     this.log(`🔧 System intent: ${intent}, data: ${JSON.stringify(payload)}`)
     
-    switch (intent) {
-      case 'system.createPlugin':
-        return await this._handleCreatePluginIntent(payload)
-        
-      case 'system.reparentPlugin':
-        return await this._handleReparentPluginIntent(payload)
-        
-      case 'system.destroyPlugin':
-        return await this._handleDestroyPluginIntent(payload)
-        
-      case 'system.getStats':
-        return this.getSystemStats()
-        
-      default:
-        throw new Error(`Unknown system intent: ${intent}`)
-    }
+    const handler = VoidCore.SYSTEM_INTENT_HANDLERS[intent]
+    if (!handler) throw new Error(`Unknown system intent: ${intent}`)
+    return await handler(payload, this)
   }
 
   /**
@@ -490,25 +472,47 @@ class VoidCore {
   
   // === Phase 5.2: DYNAMIC PLUGIN MANAGEMENT SYSTEM ===
   
+  // Phase S4: IntentRequest HandlerMapパターン
+  static INTENT_REQUEST_HANDLERS = {
+    'system.createPlugin': async (message, ctx) => await ctx._handleCreatePlugin(message),
+    'system.destroyPlugin': async (message, ctx) => await ctx._handleDestroyPlugin(message),
+    'system.reparentPlugin': async (message, ctx) => await ctx._handleReparentPlugin(message),
+    'system.connect': async (message, ctx) => await ctx._handleConnect(message)
+  }
+
   // 🚀 システムメッセージハンドラー初期化
   async _initializeSystemMessageHandlers() {
-    // 統一システムメッセージハンドラー
+    // 統一システムメッセージハンドラー (HandlerMapパターン)
     await this.subscribe('IntentRequest', async (message) => {
       try {
-        if (message.action === 'system.createPlugin') {
-          await this._handleCreatePlugin(message)
-        } else if (message.action === 'system.destroyPlugin') {
-          await this._handleDestroyPlugin(message)
-        } else if (message.action === 'system.reparentPlugin') {
-          await this._handleReparentPlugin(message)
-        } else if (message.action === 'system.connect') {
-          await this._handleConnect(message)
-        }
+        const handler = VoidCore.INTENT_REQUEST_HANDLERS[message.action]
+        if (handler) await handler(message, this)
       } catch (error) {
         this.log(`❌ System message handler error: ${error.message}`)
         console.error('System handler error:', error)
       }
     })
+  }
+
+  // Phase S4: 共通レスポンス関数 (重複削減)
+  async _sendSystemErrorResponse(action, error, correlationId) {
+    await this._sendSystemResponse(action, {
+      success: false,
+      error: error.message,
+      correlationId,
+      timestamp: Date.now()
+    }, correlationId)
+    this.log(`❌ System: ${action} failed - ${error.message}`)
+  }
+
+  async _sendSystemSuccessResponse(action, data, correlationId, logMessage) {
+    await this._sendSystemResponse(action, {
+      success: true,
+      ...data,
+      correlationId,
+      timestamp: Date.now()
+    }, correlationId)
+    if (logMessage) this.log(logMessage)
   }
   
   // 🔧 system.createPlugin ハンドラー
@@ -550,30 +554,16 @@ class VoidCore {
         }
         
         // 成功レスポンス
-        await this._sendSystemResponse('system.createPlugin', {
-          success: true,
-          pluginId,
-          type,
-          parent,
-          correlationId,
-          timestamp: Date.now()
-        }, correlationId)
-        
-        this.log(`🚀 System: Plugin created - ${pluginId} (type: ${type}, parent: ${parent})`)
+        await this._sendSystemSuccessResponse('system.createPlugin', 
+          { pluginId, type, parent }, 
+          correlationId, 
+          `🚀 System: Plugin created - ${pluginId} (type: ${type}, parent: ${parent})`)
       } else {
         throw new Error(`Failed to register plugin: ${pluginId}`)
       }
       
     } catch (error) {
-      // エラーレスポンス
-      await this._sendSystemResponse('system.createPlugin', {
-        success: false,
-        error: error.message,
-        correlationId,
-        timestamp: Date.now()
-      }, correlationId)
-      
-      this.log(`❌ System: Plugin creation failed - ${error.message}`)
+      await this._sendSystemErrorResponse('system.createPlugin', error, correlationId)
     }
   }
   
@@ -584,24 +574,13 @@ class VoidCore {
     try {
       const success = this.unregisterPlugin(pluginId)
       
-      await this._sendSystemResponse('system.destroyPlugin', {
-        success,
-        pluginId,
-        correlationId,
-        timestamp: Date.now()
-      }, correlationId)
-      
-      this.log(`🗑️ System: Plugin ${success ? 'destroyed' : 'not found'} - ${pluginId}`)
+      await this._sendSystemSuccessResponse('system.destroyPlugin', 
+        { success, pluginId }, 
+        correlationId, 
+        `🗑️ System: Plugin ${success ? 'destroyed' : 'not found'} - ${pluginId}`)
       
     } catch (error) {
-      await this._sendSystemResponse('system.destroyPlugin', {
-        success: false,
-        error: error.message,
-        correlationId,
-        timestamp: Date.now()
-      }, correlationId)
-      
-      this.log(`❌ System: Plugin destruction failed - ${error.message}`)
+      await this._sendSystemErrorResponse('system.destroyPlugin', error, correlationId)
     }
   }
   
@@ -758,19 +737,8 @@ class VoidCore {
   
   // 📏 現在の階層深度取得
   _getCurrentDepth(parentId) {
-    // 簡易実装：親を辿って深度を計算
-    let depth = 0
-    let currentParent = parentId
-    
-    while (currentParent && depth < 100) { // 無限ループ防止
-      const parentPlugin = this.getPlugin(currentParent)
-      if (!parentPlugin) break
-      
-      currentParent = parentPlugin.parentId
-      depth++
-    }
-    
-    return depth
+    // Phase S4: 共通関数使用で重複削減
+    return this._traverseParentChain(parentId).depth
   }
   
   // 🔄 循環参照チェック（戸籍異動届で使用）- 強化版
@@ -819,17 +787,14 @@ class VoidCore {
     const issues = [];
     
     for (const plugin of this.plugins) {
-      // 親プラグインの存在チェック
-      if (plugin.parentId) {
-        const parent = this.getPlugin(plugin.parentId);
-        if (!parent) {
-          issues.push({
-            type: 'missing_parent',
-            pluginId: plugin.pluginId,
-            parentId: plugin.parentId,
-            message: `Plugin ${plugin.pluginId} has non-existent parent ${plugin.parentId}`
-          });
-        }
+      // 親プラグインの存在チェック（共通化）
+      if (!this.hasValidParent(plugin)) {
+        issues.push({
+          type: 'missing_parent',
+          pluginId: plugin.pluginId,
+          parentId: plugin.parentId,
+          message: `Plugin ${plugin.pluginId} has non-existent parent ${plugin.parentId}`
+        });
       }
       
       // 循環参照チェック
@@ -940,6 +905,29 @@ class VoidCore {
     
     return ancestors;
   }
+
+  // Phase S4: 親プラグイン存在チェック共通化
+  hasValidParent(plugin) {
+    return !plugin.parentId || !!this.getPlugin(plugin.parentId)
+  }
+
+  // Phase S4: 階層探索共通関数
+  _traverseParentChain(startId, maxDepth = 100, visitor = null) {
+    const visited = new Set()
+    let current = startId
+    let depth = 0
+    
+    while (current && depth < maxDepth && !visited.has(current)) {
+      if (visitor && visitor(current, depth, visited)) return { stopped: true, current, depth }
+      visited.add(current)
+      const plugin = this.getPlugin(current)
+      if (!plugin) break
+      current = plugin.parentId
+      depth++
+    }
+    
+    return { stopped: false, current, depth, visited }
+  }
   
   // 指定プラグインの兄弟プラグインを取得（同じ親を持つ）
   getSiblings(pluginId) {
@@ -1003,4 +991,5 @@ class VoidCore {
   }
 }
 
+export { VoidCore }
 export const voidCore = new VoidCore()
