@@ -512,7 +512,7 @@
 
     <script type="module">
         import { voidCore, Message, createPlugin } from '../src/index.js';
-        import { VoidFlowMonacoIntegration } from '../src/voidflow-monaco-integration.js';
+        // import { VoidFlowMonacoIntegration } from '../src/voidflow-monaco-integration.js'; // 削除済み
         import { UniversalNodeIntegration } from '../src/universal-node-integration.js';
 
         // VoidFlow Engine - ヘッドレス型フロー実行エンジン
@@ -1555,32 +1555,10 @@
                 }
             }
 
-            // Phase 5.1: Edit plugin in Monaco Editor
+            // Phase 5.1: Edit plugin in Monaco Editor (無効化済み)
             async editPluginCode(nodeId) {
-                try {
-                    this.log(`🎨 editPluginCode called for node: ${nodeId}`);
-                    const node = this.nodes.get(nodeId);
-                    if (!node) {
-                        this.log(`❌ Node not found: ${nodeId}`);
-                        return;
-                    }
-                    
-                    this.log(`📝 Node found: ${node.type}`);
-                    
-                    // Initialize Monaco if not ready
-                    if (!this.isMonacoInitialized) {
-                        this.log(`🔧 Initializing Monaco integration...`);
-                        await this.initializeMonacoIntegration();
-                    }
-                    
-                    this.log(`🚀 Opening Monaco Editor for plugin: ${node.type}`);
-                    // Open Monaco Editor for plugin editing
-                    await this.monacoIntegration.editPlugin(nodeId, node.type);
-                    
-                } catch (error) {
-                    this.log(`❌ Failed to open plugin editor: ${error.message}`);
-                    console.error('editPluginCode error:', error);
-                }
+                this.log(`⚠️ Monaco Editor機能は削除されました (nodeId: ${nodeId})`);
+                this.log(`🔧 右クリック→Edit Plugin Codeは現在利用できません`);
             }
         }
 
