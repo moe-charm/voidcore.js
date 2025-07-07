@@ -10,18 +10,39 @@ export class ChannelManager {
     this.multiChannelEnabled = false
     this.logElement = null
     this.initialized = false
+    this.initPromise = null  // Promise-based initialization
     
     // Subscribe tracking for statistics (message.type -> channelName)
     this.typeToChannelMap = new Map()
     this.subscriptionCount = 0
+    
   }
 
-  // v13.0: Initialize transport
+  // v13.0: Initialize transport with proper Promise pattern
   async initialize() {
-    if (!this.initialized) {
-      await this.transport.initialize()
-      this.initialized = true
-      this.log(`🔌 ChannelManager initialized with ${this.transport.constructor.name}`)
+    // 既に初期化済みなら即座に返す
+    if (this.initialized) {
+      return;
+    }
+    
+    // 初期化Promiseがない場合のみ作成
+    if (!this.initPromise) {
+      this.initPromise = this._performInitialization();
+    }
+    
+    // 必ずPromiseを待つ
+    await this.initPromise;
+  }
+  
+  // 実際の初期化処理
+  async _performInitialization() {
+    try {
+      await this.transport.initialize();
+      this.initialized = true;
+      this.log(`🔌 ChannelManager initialized with ${this.transport.constructor.name}`);
+    } catch (error) {
+      this.log(`❌ ChannelManager initialization failed: ${error.message}`);
+      throw error;
     }
   }
 
@@ -73,12 +94,10 @@ export class ChannelManager {
     }
   }
 
-  // v13.0: Subscribe to message type (Transport-based)
-  subscribe(type, handler) {
-    // v13.0: Auto-initialize if needed
-    if (!this.initialized) {
-      this.initialize().catch(console.error)
-    }
+  // v13.0: Subscribe to message type (Transport-based) with proper async
+  async subscribe(type, handler) {
+    // v13.0: 必ず初期化を待つ
+    await this.initialize();
 
     // Track type -> handler mapping for statistics
     if (!this.typeToChannelMap.has(type)) {
@@ -121,9 +140,9 @@ export class ChannelManager {
   // v13.0: Create type-filtered handler for Transport
   createTypeHandler(expectedType, originalHandler) {
     return (message) => {
-      // Only call handler if message category matches (not type)
-      // v14.0 FIX: Use message.category instead of message.type
-      if (message && message.category === expectedType) {
+      // Only call handler if message type matches
+      // Phase 5.2 FIX: Use message.type instead of message.category
+      if (message && message.type === expectedType) {
         return originalHandler(message)
       }
     }

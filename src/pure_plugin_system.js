@@ -306,6 +306,165 @@ export function createLegacyCompatiblePlugin(config) {
 }
 
 // =========================================
+// 🚀 Phase 5.2: Dynamic Plugin Management
+// =========================================
+
+/**
+ * 動的プラグイン生成ヘルパー
+ * system.createPluginを簡単に使用できるAPI
+ */
+export async function spawnPlugin(parentPlugin, type, config = {}, options = {}) {
+  const correlationId = `spawn-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`
+  
+  const payload = {
+    type,
+    config,
+    parent: parentPlugin.pluginId,
+    correlationId,
+    maxDepth: options.maxDepth || 10,
+    resourceCost: options.resourceCost || 1
+  }
+  
+  // IntentRequest送信
+  await parentPlugin.sendIntent('system.createPlugin', payload)
+  
+  // レスポンス待機（非同期）
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup()
+      reject(new Error('Spawn timeout'))
+    }, options.timeout || 5000)
+    
+    const responseHandler = (message) => {
+      if (message.correlationId === correlationId && message.action === 'system.createPlugin') {
+        cleanup()
+        if (message.payload.success) {
+          resolve({
+            success: true,
+            pluginId: message.payload.pluginId,
+            type: message.payload.type,
+            correlationId
+          })
+        } else {
+          reject(new Error(message.payload.error))
+        }
+      }
+    }
+    
+    const cleanup = () => {
+      clearTimeout(timeout)
+      voidCore.unsubscribe('IntentResponse', responseHandler)
+    }
+    
+    voidCore.subscribe('IntentResponse', responseHandler)
+  })
+}
+
+/**
+ * 動的プラグイン削除ヘルパー
+ */
+export async function destroyPlugin(parentPlugin, targetPluginId, options = {}) {
+  const correlationId = `destroy-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`
+  
+  const payload = {
+    pluginId: targetPluginId,
+    correlationId
+  }
+  
+  await parentPlugin.sendIntent('system.destroyPlugin', payload)
+  
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup()
+      reject(new Error('Destroy timeout'))
+    }, options.timeout || 5000)
+    
+    const responseHandler = (message) => {
+      if (message.correlationId === correlationId && message.action === 'system.destroyPlugin') {
+        cleanup()
+        if (message.payload.success) {
+          resolve({
+            success: true,
+            pluginId: targetPluginId,
+            correlationId
+          })
+        } else {
+          reject(new Error(message.payload.error))
+        }
+      }
+    }
+    
+    const cleanup = () => {
+      clearTimeout(timeout)
+      voidCore.unsubscribe('IntentResponse', responseHandler)
+    }
+    
+    voidCore.subscribe('IntentResponse', responseHandler)
+  })
+}
+
+/**
+ * 動的接続ヘルパー
+ */
+export async function connectPlugins(parentPlugin, source, target, options = {}) {
+  const correlationId = `connect-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`
+  
+  const payload = {
+    source,
+    target,
+    sourcePort: options.sourcePort || 'output',
+    targetPort: options.targetPort || 'input',
+    correlationId
+  }
+  
+  await parentPlugin.sendIntent('system.connect', payload)
+  
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup()
+      reject(new Error('Connect timeout'))
+    }, options.timeout || 5000)
+    
+    const responseHandler = (message) => {
+      if (message.correlationId === correlationId && message.action === 'system.connect') {
+        cleanup()
+        if (message.payload.success) {
+          resolve({
+            success: true,
+            source,
+            target,
+            correlationId
+          })
+        } else {
+          reject(new Error(message.payload.error))
+        }
+      }
+    }
+    
+    const cleanup = () => {
+      clearTimeout(timeout)
+      voidCore.unsubscribe('IntentResponse', responseHandler)
+    }
+    
+    voidCore.subscribe('IntentResponse', responseHandler)
+  })
+}
+
+/**
+ * Correlation ID生成ヘルパー
+ */
+export function generateCorrelationId(prefix = 'corr') {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`
+}
+
+/**
+ * システム統計情報取得ヘルパー
+ */
+export function getSystemStats() {
+  return voidCore.getSystemStats()
+}
+
+// =========================================
 // 🌟 エクスポート
 // =========================================
 

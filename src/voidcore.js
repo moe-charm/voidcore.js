@@ -24,6 +24,14 @@ class VoidCore {
     this.plugins = []
     this.messagePool = new SimpleMessagePool()
     this.coreFusion = new CoreFusion()
+    
+    // Phase 5.2: Dynamic Plugin Management System
+    this.pendingRequests = new Map() // correlationId -> Promise resolver
+    this.maxDepth = 10 // Default maximum hierarchy depth
+    this.resourceCost = new Map() // coreId -> resource consumption
+    
+    // システムメッセージハンドラーの初期化
+    this._initializeSystemMessageHandlers()
   }
 
   setLogElement(element) {
@@ -39,16 +47,31 @@ class VoidCore {
     this.log(`💓 VoidCore v13.0: Transport swapped to ${newTransport.constructor.name}`)
   }
 
-  // Ensure ChannelManager is initialized (called automatically)
+  // Ensure ChannelManager is initialized with proper Promise pattern
   async _ensureInitialized() {
-    if (!this.initialized && !this.initPromise) {
-      this.initPromise = this.channelManager.initialize().then(() => {
-        this.initialized = true
-      })
+    // 既に初期化済みなら即座に返す
+    if (this.initialized) {
+      return;
     }
     
-    if (this.initPromise) {
-      await this.initPromise
+    // 初期化Promiseがない場合のみ作成
+    if (!this.initPromise) {
+      this.initPromise = this._performInitialization();
+    }
+    
+    // 必ずPromiseを待つ
+    await this.initPromise;
+  }
+  
+  // 実際の初期化処理
+  async _performInitialization() {
+    try {
+      await this.channelManager.initialize();
+      this.initialized = true;
+      this.log('🎆 VoidCore fully initialized');
+    } catch (error) {
+      this.log(`❌ VoidCore initialization failed: ${error.message}`);
+      throw error;
     }
   }
 
@@ -77,15 +100,13 @@ class VoidCore {
     }
   }
 
-  // メッセージ購読（typeのみを知る）
-  subscribe(type, handler) {
-    // v13.0: Lazy initialization - defer to first publish/subscribe usage
-    if (!this.initialized && !this.initPromise) {
-      this._ensureInitialized().catch(console.error)
-    }
+  // メッセージ購読（typeのみを知る） with proper async
+  async subscribe(type, handler) {
+    // v13.0: 必ず初期化を待つ
+    await this._ensureInitialized();
     
     // v12.0: Delegate to ChannelManager
-    const unsubscribe = this.channelManager.subscribe(type, handler)
+    const unsubscribe = await this.channelManager.subscribe(type, handler);
     
     // v11.0 backward compatibility: maintain legacy subscribers map
     if (!this.subscribers.has(type)) {
@@ -265,6 +286,264 @@ class VoidCore {
   clearFusionHistory() {
     this.coreFusion.clearFusionHistory()
     this.log('🧹 Fusion history cleared')
+  }
+  
+  // === Phase 5.2: DYNAMIC PLUGIN MANAGEMENT SYSTEM ===
+  
+  // 🚀 システムメッセージハンドラー初期化
+  _initializeSystemMessageHandlers() {
+    // 統一システムメッセージハンドラー
+    this.subscribe('IntentRequest', async (message) => {
+      try {
+        if (message.action === 'system.createPlugin') {
+          await this._handleCreatePlugin(message)
+        } else if (message.action === 'system.destroyPlugin') {
+          await this._handleDestroyPlugin(message)
+        } else if (message.action === 'system.connect') {
+          await this._handleConnect(message)
+        }
+      } catch (error) {
+        this.log(`❌ System message handler error: ${error.message}`)
+        console.error('System handler error:', error)
+      }
+    })
+  }
+  
+  // 🔧 system.createPlugin ハンドラー
+  async _handleCreatePlugin(message) {
+    const { type, config, parent, correlationId, maxDepth, resourceCost } = message.payload
+    
+    try {
+      // 階層深度チェック
+      if (maxDepth && this._getCurrentDepth(parent) >= maxDepth) {
+        throw new Error(`Maximum depth exceeded: ${maxDepth}`)
+      }
+      
+      // リソースコストチェック
+      if (resourceCost && !this._checkResourceAvailability(parent, resourceCost)) {
+        throw new Error(`Insufficient resources for plugin creation`)
+      }
+      
+      // 動的プラグイン生成
+      const pluginId = `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`
+      
+      // プラグインオブジェクト作成
+      const plugin = this._createPluginObject({
+        pluginId,
+        type,
+        config: config || {},
+        parent,
+        createdAt: Date.now(),
+        correlationId
+      })
+      
+      // プラグイン登録
+      const success = this.registerPlugin(plugin)
+      
+      if (success) {
+        // リソース消費を記録
+        if (resourceCost) {
+          this._consumeResource(parent, resourceCost)
+        }
+        
+        // 成功レスポンス
+        await this._sendSystemResponse('system.createPlugin', {
+          success: true,
+          pluginId,
+          type,
+          parent,
+          correlationId,
+          timestamp: Date.now()
+        }, correlationId)
+        
+        this.log(`🚀 System: Plugin created - ${pluginId} (type: ${type}, parent: ${parent})`)
+      } else {
+        throw new Error(`Failed to register plugin: ${pluginId}`)
+      }
+      
+    } catch (error) {
+      // エラーレスポンス
+      await this._sendSystemResponse('system.createPlugin', {
+        success: false,
+        error: error.message,
+        correlationId,
+        timestamp: Date.now()
+      }, correlationId)
+      
+      this.log(`❌ System: Plugin creation failed - ${error.message}`)
+    }
+  }
+  
+  // 🗑️ system.destroyPlugin ハンドラー
+  async _handleDestroyPlugin(message) {
+    const { pluginId, correlationId } = message.payload
+    
+    try {
+      const success = this.unregisterPlugin(pluginId)
+      
+      await this._sendSystemResponse('system.destroyPlugin', {
+        success,
+        pluginId,
+        correlationId,
+        timestamp: Date.now()
+      }, correlationId)
+      
+      this.log(`🗑️ System: Plugin ${success ? 'destroyed' : 'not found'} - ${pluginId}`)
+      
+    } catch (error) {
+      await this._sendSystemResponse('system.destroyPlugin', {
+        success: false,
+        error: error.message,
+        correlationId,
+        timestamp: Date.now()
+      }, correlationId)
+      
+      this.log(`❌ System: Plugin destruction failed - ${error.message}`)
+    }
+  }
+  
+  // 🔗 system.connect ハンドラー
+  async _handleConnect(message) {
+    const { source, target, sourcePort, targetPort, correlationId } = message.payload
+    
+    try {
+      // 動的接続の実装（将来拡張）
+      // 現在はログ出力のみ
+      
+      await this._sendSystemResponse('system.connect', {
+        success: true,
+        source,
+        target,
+        sourcePort,
+        targetPort,
+        correlationId,
+        timestamp: Date.now()
+      }, correlationId)
+      
+      this.log(`🔗 System: Connection established - ${source}:${sourcePort} -> ${target}:${targetPort}`)
+      
+    } catch (error) {
+      await this._sendSystemResponse('system.connect', {
+        success: false,
+        error: error.message,
+        correlationId,
+        timestamp: Date.now()
+      }, correlationId)
+      
+      this.log(`❌ System: Connection failed - ${error.message}`)
+    }
+  }
+  
+  // 🏭 プラグインオブジェクト作成
+  _createPluginObject({ pluginId, type, config, parent, createdAt, correlationId }) {
+    return {
+      pluginId,
+      type,
+      config,
+      parent,
+      createdAt,
+      correlationId,
+      core: this,
+      
+      // 基本的なプラグインAPI
+      sendIntent: async (action, payload) => {
+        const intentMessage = {
+          type: 'IntentRequest',
+          action,
+          payload: {
+            ...payload,
+            sourcePlugin: pluginId,
+            causationId: correlationId // 因果関係追跡
+          },
+          timestamp: Date.now()
+        }
+        return await this.publish(intentMessage)
+      },
+      
+      notice: async (eventName, payload) => {
+        const noticeMessage = {
+          type: 'Notice',
+          event: eventName,
+          payload: {
+            ...payload,
+            sourcePlugin: pluginId,
+            causationId: correlationId
+          },
+          timestamp: Date.now()
+        }
+        return await this.publish(noticeMessage)
+      },
+      
+      observe: (eventName, handler) => {
+        return this.subscribe('Notice', (message) => {
+          if (message.event === eventName) {
+            handler(message)
+          }
+        })
+      }
+    }
+  }
+  
+  // 📤 システムレスポンス送信
+  async _sendSystemResponse(action, payload, correlationId) {
+    const responseMessage = {
+      type: 'IntentResponse',
+      action,
+      payload,
+      correlationId,
+      timestamp: Date.now()
+    }
+    
+    return await this.publish(responseMessage)
+  }
+  
+  // 📏 現在の階層深度取得
+  _getCurrentDepth(parentId) {
+    // 簡易実装：親を辿って深度を計算
+    let depth = 0
+    let currentParent = parentId
+    
+    while (currentParent && depth < 100) { // 無限ループ防止
+      const parentPlugin = this.getPlugin(currentParent)
+      if (!parentPlugin) break
+      
+      currentParent = parentPlugin.parent
+      depth++
+    }
+    
+    return depth
+  }
+  
+  // 💰 リソース可用性チェック
+  _checkResourceAvailability(coreId, requiredCost) {
+    const currentCost = this.resourceCost.get(coreId) || 0
+    const maxCost = 100 // デフォルト最大リソース
+    
+    return (currentCost + requiredCost) <= maxCost
+  }
+  
+  // 💸 リソース消費
+  _consumeResource(coreId, cost) {
+    const currentCost = this.resourceCost.get(coreId) || 0
+    this.resourceCost.set(coreId, currentCost + cost)
+  }
+  
+  // 🔄 リソース解放
+  _releaseResource(coreId, cost) {
+    const currentCost = this.resourceCost.get(coreId) || 0
+    this.resourceCost.set(coreId, Math.max(0, currentCost - cost))
+  }
+  
+  // 📊 システム統計情報
+  getSystemStats() {
+    return {
+      ...this.getStats(),
+      pendingRequests: this.pendingRequests.size,
+      maxDepth: this.maxDepth,
+      resourceUsage: Object.fromEntries(this.resourceCost),
+      systemPlugins: this.plugins.filter(p => p.type && p.type.startsWith('system')).length,
+      dynamicPlugins: this.plugins.filter(p => p.correlationId).length
+    }
   }
 }
 

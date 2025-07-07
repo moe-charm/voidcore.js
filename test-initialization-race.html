@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 初期化競合状態デバッグ専用デモ</title>
+  <style>
+    body {
+      font-family: 'Monaco', 'Menlo', monospace;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section {
+      background: #2d2d2d;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border: 1px solid #444;
+    }
+    h1 {
+      color: #4CAF50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    h2 {
+      color: #2196F3;
+      border-bottom: 2px solid #2196F3;
+      padding-bottom: 5px;
+    }
+    .test-button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      margin: 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    .test-button:hover {
+      background: #45a049;
+    }
+    .danger-button {
+      background: #f44336;
+    }
+    .danger-button:hover {
+      background: #da190b;
+    }
+    .log-output {
+      background: #000;
+      color: #0f0;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .stats {
+      background: #333;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .stat-item {
+      background: #444;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 初期化競合状態デバッグ専用デモ</h1>
+    
+    <div class="section">
+      <h2>🎯 テスト目的</h2>
+      <p>VoidCore と ChannelManager の初期化競合状態を再現・検証します</p>
+      <ul>
+        <li>複数のsubscribe()同時呼び出しでの初期化競合</li>
+        <li>VoidCore._ensureInitialized() の競合</li>
+        <li>ChannelManager.initialize() の競合</li>
+        <li>Promise-based initialization pattern の検証</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🧪 テスト実行</h2>
+      <button class="test-button" onclick="testSingleSubscribe()">
+        🔔 単一Subscribe テスト
+      </button>
+      <button class="test-button" onclick="testMultipleSubscribe()">
+        🔔🔔 複数Subscribe テスト (競合再現)
+      </button>
+      <button class="test-button" onclick="testRapidSubscribe()">
+        ⚡ 高速Subscribe テスト (極端な競合)
+      </button>
+      <button class="test-button danger-button" onclick="testConcurrentPublish()">
+        📨 同時Publish テスト (最悪ケース)
+      </button>
+      <button class="test-button" onclick="clearLog()">
+        🧹 ログクリア
+      </button>
+    </div>
+
+    <div class="section">
+      <h2>📊 統計情報</h2>
+      <div class="stats" id="stats">
+        <div class="stat-item">
+          <div class="stat-value" id="voidcore-init-count">0</div>
+          <div class="stat-label">VoidCore初期化回数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="channelmanager-init-count">0</div>
+          <div class="stat-label">ChannelManager初期化回数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="transport-init-count">0</div>
+          <div class="stat-label">Transport初期化回数</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="subscribe-count">0</div>
+          <div class="stat-label">Subscribe呼び出し回数</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📋 デバッグログ</h2>
+      <div class="log-output" id="debug-log"></div>
+    </div>
+
+    <div class="section">
+      <h2>🔧 VoidCore インスタンス状態</h2>
+      <div class="log-output" id="voidcore-state"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    // VoidCoreクラスを直接インポート
+    import { ChannelManager } from './src/channel-manager.js'
+    
+    // VoidCoreクラスを再実装（テスト用）
+    class VoidCore {
+      constructor(transport = null) {
+        this.channelManager = new ChannelManager(transport)
+        this.initialized = false
+        this.subscribers = new Map()
+        this.logElement = null
+        this.initPromise = null
+        this.coreId = `core-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        this.plugins = []
+      }
+      
+      setLogElement(element) {
+        this.logElement = element
+        this.channelManager.setLogElement(element)
+      }
+      
+      async _ensureInitialized() {
+        if (!this.initialized && !this.initPromise) {
+          this.initPromise = this.channelManager.initialize().then(() => {
+            this.initialized = true
+          })
+        }
+        
+        if (this.initPromise) {
+          await this.initPromise
+        }
+      }
+      
+      subscribe(type, handler) {
+        if (!this.initialized && !this.initPromise) {
+          this._ensureInitialized().catch(console.error)
+        }
+        
+        const unsubscribe = this.channelManager.subscribe(type, handler)
+        
+        if (!this.subscribers.has(type)) {
+          this.subscribers.set(type, new Set())
+        }
+        this.subscribers.get(type).add(handler)
+        
+        return unsubscribe
+      }
+      
+      async publish(message) {
+        if (!message || !message.type) {
+          return 0
+        }
+        
+        await this._ensureInitialized()
+        const deliveredCount = await this.channelManager.publish(message)
+        return deliveredCount
+      }
+      
+      log(msg) {
+        if (this.logElement) {
+          this.logElement.innerHTML += msg + "<br>"
+          setTimeout(() => {
+            this.logElement.scrollTop = this.logElement.scrollHeight
+          }, 0)
+        } else {
+          console.log(msg)
+        }
+      }
+    }
+    
+    // デバッグカウンター
+    let debugCounters = {
+      voidcoreInit: 0,
+      channelManagerInit: 0,
+      transportInit: 0,
+      subscribeCount: 0
+    }
+
+    // デバッグログ機能
+    const debugLog = document.getElementById('debug-log')
+    const voidcoreState = document.getElementById('voidcore-state')
+    
+    function log(message) {
+      const timestamp = new Date().toISOString().substr(11, 12)
+      debugLog.innerHTML += `[${timestamp}] ${message}\n`
+      debugLog.scrollTop = debugLog.scrollHeight
+      console.log(message)
+    }
+
+    function updateStats() {
+      document.getElementById('voidcore-init-count').textContent = debugCounters.voidcoreInit
+      document.getElementById('channelmanager-init-count').textContent = debugCounters.channelManagerInit
+      document.getElementById('transport-init-count').textContent = debugCounters.transportInit
+      document.getElementById('subscribe-count').textContent = debugCounters.subscribeCount
+    }
+
+    function updateVoidCoreState() {
+      const state = `
+VoidCore状態:
+  initialized: ${window.testVoidCore?.initialized || 'N/A'}
+  initPromise: ${window.testVoidCore?.initPromise ? 'EXISTS' : 'NULL'}
+  coreId: ${window.testVoidCore?.coreId || 'N/A'}
+  
+ChannelManager状態:
+  initialized: ${window.testVoidCore?.channelManager?.initialized || 'N/A'}
+  _initializing: ${window.testVoidCore?.channelManager?._initializing || 'N/A'}
+  
+Transport状態:
+  initialized: ${window.testVoidCore?.channelManager?.transport?.initialized || 'N/A'}
+  type: ${window.testVoidCore?.channelManager?.transport?.constructor?.name || 'N/A'}
+      `
+      voidcoreState.textContent = state
+    }
+
+    // 初期化カウント用のオーバーライド
+    function createDebugVoidCore() {
+      const voidCore = new VoidCore()
+      
+      // VoidCore._ensureInitialized をオーバーライド
+      const originalEnsureInitialized = voidCore._ensureInitialized.bind(voidCore)
+      voidCore._ensureInitialized = async function() {
+        debugCounters.voidcoreInit++
+        log(`🔍 VoidCore._ensureInitialized() 呼び出し #${debugCounters.voidcoreInit}`)
+        updateStats()
+        return await originalEnsureInitialized()
+      }
+      
+      // ChannelManager.initialize をオーバーライド
+      const originalChannelManagerInit = voidCore.channelManager.initialize.bind(voidCore.channelManager)
+      voidCore.channelManager.initialize = async function() {
+        debugCounters.channelManagerInit++
+        log(`🔍 ChannelManager.initialize() 呼び出し #${debugCounters.channelManagerInit}`)
+        updateStats()
+        return await originalChannelManagerInit()
+      }
+      
+      // Transport.initialize をオーバーライド
+      const originalTransportInit = voidCore.channelManager.transport.initialize.bind(voidCore.channelManager.transport)
+      voidCore.channelManager.transport.initialize = async function() {
+        debugCounters.transportInit++
+        log(`🔍 Transport.initialize() 呼び出し #${debugCounters.transportInit}`)
+        updateStats()
+        return await originalTransportInit()
+      }
+      
+      // Subscribe をオーバーライド
+      const originalSubscribe = voidCore.subscribe.bind(voidCore)
+      voidCore.subscribe = function(type, handler) {
+        debugCounters.subscribeCount++
+        log(`🔍 voidCore.subscribe(${type}) 呼び出し #${debugCounters.subscribeCount}`)
+        updateStats()
+        return originalSubscribe(type, handler)
+      }
+      
+      return voidCore
+    }
+
+    // グローバルテスト関数
+    window.testSingleSubscribe = async function() {
+      log('🔔 === 単一Subscribe テスト開始 ===')
+      
+      const voidCore = createDebugVoidCore()
+      window.testVoidCore = voidCore
+      
+      voidCore.subscribe('TestMessage', (message) => {
+        log(`📨 TestMessage受信: ${JSON.stringify(message)}`)
+      })
+      
+      // 状態確認
+      setTimeout(() => {
+        updateVoidCoreState()
+        log('🔔 === 単一Subscribe テスト完了 ===')
+      }, 100)
+    }
+
+    window.testMultipleSubscribe = async function() {
+      log('🔔🔔 === 複数Subscribe テスト開始 ===')
+      
+      const voidCore = createDebugVoidCore()
+      window.testVoidCore = voidCore
+      
+      // 複数のsubscribeを同時に実行
+      const promises = []
+      for (let i = 0; i < 5; i++) {
+        promises.push(new Promise(resolve => {
+          voidCore.subscribe(`TestMessage${i}`, (message) => {
+            log(`📨 TestMessage${i}受信: ${JSON.stringify(message)}`)
+          })
+          resolve()
+        }))
+      }
+      
+      await Promise.all(promises)
+      
+      // 状態確認
+      setTimeout(() => {
+        updateVoidCoreState()
+        log('🔔🔔 === 複数Subscribe テスト完了 ===')
+      }, 100)
+    }
+
+    window.testRapidSubscribe = async function() {
+      log('⚡ === 高速Subscribe テスト開始 ===')
+      
+      const voidCore = createDebugVoidCore()
+      window.testVoidCore = voidCore
+      
+      // 極端に高速なsubscribeを実行
+      const promises = []
+      for (let i = 0; i < 20; i++) {
+        promises.push(new Promise(resolve => {
+          setTimeout(() => {
+            voidCore.subscribe(`RapidTest${i}`, (message) => {
+              log(`📨 RapidTest${i}受信: ${JSON.stringify(message)}`)
+            })
+            resolve()
+          }, Math.random() * 10) // 0-10ms のランダム遅延
+        }))
+      }
+      
+      await Promise.all(promises)
+      
+      // 状態確認
+      setTimeout(() => {
+        updateVoidCoreState()
+        log('⚡ === 高速Subscribe テスト完了 ===')
+      }, 200)
+    }
+
+    window.testConcurrentPublish = async function() {
+      log('📨 === 同時Publish テスト開始 ===')
+      
+      const voidCore = createDebugVoidCore()
+      window.testVoidCore = voidCore
+      
+      // Subscribe + Publish を同時に実行
+      const promises = []
+      
+      // Subscribe群
+      for (let i = 0; i < 10; i++) {
+        promises.push(new Promise(resolve => {
+          voidCore.subscribe(`ConcurrentTest${i}`, (message) => {
+            log(`📨 ConcurrentTest${i}受信: ${JSON.stringify(message)}`)
+          })
+          resolve()
+        }))
+      }
+      
+      // Publish群
+      for (let i = 0; i < 5; i++) {
+        promises.push(new Promise(resolve => {
+          setTimeout(async () => {
+            await voidCore.publish({
+              type: `ConcurrentTest${i}`,
+              payload: { test: `concurrent-${i}` }
+            })
+            resolve()
+          }, Math.random() * 50) // 0-50ms のランダム遅延
+        }))
+      }
+      
+      await Promise.all(promises)
+      
+      // 状態確認
+      setTimeout(() => {
+        updateVoidCoreState()
+        log('📨 === 同時Publish テスト完了 ===')
+      }, 200)
+    }
+
+    window.clearLog = function() {
+      debugLog.innerHTML = ''
+      debugCounters = {
+        voidcoreInit: 0,
+        channelManagerInit: 0,
+        transportInit: 0,
+        subscribeCount: 0
+      }
+      updateStats()
+      log('🧹 ログクリア完了')
+    }
+
+    // 初期化
+    log('🔍 初期化競合状態デバッグ専用デモ開始')
+    updateStats()
+    updateVoidCoreState()
+  </script>
+</body>
+</html>

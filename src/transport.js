@@ -73,6 +73,9 @@ export class DefaultTransport extends ITransport {
   }
 
   async initialize() {
+    if (this.initialized) {
+      return; // 重複初期化防止
+    }
     this.initialized = true;
     console.log('🔌 DefaultTransport initialized (v12.0 compatibility mode)');
   }

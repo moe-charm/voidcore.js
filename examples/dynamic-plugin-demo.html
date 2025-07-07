@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 VoidCore Phase 5.2 - Dynamic Plugin Demo (Fixed Initialization)</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .demo-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+            gap: 2px;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 2px solid #4a90e2;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            color: #4a90e2;
+        }
+
+        .main-area {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .control-panel {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-left: 1px solid #333;
+            overflow-y: auto;
+        }
+
+        .control-section {
+            margin-bottom: 30px;
+        }
+
+        .control-title {
+            font-size: 14px;
+            color: #4a90e2;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .button:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .button.danger {
+            background: #e74c3c;
+        }
+
+        .button.danger:hover {
+            background: #c0392b;
+        }
+
+        .input-group {
+            margin: 10px 0;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: #bbb;
+            margin-bottom: 5px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 8px;
+            background: #2c2c2c;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: white;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        #log {
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .plugin-list {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .plugin-item {
+            background: #2c2c2c;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 5px 0;
+            font-size: 11px;
+        }
+
+        .plugin-type {
+            color: #4a90e2;
+            font-weight: bold;
+        }
+
+        .plugin-id {
+            color: #bbb;
+            font-size: 10px;
+        }
+
+        .stats-panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 11px;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+        }
+
+        .stats-label {
+            color: #bbb;
+        }
+
+        .stats-value {
+            color: #4a90e2;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="header">
+            <h1>🚀 VoidCore Phase 5.2 - Dynamic Plugin Management Demo (Fixed)</h1>
+        </div>
+        
+        <div class="main-area">
+            <h2>📊 System Log</h2>
+            <div id="log"></div>
+        </div>
+        
+        <div class="control-panel">
+            <div class="control-section">
+                <div class="control-title">🚀 Plugin Creation</div>
+                
+                <div class="input-group">
+                    <label>Plugin Type:</label>
+                    <select id="pluginType">
+                        <option value="test.simple">test.simple</option>
+                        <option value="game.enemy">game.enemy</option>
+                        <option value="game.player">game.player</option>
+                        <option value="core.manager">core.manager</option>
+                        <option value="util.logger">util.logger</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Parent Plugin ID:</label>
+                    <input type="text" id="parentId" placeholder="Leave empty for root">
+                </div>
+                
+                <div class="input-group">
+                    <label>Max Depth:</label>
+                    <input type="number" id="maxDepth" value="5" min="1" max="20">
+                </div>
+                
+                <div class="input-group">
+                    <label>Resource Cost:</label>
+                    <input type="number" id="resourceCost" value="1" min="1" max="10">
+                </div>
+                
+                <button class="button" onclick="createDynamicPlugin()">🚀 Create Plugin</button>
+            </div>
+            
+            <div class="control-section">
+                <div class="control-title">🗑️ Plugin Management</div>
+                
+                <div class="input-group">
+                    <label>Plugin ID to Delete:</label>
+                    <input type="text" id="deletePluginId" placeholder="plugin-id">
+                </div>
+                
+                <button class="button danger" onclick="destroyDynamicPlugin()">🗑️ Delete Plugin</button>
+            </div>
+            
+            <div class="control-section">
+                <div class="control-title">🔗 Connection</div>
+                
+                <div class="input-group">
+                    <label>Source Plugin:</label>
+                    <input type="text" id="sourcePlugin" placeholder="source-plugin-id">
+                </div>
+                
+                <div class="input-group">
+                    <label>Target Plugin:</label>
+                    <input type="text" id="targetPlugin" placeholder="target-plugin-id">
+                </div>
+                
+                <button class="button" onclick="connectDynamicPlugins()">🔗 Connect</button>
+            </div>
+            
+            <div class="control-section">
+                <div class="control-title">📊 System Stats</div>
+                <div class="stats-panel" id="statsPanel">
+                    <div class="stats-item">
+                        <span class="stats-label">Total Plugins:</span>
+                        <span class="stats-value" id="totalPlugins">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-label">Dynamic Plugins:</span>
+                        <span class="stats-value" id="dynamicPlugins">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-label">Pending Requests:</span>
+                        <span class="stats-value" id="pendingRequests">0</span>
+                    </div>
+                </div>
+                
+                <button class="button" onclick="updateStats()">📊 Refresh Stats</button>
+            </div>
+            
+            <div class="control-section">
+                <div class="control-title">📋 Active Plugins</div>
+                <div class="plugin-list" id="pluginList">
+                    <div class="plugin-item">No plugins created yet</div>
+                </div>
+                
+                <button class="button" onclick="updatePluginList()">📋 Refresh List</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { voidCore, createPlugin, spawnPlugin, destroyPlugin, connectPlugins, getSystemStats } from '../src/pure_plugin_system.js';
+
+        // ログ要素の設定
+        voidCore.setLogElement(document.getElementById('log'));
+
+        // グローバル関数定義
+        window.voidCore = voidCore;
+        window.createDynamicPlugin = createDynamicPlugin;
+        window.destroyDynamicPlugin = destroyDynamicPlugin;
+        window.connectDynamicPlugins = connectDynamicPlugins;
+        window.updateStats = updateStats;
+        window.updatePluginList = updatePluginList;
+
+        // 🚀 動的プラグイン作成
+        async function createDynamicPlugin() {
+            const type = document.getElementById('pluginType').value;
+            const parentId = document.getElementById('parentId').value.trim();
+            const maxDepth = parseInt(document.getElementById('maxDepth').value);
+            const resourceCost = parseInt(document.getElementById('resourceCost').value);
+
+            try {
+                const correlationId = `demo-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+                
+                const payload = {
+                    type,
+                    config: {
+                        demoMode: true,
+                        createdBy: 'demo-interface'
+                    },
+                    parent: parentId || null,
+                    correlationId,
+                    maxDepth,
+                    resourceCost
+                };
+
+                // 直接IntentRequestを送信
+                await voidCore.publish({
+                    type: 'IntentRequest',
+                    action: 'system.createPlugin',
+                    payload,
+                    timestamp: Date.now()
+                });
+
+                voidCore.log(`📤 Plugin creation request sent: ${type}`);
+                
+                // UI更新
+                setTimeout(() => {
+                    updateStats();
+                    updatePluginList();
+                }, 500);
+
+            } catch (error) {
+                voidCore.log(`❌ Plugin creation failed: ${error.message}`);
+            }
+        }
+
+        // 🗑️ 動的プラグイン削除
+        async function destroyDynamicPlugin() {
+            const pluginId = document.getElementById('deletePluginId').value.trim();
+            
+            if (!pluginId) {
+                voidCore.log('⚠️ Please enter a plugin ID to delete');
+                return;
+            }
+
+            try {
+                const correlationId = `destroy-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+                
+                await voidCore.publish({
+                    type: 'IntentRequest',
+                    action: 'system.destroyPlugin',
+                    payload: {
+                        pluginId,
+                        correlationId
+                    },
+                    timestamp: Date.now()
+                });
+
+                voidCore.log(`📤 Plugin destruction request sent: ${pluginId}`);
+                
+                // UI更新
+                setTimeout(() => {
+                    updateStats();
+                    updatePluginList();
+                }, 500);
+
+            } catch (error) {
+                voidCore.log(`❌ Plugin destruction failed: ${error.message}`);
+            }
+        }
+
+        // 🔗 動的接続
+        async function connectDynamicPlugins() {
+            const source = document.getElementById('sourcePlugin').value.trim();
+            const target = document.getElementById('targetPlugin').value.trim();
+            
+            if (!source || !target) {
+                voidCore.log('⚠️ Please enter both source and target plugin IDs');
+                return;
+            }
+
+            try {
+                const correlationId = `connect-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+                
+                await voidCore.publish({
+                    type: 'IntentRequest',
+                    action: 'system.connect',
+                    payload: {
+                        source,
+                        target,
+                        sourcePort: 'output',
+                        targetPort: 'input',
+                        correlationId
+                    },
+                    timestamp: Date.now()
+                });
+
+                voidCore.log(`📤 Connection request sent: ${source} -> ${target}`);
+
+            } catch (error) {
+                voidCore.log(`❌ Connection failed: ${error.message}`);
+            }
+        }
+
+        // 📊 統計情報更新
+        function updateStats() {
+            const stats = getSystemStats();
+            
+            document.getElementById('totalPlugins').textContent = stats.pluginCount || 0;
+            document.getElementById('dynamicPlugins').textContent = stats.dynamicPlugins || 0;
+            document.getElementById('pendingRequests').textContent = stats.pendingRequests || 0;
+            
+            voidCore.log(`📊 Stats updated: ${stats.pluginCount} plugins, ${stats.dynamicPlugins} dynamic`);
+        }
+
+        // 📋 プラグインリスト更新
+        function updatePluginList() {
+            const plugins = voidCore.getAllPlugins();
+            const listElement = document.getElementById('pluginList');
+            
+            if (plugins.length === 0) {
+                listElement.innerHTML = '<div class="plugin-item">No plugins created yet</div>';
+                return;
+            }
+            
+            listElement.innerHTML = plugins.map(plugin => `
+                <div class="plugin-item">
+                    <div class="plugin-type">${plugin.type || 'unknown'}</div>
+                    <div class="plugin-id">${plugin.pluginId}</div>
+                    ${plugin.parent ? `<div style="color: #888; font-size: 10px;">Parent: ${plugin.parent}</div>` : ''}
+                    ${plugin.correlationId ? `<div style="color: #4a90e2; font-size: 10px;">Dynamic (${plugin.correlationId})</div>` : ''}
+                </div>
+            `).join('');
+            
+            voidCore.log(`📋 Plugin list updated: ${plugins.length} total`);
+        }
+
+        // 初期化（修正版: 非同期対応）
+        async function initializeDemo() {
+            voidCore.log('🚀 VoidCore Phase 5.2 Dynamic Plugin Demo initialized (Fixed Version)');
+            voidCore.log('💡 Use the controls on the right to create and manage plugins dynamically');
+            voidCore.log('🎯 Try creating a few plugins and watch the system statistics');
+            
+            // 初期統計更新
+            updateStats();
+            updatePluginList();
+
+            // レスポンス監視（修正版: async/await対応）
+            await voidCore.subscribe('IntentResponse', (message) => {
+                if (message.action && message.action.startsWith('system.')) {
+                    voidCore.log(`📨 System response: ${message.action} - ${message.payload.success ? '✅ Success' : '❌ Failed'}`);
+                    if (!message.payload.success) {
+                        voidCore.log(`   Error: ${message.payload.error}`);
+                    }
+                }
+            });
+            
+            voidCore.log('✅ Demo initialization completed - Ready for plugin management!');
+        }
+        
+        // 初期化実行
+        initializeDemo().catch(error => {
+            console.error('Demo initialization failed:', error);
+            voidCore.log(`❌ Demo initialization failed: ${error.message}`);
+        });
+    </script>
+</body>
+</html>
