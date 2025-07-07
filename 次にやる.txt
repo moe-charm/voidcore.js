@@ -1,0 +1,60 @@
+# 🐱 次にやること
+
+## 🚀 Phase S3後続作業 (優先度順)
+
+### **1. メッセージアダプター汎用化 (中優先度)**
+- VoidFlowMessageAdapter → UniversalMessageAdapter
+- 推定削減: 275行
+- ファイル: src/voidflow-message-adapter.js
+
+### **2. ノード統合統一 (中優先度)**
+- VoidFlowNodeIntegration汎用化
+- 推定削減: 412行
+- ファイル: src/voidflow-node-integration.js
+
+### **3. Phase R統合ストレステスト (中優先度)**
+- 高負荷時のIntent処理確認
+- パフォーマンス劣化チェック
+
+### **4. パフォーマンスベンチマーク作成 (中優先度)**
+- Phase R統合前後比較
+- メモリ使用量・実行時間測定
+
+## 🧠 Phase S4: ChatGPT提案コアスリム化 (将来)
+
+### **目標: 1000行→450行 (55%削減)**
+
+#### **Week 1: HandlerMap方式実装**
+- if文撲滅運動
+- message.type分岐統一
+- 推定削減: 100-150行
+
+#### **Week 2: 状態管理分離**
+- PluginStore クラス作成
+- MessageRouter 分離
+- 推定削減: 250-300行
+
+#### **Week 3: 型統一・共通処理統合**
+- INode インターフェース統一
+- Core/Plugin共通化
+- 推定削減: 150-200行
+
+#### **Week 4: 本質コード抽出**
+- コメント・デバッグコード退避
+- 最終調整・テスト
+
+## 📊 数値目標追跡
+
+### **Phase S3達成状況:**
+- ✅ VoidFlowNodePlugin → IPlugin: 500行削減
+- 🔄 残り目標: 1,100行削除 (1,600行目標)
+
+### **Phase S4期待効果:**
+- voidcore.js: 1000行→450行
+- 分離モジュール: 500行新規
+- 保守性: 大幅向上
+
+---
+
+*Last Updated: 2025-01-07*
+*Phase S3完了・Phase S4計画済み*

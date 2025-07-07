@@ -3,7 +3,7 @@
 
 import { voidCore } from './voidcore.js';
 import { Message } from './message.js';
-import { voidFlowAdapter } from './voidflow-message-adapter.js';
+import { voidFlowAdapter } from './universal-message-adapter.js';
 import { IPlugin } from './plugin-interface.js';
 
 /**

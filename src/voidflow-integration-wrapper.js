@@ -1,7 +1,7 @@
 // voidflow-integration-wrapper.js - VoidFlow統合互換ラッパー
 // Phase 5.3: 既存VoidFlow機能との完全互換性維持レイヤー
 
-import { voidFlowAdapter } from './voidflow-message-adapter.js';
+import { voidFlowAdapter } from './universal-message-adapter.js';
 import { voidCore } from './voidcore.js';
 
 /**

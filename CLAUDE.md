@@ -1,0 +1,172 @@
+# 🐱 VoidCore開発ルール・設定ファイル
+
+## 📡 ローカルサーバー管理ルール
+
+### **ポート固定: 8000番**
+- **必須**: テスト時は常に`http://localhost:8000`を使用
+- **理由**: ポート番号決め打ちでにゃーがチェックしやすく
+
+### **サーバー起動手順**
+```bash
+# 1. 既存サーバー全停止（競合回避）
+pkill -f "python3.*http.server" 2>/dev/null || true
+
+# 2. バックグラウンドでサーバー起動（出力抑制）
+python3 -m http.server 8000 --bind localhost > /dev/null 2>&1 &
+
+# 3. 起動確認（2秒待機）
+sleep 2
+ps aux | grep "python3.*http.server.*8000" | grep -v grep
+
+# 4. 接続テスト
+curl -s http://localhost:8000 > /dev/null && echo "✅ Server ready on port 8000" || echo "❌ Server failed"
+```
+
+### **📋 実際の実行例（2025-01-07確認済み）**
+```bash
+# Step 1: 既存サーバー停止
+$ pkill -f "python3.*http.server" 2>/dev/null || true
+
+# Step 2: サーバー起動
+$ python3 -m http.server 8000 --bind localhost > /dev/null 2>&1 &
+
+# Step 3: プロセス確認
+$ sleep 2; ps aux | grep "python3.*http.server.*8000" | grep -v grep
+tomoaki    74909  0.0  0.0  27404 19788 ?        S    17:40   0:00 python3 -m http.server 8000 --bind localhost
+
+# Step 4: 接続確認
+$ curl -s http://localhost:8000 > /dev/null && echo "✅ Server ready on port 8000" || echo "❌ Server failed"
+✅ Server ready on port 8000
+```
+
+### **サーバー管理コマンド**
+```bash
+# サーバー状態確認
+ps aux | grep "python3.*http.server.*8000"
+
+# サーバー停止
+pkill -f "python3.*http.server.*8000"
+
+# サーバー再起動
+pkill -f "python3.*http.server.*8000" 2>/dev/null; python3 -m http.server 8000 --bind localhost > /dev/null 2>&1 &
+```
+
+### **🐱 にゃー専用ワンライナー**
+```bash
+# 📡 サーバー立て直し（確実版）
+pkill -f "python3.*http.server" 2>/dev/null || true; python3 -m http.server 8000 --bind localhost > /dev/null 2>&1 & sleep 2; curl -s http://localhost:8000 > /dev/null && echo "✅ Server ready on port 8000" || echo "❌ Server failed"
+
+# 🧪 テストページ直接アクセス
+# Phase S3テスト: http://localhost:8000/test-voidflow-phase-s3-integration.html
+# Phase Rテスト: http://localhost:8000/test-voidflow-phase-r-integration-fixed.html
+# 簡易テスト: http://localhost:8000/test-voidflow-simple.html
+```
+
+### **⚠️ トラブル時の対処法**
+```bash
+# 🔥 完全リセット（全httpサーバー停止）
+sudo pkill -f "python.*http.server" 2>/dev/null || true
+sleep 1
+python3 -m http.server 8000 --bind localhost > /dev/null 2>&1 &
+
+# 🔍 ポート占有確認
+lsof -i :8000
+
+# 🏥 緊急時別ポート使用
+python3 -m http.server 8001 --bind localhost > /dev/null 2>&1 &
+# その場合: http://localhost:8001 でアクセス
+```
+
+### **トラブルシューティング**
+- **ポート占有エラー**: 上記停止コマンドで既存サーバー終了
+- **接続エラー**: 2-3秒待ってから再試行
+- **権限エラー**: sudo不要、localhost bindで回避
+
+---
+
+## 🧪 テスト実行ルール
+
+### **テストURL形式**
+- 基本テスト: `http://localhost:8000/test-*.html`
+- VoidFlowテスト: `http://localhost:8000/test-voidflow-*.html`
+- Phase別テスト: `http://localhost:8000/test-*-phase-*.html`
+
+### **テスト前チェックリスト**
+1. ✅ サーバー8000番起動確認
+2. ✅ 必要ファイル存在確認
+3. ✅ ブラウザ開発者ツール準備
+4. ✅ エラーログ監視準備
+
+---
+
+## 📝 開発・コミットルール
+
+### **🎯 重要ルール: 次にやることの管理**
+- **必須**: 次にやる作業は `次にやる.txt` に記載
+- **禁止**: CLAUDE.mdに次回予定を詳細記載
+- **目的**: 役割分離と情報整理
+
+## 📝 開発・コミットルール
+
+### **ファイル命名規則**
+- テストファイル: `test-[機能名]-[phase名].html`
+- ドキュメント: `docs/[機能名]_[バージョン]_[言語].md`
+- レポート: `docs/[分析対象]分析レポート.md`
+
+### **コミットメッセージ形式**
+```
+[type]: 🚀 [Phase/機能名] - [概要]
+
+✨ 主要変更:
+• [変更点1]
+• [変更点2]
+
+🎯 [効果・達成]:
+• [効果1]
+• [効果2]
+
+📊 [数値的成果]:
+• [削減行数/改善率など]
+
+🧪 [テスト]:
+• [テストファイル名]
+
+🎉 Generated with [Claude Code](https://claude.ai/code)
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+### **ブランチ戦略**
+- `master`: 安定版
+- 大型リファクタリング時は一時ブランチ作成検討
+
+---
+
+## 🔧 開発環境設定
+
+### **推奨エディタ設定**
+- タブ幅: 2スペース
+- 文字コード: UTF-8
+- 改行コード: LF
+
+### **必須チェックコマンド**
+- 型チェック: `npm run typecheck` (利用可能時)
+- リント: `npm run lint` (利用可能時)
+- テスト: `npm test` (利用可能時)
+
+---
+
+## 📋 Phase管理
+
+### **現在のPhase状況**
+- ✅ Phase R: VoidCore統一Intentアーキテクチャ (完了)
+- ✅ Phase S3: VoidFlowNodePlugin → IPlugin統合 (完了)
+- 🔄 Phase S3後続: メッセージアダプター汎用化、コード削減継続
+
+### **参考: 将来戦略ノート**
+- 詳細な次回作業は `次にやる.txt` 参照
+- ChatGPT提案の戦略分析は `docs/` 内に保存予定
+
+---
+
+*Last Updated: 2025-01-07*  
+*VoidCore v14.0 Phase R + S3統合完了版 + ChatGPT戦略追加*

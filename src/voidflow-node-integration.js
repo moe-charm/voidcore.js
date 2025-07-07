@@ -2,7 +2,7 @@
 // Phase 5.3 Phase 2: 既存VoidFlowEngine→新プラグインシステム統合
 
 import { VoidFlowNodePlugin, createAllStandardNodePlugins, registerToVoidCore } from './voidflow-node-plugin.js';
-import { voidFlowAdapter } from './voidflow-message-adapter.js';
+import { voidFlowAdapter } from './universal-message-adapter.js';
 import { voidCore } from './voidcore.js';
 
 /**
