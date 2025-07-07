@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>🔧 Phase R Intent Fix Verification</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: #1a1a2e;
+            color: #ffffff;
+            padding: 20px;
+            margin: 0;
+        }
+        .log-area {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 20px 0;
+        }
+        .button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: inherit;
+            font-size: 12px;
+        }
+        .button.success {
+            background: #27ae60;
+        }
+        .button.danger {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Phase R Intent Fix Verification</h1>
+    
+    <button class="button" onclick="testIntentFix()">Test Intent Fix</button>
+    <button class="button success" onclick="testMessageCreation()">Test Message Creation</button>
+    <button class="button danger" onclick="clearLog()">Clear Log</button>
+    
+    <div class="log-area" id="testLog"></div>
+
+    <script type="module">
+        import { VoidCore } from './src/voidcore.js';
+        import { Message } from './src/message.js';
+
+        const voidCore = new VoidCore();
+        window.voidCore = voidCore;
+        window.Message = Message;
+        
+        voidCore.setLogElement(document.getElementById('testLog'));
+
+        window.testIntentFix = async function() {
+            const log = document.getElementById('testLog');
+            log.innerHTML += '<div style="color: #4a90e2;">🔧 Testing Phase R Intent Fix...</div>';
+            
+            try {
+                // Test Message.intent() creation
+                const intentMessage = Message.intent('system.getStats', { test: true });
+                log.innerHTML += `<div style="color: #27ae60;">✅ Message created: ${JSON.stringify(intentMessage, null, 2)}</div>`;
+                
+                // Check if intent field is set
+                if (intentMessage.intent) {
+                    log.innerHTML += `<div style="color: #27ae60;">✅ Intent field: ${intentMessage.intent}</div>`;
+                } else {
+                    log.innerHTML += `<div style="color: #e74c3c;">❌ Intent field missing: ${intentMessage.intent}</div>`;
+                    return;
+                }
+                
+                // Test sendIntent API
+                const result = await voidCore.sendIntent('system.getStats');
+                log.innerHTML += `<div style="color: #27ae60;">✅ sendIntent result: ${JSON.stringify(result, null, 2)}</div>`;
+                
+                log.innerHTML += '<div style="color: #27ae60;">🎉 Phase R Intent Fix Verification SUCCESSFUL!</div>';
+                
+            } catch (error) {
+                log.innerHTML += `<div style="color: #e74c3c;">❌ Error: ${error.message}</div>`;
+                log.innerHTML += `<div style="color: #e74c3c;">❌ Stack: ${error.stack}</div>`;
+            }
+        };
+
+        window.testMessageCreation = function() {
+            const log = document.getElementById('testLog');
+            log.innerHTML += '<div style="color: #9b59b6;">🧪 Testing Message.intent() creation...</div>';
+            
+            // Test multiple intent creations
+            const testIntents = [
+                'system.getStats',
+                'system.createPlugin',
+                'plugin.getInfo',
+                'custom.test'
+            ];
+            
+            testIntents.forEach(intentName => {
+                const msg = Message.intent(intentName, { data: 'test' });
+                log.innerHTML += `<div>Intent: ${intentName} → intent field: ${msg.intent}</div>`;
+                log.innerHTML += `<div>Valid: ${msg.isValid()}, Description: ${msg.getDescription()}</div>`;
+            });
+        };
+
+        window.clearLog = function() {
+            document.getElementById('testLog').innerHTML = '';
+        };
+    </script>
+</body>
+</html>

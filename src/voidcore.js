@@ -6,6 +6,7 @@ import { ChannelManager } from './channel-manager.js'
 import { CoreFusion } from './core-fusion.js'
 import { SimpleMessagePool } from './simple-message-pool.js'
 import { Message } from './message.js'
+import { IPlugin, ICorePlugin, isCorePlugin } from './plugin-interface.js'
 
 class VoidCore {
   constructor(transport = null) {
@@ -147,6 +148,202 @@ class VoidCore {
     const deliveredCount = await this.channelManager.publish(message)
     
     return deliveredCount
+  }
+
+  // ==========================================
+  // 🎯 Phase R: ChatGPT統一Intentシステム
+  // ==========================================
+
+  /**
+   * Intent送信API - ChatGPT提案の統一操作インターフェース
+   * 
+   * Before: system.createPlugin(config)
+   * After:  await voidCore.sendIntent('system.createPlugin', config)
+   * 
+   * @param {string} intentName - Intent名 ("system.createPlugin" etc.)
+   * @param {Object} data - Intentデータ
+   * @param {Object} options - オプション（correlationId等）
+   * @returns {Promise<Object>} Intent処理結果
+   */
+  async sendIntent(intentName, data = {}, options = {}) {
+    await this._ensureInitialized()
+    
+    // Intent統一メッセージ作成
+    const intentMessage = Message.intent(intentName, data, options)
+    
+    this.log(`🎯 Sending Intent: ${intentName}`)
+    this.log(`🔍 Intent message structure: ${JSON.stringify(intentMessage, null, 2)}`)
+    
+    // Intent処理ハンドラーを探す
+    const result = await this._processIntent(intentMessage)
+    
+    return result
+  }
+
+  /**
+   * Intent処理の内部実装
+   * @param {Object} intentMessage - Intent付きメッセージ
+   * @returns {Promise<Object>} 処理結果
+   */
+  async _processIntent(intentMessage) {
+    // デバッグ: メッセージ全体を出力
+    this.log(`🔍 Full intentMessage: ${JSON.stringify(intentMessage, null, 2)}`)
+    
+    // 正しくintentフィールドを取得
+    const intent = intentMessage.intent
+    const payload = intentMessage.payload
+    
+    // デバッグログ
+    this.log(`🔍 Processing intent: ${intent}, payload keys: ${Object.keys(payload || {}).join(', ')}`)
+    this.log(`🔍 typeof intent: ${typeof intent}, intent value: "${intent}"`)
+    
+    if (!intent) {
+      this.log(`❌ Intent is falsy: ${intent}`)
+      throw new Error('Intent name is required')
+    }
+    
+    try {
+      // システムIntent処理
+      if (intent.startsWith('system.')) {
+        return await this._handleSystemIntent(intentMessage)
+      }
+      
+      // プラグインIntent処理
+      if (intent.startsWith('plugin.')) {
+        return await this._handlePluginIntent(intentMessage)
+      }
+      
+      // カスタムIntent処理（後で拡張）
+      return await this._handleCustomIntent(intentMessage)
+      
+    } catch (error) {
+      this.log(`❌ Intent processing failed: ${intent} - ${error.message}`)
+      throw error
+    }
+  }
+
+  /**
+   * システムIntent処理
+   * @param {Object} intentMessage - システムIntent
+   * @returns {Promise<Object>} 処理結果
+   */
+  async _handleSystemIntent(intentMessage) {
+    const intent = intentMessage.intent
+    const payload = intentMessage.payload
+    
+    this.log(`🔧 System intent: ${intent}, data: ${JSON.stringify(payload)}`)
+    
+    switch (intent) {
+      case 'system.createPlugin':
+        return await this._handleCreatePluginIntent(payload)
+        
+      case 'system.reparentPlugin':
+        return await this._handleReparentPluginIntent(payload)
+        
+      case 'system.destroyPlugin':
+        return await this._handleDestroyPluginIntent(payload)
+        
+      case 'system.getStats':
+        return this.getSystemStats()
+        
+      default:
+        throw new Error(`Unknown system intent: ${intent}`)
+    }
+  }
+
+  /**
+   * プラグインIntent処理
+   * @param {Object} intentMessage - プラグインIntent
+   * @returns {Promise<Object>} 処理結果
+   */
+  async _handlePluginIntent(intentMessage) {
+    const intent = intentMessage.intent
+    const payload = intentMessage.payload
+    
+    // 既存プラグインシステムへの転送（後で実装）
+    this.log(`📨 Forwarding plugin intent: ${intent}, data: ${JSON.stringify(payload)}`)
+    
+    // 暫定実装：既存システムを呼び出し
+    return await this._forwardToExistingSystem(intentMessage)
+  }
+
+  /**
+   * カスタムIntent処理
+   * @param {Object} intentMessage - カスタムIntent
+   * @returns {Promise<Object>} 処理結果
+   */
+  async _handleCustomIntent(intentMessage) {
+    // 暫定実装：通常のメッセージとして発行
+    await this.publish(intentMessage)
+    return { status: 'forwarded', intent: intentMessage.intent }
+  }
+
+  // ==========================================
+  // 🔧 Intent実装詳細
+  // ==========================================
+
+  async _handleCreatePluginIntent(payload) {
+    // 暫定実装：既存のcreateDynamicPluginを呼び出し
+    this.log(`🔧 Creating plugin via Intent: ${payload.type}`)
+    
+    // 既存システムへの移行コード（後で詳細実装）
+    return await this._createPluginViaIntent(payload)
+  }
+
+  async _handleReparentPluginIntent(payload) {
+    const { childId, newParentId } = payload
+    this.log(`🔧 Reparenting plugin via Intent: ${childId} -> ${newParentId}`)
+    
+    // 戸籍異動届の統一処理
+    return await this._reparentPluginViaIntent(payload)
+  }
+
+  async _handleDestroyPluginIntent(payload) {
+    const { pluginId } = payload
+    this.log(`🔧 Destroying plugin via Intent: ${pluginId}`)
+    
+    return await this._destroyPluginViaIntent(payload)
+  }
+
+  // ==========================================
+  // 🚀 移行用ヘルパーメソッド
+  // ==========================================
+
+  async _createPluginViaIntent(payload) {
+    // 既存のプラグイン作成システムとの統合
+    // 実装詳細は次のステップで
+    return { 
+      status: 'created', 
+      pluginId: `plugin_${Date.now()}`,
+      message: 'Plugin created via Intent system'
+    }
+  }
+
+  async _reparentPluginViaIntent(payload) {
+    // 既存の戸籍異動届システムとの統合
+    return { 
+      status: 'reparented', 
+      ...payload,
+      message: 'Plugin reparented via Intent system'
+    }
+  }
+
+  async _destroyPluginViaIntent(payload) {
+    // 既存のプラグイン削除システムとの統合
+    return { 
+      status: 'destroyed', 
+      pluginId: payload.pluginId,
+      message: 'Plugin destroyed via Intent system'
+    }
+  }
+
+  async _forwardToExistingSystem(intentMessage) {
+    // 既存システムへの転送処理
+    return { 
+      status: 'forwarded', 
+      intent: intentMessage.intent,
+      message: 'Forwarded to existing system'
+    }
   }
 
   // 購読者数取得

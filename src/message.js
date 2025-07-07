@@ -8,6 +8,11 @@ export class Message {
     this.category = category // Intent/Notice/Proposal
     this.timestamp = Date.now()
     this.id = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    // Phase R: ChatGPT提案の統一Intentシステム
+    this.intent = null          // "system.createPlugin", "system.reparentPlugin" etc.
+    this.correlationId = null   // 因果関係追跡
+    this.causationId = null     // 前のメッセージとの関連
   }
 
   // === v12.0 NEW MESSAGE TYPES ===
@@ -20,6 +25,19 @@ export class Message {
     return message
   }
 
+  // Phase R: ChatGPT統一Intentファクトリ
+  static intent(intentName, data, options = {}) {
+    console.log(`🔍 Message.intent called with: intentName=${intentName}, data=`, data)
+    
+    const message = new Message('IntentRequest', data, 'IntentRequest')
+    message.intent = intentName
+    message.correlationId = options.correlationId || `intent_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+    message.causationId = options.causationId || null
+    
+    console.log(`🔍 Created message:`, message)
+    return message
+  }
+
   // IntentResponse専用ファクトリ - 「〜しました」(1対1、応答)
   static intentResponse(action, payload) {
     const message = new Message(action, payload, 'IntentResponse')
@@ -29,16 +47,8 @@ export class Message {
 
   // === BACKWARD COMPATIBILITY ===
   
-  // Intent専用ファクトリ - 「〜してほしい」(1対1) - v11.0 互換性
-  // 自動的にIntentRequestとして処理される
-  static intent(target_role, action, payload) {
-    console.log('⚠️ Message.intent() is deprecated. Use Message.intentRequest() for v12.0')
-    const message = new Message(action, payload, 'IntentRequest')
-    message.target_role = target_role // v11.0互換性
-    message.target = target_role      // v12.0形式にも対応
-    message.action = action
-    return message
-  }
+  // Legacy Intent factory removed - conflicts with Phase R unified Intent system
+  // Use Message.intentRequest() for v12.0 compatibility if needed
 
   // Notice専用ファクトリ - 「〜が起きた」(1対多)
   static notice(event_name, payload) {
@@ -73,7 +83,8 @@ export class Message {
 
     switch (this.category) {
       case 'IntentRequest':
-        return !!(this.target && this.action)
+        // Phase R: Support unified Intent system OR legacy target/action
+        return !!(this.intent || (this.target && this.action))
       case 'IntentResponse':
         return !!this.action
       case 'Intent': // v11.0 backward compatibility
@@ -91,7 +102,12 @@ export class Message {
   getDescription() {
     switch (this.category) {
       case 'IntentRequest':
-        return `Request: "${this.target}, please ${this.action}"`
+        // Phase R: Support unified Intent system OR legacy target/action
+        if (this.intent) {
+          return `Intent: "${this.intent}"`
+        } else {
+          return `Request: "${this.target}, please ${this.action}"`
+        }
       case 'IntentResponse':
         return `Response: "${this.action} completed"`
       case 'Intent': // v11.0 backward compatibility
