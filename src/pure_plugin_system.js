@@ -23,8 +23,8 @@ import { Message } from './message.js';
  * 紳士協定としてのヘルスチェック応答
  * プラグインは任意でこれに応答できる（強制ではない）
  */
-export function registerHealthCheck(pluginId, customStatus = {}) {
-  voidCore.subscribe('IntentRequest', async (message) => {
+export async function registerHealthCheck(pluginId, customStatus = {}) {
+  await voidCore.subscribe('IntentRequest', async (message) => {
     // v14.0 FIX: Filter for health check messages manually
     if (message.action === 'core.health.ping') {
       // 自分宛のヘルスチェックかどうか確認
@@ -49,7 +49,7 @@ export function registerHealthCheck(pluginId, customStatus = {}) {
  * プロセス情報の自己申告
  * プラグインが任意で自分のPIDを登録できる
  */
-export function declareProcess(pluginId, processInfo = {}) {
+export async function declareProcess(pluginId, processInfo = {}) {
   const declaration = {
     pluginId: pluginId,
     pid: (typeof process !== 'undefined' && process.pid) || processInfo.pid || 'browser-tab',
@@ -62,7 +62,7 @@ export function declareProcess(pluginId, processInfo = {}) {
   voidCore.publish(Message.notice('system.process.declared', declaration));
 
   // 終了要求の監視（紳士協定）
-  voidCore.subscribe('IntentRequest', 'system.process.terminate', async (message) => {
+  await voidCore.subscribe('IntentRequest', 'system.process.terminate', async (message) => {
     if (message.payload.targetPluginId === pluginId) {
       const { force = false, reason = 'System request' } = message.payload;
       
@@ -182,14 +182,14 @@ export function createComfortablePlugin(config) {
     },
     
     // メッセージハンドラー登録
-    on(messageType, eventName, handler) {
+    async on(messageType, eventName, handler) {
       const key = `${messageType}:${eventName}`;
       this.handlers.set(key, handler);
       
       console.log(`🔧 Setting up subscription: pluginId=${this.pluginId}, messageType=${messageType}, eventName=${eventName}`);
       
       // VoidCoreは (type, handler) の2引数
-      voidCore.subscribe(messageType, async (message) => {
+      await voidCore.subscribe(messageType, async (message) => {
         console.log(`🔍 ${this.pluginId} received message:`, messageType, message);
         try {
           // メッセージタイプに応じたフィルタリング
@@ -356,7 +356,7 @@ export async function spawnPlugin(parentPlugin, type, config = {}, options = {})
       voidCore.unsubscribe('IntentResponse', responseHandler)
     }
     
-    voidCore.subscribe('IntentResponse', responseHandler)
+    await voidCore.subscribe('IntentResponse', responseHandler)
   })
 }
 
@@ -399,7 +399,7 @@ export async function destroyPlugin(parentPlugin, targetPluginId, options = {}) 
       voidCore.unsubscribe('IntentResponse', responseHandler)
     }
     
-    voidCore.subscribe('IntentResponse', responseHandler)
+    await voidCore.subscribe('IntentResponse', responseHandler)
   })
 }
 
@@ -446,7 +446,7 @@ export async function connectPlugins(parentPlugin, source, target, options = {})
       voidCore.unsubscribe('IntentResponse', responseHandler)
     }
     
-    voidCore.subscribe('IntentResponse', responseHandler)
+    await voidCore.subscribe('IntentResponse', responseHandler)
   })
 }
 
