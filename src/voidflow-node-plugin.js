@@ -4,29 +4,44 @@
 import { voidCore } from './voidcore.js';
 import { Message } from './message.js';
 import { voidFlowAdapter } from './voidflow-message-adapter.js';
+import { IPlugin } from './plugin-interface.js';
 
 /**
- * 🔌 VoidFlowNodePlugin - 統一ノードプラグインシステム
+ * 🔌 VoidFlowNodePlugin - 統一ノードプラグインシステム (Phase R統合版)
  * 
  * VoidFlowの17種類固定ノードをVoidCoreの無限拡張プラグインに統一
  * eval排除によるセキュリティ革命とサンドボックス化実現
+ * IPlugin継承によるPhase R完全統合
  * 
- * 哲学: 「固定から無限へ、危険から安全へ」
+ * 哲学: 「固定から無限へ、危険から安全へ、統一から汎用へ」
  */
-export class VoidFlowNodePlugin {
+export class VoidFlowNodePlugin extends IPlugin {
   constructor(config) {
-    this.nodeType = config.nodeType; // 'input.text', 'button.send' etc.
-    this.pluginId = config.pluginId || `voidflow.${config.nodeType}.${Date.now()}`;
-    this.displayName = config.displayName || config.nodeType;
-    this.description = config.description || `VoidFlow ${config.nodeType} node`;
+    // IPlugin継承による統一初期化
+    super({
+      id: config.pluginId || `voidflow.${config.nodeType}.${Date.now()}`,
+      type: config.nodeType || 'voidflow.node',
+      displayName: config.displayName || config.nodeType,
+      metadata: {
+        nodeType: config.nodeType,
+        description: config.description || `VoidFlow ${config.nodeType} node`,
+        voidFlowConfig: config.voidFlowConfig || {},
+        source: 'VoidFlowNodePlugin',
+        phaseR: true // Phase R統合マーカー
+      }
+    });
     
-    // VoidFlow統合情報
-    this.voidFlowConfig = {
+    // VoidFlow固有プロパティ
+    this.nodeType = config.nodeType; // 'input.text', 'button.send' etc.
+    
+    // VoidFlow統合情報（メタデータに統合）
+    this.metadata.voidFlowConfig = {
       inputs: config.inputs || [],
       outputs: config.outputs || ['result'],
       category: config.category || 'general',
       icon: config.icon || '🔌',
-      color: config.color || '#4a90e2'
+      color: config.color || '#4a90e2',
+      ...this.metadata.voidFlowConfig
     };
     
     // 実行コンテキスト
@@ -46,8 +61,8 @@ export class VoidFlowNodePlugin {
       memoryLimit: config.memoryLimit || 10 * 1024 * 1024 // 10MB
     };
     
-    // 実行統計
-    this.stats = {
+    // 実行統計（メタデータに統合）
+    this.metadata.stats = {
       executions: 0,
       successes: 0,
       errors: 0,
@@ -59,7 +74,112 @@ export class VoidFlowNodePlugin {
     // カスタム実行関数（サンドボックス化済み）
     this.executeFunction = config.executeFunction || this.getDefaultExecuteFunction();
     
-    this.log(`🔌 VoidFlowNodePlugin created: ${this.nodeType}`);
+    this.log(`🔌 VoidFlowNodePlugin (Phase R) created: ${this.nodeType}`);
+  }
+
+  // ==========================================
+  // 🎆 Phase R統一メッセージハンドラー
+  // ==========================================
+
+  /**
+   * Phase R統一メッセージハンドラー（IPlugin継承）
+   * @param {Object} message - IMessage形式のメッセージ
+   * @returns {Promise<void>}
+   */
+  async handleMessage(message) {
+    this.log(`📨 Message received: ${message.type}`);
+    
+    // Phase R統一メッセージ処理を継承
+    return await super.handleMessage(message);
+  }
+
+  /**
+   * VoidFlowカスタムIntent処理（IPlugin継承オーバーライド）
+   * @param {Object} message - Intent付きメッセージ
+   * @returns {Promise<void>}
+   */
+  async handleCustomIntent(message) {
+    const { intent, payload } = message;
+    
+    switch (intent) {
+      case 'voidflow.execute':
+        return await this.handleExecuteIntent(payload, message);
+      case 'voidflow.getStats':
+        return await this.handleGetStatsIntent(payload, message);
+      case 'voidflow.updateSandbox':
+        return await this.handleUpdateSandboxIntent(payload, message);
+      default:
+        // 未対応のIntentは親クラスに委謗
+        return await super.handleCustomIntent(message);
+    }
+  }
+
+  /**
+   * VoidFlow実行Intent処理
+   * @param {Object} payload - ペイロード
+   * @param {Object} message - 元メッセージ
+   * @returns {Promise<Object>}
+   */
+  async handleExecuteIntent(payload, message) {
+    const { inputData, context } = payload;
+    
+    try {
+      const result = await this.execute(inputData, context);
+      this.log(`⚙️ Intent execute success: ${this.nodeType}`);
+      
+      return {
+        success: true,
+        result: result,
+        nodeType: this.nodeType,
+        executionTime: Date.now() - (context?.startTime || Date.now())
+      };
+    } catch (error) {
+      this.log(`❌ Intent execute failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * VoidFlow統計取得Intent処理
+   * @param {Object} payload - ペイロード
+   * @param {Object} message - 元メッセージ
+   * @returns {Promise<Object>}
+   */
+  async handleGetStatsIntent(payload, message) {
+    const stats = this.getNodeStats();
+    this.log(`📈 Intent getStats: ${this.nodeType}`);
+    
+    return {
+      success: true,
+      stats: stats,
+      nodeType: this.nodeType,
+      timestamp: Date.now()
+    };
+  }
+
+  /**
+   * VoidFlowサンドボックス更新Intent処理
+   * @param {Object} payload - ペイロード
+   * @param {Object} message - 元メッセージ
+   * @returns {Promise<Object>}
+   */
+  async handleUpdateSandboxIntent(payload, message) {
+    const { sandboxConfig } = payload;
+    
+    try {
+      this.updateSandboxConfig(sandboxConfig);
+      this.log(`🛡️ Intent updateSandbox: ${this.nodeType}`);
+      
+      return {
+        success: true,
+        updatedSandbox: this.sandbox,
+        nodeType: this.nodeType,
+        timestamp: Date.now()
+      };
+    } catch (error) {
+      this.log(`❌ Intent updateSandbox failed: ${error.message}`);
+      throw error;
+    }
   }
 
   // ==========================================
@@ -74,7 +194,7 @@ export class VoidFlowNodePlugin {
    */
   async execute(inputData, context = {}) {
     const startTime = Date.now();
-    this.stats.executions++;
+    this.metadata.stats.executions++;
     
     try {
       // コンテキスト設定
@@ -97,10 +217,10 @@ export class VoidFlowNodePlugin {
       
       // 実行完了統計
       const executionTime = Date.now() - startTime;
-      this.stats.successes++;
-      this.stats.totalExecutionTime += executionTime;
-      this.stats.averageExecutionTime = this.stats.totalExecutionTime / this.stats.executions;
-      this.stats.lastExecution = Date.now();
+      this.metadata.stats.successes++;
+      this.metadata.stats.totalExecutionTime += executionTime;
+      this.metadata.stats.averageExecutionTime = this.metadata.stats.totalExecutionTime / this.metadata.stats.executions;
+      this.metadata.stats.lastExecution = Date.now();
       
       // 実行完了通知
       await this.publishExecutionEvent('complete', {
@@ -115,7 +235,7 @@ export class VoidFlowNodePlugin {
       return result;
       
     } catch (error) {
-      this.stats.errors++;
+      this.metadata.stats.errors++;
       
       // エラー通知
       await this.publishExecutionEvent('error', {
@@ -488,11 +608,12 @@ export class VoidFlowNodePlugin {
    */
   getNodeStats() {
     return {
-      ...this.stats,
+      ...this.metadata.stats,
       nodeType: this.nodeType,
-      pluginId: this.pluginId,
-      config: this.voidFlowConfig,
-      sandbox: this.sandbox
+      pluginId: this.id, // IPlugin継承のidプロパティ使用
+      config: this.metadata.voidFlowConfig,
+      sandbox: this.sandbox,
+      phaseR: true // Phase R統合マーカー
     };
   }
 
@@ -519,12 +640,12 @@ export class VoidFlowNodePlugin {
   }
 
   /**
-   * ログ出力
+   * ログ出力（IPlugin継承メソッド使用）
    * @param {string} message - ログメッセージ
    */
   log(message) {
-    const timestamp = new Date().toLocaleTimeString();
-    console.log(`[${timestamp}] 🔌 ${this.nodeType}: ${message}`);
+    // IPlugin継承の統一ログ出力メソッド使用
+    super.log(`[🔌 ${this.nodeType}] ${message}`);
   }
 }
 
@@ -533,16 +654,23 @@ export class VoidFlowNodePlugin {
 // ==========================================
 
 /**
- * VoidFlowノードプラグイン作成ファクトリー
+ * VoidFlowノードプラグイン作成ファクトリー（Phase R統一版）
  * @param {string} nodeType - ノードタイプ
  * @param {Object} config - 設定
  * @returns {VoidFlowNodePlugin} ノードプラグイン
  */
 export function createVoidFlowNodePlugin(nodeType, config = {}) {
-  return new VoidFlowNodePlugin({
+  const plugin = new VoidFlowNodePlugin({
     nodeType: nodeType,
     ...config
   });
+  
+  // Phase R統合マーカー追加
+  plugin.metadata.phaseR = true;
+  plugin.metadata.createdWith = 'createVoidFlowNodePlugin';
+  plugin.metadata.version = 'v14.0-phase-r';
+  
+  return plugin;
 }
 
 /**
@@ -573,39 +701,17 @@ export function createAllStandardNodePlugins() {
 }
 
 /**
- * VoidCoreプラグインとして登録
+ * VoidCoreプラグインとして登録（Phase R統一版）
  * @param {VoidFlowNodePlugin} nodePlugin - ノードプラグイン
  * @returns {boolean} 登録成功/失敗
  */
 export function registerNodePluginToVoidCore(nodePlugin) {
   try {
-    // VoidCoreプラグイン形式に変換
-    const voidCorePlugin = {
-      pluginId: nodePlugin.pluginId,
-      displayName: nodePlugin.displayName,
-      type: `voidflow.${nodePlugin.nodeType}`,
-      parentId: null,
-      metadata: {
-        nodeType: nodePlugin.nodeType,
-        voidFlowConfig: nodePlugin.voidFlowConfig,
-        createdAt: Date.now(),
-        source: 'VoidFlowNodePlugin'
-      },
-      
-      // VoidFlow統合実行メソッド
-      execute: async (inputData, context) => {
-        return await nodePlugin.execute(inputData, context);
-      },
-      
-      // 統計情報
-      getStats: () => nodePlugin.getNodeStats()
-    };
-    
-    // VoidCoreに登録
-    const success = voidCore.registerPlugin(voidCorePlugin);
+    // IPlugin継承により直接登録可能（変換不要）
+    const success = voidCore.registerPlugin(nodePlugin);
     
     if (success) {
-      console.log(`✅ Node plugin registered to VoidCore: ${nodePlugin.nodeType}`);
+      console.log(`✅ Node plugin (Phase R) registered to VoidCore: ${nodePlugin.nodeType}`);
     } else {
       console.error(`❌ Failed to register node plugin: ${nodePlugin.nodeType}`);
     }
