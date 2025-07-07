@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ UniversalNodeIntegration バリデーションテスト</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #27ae60, #2ecc71, #58d68d);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #ffffff;
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .validation-indicator {
+            background: linear-gradient(90deg, #ffffff, #f8f9fa, #e9ecef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        .test-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .test-section {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #27ae60;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .test-title {
+            color: #27ae60;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #27ae60;
+            padding-bottom: 8px;
+            text-align: center;
+        }
+        
+        .button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: inherit;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            width: calc(100% - 10px);
+        }
+        
+        .button:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+        }
+        
+        .button.critical {
+            background: #e74c3c;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .button.warning {
+            background: #f39c12;
+        }
+        
+        .button.warning:hover {
+            background: #e67e22;
+        }
+        
+        .log-area {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 10px;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+        
+        .validation-panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .validation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 11px;
+        }
+        
+        .validation-label {
+            color: #bbb;
+        }
+        
+        .validation-status {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+        
+        .validation-status.pass {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .validation-status.fail {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .validation-status.warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .validation-status.pending {
+            background: #95a5a6;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✅ UniversalNodeIntegration バリデーションテスト</h1>
+        <p class="validation-indicator">統合バリデーション・品質保証システム</p>
+    </div>
+
+    <div class="test-container">
+        <!-- 基本バリデーション -->
+        <div class="test-section">
+            <div class="test-title">🔍 基本バリデーション</div>
+            
+            <button class="button" onclick="validateImports()">インポート確認</button>
+            <button class="button" onclick="validateConfiguration()">設定バリデーション</button>
+            <button class="button" onclick="validateInitialization()">初期化確認</button>
+            <button class="button critical" onclick="validateCriticalPath()">重要パス確認</button>
+            
+            <div class="log-area" id="basicLog"></div>
+            
+            <div class="validation-panel">
+                <div class="test-title">基本バリデーション結果</div>
+                <div class="validation-item">
+                    <span class="validation-label">インポート:</span>
+                    <span class="validation-status pending" id="importStatus">待機中</span>
+                </div>
+                <div class="validation-item">
+                    <span class="validation-label">設定:</span>
+                    <span class="validation-status pending" id="configStatus">待機中</span>
+                </div>
+                <div class="validation-item">
+                    <span class="validation-label">初期化:</span>
+                    <span class="validation-status pending" id="initStatus">待機中</span>
+                </div>
+                <div class="validation-item">
+                    <span class="validation-label">重要パス:</span>
+                    <span class="validation-status pending" id="criticalStatus">待機中</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 実行時バリデーション -->
+        <div class="test-section">
+            <div class="test-title">⚡ 実行時バリデーション</div>
+            
+            <button class="button" onclick="validateExecution()">実行確認</button>
+            <button class="button" onclick="validateErrorHandling()">エラーハンドリング</button>
+            <button class="button warning" onclick="validatePerformance()">性能確認</button>
+            <button class="button" onclick="validateCompatibility()">互換性確認</button>
+            
+            <div class="log-area" id="runtimeLog"></div>
+            
+            <div class="validation-panel">
+                <div class="test-title">実行時バリデーション結果</div>
+                <div class="validation-item">
+                    <span class="validation-label">実行:</span>
+                    <span class="validation-status pending" id="executionStatus">待機中</span>
+                </div>
+                <div class="validation-item">
+                    <span class="validation-label">エラー処理:</span>
+                    <span class="validation-status pending" id="errorStatus">待機中</span>
+                </div>
+                <div class="validation-item">
+                    <span class="validation-label">性能:</span>
+                    <span class="validation-status pending" id="performanceStatus">待機中</span>
+                </div>
+                <div class="validation-item">
+                    <span class="validation-label">互換性:</span>
+                    <span class="validation-status pending" id="compatibilityStatus">待機中</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // モックエンジンアダプター
+        class MockVoidFlowEngineAdapter {
+            constructor(voidFlowEngine) {
+                this.voidFlowEngine = voidFlowEngine;
+            }
+            
+            async initialize() {
+                // Mock initialization
+            }
+            
+            async getNode(nodeId) {
+                return this.voidFlowEngine.nodes.get(nodeId);
+            }
+            
+            async overrideExecutionMethod(newMethod) {
+                // Mock override execution method
+                if (this.voidFlowEngine.executeNode) {
+                    this.voidFlowEngine.executeNode = newMethod;
+                }
+            }
+            
+            async originalExecute(nodeId, inputData) {
+                // Mock original execute
+                if (this.voidFlowEngine.executeNode) {
+                    return await this.voidFlowEngine.executeNode(nodeId, inputData);
+                }
+                throw new Error('Original execute method not available');
+            }
+        }
+
+        // 正しいファイルからインポート
+        import { UniversalNodeIntegration } from './src/universal-node-integration.js';
+        import { UniversalMessageAdapter } from './src/universal-message-adapter.js';
+        import { IPlugin } from './src/plugin-interface.js';
+
+        // グローバル変数
+        window.UniversalNodeIntegration = UniversalNodeIntegration;
+        window.UniversalMessageAdapter = UniversalMessageAdapter;
+        window.IPlugin = IPlugin;
+        
+        let validationResults = {
+            import: 'pending',
+            config: 'pending',
+            init: 'pending',
+            critical: 'pending',
+            execution: 'pending',
+            error: 'pending',
+            performance: 'pending',
+            compatibility: 'pending'
+        };
+
+        // ログ機能
+        function logToArea(areaId, message) {
+            const area = document.getElementById(areaId);
+            if (area) {
+                const timestamp = new Date().toLocaleTimeString();
+                area.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                area.scrollTop = area.scrollHeight;
+            }
+        }
+
+        function updateValidationStatus(type, status) {
+            validationResults[type] = status;
+            const statusElement = document.getElementById(`${type}Status`);
+            if (statusElement) {
+                statusElement.textContent = status === 'pass' ? '✅ 通過' : 
+                                           status === 'fail' ? '❌ 失敗' : 
+                                           status === 'warning' ? '⚠️ 警告' : '⏳ 待機中';
+                statusElement.className = `validation-status ${status}`;
+            }
+        }
+
+        // モックVoidFlowEngine
+        const mockVoidFlowEngine = {
+            flowId: 'validation-test-flow',
+            nodes: new Map([
+                ['validate1', { type: 'input.validation', config: { required: true }, title: 'Validation Input' }],
+                ['validate2', { type: 'process.validation', config: { strict: true }, title: 'Validation Process' }],
+                ['validate3', { type: 'output.validation', config: { format: 'json' }, title: 'Validation Output' }]
+            ]),
+            executeNode: async (nodeId, inputData) => {
+                // バリデーション用の実行ロジック
+                if (!inputData || typeof inputData !== 'object') {
+                    throw new Error('Invalid input data for validation');
+                }
+                return { 
+                    result: `validation-result-${nodeId}`, 
+                    inputData,
+                    validated: true,
+                    timestamp: Date.now()
+                };
+            }
+        };
+
+        // ==========================================
+        // 基本バリデーション関数
+        // ==========================================
+
+        window.validateImports = async function() {
+            logToArea('basicLog', '🔍 インポート確認開始');
+            
+            try {
+                // 必須クラスの存在確認
+                const requiredClasses = [
+                    { name: 'UniversalNodeIntegration', class: UniversalNodeIntegration },
+                    { name: 'UniversalMessageAdapter', class: UniversalMessageAdapter },
+                    { name: 'IPlugin', class: IPlugin }
+                ];
+                
+                for (const { name, class: cls } of requiredClasses) {
+                    if (!cls) {
+                        throw new Error(`${name} が見つかりません`);
+                    }
+                    
+                    if (typeof cls !== 'function') {
+                        throw new Error(`${name} は関数ではありません`);
+                    }
+                    
+                    logToArea('basicLog', `✅ ${name} インポート成功`);
+                }
+                
+                // 静的メソッドの確認
+                if (typeof UniversalNodeIntegration.createVoidFlowConfig === 'function') {
+                    logToArea('basicLog', '✅ 静的メソッド確認完了');
+                } else {
+                    throw new Error('静的メソッドが見つかりません');
+                }
+                
+                updateValidationStatus('import', 'pass');
+                logToArea('basicLog', '🎉 インポート確認完了');
+                
+            } catch (error) {
+                updateValidationStatus('import', 'fail');
+                logToArea('basicLog', `❌ インポート確認失敗: ${error.message}`);
+            }
+        };
+
+        window.validateConfiguration = async function() {
+            logToArea('basicLog', '🔧 設定バリデーション開始');
+            
+            try {
+                // 基本設定の作成
+                const basicConfig = {
+                    engineType: 'VoidFlow',
+                    engine: new MockVoidFlowEngineAdapter(mockVoidFlowEngine),
+                    flowEngine: mockVoidFlowEngine,
+                    messageAdapter: new UniversalMessageAdapter({
+                        sourceFormat: 'voidflow',
+                        targetFormat: 'voidflow',
+                        transformRules: {
+                            'voidflow': (data) => data,
+                            'standard': (data) => ({ message: data, type: 'standard' })
+                        },
+                        adapterType: 'voidflow',
+                        outputFormat: 'voidflow'
+                    }),
+                    executionMode: 'unified'
+                };
+                
+                // 設定の必須フィールド確認
+                const requiredFields = ['engineType', 'engine', 'flowEngine', 'messageAdapter', 'executionMode'];
+                
+                for (const field of requiredFields) {
+                    if (!basicConfig[field]) {
+                        throw new Error(`必須フィールド ${field} が不足しています`);
+                    }
+                    logToArea('basicLog', `✅ ${field} 設定確認`);
+                }
+                
+                // 設定の型確認
+                if (typeof basicConfig.engineType !== 'string') {
+                    throw new Error('engineType は文字列である必要があります');
+                }
+                
+                if (typeof basicConfig.engine !== 'object') {
+                    throw new Error('engine はオブジェクトである必要があります');
+                }
+                
+                if (typeof basicConfig.flowEngine !== 'object') {
+                    throw new Error('flowEngine はオブジェクトである必要があります');
+                }
+                
+                logToArea('basicLog', '✅ 設定型確認完了');
+                
+                // 統合インスタンス作成テスト
+                const testIntegration = new UniversalNodeIntegration(basicConfig);
+                
+                if (!testIntegration) {
+                    throw new Error('統合インスタンスの作成に失敗しました');
+                }
+                
+                logToArea('basicLog', '✅ 統合インスタンス作成成功');
+                
+                updateValidationStatus('config', 'pass');
+                logToArea('basicLog', '🎉 設定バリデーション完了');
+                
+            } catch (error) {
+                updateValidationStatus('config', 'fail');
+                logToArea('basicLog', `❌ 設定バリデーション失敗: ${error.message}`);
+            }
+        };
+
+        window.validateInitialization = async function() {
+            logToArea('basicLog', '🚀 初期化確認開始');
+            
+            try {
+                // 設定作成
+                const config = {
+                    engineType: 'VoidFlow',
+                    engine: new MockVoidFlowEngineAdapter(mockVoidFlowEngine),
+                    flowEngine: mockVoidFlowEngine,
+                    messageAdapter: new UniversalMessageAdapter({
+                        sourceFormat: 'voidflow',
+                        targetFormat: 'voidflow',
+                        transformRules: {
+                            'voidflow': (data) => data,
+                            'standard': (data) => ({ message: data, type: 'standard' })
+                        },
+                        adapterType: 'voidflow',
+                        outputFormat: 'voidflow'
+                    }),
+                    executionMode: 'unified'
+                };
+                
+                const integration = new UniversalNodeIntegration(config);
+                
+                // 初期化実行
+                await integration.initialize();
+                
+                // 初期化状態の確認
+                const stats = integration.getStats();
+                
+                if (!stats) {
+                    throw new Error('統計情報が取得できません');
+                }
+                
+                if (stats.totalPlugins === 0) {
+                    throw new Error('プラグインが登録されていません');
+                }
+                
+                logToArea('basicLog', `✅ 初期化成功: ${stats.totalPlugins}プラグイン`);
+                logToArea('basicLog', `📊 フローエンジン: ${stats.flowType}`);
+                logToArea('basicLog', `📊 実行モード: ${stats.executionMode}`);
+                
+                // グローバル参照保存
+                window.validationIntegration = integration;
+                
+                updateValidationStatus('init', 'pass');
+                logToArea('basicLog', '🎉 初期化確認完了');
+                
+            } catch (error) {
+                updateValidationStatus('init', 'fail');
+                logToArea('basicLog', `❌ 初期化確認失敗: ${error.message}`);
+            }
+        };
+
+        window.validateCriticalPath = async function() {
+            logToArea('basicLog', '🔥 重要パス確認開始');
+            
+            try {
+                if (!window.validationIntegration) {
+                    await window.validateInitialization();
+                }
+                
+                const integration = window.validationIntegration;
+                
+                // 重要パステスト項目
+                const criticalTests = [
+                    {
+                        name: 'プラグインリスト取得',
+                        test: () => {
+                            const plugins = integration.getPluginList();
+                            return plugins && plugins.length > 0;
+                        }
+                    },
+                    {
+                        name: 'ノード実行',
+                        test: async () => {
+                            const result = await integration.executeNode('validate1', { test: 'critical' });
+                            return result && result.validated;
+                        }
+                    },
+                    {
+                        name: 'エラー復旧',
+                        test: async () => {
+                            try {
+                                await integration.executeNode('invalid-node', { test: 'error' });
+                                return false; // エラーが発生しないのは問題
+                            } catch (error) {
+                                return true; // エラーが適切に処理される
+                            }
+                        }
+                    }
+                ];
+                
+                let passedTests = 0;
+                
+                for (const { name, test } of criticalTests) {
+                    try {
+                        const result = await test();
+                        if (result) {
+                            logToArea('basicLog', `✅ ${name} 成功`);
+                            passedTests++;
+                        } else {
+                            logToArea('basicLog', `❌ ${name} 失敗`);
+                        }
+                    } catch (error) {
+                        logToArea('basicLog', `❌ ${name} エラー: ${error.message}`);
+                    }
+                }
+                
+                const successRate = (passedTests / criticalTests.length) * 100;
+                
+                if (successRate >= 90) {
+                    updateValidationStatus('critical', 'pass');
+                    logToArea('basicLog', `🎉 重要パス確認完了: ${Math.round(successRate)}%`);
+                } else if (successRate >= 70) {
+                    updateValidationStatus('critical', 'warning');
+                    logToArea('basicLog', `⚠️ 重要パス警告: ${Math.round(successRate)}%`);
+                } else {
+                    updateValidationStatus('critical', 'fail');
+                    logToArea('basicLog', `❌ 重要パス失敗: ${Math.round(successRate)}%`);
+                }
+                
+            } catch (error) {
+                updateValidationStatus('critical', 'fail');
+                logToArea('basicLog', `❌ 重要パス確認失敗: ${error.message}`);
+            }
+        };
+
+        // ==========================================
+        // 実行時バリデーション関数
+        // ==========================================
+
+        window.validateExecution = async function() {
+            logToArea('runtimeLog', '⚡ 実行確認開始');
+            
+            try {
+                if (!window.validationIntegration) {
+                    await window.validateInitialization();
+                }
+                
+                const integration = window.validationIntegration;
+                
+                // 実行テストケース
+                const testCases = [
+                    { nodeId: 'validate1', inputData: { value: 'test1', required: true } },
+                    { nodeId: 'validate2', inputData: { input: 'test2', strict: true } },
+                    { nodeId: 'validate3', inputData: { data: 'test3', format: 'json' } }
+                ];
+                
+                let executionSuccess = 0;
+                
+                for (const testCase of testCases) {
+                    try {
+                        const result = await integration.executeNode(testCase.nodeId, testCase.inputData);
+                        
+                        if (result && result.validated) {
+                            logToArea('runtimeLog', `✅ ${testCase.nodeId} 実行成功`);
+                            executionSuccess++;
+                        } else {
+                            logToArea('runtimeLog', `❌ ${testCase.nodeId} 実行失敗: バリデーション未完了`);
+                        }
+                        
+                    } catch (error) {
+                        logToArea('runtimeLog', `❌ ${testCase.nodeId} 実行エラー: ${error.message}`);
+                    }
+                }
+                
+                const successRate = (executionSuccess / testCases.length) * 100;
+                
+                if (successRate >= 90) {
+                    updateValidationStatus('execution', 'pass');
+                } else if (successRate >= 70) {
+                    updateValidationStatus('execution', 'warning');
+                } else {
+                    updateValidationStatus('execution', 'fail');
+                }
+                
+                logToArea('runtimeLog', `📊 実行成功率: ${Math.round(successRate)}%`);
+                
+            } catch (error) {
+                updateValidationStatus('execution', 'fail');
+                logToArea('runtimeLog', `❌ 実行確認失敗: ${error.message}`);
+            }
+        };
+
+        window.validateErrorHandling = async function() {
+            logToArea('runtimeLog', '🛡️ エラーハンドリング確認開始');
+            
+            try {
+                if (!window.validationIntegration) {
+                    await window.validateInitialization();
+                }
+                
+                const integration = window.validationIntegration;
+                
+                // エラーケーステスト
+                const errorTests = [
+                    {
+                        name: '無効なノードID',
+                        test: async () => {
+                            try {
+                                await integration.executeNode('invalid-node', { test: true });
+                                return false; // エラーが発生しないのは問題
+                            } catch (error) {
+                                return error.message.includes('invalid') || error.message.includes('not found');
+                            }
+                        }
+                    },
+                    {
+                        name: '無効な入力データ',
+                        test: async () => {
+                            try {
+                                await integration.executeNode('validate1', null);
+                                return false;
+                            } catch (error) {
+                                return error.message.includes('Invalid input');
+                            }
+                        }
+                    },
+                    {
+                        name: '空データ処理',
+                        test: async () => {
+                            try {
+                                await integration.executeNode('validate1', {});
+                                return true; // 空データでも処理できる
+                            } catch (error) {
+                                return error.message.includes('validation') || error.message.includes('required');
+                            }
+                        }
+                    }
+                ];
+                
+                let errorHandlingPassed = 0;
+                
+                for (const { name, test } of errorTests) {
+                    try {
+                        const result = await test();
+                        if (result) {
+                            logToArea('runtimeLog', `✅ ${name} 適切に処理`);
+                            errorHandlingPassed++;
+                        } else {
+                            logToArea('runtimeLog', `❌ ${name} 不適切な処理`);
+                        }
+                    } catch (error) {
+                        logToArea('runtimeLog', `❌ ${name} テストエラー: ${error.message}`);
+                    }
+                }
+                
+                const errorHandlingRate = (errorHandlingPassed / errorTests.length) * 100;
+                
+                if (errorHandlingRate >= 90) {
+                    updateValidationStatus('error', 'pass');
+                } else if (errorHandlingRate >= 70) {
+                    updateValidationStatus('error', 'warning');
+                } else {
+                    updateValidationStatus('error', 'fail');
+                }
+                
+                logToArea('runtimeLog', `🛡️ エラーハンドリング率: ${Math.round(errorHandlingRate)}%`);
+                
+            } catch (error) {
+                updateValidationStatus('error', 'fail');
+                logToArea('runtimeLog', `❌ エラーハンドリング確認失敗: ${error.message}`);
+            }
+        };
+
+        window.validatePerformance = async function() {
+            logToArea('runtimeLog', '🚀 性能確認開始');
+            
+            try {
+                if (!window.validationIntegration) {
+                    await window.validateInitialization();
+                }
+                
+                const integration = window.validationIntegration;
+                
+                // 性能テスト
+                const iterations = 50;
+                const startTime = Date.now();
+                
+                for (let i = 0; i < iterations; i++) {
+                    try {
+                        await integration.executeNode('validate1', { iteration: i });
+                    } catch (error) {
+                        // 性能テストではエラーも許容
+                    }
+                }
+                
+                const totalTime = Date.now() - startTime;
+                const avgTime = totalTime / iterations;
+                const execPerSec = Math.round(iterations / (totalTime / 1000));
+                
+                logToArea('runtimeLog', `📊 性能結果: ${totalTime}ms / ${iterations}回`);
+                logToArea('runtimeLog', `📊 平均実行時間: ${Math.round(avgTime)}ms`);
+                logToArea('runtimeLog', `📊 実行速度: ${execPerSec}回/秒`);
+                
+                // 性能基準 (平均実行時間 < 100ms)
+                if (avgTime < 100) {
+                    updateValidationStatus('performance', 'pass');
+                    logToArea('runtimeLog', '✅ 性能基準達成');
+                } else if (avgTime < 200) {
+                    updateValidationStatus('performance', 'warning');
+                    logToArea('runtimeLog', '⚠️ 性能基準警告');
+                } else {
+                    updateValidationStatus('performance', 'fail');
+                    logToArea('runtimeLog', '❌ 性能基準未達成');
+                }
+                
+            } catch (error) {
+                updateValidationStatus('performance', 'fail');
+                logToArea('runtimeLog', `❌ 性能確認失敗: ${error.message}`);
+            }
+        };
+
+        window.validateCompatibility = async function() {
+            logToArea('runtimeLog', '🔄 互換性確認開始');
+            
+            try {
+                // 互換性テスト項目
+                const compatibilityTests = [
+                    {
+                        name: 'VoidFlow統合',
+                        test: async () => {
+                            const config = UniversalNodeIntegration.createVoidFlowConfig(mockVoidFlowEngine);
+                            const integration = new UniversalNodeIntegration(config);
+                            await integration.initialize();
+                            return integration.getStats().totalPlugins > 0;
+                        }
+                    },
+                    {
+                        name: 'メッセージアダプター',
+                        test: async () => {
+                            const adapter = new UniversalMessageAdapter({
+                                sourceFormat: 'voidflow',
+                                targetFormat: 'voidflow',
+                                transformRules: {
+                                    'voidflow': (data) => data,
+                                    'standard': (data) => ({ message: data, type: 'standard' })
+                                },
+                                adapterType: 'voidflow',
+                                outputFormat: 'voidflow'
+                            });
+                            const result = await adapter.adaptMessage({ test: 'compatibility' });
+                            return result && result.adapterId;
+                        }
+                    },
+                    {
+                        name: 'プラグインインターフェース',
+                        test: async () => {
+                            const plugin = new IPlugin({
+                                id: 'test-plugin',
+                                type: 'test',
+                                displayName: 'Test Plugin',
+                                metadata: { compatibility: true }
+                            });
+                            return plugin.getId() === 'test-plugin';
+                        }
+                    }
+                ];
+                
+                let compatibilityPassed = 0;
+                
+                for (const { name, test } of compatibilityTests) {
+                    try {
+                        const result = await test();
+                        if (result) {
+                            logToArea('runtimeLog', `✅ ${name} 互換性確認`);
+                            compatibilityPassed++;
+                        } else {
+                            logToArea('runtimeLog', `❌ ${name} 互換性問題`);
+                        }
+                    } catch (error) {
+                        logToArea('runtimeLog', `❌ ${name} 互換性エラー: ${error.message}`);
+                    }
+                }
+                
+                const compatibilityRate = (compatibilityPassed / compatibilityTests.length) * 100;
+                
+                if (compatibilityRate >= 90) {
+                    updateValidationStatus('compatibility', 'pass');
+                } else if (compatibilityRate >= 70) {
+                    updateValidationStatus('compatibility', 'warning');
+                } else {
+                    updateValidationStatus('compatibility', 'fail');
+                }
+                
+                logToArea('runtimeLog', `🔄 互換性率: ${Math.round(compatibilityRate)}%`);
+                
+            } catch (error) {
+                updateValidationStatus('compatibility', 'fail');
+                logToArea('runtimeLog', `❌ 互換性確認失敗: ${error.message}`);
+            }
+        };
+
+        // 初期化
+        logToArea('basicLog', '✅ バリデーションシステム準備完了');
+        logToArea('runtimeLog', '⚡ 実行時バリデーション準備完了');
+        
+        // システム確認
+        if (UniversalNodeIntegration && UniversalMessageAdapter && IPlugin) {
+            logToArea('basicLog', '🎉 すべてのモジュール検出完了');
+            logToArea('runtimeLog', '🎉 バリデーション実行準備完了');
+        }
+    </script>
+</body>
+</html>

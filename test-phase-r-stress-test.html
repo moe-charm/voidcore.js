@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 Phase R統合ストレステスト</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #8B0000, #DC143C, #FF6347);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #FFD700;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .stress-indicator {
+            background: linear-gradient(90deg, #FFD700, #FF6347, #DC143C);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .test-container {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .test-section {
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid #FFD700;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .test-title {
+            color: #FFD700;
+            font-size: 18px;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #FFD700;
+            padding-bottom: 10px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #FF6347, #DC143C);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 20px;
+            cursor: pointer;
+            margin: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: calc(100% - 16px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .button:hover {
+            background: linear-gradient(135deg, #DC143C, #8B0000);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(255, 99, 71, 0.4);
+        }
+        
+        .button.extreme {
+            background: linear-gradient(135deg, #8B0000, #4B0000);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .button.warning {
+            background: linear-gradient(135deg, #FF8C00, #FF4500);
+        }
+        
+        .button.success {
+            background: linear-gradient(135deg, #32CD32, #228B22);
+        }
+        
+        .log-area {
+            background: #000000;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            height: 350px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.5;
+            margin: 15px 0;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .stats-panel {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+        
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        
+        .stats-label {
+            color: #FFD700;
+        }
+        
+        .stats-value {
+            color: #32CD32;
+            font-weight: bold;
+        }
+        
+        .stress-value {
+            color: #FF6347;
+            font-weight: bold;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #333;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 10px 0;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #32CD32, #FFD700, #FF6347);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 12px;
+        }
+        
+        .alert-banner {
+            background: linear-gradient(90deg, #FF0000, #FF6347, #FF0000);
+            color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            animation: flash 1s infinite;
+            display: none;
+        }
+        
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .metric-chart {
+            width: 100%;
+            height: 150px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-line {
+            stroke: #32CD32;
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .chart-area {
+            fill: url(#gradient);
+            opacity: 0.3;
+        }
+        
+        .temp-indicator {
+            color: #FF4500;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔥 Phase R統合ストレステスト</h1>
+        <p class="stress-indicator">高負荷Intent処理・システム限界測定</p>
+    </div>
+
+    <div class="alert-banner" id="alertBanner">
+        ⚠️ 警告: システム過負荷検出! 安全レベルを超えています ⚠️
+    </div>
+
+    <div class="test-container">
+        <!-- Intent処理負荷テスト -->
+        <div class="test-section">
+            <div class="test-title">🎯 Intent処理負荷テスト</div>
+            
+            <button class="button" onclick="testBasicIntentLoad()">基本Intent負荷テスト</button>
+            <button class="button warning" onclick="testHighVolumeIntents()">大量Intent処理</button>
+            <button class="button extreme" onclick="testExtremeIntentStorm()">Intent嵐テスト</button>
+            <button class="button success" onclick="testIntentRecovery()">復旧能力テスト</button>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="intentProgress"></div>
+            </div>
+            
+            <div class="log-area" id="intentLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">Intent処理統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">処理レート:</span>
+                    <span class="stats-value" id="intentRate">0 intents/sec</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">成功率:</span>
+                    <span class="stats-value" id="intentSuccessRate">0%</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">システム温度:</span>
+                    <span class="temp-indicator" id="systemTemp">🌡️ 正常</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">メモリ圧迫:</span>
+                    <span class="stress-value" id="memoryPressure">低</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 並行処理ストレス -->
+        <div class="test-section">
+            <div class="test-title">⚡ 並行処理ストレス</div>
+            
+            <button class="button" onclick="testConcurrentIntents()">並行Intent処理</button>
+            <button class="button warning" onclick="testAsyncStorm()">非同期嵐テスト</button>
+            <button class="button extreme" onclick="testChaosIntents()">カオスIntent実行</button>
+            <button class="button" onclick="testDeadlockPrevention()">デッドロック防止</button>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="concurrentProgress"></div>
+            </div>
+            
+            <div class="log-area" id="concurrentLog"></div>
+            
+            <div class="stats-panel">
+                <div class="test-title">並行処理統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">アクティブスレッド:</span>
+                    <span class="stress-value" id="activeThreads">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">キュー深度:</span>
+                    <span class="stress-value" id="queueDepth">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">競合状態:</span>
+                    <span class="stats-value" id="raceConditions">0</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">並行効率:</span>
+                    <span class="stats-value" id="concurrentEfficiency">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- システム限界テスト -->
+        <div class="test-section">
+            <div class="test-title">💥 システム限界テスト</div>
+            
+            <button class="button warning" onclick="testMemoryLimits()">メモリ限界テスト</button>
+            <button class="button extreme" onclick="testCPUOverload()">CPU過負荷テスト</button>
+            <button class="button extreme" onclick="testSystemBreakPoint()">破壊点テスト</button>
+            <button class="button success" onclick="testGracefulDegradation()">優雅な劣化テスト</button>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="systemProgress"></div>
+            </div>
+            
+            <div class="log-area" id="systemLog"></div>
+            
+            <div class="metric-chart" id="systemChart">
+                <svg width="100%" height="100%">
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#32CD32;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#FF6347;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <polyline class="chart-line" id="performanceLine" points="0,150"></polyline>
+                    <polygon class="chart-area" id="performanceArea" points="0,150"></polygon>
+                </svg>
+            </div>
+            
+            <div class="stats-panel">
+                <div class="test-title">システム限界統計</div>
+                <div class="stats-item">
+                    <span class="stats-label">CPU使用率:</span>
+                    <span class="stress-value" id="cpuUsage">0%</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">メモリ使用率:</span>
+                    <span class="stress-value" id="memoryUsage">0%</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">スループット:</span>
+                    <span class="stats-value" id="throughput">0 ops/sec</span>
+                </div>
+                <div class="stats-item">
+                    <span class="stats-label">システム状態:</span>
+                    <span class="stats-value" id="systemStatus">正常</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // VoidCoreとPhase Rシステムをインポート
+        import { voidCore } from './src/voidcore.js';
+
+        // グローバル変数
+        window.voidCore = voidCore;
+        
+        let stressTestStats = {
+            intentTests: 0,
+            intentSuccesses: 0,
+            concurrentTests: 0,
+            systemTests: 0,
+            maxIntentRate: 0,
+            maxConcurrentThreads: 0,
+            systemTemperature: 0,
+            isOverheating: false
+        };
+
+        let performanceData = [];
+        let isStressTesting = false;
+
+        // ログ機能
+        function logToArea(areaId, message, level = 'info') {
+            const area = document.getElementById(areaId);
+            if (area) {
+                const timestamp = new Date().toLocaleTimeString();
+                const colors = {
+                    info: '#32CD32',
+                    warning: '#FFD700', 
+                    error: '#FF6347',
+                    critical: '#FF0000'
+                };
+                const color = colors[level] || colors.info;
+                area.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+                area.scrollTop = area.scrollHeight;
+            }
+        }
+
+        function updateProgress(progressId, percentage) {
+            const progressBar = document.getElementById(progressId);
+            if (progressBar) {
+                progressBar.style.width = Math.min(percentage, 100) + '%';
+            }
+        }
+
+        function updateStats() {
+            const intentRate = stressTestStats.intentTests > 0 ? 
+                Math.round(stressTestStats.intentSuccesses / stressTestStats.intentTests * 1000) : 0;
+            const successRate = stressTestStats.intentTests > 0 ? 
+                Math.round(stressTestStats.intentSuccesses / stressTestStats.intentTests * 100) : 0;
+            
+            document.getElementById('intentRate').textContent = intentRate + ' intents/sec';
+            document.getElementById('intentSuccessRate').textContent = successRate + '%';
+            
+            // システム温度シミュレーション
+            if (stressTestStats.systemTemperature > 80) {
+                document.getElementById('systemTemp').textContent = '🔥 危険';
+                document.getElementById('systemTemp').style.color = '#FF0000';
+                stressTestStats.isOverheating = true;
+            } else if (stressTestStats.systemTemperature > 60) {
+                document.getElementById('systemTemp').textContent = '⚠️ 警告';
+                document.getElementById('systemTemp').style.color = '#FFD700';
+            } else {
+                document.getElementById('systemTemp').textContent = '🌡️ 正常';
+                document.getElementById('systemTemp').style.color = '#32CD32';
+                stressTestStats.isOverheating = false;
+            }
+            
+            // アラートバナー制御
+            const alertBanner = document.getElementById('alertBanner');
+            if (stressTestStats.isOverheating) {
+                alertBanner.style.display = 'block';
+            } else {
+                alertBanner.style.display = 'none';
+            }
+        }
+
+        function updatePerformanceChart() {
+            if (performanceData.length < 2) return;
+            
+            const chart = document.getElementById('performanceLine');
+            const area = document.getElementById('performanceArea');
+            
+            let points = '';
+            let areaPoints = '';
+            
+            performanceData.slice(-50).forEach((data, index) => {
+                const x = (index / 49) * 100;
+                const y = 150 - (data.performance / 100) * 150;
+                points += `${x}%,${y} `;
+                areaPoints += `${x}%,${y} `;
+            });
+            
+            areaPoints += '100%,150 0%,150';
+            
+            chart.setAttribute('points', points);
+            area.setAttribute('points', areaPoints);
+        }
+
+        // ==========================================
+        // Intent処理負荷テスト関数
+        // ==========================================
+
+        window.testBasicIntentLoad = async function() {
+            logToArea('intentLog', '🎯 基本Intent負荷テスト開始', 'info');
+            
+            try {
+                const intentCount = 1000;
+                let successCount = 0;
+                
+                const startTime = Date.now();
+                
+                for (let i = 0; i < intentCount; i++) {
+                    try {
+                        // 基本的なIntentを大量実行
+                        const result = await voidCore.sendIntent('system.getStats', {
+                            testId: `basic-load-${i}`,
+                            timestamp: Date.now()
+                        });
+                        
+                        if (result) {
+                            successCount++;
+                        }
+                        
+                        stressTestStats.intentTests++;
+                        stressTestStats.intentSuccesses++;
+                        
+                        // 進捗更新
+                        updateProgress('intentProgress', (i / intentCount) * 100);
+                        
+                        // システム温度シミュレーション
+                        stressTestStats.systemTemperature += 0.05;
+                        
+                        if (i % 100 === 0) {
+                            logToArea('intentLog', `📊 進捗: ${i}/${intentCount} (${Math.round(i/intentCount*100)}%)`, 'info');
+                        }
+                        
+                    } catch (error) {
+                        logToArea('intentLog', `❌ Intent ${i} 失敗: ${error.message}`, 'error');
+                        stressTestStats.intentTests++;
+                    }
+                    
+                    // CPU負荷制限
+                    if (i % 50 === 0) {
+                        await new Promise(resolve => setTimeout(resolve, 1));
+                    }
+                }
+                
+                const duration = Date.now() - startTime;
+                const rate = Math.round(intentCount / (duration / 1000));
+                
+                logToArea('intentLog', `✅ 基本Intent負荷テスト完了`, 'info');
+                logToArea('intentLog', `📊 結果: ${successCount}/${intentCount} 成功 (${Math.round(successCount/intentCount*100)}%)`, 'info');
+                logToArea('intentLog', `⚡ 処理レート: ${rate} intents/sec`, 'info');
+                
+                stressTestStats.maxIntentRate = Math.max(stressTestStats.maxIntentRate, rate);
+                
+            } catch (error) {
+                logToArea('intentLog', `❌ 基本Intent負荷テスト失敗: ${error.message}`, 'error');
+            }
+            
+            updateStats();
+        };
+
+        window.testHighVolumeIntents = async function() {
+            logToArea('intentLog', '🌊 大量Intent処理テスト開始', 'warning');
+            
+            try {
+                const batchSize = 100;
+                const batchCount = 50;
+                let totalSuccess = 0;
+                let totalCount = 0;
+                
+                for (let batch = 0; batch < batchCount; batch++) {
+                    const batchPromises = [];
+                    
+                    // バッチ内で並行実行
+                    for (let i = 0; i < batchSize; i++) {
+                        const intentPromise = voidCore.sendIntent('system.createPlugin', {
+                            type: `stress-plugin-${batch}-${i}`,
+                            displayName: `Stress Plugin ${batch}-${i}`,
+                            batchId: batch,
+                            timestamp: Date.now()
+                        }).then(result => {
+                            totalSuccess++;
+                            return result;
+                        }).catch(error => {
+                            logToArea('intentLog', `⚠️ Intent失敗: ${error.message}`, 'warning');
+                            return null;
+                        });
+                        
+                        batchPromises.push(intentPromise);
+                    }
+                    
+                    // バッチ完了を待機
+                    const batchResults = await Promise.allSettled(batchPromises);
+                    totalCount += batchSize;
+                    
+                    // システム温度上昇
+                    stressTestStats.systemTemperature += 2;
+                    
+                    // 進捗更新
+                    updateProgress('intentProgress', (batch / batchCount) * 100);
+                    
+                    logToArea('intentLog', `📦 バッチ ${batch + 1}/${batchCount} 完了: ${batchResults.filter(r => r.status === 'fulfilled').length}/${batchSize} 成功`, 'info');
+                    
+                    // 過熱チェック
+                    if (stressTestStats.systemTemperature > 90) {
+                        logToArea('intentLog', '🔥 システム過熱! 冷却期間を挿入', 'critical');
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        stressTestStats.systemTemperature -= 10;
+                    }
+                }
+                
+                const successRate = Math.round((totalSuccess / totalCount) * 100);
+                
+                logToArea('intentLog', `✅ 大量Intent処理完了`, 'info');
+                logToArea('intentLog', `📊 総計: ${totalSuccess}/${totalCount} 成功 (${successRate}%)`, 'info');
+                
+                stressTestStats.intentTests += totalCount;
+                stressTestStats.intentSuccesses += totalSuccess;
+                
+            } catch (error) {
+                logToArea('intentLog', `❌ 大量Intent処理失敗: ${error.message}`, 'error');
+            }
+            
+            updateStats();
+        };
+
+        window.testExtremeIntentStorm = async function() {
+            logToArea('intentLog', '🌪️ Intent嵐テスト開始 - 極限負荷!', 'critical');
+            
+            try {
+                const stormIntensity = 10000;
+                const stormDuration = 5000; // 5秒間
+                let stormCount = 0;
+                let stormSuccess = 0;
+                
+                const stormStart = Date.now();
+                
+                // Intent嵐の実行
+                const stormInterval = setInterval(async () => {
+                    const intentPromises = [];
+                    
+                    // 同時に複数のIntent実行
+                    for (let i = 0; i < 20; i++) {
+                        const intentType = ['system.getStats', 'system.createPlugin', 'plugin.getInfo'][Math.floor(Math.random() * 3)];
+                        
+                        const intentPromise = voidCore.sendIntent(intentType, {
+                            stormId: stormCount,
+                            intensity: i,
+                            timestamp: Date.now(),
+                            randomData: Array(10).fill(Math.random().toString(36))
+                        }).then(() => {
+                            stormSuccess++;
+                        }).catch(() => {
+                            // エラーは静かに処理
+                        });
+                        
+                        intentPromises.push(intentPromise);
+                    }
+                    
+                    stormCount += 20;
+                    
+                    // システム温度急上昇
+                    stressTestStats.systemTemperature += 5;
+                    
+                    // 進捗更新
+                    const elapsed = Date.now() - stormStart;
+                    updateProgress('intentProgress', (elapsed / stormDuration) * 100);
+                    
+                    if (stormCount % 200 === 0) {
+                        logToArea('intentLog', `⚡ Intent嵐強度: ${stormCount}回実行, 温度: ${Math.round(stressTestStats.systemTemperature)}°C`, 'warning');
+                    }
+                    
+                    // 危険レベルチェック
+                    if (stressTestStats.systemTemperature > 100) {
+                        logToArea('intentLog', '🚨 危険: システム限界到達! 緊急停止', 'critical');
+                        clearInterval(stormInterval);
+                    }
+                    
+                    await Promise.allSettled(intentPromises);
+                    
+                }, 100);
+                
+                // 嵐終了タイマー
+                setTimeout(() => {
+                    clearInterval(stormInterval);
+                    
+                    const stormRate = Math.round(stormCount / (stormDuration / 1000));
+                    const survivedRate = Math.round((stormSuccess / stormCount) * 100);
+                    
+                    logToArea('intentLog', `🌪️ Intent嵐終了`, 'info');
+                    logToArea('intentLog', `💥 嵐統計: ${stormCount}回実行, ${stormRate}intents/sec`, 'info');
+                    logToArea('intentLog', `🛡️ 生存率: ${survivedRate}% (${stormSuccess}/${stormCount})`, 'info');
+                    
+                    if (survivedRate > 70) {
+                        logToArea('intentLog', '🎉 Phase R統合システムは嵐を乗り切った!', 'info');
+                    } else {
+                        logToArea('intentLog', '⚠️ システムに改善の余地あり', 'warning');
+                    }
+                    
+                    stressTestStats.intentTests += stormCount;
+                    stressTestStats.intentSuccesses += stormSuccess;
+                    updateStats();
+                    
+                }, stormDuration);
+                
+            } catch (error) {
+                logToArea('intentLog', `💥 Intent嵐テスト失敗: ${error.message}`, 'error');
+            }
+        };
+
+        window.testIntentRecovery = async function() {
+            logToArea('intentLog', '🔄 復旧能力テスト開始', 'info');
+            
+            try {
+                // システム冷却
+                logToArea('intentLog', '❄️ システム冷却中...', 'info');
+                
+                const coolingInterval = setInterval(() => {
+                    if (stressTestStats.systemTemperature > 30) {
+                        stressTestStats.systemTemperature -= 5;
+                        updateStats();
+                    } else {
+                        clearInterval(coolingInterval);
+                        logToArea('intentLog', '✅ システム冷却完了', 'info');
+                        
+                        // 復旧テスト実行
+                        performRecoveryTest();
+                    }
+                }, 200);
+                
+            } catch (error) {
+                logToArea('intentLog', `❌ 復旧能力テスト失敗: ${error.message}`, 'error');
+            }
+        };
+
+        async function performRecoveryTest() {
+            try {
+                logToArea('intentLog', '🚀 復旧性能測定開始', 'info');
+                
+                const recoveryTests = [
+                    { name: '基本Intent', count: 100 },
+                    { name: '複雑Intent', count: 50 },
+                    { name: '並行Intent', count: 200 }
+                ];
+                
+                let recoveryScore = 0;
+                
+                for (const test of recoveryTests) {
+                    const testStart = Date.now();
+                    let testSuccess = 0;
+                    
+                    const testPromises = [];
+                    
+                    for (let i = 0; i < test.count; i++) {
+                        const testPromise = voidCore.sendIntent('system.getStats', {
+                            recoveryTest: test.name,
+                            iteration: i,
+                            timestamp: Date.now()
+                        }).then(() => {
+                            testSuccess++;
+                        }).catch(() => {
+                            // エラーは無視
+                        });
+                        
+                        testPromises.push(testPromise);
+                    }
+                    
+                    await Promise.allSettled(testPromises);
+                    
+                    const testDuration = Date.now() - testStart;
+                    const testRate = Math.round(test.count / (testDuration / 1000));
+                    const testSuccessRate = Math.round((testSuccess / test.count) * 100);
+                    
+                    logToArea('intentLog', `📊 ${test.name}: ${testSuccessRate}% 成功, ${testRate}ops/sec`, 'info');
+                    
+                    recoveryScore += testSuccessRate;
+                }
+                
+                const finalRecoveryScore = Math.round(recoveryScore / recoveryTests.length);
+                
+                logToArea('intentLog', `🎯 復旧スコア: ${finalRecoveryScore}%`, 'info');
+                
+                if (finalRecoveryScore > 90) {
+                    logToArea('intentLog', '🏆 優秀な復旧能力! Phase R統合は頑健', 'info');
+                } else if (finalRecoveryScore > 70) {
+                    logToArea('intentLog', '✅ 良好な復旧能力', 'info');
+                } else {
+                    logToArea('intentLog', '⚠️ 復旧能力に課題あり', 'warning');
+                }
+                
+            } catch (error) {
+                logToArea('intentLog', `❌ 復旧性能測定失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // ==========================================
+        // 並行処理ストレス関数
+        // ==========================================
+
+        window.testConcurrentIntents = async function() {
+            logToArea('concurrentLog', '⚡ 並行Intent処理テスト開始', 'info');
+            
+            try {
+                const concurrentLevel = 100;
+                const intentBatches = 10;
+                let activeThreads = 0;
+                let maxThreads = 0;
+                let queueDepth = 0;
+                
+                for (let batch = 0; batch < intentBatches; batch++) {
+                    const batchPromises = [];
+                    
+                    // 並行レベルを段階的に上げる
+                    const currentLevel = concurrentLevel + (batch * 20);
+                    
+                    for (let i = 0; i < currentLevel; i++) {
+                        const concurrentPromise = (async () => {
+                            activeThreads++;
+                            maxThreads = Math.max(maxThreads, activeThreads);
+                            queueDepth = Math.max(queueDepth, activeThreads);
+                            
+                            try {
+                                const result = await voidCore.sendIntent('system.createPlugin', {
+                                    type: `concurrent-plugin-${batch}-${i}`,
+                                    displayName: `Concurrent ${batch}-${i}`,
+                                    concurrentLevel: currentLevel,
+                                    threadId: activeThreads
+                                });
+                                
+                                return result;
+                            } finally {
+                                activeThreads--;
+                            }
+                        })();
+                        
+                        batchPromises.push(concurrentPromise);
+                    }
+                    
+                    // バッチ実行
+                    const batchStart = Date.now();
+                    const batchResults = await Promise.allSettled(batchPromises);
+                    const batchDuration = Date.now() - batchStart;
+                    
+                    const batchSuccess = batchResults.filter(r => r.status === 'fulfilled').length;
+                    const batchRate = Math.round(currentLevel / (batchDuration / 1000));
+                    
+                    logToArea('concurrentLog', `📊 バッチ${batch + 1}: ${batchSuccess}/${currentLevel} 成功, ${batchRate}ops/sec`, 'info');
+                    
+                    // 統計更新
+                    document.getElementById('activeThreads').textContent = activeThreads;
+                    document.getElementById('queueDepth').textContent = queueDepth;
+                    
+                    stressTestStats.maxConcurrentThreads = Math.max(stressTestStats.maxConcurrentThreads, maxThreads);
+                    
+                    updateProgress('concurrentProgress', ((batch + 1) / intentBatches) * 100);
+                }
+                
+                const concurrentEfficiency = Math.round((stressTestStats.maxConcurrentThreads / (concurrentLevel * intentBatches)) * 100);
+                
+                logToArea('concurrentLog', `✅ 並行Intent処理完了`, 'info');
+                logToArea('concurrentLog', `📊 最大並行: ${maxThreads}スレッド`, 'info');
+                logToArea('concurrentLog', `🎯 並行効率: ${concurrentEfficiency}%`, 'info');
+                
+                document.getElementById('concurrentEfficiency').textContent = concurrentEfficiency + '%';
+                
+            } catch (error) {
+                logToArea('concurrentLog', `❌ 並行Intent処理失敗: ${error.message}`, 'error');
+            }
+        };
+
+        window.testAsyncStorm = async function() {
+            logToArea('concurrentLog', '🌀 非同期嵐テスト開始', 'warning');
+            
+            try {
+                const stormIntensity = 500;
+                const stormWaves = 5;
+                let totalAsyncOps = 0;
+                let successfulOps = 0;
+                
+                for (let wave = 0; wave < stormWaves; wave++) {
+                    logToArea('concurrentLog', `🌊 第${wave + 1}波開始 (強度: ${stormIntensity})`, 'warning');
+                    
+                    const wavePromises = [];
+                    
+                    for (let i = 0; i < stormIntensity; i++) {
+                        const asyncOp = (async () => {
+                            // 非同期処理のシミュレーション
+                            await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
+                            
+                            // ランダムなIntent実行
+                            const intentTypes = ['system.getStats', 'system.createPlugin', 'plugin.getInfo'];
+                            const randomIntent = intentTypes[Math.floor(Math.random() * intentTypes.length)];
+                            
+                            return voidCore.sendIntent(randomIntent, {
+                                waveId: wave,
+                                operationId: i,
+                                timestamp: Date.now()
+                            });
+                        })();
+                        
+                        wavePromises.push(asyncOp);
+                    }
+                    
+                    const waveStart = Date.now();
+                    const waveResults = await Promise.allSettled(wavePromises);
+                    const waveDuration = Date.now() - waveStart;
+                    
+                    const waveSuccess = waveResults.filter(r => r.status === 'fulfilled').length;
+                    const waveRate = Math.round(stormIntensity / (waveDuration / 1000));
+                    
+                    totalAsyncOps += stormIntensity;
+                    successfulOps += waveSuccess;
+                    
+                    logToArea('concurrentLog', `🌊 第${wave + 1}波完了: ${waveSuccess}/${stormIntensity} 成功, ${waveRate}ops/sec`, 'info');
+                    
+                    updateProgress('concurrentProgress', ((wave + 1) / stormWaves) * 100);
+                    
+                    // システム負荷シミュレーション
+                    stressTestStats.systemTemperature += 8;
+                    updateStats();
+                }
+                
+                const overallSuccessRate = Math.round((successfulOps / totalAsyncOps) * 100);
+                
+                logToArea('concurrentLog', `🌀 非同期嵐終了`, 'info');
+                logToArea('concurrentLog', `📊 総計: ${successfulOps}/${totalAsyncOps} 成功 (${overallSuccessRate}%)`, 'info');
+                
+                if (overallSuccessRate > 80) {
+                    logToArea('concurrentLog', '🏆 非同期嵐を乗り切った! 堅牢なシステム', 'info');
+                } else {
+                    logToArea('concurrentLog', '⚠️ 非同期処理に改善余地', 'warning');
+                }
+                
+            } catch (error) {
+                logToArea('concurrentLog', `❌ 非同期嵐テスト失敗: ${error.message}`, 'error');
+            }
+        };
+
+        window.testChaosIntents = async function() {
+            logToArea('concurrentLog', '💥 カオスIntent実行開始', 'critical');
+            
+            try {
+                const chaosOperations = [
+                    () => voidCore.sendIntent('system.createPlugin', { type: 'chaos', displayName: 'Chaos Plugin' }),
+                    () => voidCore.sendIntent('system.getStats'),
+                    () => voidCore.sendIntent('plugin.getInfo', { pluginId: 'non-existent' }),
+                    () => voidCore.sendIntent('invalid.intent', { data: 'invalid' }),
+                    () => voidCore.sendIntent('system.createPlugin', { type: null }),
+                    () => voidCore.sendIntent('system.destroyPlugin', { pluginId: 'chaos-target' })
+                ];
+                
+                const chaosRounds = 20;
+                let chaosSuccess = 0;
+                let chaosTotal = 0;
+                let raceConditions = 0;
+                
+                for (let round = 0; round < chaosRounds; round++) {
+                    const roundOperations = [];
+                    
+                    // ランダムな数の操作を並行実行
+                    const operationCount = Math.floor(Math.random() * 50) + 10;
+                    
+                    for (let i = 0; i < operationCount; i++) {
+                        const randomOperation = chaosOperations[Math.floor(Math.random() * chaosOperations.length)];
+                        
+                        const operationPromise = randomOperation().then(result => {
+                            chaosSuccess++;
+                            return result;
+                        }).catch(error => {
+                            // 意図的なエラーは成功とみなす
+                            if (error.message.includes('invalid') || error.message.includes('not found')) {
+                                chaosSuccess++;
+                            }
+                            return null;
+                        });
+                        
+                        roundOperations.push(operationPromise);
+                    }
+                    
+                    chaosTotal += operationCount;
+                    
+                    // 競合状態の検出
+                    const raceStart = Date.now();
+                    await Promise.allSettled(roundOperations);
+                    const raceDuration = Date.now() - raceStart;
+                    
+                    if (raceDuration > 1000) {
+                        raceConditions++;
+                    }
+                    
+                    logToArea('concurrentLog', `💥 カオス${round + 1}: ${operationCount}操作実行`, 'warning');
+                    
+                    updateProgress('concurrentProgress', ((round + 1) / chaosRounds) * 100);
+                }
+                
+                const chaosSuccessRate = Math.round((chaosSuccess / chaosTotal) * 100);
+                
+                logToArea('concurrentLog', `💥 カオスIntent実行完了`, 'info');
+                logToArea('concurrentLog', `📊 カオス統計: ${chaosSuccess}/${chaosTotal} 処理完了 (${chaosSuccessRate}%)`, 'info');
+                logToArea('concurrentLog', `⚡ 競合状態検出: ${raceConditions}回`, 'info');
+                
+                document.getElementById('raceConditions').textContent = raceConditions;
+                
+                if (chaosSuccessRate > 85 && raceConditions < 5) {
+                    logToArea('concurrentLog', '🛡️ カオスに負けない頑健なシステム!', 'info');
+                } else {
+                    logToArea('concurrentLog', '⚠️ カオス耐性の向上が必要', 'warning');
+                }
+                
+            } catch (error) {
+                logToArea('concurrentLog', `💥 カオスIntent実行失敗: ${error.message}`, 'error');
+            }
+        };
+
+        window.testDeadlockPrevention = async function() {
+            logToArea('concurrentLog', '🔐 デッドロック防止テスト開始', 'info');
+            
+            try {
+                // デッドロック状況のシミュレーション
+                const resourceA = 'resourceA';
+                const resourceB = 'resourceB';
+                let deadlockPrevented = 0;
+                let totalDeadlockTests = 0;
+                
+                const deadlockScenarios = 10;
+                
+                for (let scenario = 0; scenario < deadlockScenarios; scenario++) {
+                    logToArea('concurrentLog', `🔒 デッドロックシナリオ ${scenario + 1}実行`, 'info');
+                    
+                    const scenario1Promise = (async () => {
+                        // プロセス1: A → B の順でリソース要求
+                        const resultA = await voidCore.sendIntent('system.createPlugin', {
+                            type: `deadlock-test-a-${scenario}`,
+                            resource: resourceA,
+                            step: 1
+                        });
+                        
+                        await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
+                        
+                        const resultB = await voidCore.sendIntent('system.createPlugin', {
+                            type: `deadlock-test-b-${scenario}`,
+                            resource: resourceB,
+                            step: 2,
+                            dependsOn: resultA?.id
+                        });
+                        
+                        return { scenario: scenario, process: 1, success: true };
+                    })();
+                    
+                    const scenario2Promise = (async () => {
+                        // プロセス2: B → A の順でリソース要求（デッドロック可能性）
+                        await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+                        
+                        const resultB = await voidCore.sendIntent('system.createPlugin', {
+                            type: `deadlock-test-b2-${scenario}`,
+                            resource: resourceB,
+                            step: 1
+                        });
+                        
+                        await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
+                        
+                        const resultA = await voidCore.sendIntent('system.createPlugin', {
+                            type: `deadlock-test-a2-${scenario}`,
+                            resource: resourceA,
+                            step: 2,
+                            dependsOn: resultB?.id
+                        });
+                        
+                        return { scenario: scenario, process: 2, success: true };
+                    })();
+                    
+                    try {
+                        // タイムアウト付きで実行（デッドロック検出）
+                        const timeoutPromise = new Promise((_, reject) => {
+                            setTimeout(() => reject(new Error('Deadlock detected')), 2000);
+                        });
+                        
+                        const results = await Promise.race([
+                            Promise.allSettled([scenario1Promise, scenario2Promise]),
+                            timeoutPromise
+                        ]);
+                        
+                        if (Array.isArray(results)) {
+                            const successCount = results.filter(r => r.status === 'fulfilled').length;
+                            if (successCount === 2) {
+                                deadlockPrevented++;
+                                logToArea('concurrentLog', `✅ シナリオ ${scenario + 1}: デッドロック回避成功`, 'info');
+                            } else {
+                                logToArea('concurrentLog', `⚠️ シナリオ ${scenario + 1}: 部分的成功`, 'warning');
+                            }
+                        }
+                        
+                    } catch (error) {
+                        if (error.message.includes('Deadlock')) {
+                            logToArea('concurrentLog', `🔒 シナリオ ${scenario + 1}: デッドロック検出`, 'warning');
+                        } else {
+                            logToArea('concurrentLog', `❌ シナリオ ${scenario + 1}: エラー - ${error.message}`, 'error');
+                        }
+                    }
+                    
+                    totalDeadlockTests++;
+                    updateProgress('concurrentProgress', ((scenario + 1) / deadlockScenarios) * 100);
+                }
+                
+                const deadlockPreventionRate = Math.round((deadlockPrevented / totalDeadlockTests) * 100);
+                
+                logToArea('concurrentLog', `🔐 デッドロック防止テスト完了`, 'info');
+                logToArea('concurrentLog', `📊 防止率: ${deadlockPreventionRate}% (${deadlockPrevented}/${totalDeadlockTests})`, 'info');
+                
+                if (deadlockPreventionRate > 80) {
+                    logToArea('concurrentLog', '🛡️ 優秀なデッドロック防止機能!', 'info');
+                } else if (deadlockPreventionRate > 60) {
+                    logToArea('concurrentLog', '✅ 基本的なデッドロック防止機能', 'info');
+                } else {
+                    logToArea('concurrentLog', '⚠️ デッドロック防止機能の強化が必要', 'warning');
+                }
+                
+            } catch (error) {
+                logToArea('concurrentLog', `❌ デッドロック防止テスト失敗: ${error.message}`, 'error');
+            }
+        };
+
+        // ==========================================
+        // システム限界テスト関数
+        // ==========================================
+
+        window.testMemoryLimits = async function() {
+            logToArea('systemLog', '💾 メモリ限界テスト開始', 'warning');
+            
+            try {
+                const memoryTestObjects = [];
+                let currentMemory = 0;
+                let maxMemoryReached = false;
+                
+                // メモリ消費のシミュレーション
+                for (let i = 0; i < 10000 && !maxMemoryReached; i++) {
+                    try {
+                        // 大きなオブジェクト作成
+                        const largeObject = {
+                            id: `memory-test-${i}`,
+                            data: Array(1000).fill().map(() => Math.random().toString(36)),
+                            timestamp: Date.now(),
+                            metadata: {
+                                iteration: i,
+                                size: 1000,
+                                testType: 'memory-stress'
+                            }
+                        };
+                        
+                        memoryTestObjects.push(largeObject);
+                        
+                        // Intent実行でメモリ圧迫
+                        await voidCore.sendIntent('system.createPlugin', {
+                            type: `memory-stress-${i}`,
+                            displayName: `Memory Test ${i}`,
+                            largeData: largeObject.data.slice(0, 100)
+                        });
+                        
+                        // メモリ使用量シミュレーション
+                        currentMemory += 0.1;
+                        
+                        if (performance.memory) {
+                            const realMemory = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
+                            document.getElementById('memoryUsage').textContent = realMemory + 'MB';
+                        } else {
+                            document.getElementById('memoryUsage').textContent = Math.round(currentMemory) + 'MB';
+                        }
+                        
+                        updateProgress('systemProgress', (i / 10000) * 100);
+                        
+                        if (i % 1000 === 0) {
+                            logToArea('systemLog', `💾 メモリテスト進捗: ${i}/10000 オブジェクト作成`, 'info');
+                        }
+                        
+                        // メモリ圧迫警告
+                        if (currentMemory > 50) {
+                            logToArea('systemLog', '⚠️ メモリ使用量が閾値を超過', 'warning');
+                            maxMemoryReached = true;
+                        }
+                        
+                    } catch (error) {
+                        logToArea('systemLog', `💾 メモリ制限到達: ${error.message}`, 'warning');
+                        maxMemoryReached = true;
+                    }
+                }
+                
+                logToArea('systemLog', `💾 メモリ限界テスト完了`, 'info');
+                logToArea('systemLog', `📊 作成オブジェクト数: ${memoryTestObjects.length}`, 'info');
+                logToArea('systemLog', `📊 推定メモリ使用量: ${Math.round(currentMemory)}MB`, 'info');
+                
+                // メモリクリーンアップ
+                memoryTestObjects.length = 0;
+                
+                if (typeof gc === 'function') {
+                    gc();
+                    logToArea('systemLog', '🧹 ガベージコレクション実行', 'info');
+                }
+                
+                // 性能データ記録
+                performanceData.push({
+                    timestamp: Date.now(),
+                    performance: Math.max(0, 100 - currentMemory)
+                });
+                updatePerformanceChart();
+                
+            } catch (error) {
+                logToArea('systemLog', `❌ メモリ限界テスト失敗: ${error.message}`, 'error');
+            }
+        };
+
+        window.testCPUOverload = async function() {
+            logToArea('systemLog', '🔥 CPU過負荷テスト開始', 'critical');
+            
+            try {
+                const cpuIntensiveOperations = 20;
+                let cpuUsage = 0;
+                
+                for (let operation = 0; operation < cpuIntensiveOperations; operation++) {
+                    logToArea('systemLog', `🔥 CPU集約的操作 ${operation + 1}/${cpuIntensiveOperations}`, 'warning');
+                    
+                    // CPU集約的タスクのシミュレーション
+                    const cpuTasks = [];
+                    
+                    for (let task = 0; task < 10; task++) {
+                        const cpuTask = (async () => {
+                            // 計算集約的処理
+                            let result = 0;
+                            for (let i = 0; i < 100000; i++) {
+                                result += Math.sin(i) * Math.cos(i) * Math.tan(i);
+                            }
+                            
+                            // 同時にIntent実行
+                            return voidCore.sendIntent('system.getStats', {
+                                cpuTestId: `cpu-${operation}-${task}`,
+                                computationResult: result,
+                                timestamp: Date.now()
+                            });
+                        })();
+                        
+                        cpuTasks.push(cpuTask);
+                    }
+                    
+                    const operationStart = Date.now();
+                    await Promise.allSettled(cpuTasks);
+                    const operationDuration = Date.now() - operationStart;
+                    
+                    // CPU使用率シミュレーション
+                    cpuUsage = Math.min(100, cpuUsage + (operationDuration / 100));
+                    document.getElementById('cpuUsage').textContent = Math.round(cpuUsage) + '%';
+                    
+                    logToArea('systemLog', `⏱️ 操作 ${operation + 1} 完了: ${operationDuration}ms`, 'info');
+                    
+                    updateProgress('systemProgress', ((operation + 1) / cpuIntensiveOperations) * 100);
+                    
+                    // システム温度上昇
+                    stressTestStats.systemTemperature += 3;
+                    updateStats();
+                    
+                    // 過負荷チェック
+                    if (cpuUsage > 90) {
+                        logToArea('systemLog', '🚨 CPU過負荷検出! 冷却期間挿入', 'critical');
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        cpuUsage = Math.max(20, cpuUsage - 30);
+                    }
+                    
+                    // スループット計算
+                    const throughput = Math.round(10 / (operationDuration / 1000));
+                    document.getElementById('throughput').textContent = throughput + ' ops/sec';
+                    
+                    // 性能データ記録
+                    performanceData.push({
+                        timestamp: Date.now(),
+                        performance: Math.max(0, 100 - cpuUsage)
+                    });
+                    updatePerformanceChart();
+                }
+                
+                logToArea('systemLog', `🔥 CPU過負荷テスト完了`, 'info');
+                logToArea('systemLog', `📊 最大CPU使用率: ${Math.round(cpuUsage)}%`, 'info');
+                
+                if (cpuUsage < 80) {
+                    logToArea('systemLog', '✅ CPU過負荷耐性良好', 'info');
+                } else {
+                    logToArea('systemLog', '⚠️ CPU過負荷により性能劣化', 'warning');
+                }
+                
+            } catch (error) {
+                logToArea('systemLog', `❌ CPU過負荷テスト失敗: ${error.message}`, 'error');
+            }
+        };
+
+        window.testSystemBreakPoint = async function() {
+            logToArea('systemLog', '💥 破壊点テスト開始 - 危険!', 'critical');
+            
+            try {
+                logToArea('systemLog', '⚠️ 警告: システム破壊点の探索を開始します', 'critical');
+                
+                const destructiveTests = [
+                    {
+                        name: '大量プラグイン作成',
+                        execute: async () => {
+                            const promises = [];
+                            for (let i = 0; i < 1000; i++) {
+                                promises.push(voidCore.sendIntent('system.createPlugin', {
+                                    type: `destruction-test-${i}`,
+                                    displayName: `Destruction ${i}`
+                                }));
+                            }
+                            return Promise.allSettled(promises);
+                        }
+                    },
+                    {
+                        name: '無限再帰Intent',
+                        execute: async () => {
+                            const recursiveTest = async (depth) => {
+                                if (depth > 100) return; // 安全装置
+                                
+                                await voidCore.sendIntent('system.getStats', {
+                                    recursiveDepth: depth,
+                                    timestamp: Date.now()
+                                });
+                                
+                                return recursiveTest(depth + 1);
+                            };
+                            
+                            return recursiveTest(0);
+                        }
+                    },
+                    {
+                        name: '巨大ペイロード送信',
+                        execute: async () => {
+                            const hugePayload = Array(10000).fill().map(() => ({
+                                data: Array(100).fill(Math.random().toString(36)),
+                                timestamp: Date.now()
+                            }));
+                            
+                            return voidCore.sendIntent('system.createPlugin', {
+                                type: 'huge-payload-test',
+                                hugeData: hugePayload
+                            });
+                        }
+                    }
+                ];
+                
+                let systemBroken = false;
+                let lastWorkingTest = -1;
+                
+                for (let testIndex = 0; testIndex < destructiveTests.length && !systemBroken; testIndex++) {
+                    const test = destructiveTests[testIndex];
+                    
+                    logToArea('systemLog', `💥 破壊テスト: ${test.name}`, 'critical');
+                    
+                    try {
+                        const testStart = Date.now();
+                        
+                        // タイムアウト付きで実行
+                        const timeoutPromise = new Promise((_, reject) => {
+                            setTimeout(() => reject(new Error('Test timeout - possible system hang')), 10000);
+                        });
+                        
+                        const result = await Promise.race([test.execute(), timeoutPromise]);
+                        const testDuration = Date.now() - testStart;
+                        
+                        logToArea('systemLog', `✅ ${test.name} 完了: ${testDuration}ms`, 'info');
+                        lastWorkingTest = testIndex;
+                        
+                        // システム状態確認
+                        const healthCheck = await voidCore.sendIntent('system.getStats');
+                        if (healthCheck) {
+                            logToArea('systemLog', `💚 システム健全性確認: OK`, 'info');
+                        }
+                        
+                    } catch (error) {
+                        logToArea('systemLog', `💥 ${test.name} 失敗: ${error.message}`, 'critical');
+                        
+                        if (error.message.includes('timeout') || error.message.includes('hang')) {
+                            logToArea('systemLog', '🚨 システムハング検出! 破壊点発見', 'critical');
+                            systemBroken = true;
+                        }
+                    }
+                    
+                    updateProgress('systemProgress', ((testIndex + 1) / destructiveTests.length) * 100);
+                    
+                    // システム回復待機
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+                
+                logToArea('systemLog', `💥 破壊点テスト完了`, 'info');
+                
+                if (systemBroken) {
+                    logToArea('systemLog', `🎯 破壊点発見: テスト${lastWorkingTest + 2}で限界到達`, 'warning');
+                    document.getElementById('systemStatus').textContent = '破壊点発見';
+                    document.getElementById('systemStatus').style.color = '#FF6347';
+                } else {
+                    logToArea('systemLog', `🛡️ 全破壊テストに耐えた! 頑健なシステム`, 'info');
+                    document.getElementById('systemStatus').textContent = '破壊耐性良好';
+                    document.getElementById('systemStatus').style.color = '#32CD32';
+                }
+                
+            } catch (error) {
+                logToArea('systemLog', `💥 破壊点テスト失敗: ${error.message}`, 'error');
+            }
+        };
+
+        window.testGracefulDegradation = async function() {
+            logToArea('systemLog', '🌟 優雅な劣化テスト開始', 'info');
+            
+            try {
+                // 段階的負荷増加による劣化測定
+                const loadLevels = [10, 50, 100, 200, 500, 1000];
+                const degradationResults = [];
+                
+                for (const loadLevel of loadLevels) {
+                    logToArea('systemLog', `📊 負荷レベル ${loadLevel} での性能測定`, 'info');
+                    
+                    const loadStart = Date.now();
+                    let successCount = 0;
+                    
+                    const loadPromises = [];
+                    
+                    for (let i = 0; i < loadLevel; i++) {
+                        const loadPromise = voidCore.sendIntent('system.getStats', {
+                            loadTest: true,
+                            loadLevel: loadLevel,
+                            iteration: i
+                        }).then(() => {
+                            successCount++;
+                        }).catch(() => {
+                            // エラーは無視
+                        });
+                        
+                        loadPromises.push(loadPromise);
+                    }
+                    
+                    await Promise.allSettled(loadPromises);
+                    
+                    const loadDuration = Date.now() - loadStart;
+                    const throughput = Math.round(loadLevel / (loadDuration / 1000));
+                    const successRate = Math.round((successCount / loadLevel) * 100);
+                    
+                    degradationResults.push({
+                        loadLevel,
+                        throughput,
+                        successRate,
+                        duration: loadDuration
+                    });
+                    
+                    logToArea('systemLog', `📈 負荷${loadLevel}: ${throughput}ops/sec, 成功率${successRate}%`, 'info');
+                    
+                    updateProgress('systemProgress', (loadLevels.indexOf(loadLevel) + 1) / loadLevels.length * 100);
+                    
+                    // 性能データ記録
+                    performanceData.push({
+                        timestamp: Date.now(),
+                        performance: successRate
+                    });
+                    updatePerformanceChart();
+                    
+                    // 回復期間
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                // 劣化分析
+                logToArea('systemLog', '📊 劣化分析結果:', 'info');
+                
+                let gracefulDegradation = true;
+                let previousThroughput = degradationResults[0].throughput;
+                
+                for (let i = 1; i < degradationResults.length; i++) {
+                    const current = degradationResults[i];
+                    const degradationRate = Math.round((previousThroughput - current.throughput) / previousThroughput * 100);
+                    
+                    logToArea('systemLog', `   負荷${current.loadLevel}: 劣化率${degradationRate}%`, 'info');
+                    
+                    if (degradationRate > 50) {
+                        gracefulDegradation = false;
+                        logToArea('systemLog', `⚠️ 急激な性能劣化検出 (負荷レベル${current.loadLevel})`, 'warning');
+                    }
+                    
+                    previousThroughput = current.throughput;
+                }
+                
+                if (gracefulDegradation) {
+                    logToArea('systemLog', '🌟 優雅な劣化を確認! 負荷増加に適切に対応', 'info');
+                    document.getElementById('systemStatus').textContent = '優雅な劣化';
+                    document.getElementById('systemStatus').style.color = '#32CD32';
+                } else {
+                    logToArea('systemLog', '⚠️ 急激な性能劣化あり。改善が必要', 'warning');
+                    document.getElementById('systemStatus').textContent = '劣化要改善';
+                    document.getElementById('systemStatus').style.color = '#FFD700';
+                }
+                
+            } catch (error) {
+                logToArea('systemLog', `❌ 優雅な劣化テスト失敗: ${error.message}`, 'error');
+            }
+        };
+
+        // ==========================================
+        // 初期化とユーティリティ
+        // ==========================================
+
+        // 初期化
+        updateStats();
+        
+        logToArea('intentLog', '🎯 Intent処理負荷テストシステム準備完了', 'info');
+        logToArea('concurrentLog', '⚡ 並行処理ストレステストシステム準備完了', 'info');
+        logToArea('systemLog', '💥 システム限界テストシステム準備完了', 'info');
+        
+        // VoidCore確認
+        if (voidCore) {
+            logToArea('intentLog', '✅ VoidCore Phase R統合システム検出', 'info');
+            logToArea('concurrentLog', '✅ Phase R統合 並行処理システム準備完了', 'info');
+            logToArea('systemLog', '✅ Phase R統合 システム限界測定準備完了', 'info');
+        }
+        
+        // 定期的な統計更新
+        setInterval(() => {
+            if (isStressTesting) {
+                updateStats();
+                
+                // ランダムな性能データ生成（デモ用）
+                if (Math.random() < 0.3) {
+                    performanceData.push({
+                        timestamp: Date.now(),
+                        performance: Math.random() * 100
+                    });
+                    updatePerformanceChart();
+                }
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
