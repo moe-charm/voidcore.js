@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 VoidCore Phase3統合テスト</title>
+    <style>
+        body {
+            font-family: 'Consolas', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 10px;
+        }
+        .test-section {
+            background: #2a2a2a;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #00ff00;
+        }
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: #4a4a4a;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #00ff00;
+            color: #1a1a1a;
+        }
+        .btn.danger {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+        .btn.danger:hover {
+            background: #ff4444;
+            color: #1a1a1a;
+        }
+        .output {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .stats-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #555;
+        }
+        .stat-title {
+            color: #00ffff;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .stat-value {
+            font-size: 18px;
+            color: #ffff00;
+        }
+        .error {
+            color: #ff4444;
+        }
+        .success {
+            color: #44ff44;
+        }
+        .warning {
+            color: #ffaa44;
+        }
+        .info {
+            color: #44aaff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 VoidCore v14.0 Phase3統合テスト</h1>
+            <p>🎯 大工事Phase3完了 - 統合システム動作確認</p>
+            <p>📊 UnifiedPluginManager + UnifiedIntentHandler + UnifiedStatsManager</p>
+        </div>
+
+        <!-- コア初期化テスト -->
+        <div class="test-section">
+            <h2>🚀 コア初期化テスト</h2>
+            <div class="test-controls">
+                <button class="btn" onclick="initializeCore()">コア初期化</button>
+                <button class="btn" onclick="checkCoreStatus()">コア状態確認</button>
+                <button class="btn danger" onclick="clearCore()">コアクリア</button>
+            </div>
+            <div id="core-output" class="output"></div>
+        </div>
+
+        <!-- UnifiedPluginManager テスト -->
+        <div class="test-section">
+            <h2>🔌 UnifiedPluginManager テスト</h2>
+            <div class="test-controls">
+                <button class="btn" onclick="createTestPlugin()">テストプラグイン作成</button>
+                <button class="btn" onclick="listPlugins()">プラグイン一覧</button>
+                <button class="btn" onclick="getPluginStats()">プラグイン統計</button>
+                <button class="btn danger" onclick="removeAllPlugins()">全プラグイン削除</button>
+            </div>
+            <div id="plugin-output" class="output"></div>
+        </div>
+
+        <!-- UnifiedIntentHandler テスト -->
+        <div class="test-section">
+            <h2>🎯 UnifiedIntentHandler テスト</h2>
+            <div class="test-controls">
+                <button class="btn" onclick="sendBootIntent()">system.boot.ready</button>
+                <button class="btn" onclick="sendPluginIntent()">system.plugin.create</button>
+                <button class="btn" onclick="sendStatsIntent()">system.stats</button>
+                <button class="btn" onclick="sendCustomIntent()">カスタムIntent</button>
+                <button class="btn" onclick="getIntentStats()">Intent統計</button>
+            </div>
+            <div id="intent-output" class="output"></div>
+        </div>
+
+        <!-- UnifiedStatsManager テスト -->
+        <div class="test-section">
+            <h2>📊 UnifiedStatsManager テスト</h2>
+            <div class="test-controls">
+                <button class="btn" onclick="collectAllStats()">全統計収集</button>
+                <button class="btn" onclick="getStatsHistory()">統計履歴</button>
+                <button class="btn" onclick="startAutoCollection()">自動収集開始</button>
+                <button class="btn danger" onclick="stopAutoCollection()">自動収集停止</button>
+            </div>
+            <div id="stats-output" class="output"></div>
+            <div id="stats-display" class="stats-display"></div>
+        </div>
+
+        <!-- システム統合テスト -->
+        <div class="test-section">
+            <h2>🌟 システム統合テスト</h2>
+            <div class="test-controls">
+                <button class="btn" onclick="runIntegrationTest()">統合テスト実行</button>
+                <button class="btn" onclick="stressTest()">負荷テスト</button>
+                <button class="btn" onclick="systemCheck()">システム診断</button>
+            </div>
+            <div id="integration-output" class="output"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { VoidCore } from './src/index.js';
+        
+        // グローバル変数
+        let voidCore = null;
+        let testPluginCounter = 0;
+        let autoCollectionTimer = null;
+
+        // ログ出力ユーティリティ
+        function logToOutput(elementId, message, type = 'info') {
+            const output = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            output.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+
+        // コア初期化テスト
+        window.initializeCore = async function() {
+            try {
+                clearOutput('core-output');
+                logToOutput('core-output', '🚀 VoidCore初期化開始...', 'info');
+                
+                voidCore = new VoidCore();
+                await voidCore.initPromise;
+                
+                logToOutput('core-output', '✅ VoidCore初期化完了', 'success');
+                logToOutput('core-output', `📍 Core ID: ${voidCore.coreId}`, 'info');
+                logToOutput('core-output', `🎯 統合システム準備完了:`, 'info');
+                logToOutput('core-output', `  - UnifiedPluginManager: ${voidCore.unifiedPluginManager ? '✅' : '❌'}`, 'info');
+                logToOutput('core-output', `  - UnifiedIntentHandler: ${voidCore.unifiedIntentHandler ? '✅' : '❌'}`, 'info');
+                logToOutput('core-output', `  - UnifiedStatsManager: ${voidCore.unifiedStatsManager ? '✅' : '❌'}`, 'info');
+                
+            } catch (error) {
+                logToOutput('core-output', `❌ 初期化失敗: ${error.message}`, 'error');
+                console.error('Core initialization failed:', error);
+            }
+        };
+
+        window.checkCoreStatus = function() {
+            if (!voidCore) {
+                logToOutput('core-output', '⚠️ コアが初期化されていません', 'warning');
+                return;
+            }
+            
+            const status = {
+                initialized: voidCore.initialized,
+                coreId: voidCore.coreId,
+                systemStatus: voidCore.systemBootManager?.systemStatus || 'unknown',
+                bootComplete: voidCore.systemBootManager?.isBootComplete || false
+            };
+            
+            logToOutput('core-output', `📊 コア状態: ${JSON.stringify(status, null, 2)}`, 'info');
+        };
+
+        window.clearCore = async function() {
+            if (voidCore) {
+                await voidCore.clear();
+                voidCore = null;
+                logToOutput('core-output', '🧹 コアクリア完了', 'success');
+            }
+        };
+
+        // UnifiedPluginManager テスト
+        window.createTestPlugin = async function() {
+            if (!voidCore) {
+                logToOutput('plugin-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            try {
+                testPluginCounter++;
+                const testPlugin = {
+                    id: `test-plugin-${testPluginCounter}`,
+                    type: 'test',
+                    receiveMessage: (message) => {
+                        logToOutput('plugin-output', `📨 Plugin ${testPlugin.id} received: ${message.type}`, 'info');
+                    }
+                };
+                
+                const result = await voidCore.registerPlugin(testPlugin);
+                if (result) {
+                    logToOutput('plugin-output', `✅ プラグイン作成成功: ${testPlugin.id}`, 'success');
+                } else {
+                    logToOutput('plugin-output', `❌ プラグイン作成失敗: ${testPlugin.id}`, 'error');
+                }
+                
+            } catch (error) {
+                logToOutput('plugin-output', `❌ プラグイン作成エラー: ${error.message}`, 'error');
+            }
+        };
+
+        window.listPlugins = function() {
+            if (!voidCore) {
+                logToOutput('plugin-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            const plugins = voidCore.getPlugins();
+            logToOutput('plugin-output', `📋 登録プラグイン数: ${plugins.length}`, 'info');
+            
+            plugins.forEach(plugin => {
+                logToOutput('plugin-output', `  - ${plugin.id} (type: ${plugin.type})`, 'info');
+            });
+        };
+
+        window.getPluginStats = function() {
+            if (!voidCore) {
+                logToOutput('plugin-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            const stats = voidCore.unifiedPluginManager.getStats();
+            logToOutput('plugin-output', `📊 プラグイン統計:`, 'info');
+            logToOutput('plugin-output', `  - 総プラグイン数: ${stats.totalPlugins}`, 'info');
+            logToOutput('plugin-output', `  - アクティブ: ${stats.activePlugins}`, 'info');
+            logToOutput('plugin-output', `  - 型別分布: ${JSON.stringify(stats.pluginsByType)}`, 'info');
+        };
+
+        window.removeAllPlugins = async function() {
+            if (!voidCore) {
+                logToOutput('plugin-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            const plugins = voidCore.getPlugins();
+            let removed = 0;
+            
+            for (const plugin of plugins) {
+                if (voidCore.removePlugin(plugin.id)) {
+                    removed++;
+                }
+            }
+            
+            logToOutput('plugin-output', `🗑️ ${removed}個のプラグインを削除しました`, 'success');
+        };
+
+        // UnifiedIntentHandler テスト
+        window.sendBootIntent = async function() {
+            if (!voidCore) {
+                logToOutput('intent-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            try {
+                const intentMessage = {
+                    action: 'system.boot.ready',
+                    payload: {
+                        timestamp: Date.now(),
+                        coreId: voidCore.coreId
+                    }
+                };
+                
+                const result = await voidCore.unifiedIntentHandler.processIntent(intentMessage);
+                logToOutput('intent-output', `🚀 system.boot.ready 結果: ${JSON.stringify(result)}`, 'success');
+                
+            } catch (error) {
+                logToOutput('intent-output', `❌ Intent処理エラー: ${error.message}`, 'error');
+            }
+        };
+
+        window.sendPluginIntent = async function() {
+            if (!voidCore) {
+                logToOutput('intent-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            try {
+                const intentMessage = {
+                    action: 'system.plugin.create',
+                    payload: {
+                        type: 'test',
+                        config: { name: 'Intent作成テスト' }
+                    }
+                };
+                
+                const result = await voidCore.unifiedIntentHandler.processIntent(intentMessage);
+                logToOutput('intent-output', `🔌 system.plugin.create 結果: ${JSON.stringify(result)}`, 'success');
+                
+            } catch (error) {
+                logToOutput('intent-output', `❌ Intent処理エラー: ${error.message}`, 'error');
+            }
+        };
+
+        window.sendStatsIntent = async function() {
+            if (!voidCore) {
+                logToOutput('intent-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            try {
+                const intentMessage = {
+                    action: 'system.stats',
+                    payload: {}
+                };
+                
+                const result = await voidCore.unifiedIntentHandler.processIntent(intentMessage);
+                logToOutput('intent-output', `📊 system.stats 結果: ${JSON.stringify(result, null, 2)}`, 'success');
+                
+            } catch (error) {
+                logToOutput('intent-output', `❌ Intent処理エラー: ${error.message}`, 'error');
+            }
+        };
+
+        window.sendCustomIntent = async function() {
+            if (!voidCore) {
+                logToOutput('intent-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            try {
+                const intentMessage = {
+                    action: 'custom.test.action',
+                    payload: {
+                        message: 'カスタムIntentテスト',
+                        timestamp: Date.now()
+                    }
+                };
+                
+                const result = await voidCore.unifiedIntentHandler.processIntent(intentMessage);
+                logToOutput('intent-output', `🎨 custom.test.action 結果: ${JSON.stringify(result)}`, 'success');
+                
+            } catch (error) {
+                logToOutput('intent-output', `❌ Intent処理エラー: ${error.message}`, 'error');
+            }
+        };
+
+        window.getIntentStats = function() {
+            if (!voidCore) {
+                logToOutput('intent-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            const stats = voidCore.unifiedIntentHandler.getStats();
+            logToOutput('intent-output', `📊 Intent統計:`, 'info');
+            logToOutput('intent-output', `  - 総Intent数: ${stats.totalIntents}`, 'info');
+            logToOutput('intent-output', `  - 成功: ${stats.successfulIntents}`, 'info');
+            logToOutput('intent-output', `  - 失敗: ${stats.failedIntents}`, 'info');
+            logToOutput('intent-output', `  - 待機中: ${stats.pendingIntents}`, 'info');
+        };
+
+        // UnifiedStatsManager テスト
+        window.collectAllStats = async function() {
+            if (!voidCore) {
+                logToOutput('stats-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            try {
+                const stats = await voidCore.unifiedStatsManager.collectAllStats();
+                logToOutput('stats-output', `📊 統計収集完了: ${new Date(stats.timestamp).toLocaleTimeString()}`, 'success');
+                
+                // 統計表示更新
+                updateStatsDisplay(stats);
+                
+            } catch (error) {
+                logToOutput('stats-output', `❌ 統計収集エラー: ${error.message}`, 'error');
+            }
+        };
+
+        window.getStatsHistory = function() {
+            if (!voidCore) {
+                logToOutput('stats-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            const history = voidCore.unifiedStatsManager.getStatsHistory(5);
+            logToOutput('stats-output', `📋 統計履歴 (最新5件):`, 'info');
+            
+            history.forEach((entry, index) => {
+                const time = new Date(entry.timestamp).toLocaleTimeString();
+                logToOutput('stats-output', `  ${index + 1}. ${time} - ${entry.summary?.overallHealth || 'unknown'}`, 'info');
+            });
+        };
+
+        window.startAutoCollection = function() {
+            if (!voidCore) {
+                logToOutput('stats-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            voidCore.unifiedStatsManager.startAutoCollection();
+            logToOutput('stats-output', '🔄 自動統計収集開始', 'success');
+        };
+
+        window.stopAutoCollection = function() {
+            if (!voidCore) {
+                logToOutput('stats-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            voidCore.unifiedStatsManager.stopAutoCollection();
+            logToOutput('stats-output', '⏸️ 自動統計収集停止', 'success');
+        };
+
+        function updateStatsDisplay(stats) {
+            const display = document.getElementById('stats-display');
+            display.innerHTML = '';
+            
+            // エラーハンドリング
+            if (stats.error) {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-title">統計エラー</div>
+                    <div class="stat-value error">${stats.error}</div>
+                `;
+                display.appendChild(card);
+                return;
+            }
+            
+            if (!stats.categories) {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-title">統計データなし</div>
+                    <div class="stat-value warning">カテゴリデータが見つかりません</div>
+                `;
+                display.appendChild(card);
+                return;
+            }
+            
+            // 基本統計
+            if (stats.categories.core) {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-title">コア統計</div>
+                    <div class="stat-value">ID: ${stats.categories.core.coreId}</div>
+                    <div class="stat-value">初期化: ${stats.categories.core.initialized ? '✅' : '❌'}</div>
+                    <div class="stat-value">実行時間: ${stats.categories.core.runtime || 0}ms</div>
+                `;
+                display.appendChild(card);
+            }
+            
+            // プラグイン統計
+            if (stats.categories.plugin) {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-title">プラグイン統計</div>
+                    <div class="stat-value">総数: ${stats.categories.plugin.plugins || 0}</div>
+                    <div class="stat-value">アクティブ: ${stats.categories.plugin.healthyPlugins || 0}</div>
+                    <div class="stat-value">不健全: ${stats.categories.plugin.unhealthyPlugins || 0}</div>
+                `;
+                display.appendChild(card);
+            }
+            
+            // Intent統計
+            if (stats.categories.intent) {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-title">Intent統計</div>
+                    <div class="stat-value">総数: ${stats.categories.intent.totalIntents || 0}</div>
+                    <div class="stat-value">成功率: ${((stats.categories.intent.successRate || 0) * 100).toFixed(1)}%</div>
+                    <div class="stat-value">平均処理時間: ${(stats.categories.intent.averageProcessingTime || 0).toFixed(2)}ms</div>
+                `;
+                display.appendChild(card);
+            }
+            
+            // システム統計
+            if (stats.categories.system) {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-title">システム統計</div>
+                    <div class="stat-value">プラットフォーム: ${stats.categories.system.platform || 'unknown'}</div>
+                    <div class="stat-value">稼働時間: ${(stats.categories.system.uptime || 0).toFixed(2)}s</div>
+                    <div class="stat-value">メモリ: ${stats.categories.system.memory ? (stats.categories.system.memory.rss / 1024 / 1024).toFixed(2) : '0'}MB</div>
+                `;
+                display.appendChild(card);
+            }
+        }
+
+        // システム統合テスト
+        window.runIntegrationTest = async function() {
+            if (!voidCore) {
+                logToOutput('integration-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            logToOutput('integration-output', '🌟 統合テスト開始...', 'info');
+            
+            try {
+                // 1. プラグイン作成
+                const plugin = {
+                    id: 'integration-test-plugin',
+                    type: 'integration',
+                    receiveMessage: (msg) => console.log('Integration plugin received:', msg)
+                };
+                
+                await voidCore.registerPlugin(plugin);
+                logToOutput('integration-output', '✅ ステップ1: プラグイン作成完了', 'success');
+                
+                // 2. Intent送信
+                const intentResult = await voidCore.unifiedIntentHandler.processIntent({
+                    action: 'system.plugin.list',
+                    payload: {}
+                });
+                logToOutput('integration-output', '✅ ステップ2: Intent処理完了', 'success');
+                
+                // 3. 統計収集
+                const stats = await voidCore.unifiedStatsManager.collectAllStats();
+                logToOutput('integration-output', '✅ ステップ3: 統計収集完了', 'success');
+                
+                // 4. 結果確認
+                const pluginCount = voidCore.getPlugins().length;
+                const intentStats = voidCore.unifiedIntentHandler.getStats();
+                
+                logToOutput('integration-output', `📊 統合テスト結果:`, 'info');
+                logToOutput('integration-output', `  - プラグイン数: ${pluginCount}`, 'info');
+                logToOutput('integration-output', `  - Intent処理数: ${intentStats.totalIntents}`, 'info');
+                
+                // 統計データのエラーハンドリング
+                if (stats.error) {
+                    logToOutput('integration-output', `  - 統計エラー: ${stats.error}`, 'error');
+                } else if (stats.categories) {
+                    logToOutput('integration-output', `  - 統計カテゴリ: ${Object.keys(stats.categories).length}`, 'info');
+                    logToOutput('integration-output', `  - 全体健全性: ${stats.summary?.overallHealth || 'unknown'}`, 'info');
+                } else {
+                    logToOutput('integration-output', `  - 統計データ: 取得失敗`, 'warning');
+                }
+                
+                logToOutput('integration-output', '🎉 統合テスト完了 - すべて正常動作！', 'success');
+                
+            } catch (error) {
+                logToOutput('integration-output', `❌ 統合テスト失敗: ${error.message}`, 'error');
+            }
+        };
+
+        window.stressTest = async function() {
+            if (!voidCore) {
+                logToOutput('integration-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            logToOutput('integration-output', '🔥 負荷テスト開始...', 'info');
+            
+            const startTime = Date.now();
+            let successCount = 0;
+            let errorCount = 0;
+            
+            // 100個のプラグイン作成
+            for (let i = 0; i < 100; i++) {
+                try {
+                    const plugin = {
+                        id: `stress-test-${i}`,
+                        type: 'stress',
+                        receiveMessage: () => {}
+                    };
+                    
+                    await voidCore.registerPlugin(plugin);
+                    successCount++;
+                } catch (error) {
+                    errorCount++;
+                }
+            }
+            
+            // 50個のIntent送信
+            for (let i = 0; i < 50; i++) {
+                try {
+                    await voidCore.unifiedIntentHandler.processIntent({
+                        action: 'system.plugin.list',
+                        payload: {}
+                    });
+                    successCount++;
+                } catch (error) {
+                    errorCount++;
+                }
+            }
+            
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+            
+            logToOutput('integration-output', `🏁 負荷テスト完了:`, 'info');
+            logToOutput('integration-output', `  - 実行時間: ${duration}ms`, 'info');
+            logToOutput('integration-output', `  - 成功: ${successCount}`, 'success');
+            logToOutput('integration-output', `  - 失敗: ${errorCount}`, errorCount > 0 ? 'error' : 'success');
+            logToOutput('integration-output', `  - 成功率: ${((successCount / (successCount + errorCount)) * 100).toFixed(1)}%`, 'info');
+        };
+
+        window.systemCheck = async function() {
+            if (!voidCore) {
+                logToOutput('integration-output', '⚠️ 先にコアを初期化してください', 'warning');
+                return;
+            }
+            
+            logToOutput('integration-output', '🔍 システム診断開始...', 'info');
+            
+            // 診断項目
+            const checks = [
+                {
+                    name: 'コア初期化状態',
+                    check: () => voidCore.initialized,
+                    expected: true
+                },
+                {
+                    name: 'UnifiedPluginManager',
+                    check: () => !!voidCore.unifiedPluginManager,
+                    expected: true
+                },
+                {
+                    name: 'UnifiedIntentHandler',
+                    check: () => !!voidCore.unifiedIntentHandler,
+                    expected: true
+                },
+                {
+                    name: 'UnifiedStatsManager',
+                    check: () => !!voidCore.unifiedStatsManager,
+                    expected: true
+                },
+                {
+                    name: 'SystemBootManager',
+                    check: () => !!voidCore.systemBootManager,
+                    expected: true
+                },
+                {
+                    name: 'BootSequence完了',
+                    check: () => voidCore.systemBootManager?.isBootComplete,
+                    expected: true
+                }
+            ];
+            
+            let passCount = 0;
+            let failCount = 0;
+            
+            for (const check of checks) {
+                try {
+                    const result = check.check();
+                    if (result === check.expected) {
+                        logToOutput('integration-output', `✅ ${check.name}: 正常`, 'success');
+                        passCount++;
+                    } else {
+                        logToOutput('integration-output', `❌ ${check.name}: 異常 (期待: ${check.expected}, 実際: ${result})`, 'error');
+                        failCount++;
+                    }
+                } catch (error) {
+                    logToOutput('integration-output', `❌ ${check.name}: エラー - ${error.message}`, 'error');
+                    failCount++;
+                }
+            }
+            
+            const totalChecks = passCount + failCount;
+            const successRate = (passCount / totalChecks) * 100;
+            
+            logToOutput('integration-output', `📊 診断結果:`, 'info');
+            logToOutput('integration-output', `  - 合格: ${passCount}/${totalChecks}`, 'info');
+            logToOutput('integration-output', `  - 成功率: ${successRate.toFixed(1)}%`, successRate === 100 ? 'success' : 'warning');
+            
+            if (successRate === 100) {
+                logToOutput('integration-output', '🎉 システム診断完了 - すべて正常！', 'success');
+            } else {
+                logToOutput('integration-output', '⚠️ システム診断完了 - 一部異常あり', 'warning');
+            }
+        };
+
+        // 初期化時に自動実行
+        window.addEventListener('load', function() {
+            logToOutput('core-output', '🌟 VoidCore Phase3統合テスト準備完了', 'success');
+            logToOutput('core-output', '👆 「コア初期化」ボタンをクリックしてテストを開始してください', 'info');
+        });
+    </script>
+</body>
+</html>

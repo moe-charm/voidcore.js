@@ -186,7 +186,7 @@ class VoidCore {
    * system.boot.ready Intent送信
    */
   async _sendSystemBootReadyIntent() {
-    const bootReadyIntent = Message.IntentRequest('system.boot.ready', {
+    const bootReadyIntent = Message.intentRequest('system.boot.ready', 'system.boot.ready', {
       timestamp: Date.now(),
       coreId: this.coreId,
       bootSequence: this.systemBootManager.bootSequence,
@@ -206,7 +206,7 @@ class VoidCore {
    */
   async sendMessage(message) {
     await this._ensureInitialized()
-    return await this.base.sendMessage(message)
+    return await this.base.publish(message)
   }
 
   /**

@@ -235,18 +235,18 @@ export class UnifiedStatsManager {
   async collectSystemStats() {
     const stats = {
       timestamp: Date.now(),
-      uptime: process.uptime ? process.uptime() : 0,
-      nodeVersion: process.version || 'Unknown',
-      platform: process.platform || 'Unknown'
+      uptime: (typeof process !== 'undefined' && process.uptime) ? process.uptime() : 0,
+      nodeVersion: (typeof process !== 'undefined' && process.version) ? process.version : 'Browser',
+      platform: (typeof process !== 'undefined' && process.platform) ? process.platform : 'Browser'
     }
     
     // 🔧 メモリ統計（可能な場合）
-    if (process.memoryUsage) {
+    if (typeof process !== 'undefined' && process.memoryUsage) {
       stats.memory = process.memoryUsage()
     }
     
     // 🎯 CPU統計（可能な場合）
-    if (process.cpuUsage) {
+    if (typeof process !== 'undefined' && process.cpuUsage) {
       stats.cpu = process.cpuUsage()
     }
     
