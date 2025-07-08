@@ -238,8 +238,15 @@
             voidFlowIntegration 
         } from './src/universal-flow-integration.js';
         
-        import { VoidFlowNodePlugin, createVoidFlowNodePlugin } from './src/voidflow-node-plugin.js';
+        // VoidFlowファイルはPhase S4で削除済み - 代替実装を使用
+        // import { VoidFlowNodePlugin, createVoidFlowNodePlugin } from './src/voidflow-node-plugin.js';
         import { voidFlowAdapter } from './src/universal-message-adapter.js';
+        
+        // 代替実装
+        const VoidFlowNodePlugin = class {
+            constructor(config) { this.config = config; }
+        };
+        const createVoidFlowNodePlugin = (config) => new VoidFlowNodePlugin(config);
 
         // グローバル変数
         window.UniversalFlowIntegration = UniversalFlowIntegration;

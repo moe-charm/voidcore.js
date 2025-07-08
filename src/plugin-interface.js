@@ -12,6 +12,7 @@
 export class IPlugin {
   constructor(config) {
     this.id = config.id || `plugin_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+    this.pluginId = this.id  // VoidCore互換性のため
     this.type = config.type || 'generic'
     this.parent = config.parent || null
     this.isCore = config.isCore || false

@@ -10,9 +10,7 @@ export {
   declareProcess
 } from './pure_plugin_system.js';
 
-// 後方互換性（legacy フォルダへの参照）
-export { AutonomousPlugin } from './legacy/autonomous_plugin.js';
-export { CachedAutonomousPlugin } from './legacy/cached_autonomous_plugin.js';
+// 後方互換性export削除完了 - ローカルVoidCoreコピー戦略により不要
 
 // v14.0: CoreFusion v1.2 & SimpleMessagePool
 export { CoreFusion, coreFusion } from './core-fusion.js';

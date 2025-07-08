@@ -1,0 +1,96 @@
+# SystemBootManager 実装ガイドライン（Claude Code用）
+
+## 🧠 目的
+
+`SystemBootManager` は VoidCore 起動フェーズを管理する「起動用プラグイン」です。  
+VoidCore の中核ではなく、**起動プロセスを監視・調整する自己完結型プラグイン**として実装してください。
+
+---
+
+## ✅ 実装方針の要点
+
+### 1. 「Core」ではなく「Plugin」として設計する
+
+- `SystemBootManager` は **IPlugin を継承**
+- `isCore: true` を指定することで、構造上は Core に並ぶ存在として配置される
+- ただし **VoidCore 自体を直接操作しないこと**
+
+---
+
+### 2. VoidCoreとの接続は「Intent」で行うこと
+
+- `voidCore` オブジェクトを直接保持・操作しない  
+  ❌ NG例：
+  ```ts
+  this.voidCore.registerPlugin(...);
+  this.voidCore.pluginManager.getById(...);
+  
+  ✅ OK例（Intent経由）：
+
+    this.sendIntent('system.registerPlugin', { pluginSpec: ... });
+    this.sendIntent('system.boot.ready', { ok: true });
+
+→ この方式により、起動順制御・非同期処理・再現性・ログ記録が容易になります。
+
+ 起動依存性をメッセージで追跡する構造を想定すること
+
+    PluginStatusWatcher 等と連携し、
+    すべての重要Pluginが ready 状態になるのを Promise.all() 等で検出する
+
+    ✅ 例：
+
+async checkAllDependenciesReady() {
+  const pluginIds = ['FlowVisualCore', 'PluginA', 'PluginB'];
+  const allReady = await Promise.all(pluginIds.map(id => this.waitForPluginReady(id)));
+  return allReady.every(ok => ok);
+  
+  
+}
+
+export class SystemBootManager extends IPlugin {
+  constructor() {
+    super({
+      id: 'System.BootManager',
+      type: 'system.boot',
+      displayName: 'System Boot Manager',
+      isCore: true
+    });
+  }
+
+  onLoad() {
+    this.sendIntent('system.boot.phaseStart', { phase: 'init' });
+
+    this.checkAllDependenciesReady().then(() => {
+      this.sendIntent('system.boot.ready', { ok: true });
+    });
+  }
+
+  async checkAllDependenciesReady() {
+    // PluginStatusWatcher 等と連携
+    // await this.waitForPluginReady(...)
+  }
+}
+
+
+📌 備考
+
+    SystemBootManager 自体が onLoad() 時点で動作可能であることを前提としてください
+
+    Intentベース通信を徹底することで、「コアと密結合せずに機能する完全自律型起動マネージャ」が成立します
+
+🚫 よくある間違いと回避策
+❌ やりがちなミス	回避策
+this.voidCore に依存する	this.sendIntent(...) に切り替える
+Pluginを順序で起動させようとする	ステータス監視とPromiseで非同期連携
+コアの中で直接ロード処理を書く	全てPluginで完結させること
+
+この設計の利点
+
+    ✅ テスト可能・再現可能・記録可能な起動処理
+
+    ✅ Plugin/Plugin間の連携が自動構築される
+
+    ✅ VoidCore自体の独立性が保たれる（コア肥大化を防止）
+
+以上。
+Claude Code 君はこのガイドラインに従って SystemBootManager を実装してにゃ！🐾

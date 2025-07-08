@@ -1,0 +1,223 @@
+/* VoidFlow - Nodes Styles */
+
+/* ノードパレット */
+.level-section {
+    margin-bottom: 30px;
+}
+
+.level-title {
+    font-size: 14px;
+    color: #4a90e2;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #333;
+}
+
+.node-item {
+    background: #2d2d2d;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    /* transition: all 0.3s ease; パフォーマンス最適化で無効化 */
+    position: relative;
+    /* overflow: hidden; */
+}
+
+.node-item:hover {
+    border-color: #4a90e2;
+    /* box-shadow: 0 0 15px rgba(74, 144, 226, 0.3);
+    transform: translateY(-2px); パフォーマンス最適化で無効化 */
+}
+
+/* .node-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(74, 144, 226, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.node-item:hover::before {
+    left: 100%;
+} */
+
+.proxy-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: linear-gradient(45deg, #7b68ee, #9370db);
+    color: white;
+    font-size: 8px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: bold;
+    opacity: 0.9;
+}
+
+.node-name {
+    font-weight: bold;
+    font-size: 12px;
+    color: #ffffff;
+    margin-bottom: 5px;
+}
+
+.node-description {
+    font-size: 10px;
+    color: #aaa;
+    line-height: 1.3;
+}
+
+/* キャンバス上のノード */
+.voidflow-node {
+    position: absolute;
+    background: linear-gradient(145deg, #1e1e1e, #0a0a0a);
+    border: 2px solid #4a90e2;
+    border-radius: 12px;
+    padding: 15px;
+    min-width: 160px;
+    cursor: move;
+    /* transition: all 0.3s ease; Phase 4で問題特定：Chrome/Edge遅延の犯人！ */
+    box-shadow: 0 4px 20px rgba(74, 144, 226, 0.2);
+    z-index: 10;
+    /* Chrome対応: タッチイベントとドラッグ動作の制御 */
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.voidflow-node:hover {
+    /* box-shadow: 0 8px 30px rgba(74, 144, 226, 0.4); パフォーマンス最適化で無効化 */
+    /* transform: translateY(-2px); パフォーマンス最適化で無効化 */
+}
+
+.voidflow-node.selected {
+    border-color: #7b68ee;
+    box-shadow: 0 0 30px rgba(123, 104, 238, 0.5);
+}
+
+.voidflow-node.executing {
+    border-color: #ffa500;
+    box-shadow: 0 0 25px rgba(255, 165, 0, 0.6);
+}
+
+.voidflow-node.success {
+    border-color: #00ff00;
+    box-shadow: 0 0 25px rgba(0, 255, 0, 0.4);
+}
+
+.voidflow-node.error {
+    border-color: #ff4444;
+    box-shadow: 0 0 25px rgba(255, 68, 68, 0.6);
+}
+
+.node-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #4a90e2;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.node-content {
+    font-size: 11px;
+    color: #ccc;
+    line-height: 1.4;
+}
+
+.node-output {
+    margin-top: 8px;
+    padding: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    font-size: 10px;
+    color: #80c0ff;
+    border-left: 3px solid #4a90e2;
+}
+
+/* プロパティパネル */
+.execute-button {
+    background: linear-gradient(145deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    width: 100%;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    margin: 15px 0;
+    /* transition: all 0.3s ease; */
+}
+
+.execute-button:hover {
+    background: linear-gradient(145deg, #357abd, #2c5aa0);
+    /* transform: translateY(-1px); */
+}
+
+.execute-button:active {
+    /* transform: translateY(0); */
+}
+
+/* 接続ポート */
+.connection-port {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #4a90e2;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 20;
+}
+
+.connection-port:hover {
+    transform: scale(1.3);
+    box-shadow: 0 0 10px rgba(74, 144, 226, 0.8);
+}
+
+.input-port {
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.output-port {
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* ノード入力フィールド */
+.node-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 6px 8px;
+    color: #fff;
+    font-size: 11px;
+    margin: 5px 0;
+}
+
+.node-input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
+}
+
+/* 接続候補モーダル */
+.candidate-item:hover {
+    background: rgba(74, 144, 226, 0.2) !important;
+    border-color: #4a90e2 !important;
+}

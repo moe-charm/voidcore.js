@@ -1,0 +1,61 @@
+/* VoidFlow - Layout Styles */
+
+.voidflow-container {
+    display: grid;
+    grid-template-columns: 300px 1fr 300px;
+    grid-template-rows: 60px 1fr 50px;
+    height: 100vh;
+    gap: 2px;
+}
+
+.header {
+    grid-column: 1 / -1;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 2px solid #4a90e2;
+}
+
+.header h1 {
+    font-size: 18px;
+    color: #4a90e2;
+    /* background: linear-gradient(45deg, #4a90e2, #7b68ee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: titleGlow 3s ease-in-out infinite alternate; */
+}
+
+.node-palette {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    overflow-y: auto;
+    border-right: 1px solid #333;
+}
+
+.properties-panel {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    overflow-y: auto;
+    border-left: 1px solid #333;
+}
+
+.panel-title {
+    font-size: 14px;
+    color: #4a90e2;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #333;
+}
+
+.footer {
+    grid-column: 1 / -1;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    border-top: 1px solid #333;
+    font-size: 12px;
+    color: #666;
+}

@@ -1,0 +1,3156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 VoidFlow - Constellation Zero | 創造性の永久機関</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: #1a1a2e; /* グラデーション停止 */
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .voidflow-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            grid-template-rows: 60px 1fr 50px;
+            height: 100vh;
+            gap: 2px;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 2px solid #4a90e2;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            color: #4a90e2;
+            /* background: linear-gradient(45deg, #4a90e2, #7b68ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGlow 3s ease-in-out infinite alternate; */
+        }
+
+        /* @keyframes titleGlow {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.3); }
+        } */
+
+        .node-palette {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #333;
+        }
+
+        .level-section {
+            margin-bottom: 30px;
+        }
+
+        .level-title {
+            font-size: 14px;
+            color: #4a90e2;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .node-item {
+            background: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            /* transition: all 0.3s ease; */
+            position: relative;
+            /* overflow: hidden; */
+        }
+
+        .node-item:hover {
+            border-color: #4a90e2;
+            /* box-shadow: 0 0 15px rgba(74, 144, 226, 0.3);
+            transform: translateY(-2px); */
+        }
+
+        /* .node-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(74, 144, 226, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .node-item:hover::before {
+            left: 100%;
+        } */
+
+        .proxy-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: linear-gradient(45deg, #7b68ee, #9370db);
+            color: white;
+            font-size: 8px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+            opacity: 0.9;
+        }
+
+        .node-name {
+            font-weight: bold;
+            font-size: 12px;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .node-description {
+            font-size: 10px;
+            color: #aaa;
+            line-height: 1.3;
+        }
+
+        .canvas-area {
+            background: radial-gradient(circle at 50% 50%, #0f1419 0%, #0a0a0a 100%);
+            position: relative;
+            overflow: hidden;
+            /* Chrome対応: タッチイベントとスクロール慣性の無効化 */
+            touch-action: none;
+            -webkit-overflow-scrolling: auto;
+            overscroll-behavior: none;
+        }
+        
+        #connectionSvg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* ノードより下に配置 */
+            pointer-events: none; /* SVG全体のクリックを無効化 */
+        }
+        
+        .connection, .connection-click-area, .bundled-connection {
+            pointer-events: all; /* 個別の線のみクリック可能 */
+        }
+
+        .canvas-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(#333 1px, transparent 1px),
+                linear-gradient(90deg, #333 1px, transparent 1px);
+            background-size: 50px 50px;
+            /* animation: gridPulse 4s ease-in-out infinite; GPU負荷の犯人！停止 */
+        }
+
+        /* @keyframes gridPulse {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.2; }
+        } */
+
+        .voidflow-node {
+            position: absolute;
+            background: linear-gradient(145deg, #1e1e1e, #0a0a0a);
+            border: 2px solid #4a90e2;
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 160px;
+            cursor: move;
+            /* transition: all 0.3s ease; 犯人候補！無効化 */
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.2);
+            z-index: 10; /* 接続線より上に配置 */
+            /* Chrome対応: タッチイベントとドラッグ動作の制御 */
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .voidflow-node:hover {
+            /* box-shadow: 0 8px 30px rgba(74, 144, 226, 0.4); 犯人候補！無効化 */
+            /* transform: translateY(-2px); 犯人候補！無効化 */
+        }
+
+        .voidflow-node.executing {
+            border-color: #00ff88;
+            animation: heartbeat 1s infinite;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .voidflow-node.success {
+            border-color: #00ff88;
+            animation: successGlow 0.5s ease-out;
+        }
+
+        @keyframes successGlow {
+            0% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.8); }
+            100% { box-shadow: 0 4px 20px rgba(74, 144, 226, 0.2); }
+        }
+
+        .voidflow-node.error {
+            border-color: #ff4757;
+            animation: errorShake 0.3s;
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .node-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .node-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 8px;
+            color: #fff;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .node-input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 10px rgba(74, 144, 226, 0.3);
+        }
+
+        .node-output {
+            background: rgba(0, 20, 40, 0.8);
+            border: 1px solid #004080;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 11px;
+            color: #80c0ff;
+            min-height: 30px;
+            font-family: 'Monaco', monospace;
+        }
+
+        .connection-port {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #4a90e2;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .connection-port:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 10px rgba(74, 144, 226, 0.8);
+        }
+
+        .input-port {
+            left: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .output-port {
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .connection-line {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .properties-panel {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 1px solid #333;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            color: #4a90e2;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .execute-button {
+            background: linear-gradient(145deg, #4a90e2, #7b68ee);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 0;
+            width: 100%;
+        }
+
+        .execute-button:hover {
+            background: linear-gradient(145deg, #5aa0f2, #8b78fe);
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .start-button {
+            background: linear-gradient(145deg, #00ff88, #00cc6a);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px 0;
+            width: 100%;
+        }
+
+        .start-button:hover {
+            background: linear-gradient(145deg, #00ff88, #00ee80);
+            box-shadow: 0 2px 10px rgba(0, 255, 136, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .footer {
+            grid-column: 1 / -1;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            border-top: 1px solid #333;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .zen-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #4a90e2;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .zen-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            animation: zenGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes zenGlow {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        /* Phase 5.1: Monaco Editor and Context Menu Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0; 
+                transform: translateX(100px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateX(0); 
+            }
+        }
+
+        .node-context-menu {
+            animation: fadeIn 0.2s ease;
+        }
+
+        .voidflow-editor-modal {
+            animation: fadeIn 0.3s ease;
+        }
+
+        .zen-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="voidflow-container">
+        <header class="header">
+            <h1>🌟 VoidFlow - Constellation Zero | 創造性の永久機関</h1>
+        </header>
+
+        <div class="node-palette">
+            <div class="level-section">
+                <div class="level-title">🎒 レベル1: 動くよろこびセット</div>
+                <div class="node-item" data-node-type="button.send">
+                    <div class="node-name">Button: Send</div>
+                    <div class="node-description">自律プラグインを刺激する</div>
+                </div>
+                <div class="node-item" data-node-type="input.text">
+                    <div class="node-name">Input: Text</div>
+                    <div class="node-description">宇宙の起源、意志の表明</div>
+                </div>
+                <div class="node-item" data-node-type="string.uppercase">
+                    <div class="node-name">String: UpperCase</div>
+                    <div class="node-description">意志が変化する様を体感</div>
+                </div>
+                <div class="node-item" data-node-type="output.console">
+                    <div class="node-name">Output: Console</div>
+                    <div class="node-description">観測手段＝現実の確定</div>
+                </div>
+            </div>
+
+            <div class="level-section">
+                <div class="level-title">✨ レベル2: 世界とつながる</div>
+                <div class="node-item" data-node-type="web.fetch">
+                    <div class="node-name">Web: Fetch API</div>
+                    <div class="node-description">外宇宙に扉を開ける</div>
+                </div>
+                <div class="node-item" data-node-type="json.parser">
+                    <div class="node-name">JSON: Parser</div>
+                    <div class="node-description">混沌に意味を与える</div>
+                </div>
+                <div class="node-item" data-node-type="ui.card">
+                    <div class="node-name">UI: Simple Card</div>
+                    <div class="node-description">美しさは意味の完成</div>
+                </div>
+            </div>
+
+            <div class="level-section">
+                <div class="level-title">🌀 レベル3: メタへの昇華</div>
+                <div class="node-item" data-node-type="core.plugin-lister">
+                    <div class="node-name">Core: Plugin Lister</div>
+                    <div class="node-description">🔗 VoidCore自己観測への参照</div>
+                    <div class="proxy-badge">参照</div>
+                </div>
+                <div class="node-item" data-node-type="core.connection-manager">
+                    <div class="node-name">Core: Connection Manager</div>
+                    <div class="node-description">🔗 VoidCore接続管理への参照</div>
+                    <div class="proxy-badge">参照</div>
+                </div>
+                <div class="node-item" data-node-type="flow.connector">
+                    <div class="node-name">Flow: Connector</div>
+                    <div class="node-description">自己編集＝創造の完成</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-area">
+            <div class="canvas-grid"></div>
+            <div class="zen-message" id="zenMessage">
+                <div class="zen-title">静寂の器に星座を描く</div>
+                <div class="zen-subtitle">ノードをドラッグして配置し、創造性の永久機関を始動させよ</div>
+            </div>
+            <svg id="connectionSvg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
+            </svg>
+        </div>
+
+        <div class="properties-panel">
+            <div class="panel-title">⚙️ プロパティ</div>
+            <div id="propertiesContent">
+                <p style="color: #888; font-size: 12px;">ノードを選択してプロパティを表示</p>
+            </div>
+            <button class="execute-button" onclick="executeFlow()">🚀 フロー実行</button>
+            <div class="panel-title">📊 実行ログ</div>
+            <div id="executionLog" style="background: rgba(0,0,0,0.5); border-radius: 6px; padding: 10px; font-size: 11px; color: #80c0ff; max-height: 200px; overflow-y: auto; font-family: 'Monaco', monospace;">
+                VoidFlow - Constellation Zero 起動完了<br>
+                創造性の永久機関、準備中...<br>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <span>🌟 VoidCore v14.0 - Pure Message System | セリンの大改革による創造性の永久機関</span>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { voidCore, Message, createPlugin } from '../src/index.js';
+        // import { VoidFlowMonacoIntegration } from '../src/voidflow-monaco-integration.js'; // 削除済み
+        import { UniversalNodeIntegration } from '../src/universal-node-integration.js';
+
+        // VoidFlow Engine - ヘッドレス型フロー実行エンジン
+        class VoidFlowEngine {
+            constructor() {
+                this.nodes = new Map();
+                this.edges = new Map();
+                this.executionState = new Map();
+                this.nodeCounter = 0;
+                this.selectedNode = null;
+                
+                // Phase 5.1: Monaco Editor integration
+                this.monacoIntegration = null;
+                this.isMonacoInitialized = false;
+                
+                // Phase R Integration: Universal Node Integration
+                this.universalIntegration = null;
+                this.initializeUniversalIntegration();
+            }
+
+            // ノード作成
+            createNode(type, position) {
+                const nodeId = `node-${++this.nodeCounter}`;
+                const node = {
+                    id: nodeId,
+                    type: type,
+                    position: position,
+                    properties: {},
+                    inputs: this.getInputPorts(type),
+                    outputs: this.getOutputPorts(type)
+                };
+
+                this.nodes.set(nodeId, node);
+                this.executionState.set(nodeId, { status: 'waiting', result: null });
+                return node;
+            }
+
+            // ノードタイプ別のポート定義
+            getInputPorts(type) {
+                const portDefs = {
+                    'button.send': [],
+                    'input.text': [{ id: 'trigger', name: 'Trigger', dataType: 'signal' }],
+                    'string.uppercase': [{ id: 'input', name: 'Text', dataType: 'string' }],
+                    'output.console': [{ id: 'input', name: 'Data', dataType: 'any' }],
+                    'web.fetch': [{ id: 'trigger', name: 'Trigger', dataType: 'signal' }],
+                    'json.parser': [{ id: 'input', name: 'JSON', dataType: 'string' }],
+                    'ui.card': [{ id: 'input', name: 'Data', dataType: 'any' }],
+                    'core.plugin-lister': [{ id: 'trigger', name: 'Trigger', dataType: 'signal' }],
+                    'core.connection-manager': [
+                        { id: 'connect-request', name: 'Connect Request', dataType: 'object' },
+                        { id: 'disconnect-request', name: 'Disconnect Request', dataType: 'object' }
+                    ],
+                    'flow.connector': [
+                        { id: 'plugin-list', name: 'Plugin List', dataType: 'array' },
+                        { id: 'source-node', name: 'Source Node ID', dataType: 'string' },
+                        { id: 'target-node', name: 'Target Node ID', dataType: 'string' }
+                    ]
+                };
+                return portDefs[type] || [];
+            }
+
+            getOutputPorts(type) {
+                const portDefs = {
+                    'button.send': [{ id: 'signal', name: 'Signal', dataType: 'signal' }],
+                    'input.text': [{ id: 'output', name: 'Text', dataType: 'string' }],
+                    'string.uppercase': [{ id: 'output', name: 'Result', dataType: 'string' }],
+                    'output.console': [],
+                    'web.fetch': [{ id: 'output', name: 'Response', dataType: 'string' }],
+                    'json.parser': [{ id: 'output', name: 'Parsed', dataType: 'any' }],
+                    'ui.card': [],
+                    'core.plugin-lister': [{ id: 'output', name: 'Plugin List', dataType: 'array' }],
+                    'core.connection-manager': [{ id: 'result', name: 'Operation Result', dataType: 'object' }],
+                    'flow.connector': [{ id: 'output', name: 'Connection Result', dataType: 'object' }]
+                };
+                return portDefs[type] || [];
+            }
+
+            // エッジ（接続）作成
+            createEdge(sourceNodeId, sourcePortId, targetNodeId, targetPortId) {
+                const edgeId = `edge-${Date.now()}`;
+                const edge = {
+                    id: edgeId,
+                    sourceNodeId,
+                    sourcePortId,
+                    targetNodeId,
+                    targetPortId
+                };
+
+                this.edges.set(edgeId, edge);
+                return edge;
+            }
+
+            // VoidPacket クラス
+            createVoidPacket(payload, metadata = {}) {
+                return {
+                    payload: payload,
+                    timestamp: new Date(),
+                    sourceNodeId: metadata.sourceNodeId || null,
+                    error: metadata.error || null
+                };
+            }
+
+            // ノード実行
+            async executeNode(nodeId, inputPacket = null) {
+                const node = this.nodes.get(nodeId);
+                if (!node) return null;
+
+                this.setNodeStatus(nodeId, 'executing');
+                
+                try {
+                    let result;
+                    
+                    // Phase 5.1: Check for custom plugin code first
+                    if (this.customPluginCodes && this.customPluginCodes.has(node.type)) {
+                        try {
+                            const customCode = this.customPluginCodes.get(node.type);
+                            const self = this; // Save reference to VoidFlowEngine
+                            
+                            const customFunction = function(inputPacket, nodeId) {
+                                let result;
+                                
+                                // Make VoidFlowEngine methods available
+                                const updateNodeOutput = (id, content) => self.updateNodeOutput(id, content);
+                                const createVoidPacket = (data, meta) => self.createVoidPacket(data, meta);
+                                const log = (msg) => self.log(msg);
+                                
+                                // Execute custom plugin code
+                                eval(customCode);
+                                
+                                return result;
+                            };
+                            
+                            result = customFunction(inputPacket, nodeId);
+                            this.log(`🎨 Custom plugin executed: ${node.type}`);
+                            
+                        } catch (error) {
+                            this.log(`❌ Custom plugin error in ${node.type}: ${error.message}`);
+                            this.updateNodeOutput(nodeId, `❌ Custom plugin error: ${error.message}`);
+                            return this.createVoidPacket(null, { sourceNodeId: nodeId, error: error.message });
+                        }
+                    } else {
+                        // Default plugin execution
+                        switch (node.type) {
+                        case 'button.send':
+                            // Signalパケットを生成（接続されたノードにのみ送信される）
+                            result = this.createVoidPacket('signal', { sourceNodeId: nodeId });
+                            this.updateNodeOutput(nodeId, `🚀 Signal送信完了`);
+                            this.log(`📡 Signal送信: 接続されたプラグインを刺激`);
+                            break;
+                            
+                        case 'input.text':
+                            // Triggerシグナルを受信した場合のみ実行
+                            if (inputPacket && inputPacket.payload === 'signal') {
+                                const textValue = node.properties.text || 'Hello VoidFlow!';
+                                result = this.createVoidPacket(textValue, { sourceNodeId: nodeId });
+                                this.updateNodeOutput(nodeId, `📤 "${textValue}" (Trigger受信)`);
+                                this.log(`📤 Input:Text実行: "${textValue}"`);
+                            } else {
+                                // Triggerなしでは実行しない
+                                throw new Error('Trigger signal required');
+                            }
+                            break;
+                            
+                        case 'string.uppercase':
+                            if (!inputPacket) throw new Error('Input required');
+                            const upperValue = String(inputPacket.payload).toUpperCase();
+                            result = this.createVoidPacket(upperValue, { sourceNodeId: nodeId });
+                            this.updateNodeOutput(nodeId, `🔄 "${inputPacket.payload}" → "${upperValue}"`);
+                            break;
+                            
+                        case 'output.console':
+                            if (!inputPacket) throw new Error('Input required');
+                            // VoidFlowログとブラウザーコンソール両方に出力
+                            this.log(`🔥 Output: ${inputPacket.payload}`);
+                            console.log(`🌟 VoidFlow Console Output:`, inputPacket.payload);
+                            console.log(`📦 VoidPacket:`, inputPacket);
+                            result = this.createVoidPacket(inputPacket.payload, { sourceNodeId: nodeId });
+                            this.updateNodeOutput(nodeId, `📺 "${inputPacket.payload}" (→ブラウザコンソール)`);
+                            break;
+
+                        case 'web.fetch':
+                            // Triggerシグナルを受信した場合のみ実行
+                            if (inputPacket && inputPacket.payload === 'signal') {
+                                const url = node.properties.url || 'https://httpbin.org/json';
+                                this.updateNodeOutput(nodeId, `🌐 取得中... ${url}`);
+                                
+                                try {
+                                    const response = await fetch(url);
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                                    }
+                                    const data = await response.text();
+                                    result = this.createVoidPacket(data, { sourceNodeId: nodeId });
+                                    this.updateNodeOutput(nodeId, `✅ 成功 (${data.length}文字)`);
+                                    this.log(`🌐 Fetch成功: ${url} → ${data.length}文字`);
+                                } catch (error) {
+                                    // CORSエラーの場合、モック データを返す
+                                    if (error.message.includes('CORS') || error.message.includes('fetch')) {
+                                        this.log(`⚠️ CORS制限によりモックデータを使用: ${url}`);
+                                        const mockData = JSON.stringify({
+                                            message: "VoidFlow Demo Data",
+                                            timestamp: new Date().toISOString(),
+                                            source: "VoidFlow Mock API",
+                                            data: {
+                                                title: "創造性の永久機関",
+                                                version: "v14.0",
+                                                philosophy: "すべての存在は、メッセージで生まれ、メッセージで終わる"
+                                            }
+                                        });
+                                        result = this.createVoidPacket(mockData, { sourceNodeId: nodeId });
+                                        this.updateNodeOutput(nodeId, `🎭 モックデータ (${mockData.length}文字)`);
+                                        break;
+                                    }
+                                    throw new Error(`Fetch失敗: ${error.message}`);
+                                }
+                            } else {
+                                // Triggerなしでは実行しない
+                                throw new Error('Trigger signal required');
+                            }
+                            break;
+
+                        case 'json.parser':
+                            if (!inputPacket) throw new Error('Input required');
+                            
+                            try {
+                                const jsonData = JSON.parse(inputPacket.payload);
+                                const path = node.properties.path || '';
+                                
+                                let extractedData = jsonData;
+                                if (path) {
+                                    // JSONパス解析 (簡易版)
+                                    const pathParts = path.split('.');
+                                    for (const part of pathParts) {
+                                        if (part && extractedData != null) {
+                                            extractedData = extractedData[part];
+                                        }
+                                    }
+                                }
+                                
+                                result = this.createVoidPacket(extractedData, { sourceNodeId: nodeId });
+                                this.updateNodeOutput(nodeId, `📊 解析完了: ${JSON.stringify(extractedData).substring(0, 50)}...`);
+                                this.log(`📊 JSON解析成功: パス "${path}" → ${typeof extractedData}`);
+                            } catch (error) {
+                                throw new Error(`JSON解析失敗: ${error.message}`);
+                            }
+                            break;
+
+                        case 'ui.card':
+                            if (!inputPacket) throw new Error('Input required');
+                            
+                            const cardData = inputPacket.payload;
+                            const title = node.properties.title || 'VoidFlow Card';
+                            
+                            // UIカードをノード内に表示
+                            const cardHtml = this.createCardHtml(title, cardData);
+                            this.updateNodeOutput(nodeId, '', cardHtml);
+                            
+                            result = this.createVoidPacket(cardData, { sourceNodeId: nodeId });
+                            this.log(`🎨 UIカード表示: ${title}`);
+                            break;
+
+                        case 'core.plugin-lister':
+                            // デバッグ: 受信データ確認
+                            this.log(`🔍 Plugin Lister受信: ${JSON.stringify(inputPacket)}`);
+                            // Triggerシグナルを受信した場合のみ実行
+                            if (inputPacket && inputPacket.payload === 'signal') {
+                                this.updateNodeOutput(nodeId, `🔍 VoidCore自己観測中...`);
+                                
+                                // 参照プラグイン: VoidCoreに問い合わせ
+                                const registeredPlugins = await this.handleCoreFunction('plugin-lister', {});
+                                
+                                result = this.createVoidPacket(registeredPlugins, { sourceNodeId: nodeId });
+                                this.updateNodeOutput(nodeId, `🌟 発見: ${registeredPlugins.length}個のプラグイン (参照型)`);
+                                this.log(`🔍 参照Plugin Lister実行: ${registeredPlugins.length}個のプラグインを発見`);
+                                
+                                // 詳細ログ
+                                this.log(`📋 発見されたプラグイン: ${registeredPlugins.map(p => p.type).join(', ')}`);
+                            } else {
+                                // Triggerなしでは実行しない
+                                throw new Error('Trigger signal required');
+                            }
+                            break;
+
+                        case 'flow.connector':
+                            if (!inputPacket) throw new Error('Input required');
+                            
+                            this.updateNodeOutput(nodeId, `🔗 フロー自己編集実行中...`);
+                            
+                            // Flow Connectorは複数の入力を統合する必要がある
+                            const connectorResult = await this.executeFlowConnector(nodeId, inputPacket);
+                            
+                            result = this.createVoidPacket(connectorResult, { sourceNodeId: nodeId });
+                            this.updateNodeOutput(nodeId, `✨ 自己編集完了: ${connectorResult.action}`);
+                            this.log(`🔗 Flow Connector実行: ${connectorResult.action}`);
+                            break;
+
+                        case 'core.connection-manager':
+                            if (!inputPacket) throw new Error('Input required');
+                            
+                            // デバッグ: 受信データ確認
+                            this.log(`🔗 Connection Manager受信: ${JSON.stringify(inputPacket)}`);
+                            this.updateNodeOutput(nodeId, `🔗 接続管理実行中...`);
+                            
+                            // データ形式変換: Flow Connector結果 → Connection Manager期待形式
+                            let connectionData = inputPacket.payload;
+                            
+                            // Flow Connectorの結果を変換
+                            if (connectionData.action === 'created-and-connected' && connectionData.sourceNodeId && connectionData.targetNodeId) {
+                                connectionData = {
+                                    source: { nodeId: connectionData.sourceNodeId },
+                                    target: { nodeId: connectionData.targetNodeId },
+                                    connectionType: 'flow-connector-created',
+                                    metadata: {
+                                        originalAction: connectionData.action,
+                                        edgeId: connectionData.edgeId
+                                    }
+                                };
+                                this.log(`🔄 データ変換完了: Flow Connector → Connection Manager`);
+                            }
+                            
+                            // 参照プラグイン: VoidCoreの接続管理に委譲
+                            const connectionResult = await this.handleCoreFunction('connection-manager', {
+                                action: 'connect',
+                                data: connectionData
+                            });
+                            
+                            result = this.createVoidPacket(connectionResult, { sourceNodeId: nodeId });
+                            this.updateNodeOutput(nodeId, `✨ 接続操作完了: ${connectionResult.message}`);
+                            this.log(`🔗 参照Connection Manager実行: ${connectionResult.message}`);
+                            break;
+                            
+                        default:
+                            throw new Error(`Unknown node type: ${node.type}`);
+                        }
+                    } // End of else block for default plugin execution
+
+                    this.setNodeStatus(nodeId, 'success');
+                    this.executionState.get(nodeId).result = result;
+                    return result;
+                    
+                } catch (error) {
+                    this.setNodeStatus(nodeId, 'error');
+                    this.log(`❌ Error in ${node.type}: ${error.message}`);
+                    this.updateNodeOutput(nodeId, `❌ Error: ${error.message}`);
+                    return this.createVoidPacket(null, { sourceNodeId: nodeId, error: error.message });
+                }
+            }
+
+            // ノード出力表示を更新
+            updateNodeOutput(nodeId, outputText, htmlContent = null) {
+                const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
+                if (!nodeElement) return;
+
+                const outputElement = nodeElement.querySelector('.node-output');
+                if (outputElement) {
+                    if (htmlContent) {
+                        outputElement.innerHTML = htmlContent;
+                    } else {
+                        outputElement.textContent = outputText;
+                    }
+                    
+                    // 更新アニメーション
+                    outputElement.style.background = 'rgba(0, 255, 136, 0.2)';
+                    outputElement.style.borderColor = '#00ff88';
+                    
+                    setTimeout(() => {
+                        outputElement.style.background = 'rgba(0, 20, 40, 0.8)';
+                        outputElement.style.borderColor = '#004080';
+                    }, 1000);
+                }
+            }
+
+            // UIカードHTML作成
+            createCardHtml(title, data) {
+                return `
+                    <div style="background: linear-gradient(135deg, #1a1a2e, #16213e); 
+                               border: 1px solid #4a90e2; border-radius: 8px; 
+                               padding: 12px; margin: 5px 0; min-height: 80px;">
+                        <div style="color: #4a90e2; font-weight: bold; font-size: 12px; margin-bottom: 8px;">
+                            🎨 ${title}
+                        </div>
+                        <div style="color: #fff; font-size: 11px; line-height: 1.4;">
+                            ${typeof data === 'object' ? 
+                                Object.entries(data).slice(0, 3).map(([key, value]) => 
+                                    `<div><span style="color: #80c0ff;">${key}:</span> ${String(value).substring(0, 30)}${String(value).length > 30 ? '...' : ''}</div>`
+                                ).join('') :
+                                String(data).substring(0, 100) + (String(data).length > 100 ? '...' : '')
+                            }
+                        </div>
+                    </div>
+                `;
+            }
+
+            // フロー全体実行
+            async executeFlow() {
+                this.log('🚀 フロー実行開始...');
+                
+                // Button:Sendノードを探して実行
+                const buttonNodes = Array.from(this.nodes.values()).filter(node => {
+                    return node.type === 'button.send';
+                });
+                
+                if (buttonNodes.length === 0) {
+                    this.log('⚠️ Button:Sendノードが見つかりません');
+                    this.log('💡 Button:Sendノードを配置して、Input:TextやWeb:FetchAPIに接続してください');
+                    return;
+                }
+                
+                this.log(`🎯 Button:Sendノード発見: ${buttonNodes.length}個`);
+                
+                for (const buttonNode of buttonNodes) {
+                    this.log(`🚀 実行: ${getNodeDisplayName(buttonNode.type)}`);
+                    await this.executeFromNode(buttonNode.id);
+                }
+                
+                this.log('✨ フロー実行完了!');
+            }
+
+            // 特定ノードから実行開始
+            async executeFromNode(nodeId, inputPacket = null) {
+                const result = await this.executeNode(nodeId, inputPacket);
+                
+                if (!result || result.error) return;
+
+                // 接続先ノードを実行（同時並列実行！）
+                const connectedEdges = Array.from(this.edges.values()).filter(e => e.sourceNodeId === nodeId);
+                
+                if (connectedEdges.length > 0) {
+                    this.log(`🚀 ${connectedEdges.length}個のノードに同時送信開始`);
+                    
+                    // Promise.allで同時実行！
+                    const promises = connectedEdges.map(async (edge) => {
+                        await new Promise(resolve => setTimeout(resolve, 200)); // 少しだけ視覚遅延
+                        return this.executeFromNode(edge.targetNodeId, result);
+                    });
+                    
+                    await Promise.all(promises);
+                    this.log(`✨ ${connectedEdges.length}個のノード同時実行完了`);
+                }
+            }
+
+            // ノード状態設定
+            setNodeStatus(nodeId, status) {
+                this.executionState.get(nodeId).status = status;
+                const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
+                if (nodeElement) {
+                    nodeElement.className = `voidflow-node ${status}`;
+                    setTimeout(() => {
+                        if (status !== 'executing') {
+                            nodeElement.className = 'voidflow-node';
+                        }
+                    }, 1000);
+                }
+            }
+
+            // VoidCore自己観測: 利用可能なプラグインを取得
+            getAvailablePlugins() {
+                // 現在実装されているすべてのノードタイプを自己観測
+                const pluginList = [
+                    {
+                        type: 'button.send',
+                        name: 'Button: Send',
+                        description: '自律プラグインを刺激する',
+                        level: 1,
+                        category: 'trigger',
+                        inputPorts: this.getInputPorts('button.send'),
+                        outputPorts: this.getOutputPorts('button.send'),
+                        properties: {}
+                    },
+                    {
+                        type: 'input.text',
+                        name: 'Input: Text',
+                        description: '宇宙の起源、意志の表明',
+                        level: 1,
+                        category: 'input',
+                        inputPorts: this.getInputPorts('input.text'),
+                        outputPorts: this.getOutputPorts('input.text'),
+                        properties: { text: 'string' }
+                    },
+                    {
+                        type: 'string.uppercase',
+                        name: 'String: UpperCase',
+                        description: '意志が変化する様を体感',
+                        level: 1,
+                        category: 'transform',
+                        inputPorts: this.getInputPorts('string.uppercase'),
+                        outputPorts: this.getOutputPorts('string.uppercase'),
+                        properties: {}
+                    },
+                    {
+                        type: 'output.console',
+                        name: 'Output: Console',
+                        description: '観測手段＝現実の確定',
+                        level: 1,
+                        category: 'output',
+                        inputPorts: this.getInputPorts('output.console'),
+                        outputPorts: this.getOutputPorts('output.console'),
+                        properties: {}
+                    },
+                    {
+                        type: 'web.fetch',
+                        name: 'Web: Fetch API',
+                        description: '外宇宙に扉を開ける',
+                        level: 2,
+                        category: 'network',
+                        inputPorts: this.getInputPorts('web.fetch'),
+                        outputPorts: this.getOutputPorts('web.fetch'),
+                        properties: { url: 'string' }
+                    },
+                    {
+                        type: 'json.parser',
+                        name: 'JSON: Parser',
+                        description: '混沌に意味を与える',
+                        level: 2,
+                        category: 'transform',
+                        inputPorts: this.getInputPorts('json.parser'),
+                        outputPorts: this.getOutputPorts('json.parser'),
+                        properties: { path: 'string' }
+                    },
+                    {
+                        type: 'ui.card',
+                        name: 'UI: Simple Card',
+                        description: '美しさは意味の完成',
+                        level: 2,
+                        category: 'ui',
+                        inputPorts: this.getInputPorts('ui.card'),
+                        outputPorts: this.getOutputPorts('ui.card'),
+                        properties: { title: 'string' }
+                    },
+                    {
+                        type: 'core.plugin-lister',
+                        name: 'Core: Plugin Lister',
+                        description: '宇宙の自己観測',
+                        level: 3,
+                        category: 'meta',
+                        inputPorts: this.getInputPorts('core.plugin-lister'),
+                        outputPorts: this.getOutputPorts('core.plugin-lister'),
+                        properties: {}
+                    },
+                    {
+                        type: 'flow.connector',
+                        name: 'Flow: Connector',
+                        description: '自己編集＝創造の完成',
+                        level: 3,
+                        category: 'meta',
+                        inputPorts: this.getInputPorts('flow.connector'),
+                        outputPorts: this.getOutputPorts('flow.connector'),
+                        properties: {
+                            sourceNodeType: 'string',
+                            targetNodeType: 'string',
+                            connectionMode: 'string'
+                        }
+                    }
+                ];
+                
+                return pluginList;
+            }
+
+            // Flow Connector実行（フロー自己編集システム）
+            async executeFlowConnector(nodeId, inputPacket) {
+                const node = this.nodes.get(nodeId);
+                const sourceNodeType = node.properties.sourceNodeType || 'input.text';
+                const targetNodeType = node.properties.targetNodeType || 'output.console';
+                const connectionMode = node.properties.connectionMode || 'auto-connect';
+                
+                this.log(`🔗 自己編集開始: ${sourceNodeType} → ${targetNodeType} (${connectionMode})`);
+                
+                // Plugin Listerからのデータを解析
+                let availablePlugins = [];
+                if (Array.isArray(inputPacket.payload)) {
+                    availablePlugins = inputPacket.payload;
+                    this.log(`📋 利用可能プラグイン: ${availablePlugins.length}個`);
+                }
+                
+                // 自己編集：新しいノードを動的作成
+                const result = await this.performSelfEdit(sourceNodeType, targetNodeType, connectionMode, availablePlugins);
+                
+                return result;
+            }
+            
+            // 自己編集実行
+            async performSelfEdit(sourceNodeType, targetNodeType, connectionMode, availablePlugins) {
+                try {
+                    switch (connectionMode) {
+                        case 'auto-connect':
+                            return await this.autoConnectNodes(sourceNodeType, targetNodeType);
+                        
+                        case 'create-nodes':
+                            return await this.createAndConnectNodes(sourceNodeType, targetNodeType);
+                        
+                        case 'analyze-flow':
+                            return await this.analyzeCurrentFlow(availablePlugins);
+                        
+                        default:
+                            throw new Error(`Unknown connection mode: ${connectionMode}`);
+                    }
+                } catch (error) {
+                    this.log(`❌ 自己編集エラー: ${error.message}`);
+                    return { action: 'error', error: error.message };
+                }
+            }
+            
+            // 自動接続モード
+            async autoConnectNodes(sourceType, targetType) {
+                const sourceNodes = Array.from(this.nodes.values()).filter(n => n.type === sourceType);
+                const targetNodes = Array.from(this.nodes.values()).filter(n => n.type === targetType);
+                
+                this.log(`🔍 探索中: source='${sourceType}' (${sourceNodes.length}個), target='${targetType}' (${targetNodes.length}個)`);
+                
+                if (sourceNodes.length === 0 || targetNodes.length === 0) {
+                    return { 
+                        action: 'no-nodes-found', 
+                        sourceType, 
+                        targetType,
+                        sourceCount: sourceNodes.length,
+                        targetCount: targetNodes.length
+                    };
+                }
+                
+                // 最初の組み合わせを自動接続
+                const sourceNode = sourceNodes[0];
+                const targetNode = targetNodes[0];
+                
+                const edge = this.createEdge(sourceNode.id, 'output', targetNode.id, 'input');
+                this.renderConnection(edge);
+                
+                this.log(`🔗 自動接続完了: ${sourceNode.type} → ${targetNode.type}`);
+                
+                return {
+                    action: 'auto-connected',
+                    sourceNodeId: sourceNode.id,
+                    targetNodeId: targetNode.id,
+                    edgeId: edge.id
+                };
+            }
+            
+            // ノード作成＆接続モード
+            async createAndConnectNodes(sourceType, targetType) {
+                const canvas = document.querySelector('.canvas-area');
+                const rect = canvas.getBoundingClientRect();
+                
+                // 新しいノードを作成
+                const sourcePos = { x: Math.random() * 300 + 100, y: Math.random() * 200 + 100 };
+                const targetPos = { x: sourcePos.x + 250, y: sourcePos.y };
+                
+                const sourceNode = this.createNode(sourceType, sourcePos);
+                const targetNode = this.createNode(targetType, targetPos);
+                
+                // UIに追加
+                const sourceElement = window.createNodeElement(sourceNode);
+                const targetElement = window.createNodeElement(targetNode);
+                canvas.appendChild(sourceElement);
+                canvas.appendChild(targetElement);
+                
+                // 接続作成
+                const edge = this.createEdge(sourceNode.id, 'output', targetNode.id, 'input');
+                
+                // 接続線を描画
+                window.drawConnection(edge);
+                
+                this.log(`🎯 ノード作成＆接続完了: ${sourceType} → ${targetType}`);
+                
+                return {
+                    action: 'created-and-connected',
+                    sourceNodeId: sourceNode.id,
+                    targetNodeId: targetNode.id,
+                    edgeId: edge.id
+                };
+            }
+            
+            // フロー分析モード
+            async analyzeCurrentFlow(availablePlugins) {
+                const nodeCount = this.nodes.size;
+                const edgeCount = this.edges.size;
+                const nodeTypes = Array.from(this.nodes.values()).map(n => n.type);
+                const typeDistribution = {};
+                
+                nodeTypes.forEach(type => {
+                    typeDistribution[type] = (typeDistribution[type] || 0) + 1;
+                });
+                
+                this.log(`📊 フロー分析: ${nodeCount}ノード, ${edgeCount}接続`);
+                this.log(`📈 タイプ分布: ${JSON.stringify(typeDistribution)}`);
+                
+                return {
+                    action: 'flow-analyzed',
+                    nodeCount,
+                    edgeCount,
+                    typeDistribution,
+                    availablePlugins: availablePlugins.length,
+                    complexity: nodeCount + edgeCount * 2
+                };
+            }
+
+            // Phase 4: コア機能ハンドラ（参照プラグイン用）
+            async handleCoreFunction(functionType, message) {
+                this.log(`🔧 コア機能実行: ${functionType}`);
+                
+                switch(functionType) {
+                    case 'plugin-lister':
+                        return this.getAllRegisteredPlugins();
+                    
+                    case 'connection-manager':
+                        return await this.handleConnectionRequest(message);
+                    
+                    case 'plugin-creator':
+                        return await this.handleCreationRequest(message);
+                    
+                    default:
+                        throw new Error(`Unknown core function: ${functionType}`);
+                }
+            }
+            
+            // 登録済みプラグイン情報取得（真の知識）
+            getAllRegisteredPlugins() {
+                // 実際に実装されているプラグインのみを返す
+                const registeredPlugins = this.getAvailablePlugins();
+                
+                // 参照プラグインも追加
+                const coreReferences = [
+                    {
+                        type: 'core.plugin-lister',
+                        name: 'Core: Plugin Lister (参照)',
+                        description: 'VoidCore自己観測への参照',
+                        level: 3,
+                        category: 'core-reference',
+                        inputPorts: [{ id: 'trigger', name: 'Trigger', dataType: 'signal' }],
+                        outputPorts: [{ id: 'output', name: 'Plugin List', dataType: 'array' }],
+                        properties: {},
+                        isProxy: true
+                    },
+                    {
+                        type: 'core.connection-manager',
+                        name: 'Core: Connection Manager (参照)',
+                        description: 'VoidCore接続管理への参照',
+                        level: 3,
+                        category: 'core-reference',
+                        inputPorts: [
+                            { id: 'connect-request', name: 'Connect Request', dataType: 'object' },
+                            { id: 'disconnect-request', name: 'Disconnect Request', dataType: 'object' }
+                        ],
+                        outputPorts: [{ id: 'result', name: 'Operation Result', dataType: 'object' }],
+                        properties: {},
+                        isProxy: true
+                    }
+                ];
+                
+                return [...registeredPlugins, ...coreReferences];
+            }
+            
+            // 接続要求処理
+            async handleConnectionRequest(message) {
+                const { action, data } = message;
+                
+                switch(action) {
+                    case 'connect':
+                        return await this.establishConnection(data);
+                    
+                    case 'disconnect':
+                        return await this.removeConnection(data.connectionId);
+                    
+                    case 'get_connections':
+                        return this.getConnections(data.nodeId);
+                    
+                    default:
+                        throw new Error(`Unknown connection action: ${action}`);
+                }
+            }
+            
+            // メッセージベース接続確立
+            async establishConnection(connectionData) {
+                // デバッグ: 接続データ確認
+                this.log(`🔗 establishConnection受信: ${JSON.stringify(connectionData)}`);
+                const { source, target, connectionType = 'data-flow', schema } = connectionData;
+                
+                // 接続ID生成
+                const connectionId = `conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                
+                // 接続データ作成
+                const connection = {
+                    id: connectionId,
+                    source: source,
+                    target: target,
+                    connectionType: connectionType,
+                    schema: schema,
+                    createdAt: new Date().toISOString()
+                };
+                
+                // 既存のcreateEdgeを使用（後方互換性）
+                const edge = this.createEdge(
+                    source.nodeId, 
+                    source.portId || 'output',
+                    target.nodeId, 
+                    target.portId || 'input'
+                );
+                
+                // 接続情報を保存
+                edge.connectionId = connectionId;
+                edge.connectionType = connectionType;
+                edge.schema = schema;
+                
+                // UI描画
+                if (window.drawConnection) {
+                    window.drawConnection(edge);
+                }
+                
+                this.log(`🔗 メッセージベース接続確立: ${source.nodeId} → ${target.nodeId}`);
+                
+                return {
+                    success: true,
+                    connectionId: connectionId,
+                    edge: edge,
+                    message: '接続が正常に確立されました'
+                };
+            }
+            
+            // 接続解除
+            async removeConnection(connectionId) {
+                // 該当するエッジを検索
+                const targetEdge = Array.from(this.edges.values()).find(edge => 
+                    edge.connectionId === connectionId
+                );
+                
+                if (!targetEdge) {
+                    throw new Error(`Connection not found: ${connectionId}`);
+                }
+                
+                // エッジ削除
+                this.edges.delete(targetEdge.id);
+                
+                // UI更新
+                const svg = document.getElementById('connectionSvg');
+                const pathElement = svg.querySelector(`[data-edge-id="${targetEdge.id}"]`);
+                if (pathElement) {
+                    pathElement.remove();
+                }
+                
+                this.log(`🔓 接続解除完了: ${connectionId}`);
+                
+                return {
+                    success: true,
+                    connectionId: connectionId,
+                    message: '接続が正常に解除されました'
+                };
+            }
+            
+            // 接続情報取得
+            getConnections(nodeId = null) {
+                const allEdges = Array.from(this.edges.values());
+                
+                if (nodeId) {
+                    // 特定ノードの接続のみ
+                    return allEdges.filter(edge => 
+                        edge.sourceNodeId === nodeId || edge.targetNodeId === nodeId
+                    );
+                }
+                
+                // 全接続情報
+                return allEdges;
+            }
+            
+            // プラグイン作成要求処理
+            async handleCreationRequest(message) {
+                const { action, data } = message;
+                
+                switch(action) {
+                    case 'replicate':
+                        return await this.replicatePlugin(data);
+                    
+                    default:
+                        throw new Error(`Unknown creation action: ${action}`);
+                }
+            }
+            
+            // プラグイン複製（改良版）
+            async replicatePlugin(replicationData) {
+                const { 
+                    replicationType, 
+                    targetType, 
+                    targetNodeId, 
+                    position, 
+                    connectionStrategy = 'none',
+                    preserveState = false 
+                } = replicationData;
+                
+                let newNode;
+                
+                if (replicationType === 'type') {
+                    // タイプ複製（魂への呼びかけ）
+                    newNode = this.createNode(targetType, position);
+                    this.log(`👻 タイプ複製: ${targetType} → ${newNode.id}`);
+                    
+                } else if (replicationType === 'instance') {
+                    // インスタンス複製（個体への呼びかけ）
+                    const originalNode = this.nodes.get(targetNodeId);
+                    if (!originalNode) {
+                        throw new Error(`Source node not found: ${targetNodeId}`);
+                    }
+                    
+                    newNode = this.createNode(originalNode.type, position);
+                    
+                    if (preserveState) {
+                        // 状態・記憶を継承
+                        newNode.properties = { ...originalNode.properties };
+                        newNode.memory = originalNode.memory ? { ...originalNode.memory } : {};
+                    }
+                    
+                    this.log(`🧬 インスタンス複製: ${targetNodeId} → ${newNode.id} (状態継承: ${preserveState})`);
+                }
+                
+                // UI要素作成
+                const nodeElement = window.createNodeElement(newNode);
+                document.querySelector('.canvas-area').appendChild(nodeElement);
+                
+                // 自動接続処理
+                if (connectionStrategy !== 'none' && targetNodeId) {
+                    await this.applyConnectionStrategy(targetNodeId, newNode.id, connectionStrategy);
+                }
+                
+                return {
+                    success: true,
+                    newNodeId: newNode.id,
+                    replicationType: replicationType,
+                    connectionStrategy: connectionStrategy,
+                    message: `${replicationType}複製が完了しました`
+                };
+            }
+            
+            // 接続戦略適用
+            async applyConnectionStrategy(sourceNodeId, targetNodeId, strategy) {
+                const sourceConnections = this.getConnections(sourceNodeId);
+                
+                switch(strategy) {
+                    case 'parallel':
+                        // 並列接続：同じ入力に接続
+                        for (const edge of sourceConnections) {
+                            if (edge.targetNodeId === sourceNodeId) {
+                                // 入力側に並列接続
+                                await this.establishConnection({
+                                    source: { nodeId: edge.sourceNodeId, portId: 'output' },
+                                    target: { nodeId: targetNodeId, portId: 'input' }
+                                });
+                            }
+                        }
+                        break;
+                        
+                    case 'series':
+                        // 直列接続：元ノードの後に接続
+                        for (const edge of sourceConnections) {
+                            if (edge.sourceNodeId === sourceNodeId) {
+                                // 元の接続を新ノードに変更
+                                await this.removeConnection(edge.connectionId);
+                                await this.establishConnection({
+                                    source: { nodeId: sourceNodeId, portId: 'output' },
+                                    target: { nodeId: targetNodeId, portId: 'input' }
+                                });
+                                await this.establishConnection({
+                                    source: { nodeId: targetNodeId, portId: 'output' },
+                                    target: { nodeId: edge.targetNodeId, portId: 'input' }
+                                });
+                                break; // 最初の1つだけ
+                            }
+                        }
+                        break;
+                }
+                
+                this.log(`🔗 接続戦略適用: ${strategy} (${sourceNodeId} → ${targetNodeId})`);
+            }
+
+            // ログ出力
+            log(message) {
+                const logElement = document.getElementById('executionLog');
+                const timestamp = new Date().toLocaleTimeString();
+                logElement.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                logElement.scrollTop = logElement.scrollHeight;
+            }
+
+            // Phase R: Universal Node Integration initialization
+            async initializeUniversalIntegration() {
+                try {
+                    this.log('🌍 Initializing Phase R Universal Node Integration...');
+                    
+                    // Create VoidFlow config for Universal system
+                    const voidFlowConfig = {
+                        engineType: 'VoidFlow',
+                        engine: this,
+                        messageConfig: {
+                            sourceFormat: 'voidflow',
+                            targetFormat: 'universal',
+                            version: '14.0',
+                            transformRules: {
+                                'voidflow->universal': {
+                                    payloadKey: 'payload',
+                                    metadataKey: 'metadata',
+                                    timestampKey: 'timestamp'
+                                },
+                                'universal->voidflow': {
+                                    payloadKey: 'data',
+                                    metadataKey: 'meta',
+                                    timestampKey: 'time'
+                                }
+                            }
+                        },
+                        executionMode: 'unified',
+                        sandboxConfig: {
+                            enabled: true,
+                            timeout: 5000
+                        },
+                        loggerConfig: {
+                            level: 'info',
+                            output: (msg) => this.log(msg)
+                        }
+                    };
+                    
+                    this.universalIntegration = new UniversalNodeIntegration(voidFlowConfig);
+                    this.log('✅ Phase R Universal Integration ready! 🚀');
+                    
+                } catch (error) {
+                    this.log(`❌ Universal Integration initialization failed: ${error.message}`);
+                    console.error('Universal Integration error:', error);
+                }
+            }
+
+            // Phase 5.1: Monaco Editor initialization
+            async initializeMonacoIntegration() {
+                try {
+                    if (this.isMonacoInitialized) return;
+                    
+                    this.log('🎨 Initializing Monaco Editor for VoidFlow plugin editing...');
+                    
+                    this.monacoIntegration = new VoidFlowMonacoIntegration(this);
+                    await this.monacoIntegration.initialize();
+                    
+                    this.isMonacoInitialized = true;
+                    this.log('✅ Monaco Editor integration ready! 🚀');
+                    
+                } catch (error) {
+                    this.log(`❌ Monaco Editor initialization failed: ${error.message}`);
+                    console.error('Monaco initialization error:', error);
+                }
+            }
+
+            // Phase 5.1: Edit plugin in Monaco Editor (無効化済み)
+            async editPluginCode(nodeId) {
+                this.log(`⚠️ Monaco Editor機能は削除されました (nodeId: ${nodeId})`);
+                this.log(`🔧 右クリック→Edit Plugin Codeは現在利用できません`);
+            }
+        }
+
+        // グローバルVoidFlowEngineインスタンス
+        window.voidFlowEngine = new VoidFlowEngine();
+
+        // UI制御
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let selectedNode = null;
+        let draggedNode = null;
+        let isConnecting = false;
+        let connectionStart = null;
+        let tempConnectionLine = null;
+
+        // ノードパレットからのドラッグ＆ドロップ
+        document.querySelectorAll('.node-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const nodeType = item.dataset.nodeType;
+                if (nodeType && !item.style.opacity) {
+                    const canvas = document.querySelector('.canvas-area');
+                    const rect = canvas.getBoundingClientRect();
+                    const randomX = Math.random() * (rect.width - 200) + 100;
+                    const randomY = Math.random() * (rect.height - 150) + 100;
+                    createNodeOnCanvas(nodeType, { x: randomX, y: randomY });
+                }
+            });
+        });
+
+        // キャンバスにノード作成
+        function createNodeOnCanvas(nodeType, position) {
+            const node = voidFlowEngine.createNode(nodeType, position);
+            const nodeElement = createNodeElement(node);
+            document.querySelector('.canvas-area').appendChild(nodeElement);
+            
+            // 禅メッセージを隠す
+            const zenMessage = document.getElementById('zenMessage');
+            if (zenMessage) {
+                zenMessage.style.opacity = '0';
+                setTimeout(() => zenMessage.style.display = 'none', 500);
+            }
+            
+            voidFlowEngine.log(`📦 ノード作成: ${getNodeDisplayName(nodeType)}`);
+        }
+
+        // ノード要素作成（グローバル関数）
+        window.createNodeElement = function(node) {
+            const element = document.createElement('div');
+            element.className = 'voidflow-node';
+            element.dataset.nodeId = node.id;
+            element.style.left = node.position.x + 'px';
+            element.style.top = node.position.y + 'px';
+            element.style.cursor = 'grab'; // カーソル設定
+
+            const displayName = getNodeDisplayName(node.type);
+            element.innerHTML = `
+                <div class="node-title">${displayName}</div>
+                ${createNodeContent(node)}
+                ${node.inputs.length > 0 ? '<div class="connection-port input-port"></div>' : ''}
+                ${node.outputs.length > 0 ? '<div class="connection-port output-port"></div>' : ''}
+            `;
+
+            // ドラッグ機能とイベント
+            element.addEventListener('mousedown', startDrag);
+            element.addEventListener('click', selectNode);
+            
+            // Phase 5.1: Right-click context menu for plugin editing
+            element.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                showNodeContextMenu(node.id, e.clientX, e.clientY);
+            });
+            
+            // カーソル管理イベント
+            element.addEventListener('mouseenter', () => {
+                if (!isDragging) {
+                    element.style.cursor = 'grab';
+                }
+            });
+            
+            element.addEventListener('mouseleave', () => {
+                if (!isDragging) {
+                    element.style.cursor = 'grab';
+                }
+            });
+            
+            // ポートクリック機能
+            const inputPort = element.querySelector('.input-port');
+            const outputPort = element.querySelector('.output-port');
+            
+            if (inputPort) {
+                inputPort.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handlePortClick(node.id, 'input', inputPort);
+                });
+            }
+            
+            if (outputPort) {
+                outputPort.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handlePortClick(node.id, 'output', outputPort);
+                });
+            }
+
+            return element;
+        };
+
+        // ノード表示名取得
+        function getNodeDisplayName(type) {
+            const names = {
+                'button.send': 'Button: Send',
+                'input.text': 'Input: Text',
+                'string.uppercase': 'String: UpperCase',
+                'output.console': 'Output: Console',
+                'web.fetch': 'Web: Fetch API',
+                'json.parser': 'JSON: Parser',
+                'ui.card': 'UI: Simple Card',
+                'core.plugin-lister': 'Core: Plugin Lister',
+                'core.connection-manager': 'Core: Connection Manager',
+                'flow.connector': 'Flow: Connector'
+            };
+            return names[type] || type;
+        }
+
+        // ノードコンテンツ作成
+        function createNodeContent(node) {
+            switch (node.type) {
+                case 'button.send':
+                    return `
+                        <button class="execute-button" onclick="startFromNode('${node.id}')" 
+                                style="margin: 10px 0; padding: 15px; font-size: 16px;">
+                            🚀 Send Signal
+                        </button>
+                        <div class="node-output">📡 プラグイン刺激待機中</div>
+                    `;
+                case 'input.text':
+                    const currentValue = node.properties.text || 'Hello VoidFlow!';
+                    return `
+                        <input type="text" class="node-input" placeholder="テキストを入力..." 
+                               onchange="updateNodeProperty('${node.id}', 'text', this.value)" 
+                               value="${currentValue}">
+                        <div class="node-output">📤 "${currentValue}"</div>
+                    `;
+                case 'string.uppercase':
+                    return `<div class="node-output">🔄 変換待機中...</div>`;
+                case 'output.console':
+                    return `<div class="node-output">📺 出力待機中...</div>`;
+                case 'web.fetch':
+                    const defaultUrl = node.properties.url || 'https://httpbin.org/json';
+                    return `
+                        <input type="text" class="node-input" placeholder="URL を入力..." 
+                               onchange="updateNodeProperty('${node.id}', 'url', this.value)" 
+                               value="${defaultUrl}">
+                        <div class="node-output">🌐 send信号待機中...</div>
+                    `;
+                case 'json.parser':
+                    const defaultPath = node.properties.path || '';
+                    return `
+                        <input type="text" class="node-input" placeholder="JSONパス (例: data.name)" 
+                               onchange="updateNodeProperty('${node.id}', 'path', this.value)" 
+                               value="${defaultPath}">
+                        <div class="node-output">📊 解析待機中...</div>
+                    `;
+                case 'ui.card':
+                    const defaultTitle = node.properties.title || 'VoidFlow Card';
+                    return `
+                        <input type="text" class="node-input" placeholder="カードタイトル" 
+                               onchange="updateNodeProperty('${node.id}', 'title', this.value)" 
+                               value="${defaultTitle}">
+                        <div class="node-output">🎨 表示待機中...</div>
+                    `;
+                case 'core.plugin-lister':
+                    return `
+                        <div style="padding: 10px 0; text-align: center;">
+                            🔍 <strong>VoidCore自己観測</strong><br>
+                            <small style="color: #888;">🔗 参照型プラグイン</small>
+                        </div>
+                        <div class="node-output">🌟 自己観測待機中...</div>
+                    `;
+                case 'core.connection-manager':
+                    return `
+                        <div style="padding: 10px 0; text-align: center;">
+                            🔗 <strong>VoidCore接続管理</strong><br>
+                            <small style="color: #888;">🔗 参照型プラグイン</small>
+                        </div>
+                        <div class="node-output">⚡ 接続管理待機中...</div>
+                    `;
+                case 'flow.connector':
+                    const sourceType = node.properties.sourceNodeType || 'input.text';
+                    const targetType = node.properties.targetNodeType || 'output.console';
+                    const mode = node.properties.connectionMode || 'auto-connect';
+                    return `
+                        <div style="padding: 5px 0; font-size: 11px;">
+                            <div style="margin-bottom: 8px;">
+                                <label style="color: #888;">Source:</label>
+                                <select onchange="updateNodeProperty('${node.id}', 'sourceNodeType', this.value)" 
+                                        onmousedown="event.stopPropagation()"
+                                        style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                               border-radius: 3px; padding: 4px; color: #fff; font-size: 10px;">
+                                    <option value="input.text" ${sourceType === 'input.text' ? 'selected' : ''}>Input: Text</option>
+                                    <option value="web.fetch" ${sourceType === 'web.fetch' ? 'selected' : ''}>Web: Fetch</option>
+                                    <option value="json.parser" ${sourceType === 'json.parser' ? 'selected' : ''}>JSON: Parser</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <label style="color: #888;">Target:</label>
+                                <select onchange="updateNodeProperty('${node.id}', 'targetNodeType', this.value)" 
+                                        onmousedown="event.stopPropagation()"
+                                        style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                               border-radius: 3px; padding: 4px; color: #fff; font-size: 10px;">
+                                    <option value="output.console" ${targetType === 'output.console' ? 'selected' : ''}>Output: Console</option>
+                                    <option value="ui.card" ${targetType === 'ui.card' ? 'selected' : ''}>UI: Card</option>
+                                    <option value="string.uppercase" ${targetType === 'string.uppercase' ? 'selected' : ''}>String: UpperCase</option>
+                                    <option value="json.parser" ${targetType === 'json.parser' ? 'selected' : ''}>JSON: Parser</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <label style="color: #888;">Mode:</label>
+                                <select onchange="updateNodeProperty('${node.id}', 'connectionMode', this.value)" 
+                                        onmousedown="event.stopPropagation()"
+                                        style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                               border-radius: 3px; padding: 4px; color: #fff; font-size: 10px;">
+                                    <option value="auto-connect" ${mode === 'auto-connect' ? 'selected' : ''}>Auto Connect</option>
+                                    <option value="create-nodes" ${mode === 'create-nodes' ? 'selected' : ''}>Create & Connect</option>
+                                    <option value="analyze-flow" ${mode === 'analyze-flow' ? 'selected' : ''}>Analyze Flow</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="node-output">🔗 自己編集待機中...</div>
+                    `;
+                default:
+                    return '<div class="node-output">処理中...</div>';
+            }
+        }
+
+        // ノードプロパティ更新（グローバル関数）
+        window.updateNodeProperty = function(nodeId, property, value) {
+            const node = voidFlowEngine.nodes.get(nodeId);
+            if (node) {
+                node.properties[property] = value;
+                voidFlowEngine.log(`⚙️ プロパティ更新: ${getNodeDisplayName(node.type)}.${property} = "${value}"`);
+                
+                // 各ノードタイプに応じた即座の出力更新
+                switch (node.type) {
+                    case 'input.text':
+                        voidFlowEngine.updateNodeOutput(nodeId, `📤 "${value}"`);
+                        break;
+                    case 'web.fetch':
+                        voidFlowEngine.updateNodeOutput(nodeId, `🌐 準備完了: ${value}`);
+                        break;
+                    case 'json.parser':
+                        voidFlowEngine.updateNodeOutput(nodeId, `📊 パス設定: "${value}"`);
+                        break;
+                    case 'ui.card':
+                        voidFlowEngine.updateNodeOutput(nodeId, `🎨 タイトル: "${value}"`);
+                        break;
+                    case 'flow.connector':
+                        if (property === 'sourceNodeType') {
+                            voidFlowEngine.updateNodeOutput(nodeId, `🔗 Source: ${value}`);
+                        } else if (property === 'targetNodeType') {
+                            voidFlowEngine.updateNodeOutput(nodeId, `🔗 Target: ${value}`);
+                        } else if (property === 'connectionMode') {
+                            voidFlowEngine.updateNodeOutput(nodeId, `🔗 Mode: ${value}`);
+                        }
+                        break;
+                }
+            }
+        };
+
+        // ポートクリック処理
+        function handlePortClick(nodeId, portType, portElement) {
+            if (!isConnecting) {
+                // 接続開始
+                if (portType === 'output') {
+                    isConnecting = true;
+                    connectionStart = { nodeId, portType, element: portElement };
+                    portElement.style.backgroundColor = '#00ff88';
+                    portElement.style.boxShadow = '0 0 15px rgba(0, 255, 136, 0.8)';
+                    voidFlowEngine.log(`🔌 接続開始: ${getNodeDisplayName(voidFlowEngine.nodes.get(nodeId).type)} (Output)`);
+                    
+                    // マウス移動で一時的な線を描画
+                    document.addEventListener('mousemove', drawTempConnection);
+                    document.addEventListener('click', cancelConnection);
+                }
+            } else {
+                // 接続完了
+                if (portType === 'input' && connectionStart.portType === 'output') {
+                    const edge = voidFlowEngine.createEdge(
+                        connectionStart.nodeId, 'output',
+                        nodeId, 'input'
+                    );
+                    
+                    drawConnection(edge);
+                    voidFlowEngine.log(`🔗 接続完了: ${getNodeDisplayName(voidFlowEngine.nodes.get(connectionStart.nodeId).type)} → ${getNodeDisplayName(voidFlowEngine.nodes.get(nodeId).type)}`);
+                    
+                    // 接続線に光の粒子エフェクトを追加
+                    animateConnectionSuccess(edge);
+                }
+                
+                // 接続状態をリセット
+                resetConnectionState();
+            }
+        }
+
+        // 一時的な接続線描画
+        function drawTempConnection(e) {
+            if (!isConnecting || !connectionStart) return;
+            
+            const svg = document.getElementById('connectionSvg');
+            const existingTemp = svg.querySelector('.temp-connection');
+            if (existingTemp) existingTemp.remove();
+            
+            const startRect = connectionStart.element.getBoundingClientRect();
+            const canvasRect = document.querySelector('.canvas-area').getBoundingClientRect();
+            
+            const startX = startRect.left + startRect.width/2 - canvasRect.left;
+            const startY = startRect.top + startRect.height/2 - canvasRect.top;
+            const endX = e.clientX - canvasRect.left;
+            const endY = e.clientY - canvasRect.top;
+            
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', startX);
+            line.setAttribute('y1', startY);
+            line.setAttribute('x2', endX);
+            line.setAttribute('y2', endY);
+            line.setAttribute('stroke', '#4a90e2');
+            line.setAttribute('stroke-width', '2');
+            line.setAttribute('stroke-dasharray', '5,5');
+            line.setAttribute('class', 'temp-connection');
+            line.style.opacity = '0.7';
+            
+            svg.appendChild(line);
+        }
+
+        // 接続をキャンセル
+        function cancelConnection(e) {
+            if (e.target.closest('.connection-port')) return;
+            resetConnectionState();
+        }
+
+        // 接続状態をリセット
+        function resetConnectionState() {
+            isConnecting = false;
+            if (connectionStart) {
+                connectionStart.element.style.backgroundColor = '#4a90e2';
+                connectionStart.element.style.boxShadow = '';
+                connectionStart = null;
+            }
+            
+            const svg = document.getElementById('connectionSvg');
+            const existingTemp = svg.querySelector('.temp-connection');
+            if (existingTemp) existingTemp.remove();
+            
+            document.removeEventListener('mousemove', drawTempConnection);
+            document.removeEventListener('click', cancelConnection);
+        }
+
+        // 接続線管理システム
+        class ConnectionManager {
+            constructor() {
+                this.bundledConnections = new Map(); // sourceNodeId -> bundled connection info
+            }
+            
+            // ノードからの全接続を取得
+            getConnectionsFromNode(sourceNodeId) {
+                const connections = [];
+                for (const [edgeId, edge] of voidFlowEngine.edges) {
+                    if (edge.sourceNodeId === sourceNodeId) {
+                        connections.push(edge);
+                    }
+                }
+                return connections;
+            }
+            
+            // 接続の再描画（自動切り替え対応）- パフォーマンス改善版
+            redrawConnectionsFromNode(sourceNodeId) {
+                // 既存の接続線を削除（一括処理で高速化）
+                this.clearConnectionsFromNode(sourceNodeId);
+                
+                const connections = this.getConnectionsFromNode(sourceNodeId);
+                
+                if (connections.length === 0) return;
+                
+                // リアルタイム描画
+                if (connections.length <= 5) {
+                    // パターンA: 扇形分散式
+                    this.drawFanOutConnections(connections);
+                } else {
+                    // パターンB: 束ね太線式
+                    this.drawBundledConnection(sourceNodeId, connections);
+                }
+            }
+            
+            // 既存接続線を削除（高速化）
+            clearConnectionsFromNode(sourceNodeId) {
+                const svg = document.getElementById('connectionSvg');
+                
+                // 一括削除で高速化
+                const elementsToRemove = [
+                    ...svg.querySelectorAll(`[data-source-node="${sourceNodeId}"]`),
+                    ...svg.querySelectorAll(`[data-bundled-source="${sourceNodeId}"]`)
+                ];
+                
+                // DocumentFragment を使用して一括削除
+                elementsToRemove.forEach(element => element.remove());
+            }
+            
+            // パターンA: 扇形分散描画
+            drawFanOutConnections(connections) {
+                const angleStep = 15; // 角度間隔
+                const baseAngle = -((connections.length - 1) * angleStep) / 2; // 中央揃え
+                
+                connections.forEach((edge, index) => {
+                    const angle = baseAngle + (index * angleStep);
+                    this.drawSingleConnection(edge, angle);
+                });
+            }
+            
+            // 個別接続線を描画（角度オフセット付き）
+            drawSingleConnection(edge, angleOffset = 0) {
+                const sourceNode = document.querySelector(`[data-node-id="${edge.sourceNodeId}"]`);
+                const targetNode = document.querySelector(`[data-node-id="${edge.targetNodeId}"]`);
+                
+                if (!sourceNode || !targetNode) return;
+                
+                const sourcePort = sourceNode.querySelector('.output-port');
+                const targetPort = targetNode.querySelector('.input-port');
+                const canvasRect = document.querySelector('.canvas-area').getBoundingClientRect();
+                
+                const sourceRect = sourcePort.getBoundingClientRect();
+                const targetRect = targetPort.getBoundingClientRect();
+                
+                let startX = sourceRect.left + sourceRect.width/2 - canvasRect.left;
+                let startY = sourceRect.top + sourceRect.height/2 - canvasRect.top;
+                const endX = targetRect.left + targetRect.width/2 - canvasRect.left;
+                const endY = targetRect.top + targetRect.height/2 - canvasRect.top;
+                
+                // 角度オフセットを適用
+                if (angleOffset !== 0) {
+                    const offsetDistance = 20;
+                    const radians = (angleOffset * Math.PI) / 180;
+                    startX += Math.sin(radians) * offsetDistance;
+                    startY += Math.cos(radians) * offsetDistance;
+                }
+                
+                const svg = document.getElementById('connectionSvg');
+                this.ensureMarkers(svg);
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                
+                // ベジェ曲線で美しい接続線
+                const controlOffset = Math.abs(endX - startX) * 0.5;
+                const pathData = `M ${startX} ${startY} C ${startX + controlOffset} ${startY}, ${endX - controlOffset} ${endY}, ${endX} ${endY}`;
+                
+                // 接続タイプに応じて色と矢印を変更
+                const connectionType = edge.connectionType || 'data-flow';
+                let strokeColor = '#4a90e2';
+                let markerEnd = 'url(#arrowhead)';
+                
+                if (connectionType === 'control-flow') {
+                    strokeColor = '#ff9500';
+                    markerEnd = 'url(#glow-arrowhead)';
+                } else if (connectionType === 'special') {
+                    strokeColor = '#00ff88';
+                    markerEnd = 'url(#glow-arrowhead)';
+                }
+                
+                path.setAttribute('d', pathData);
+                path.setAttribute('stroke', strokeColor);
+                path.setAttribute('stroke-width', '3');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('marker-end', markerEnd);
+                path.setAttribute('class', 'connection');
+                path.setAttribute('data-edge-id', edge.id);
+                path.setAttribute('data-source-node', edge.sourceNodeId);
+                // path.style.filter = `drop-shadow(0 0 5px ${strokeColor}80)`; // 重いエフェクト削除
+                path.style.cursor = 'pointer';
+                path.style.pointerEvents = 'all'; // クリック可能にする
+                path.style.strokeLinecap = 'round'; // 線の端を丸くして触りやすく
+                
+                // ホバーエフェクト（軽量化）
+                path.addEventListener('mouseenter', () => {
+                    path.setAttribute('stroke-width', '5');
+                    // path.style.filter = `drop-shadow(0 0 10px ${strokeColor})`; // 重いエフェクト削除
+                });
+                
+                path.addEventListener('mouseleave', () => {
+                    path.setAttribute('stroke-width', '3');
+                    // path.style.filter = `drop-shadow(0 0 5px ${strokeColor}80)`; // 重いエフェクト削除
+                });
+                
+                // ダブルクリックで削除（デバッグ付き）
+                let clickCount = 0;
+                let clickTimer = null;
+                
+                path.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    clickCount++;
+                    
+                    if (clickCount === 1) {
+                        // 最初のクリック
+                        clickTimer = setTimeout(() => {
+                            clickCount = 0; // リセット
+                        }, 400);
+                    } else if (clickCount === 2) {
+                        // ダブルクリック検出
+                        clearTimeout(clickTimer);
+                        clickCount = 0;
+                        
+                        // 削除実行
+                        this.deleteConnection(edge.id);
+                        voidFlowEngine.log(`🗑️ 接続削除: ${edge.id}`);
+                    }
+                }, true);
+                
+                // マウスダウンイベントも処理
+                path.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                }, true);
+                
+                // 見えないクリック領域を追加（太い透明線）
+                const clickArea = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                clickArea.setAttribute('d', pathData);
+                clickArea.setAttribute('stroke', 'transparent');
+                clickArea.setAttribute('stroke-width', '10'); // 太くしてクリックしやすく
+                clickArea.setAttribute('fill', 'none');
+                clickArea.setAttribute('class', 'connection-click-area');
+                clickArea.setAttribute('data-edge-id', edge.id);
+                clickArea.style.cursor = 'pointer';
+                clickArea.style.pointerEvents = 'all';
+                
+                // クリック領域にも同じイベントを設定
+                let areaClickCount = 0;
+                let areaClickTimer = null;
+                
+                clickArea.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    
+                    areaClickCount++;
+                    
+                    if (areaClickCount === 1) {
+                        areaClickTimer = setTimeout(() => {
+                            areaClickCount = 0;
+                        }, 400);
+                    } else if (areaClickCount === 2) {
+                        clearTimeout(areaClickTimer);
+                        areaClickCount = 0;
+                        
+                        this.deleteConnection(edge.id);
+                        voidFlowEngine.log(`🗑️ 接続削除: ${edge.id}`);
+                    }
+                }, true);
+                
+                svg.appendChild(path);
+                svg.appendChild(clickArea); // クリック領域を後に追加（上に来る）
+            }
+            
+            // パターンB: 束ね太線描画
+            drawBundledConnection(sourceNodeId, connections) {
+                const sourceNode = document.querySelector(`[data-node-id="${sourceNodeId}"]`);
+                if (!sourceNode) return;
+                
+                const sourcePort = sourceNode.querySelector('.output-port');
+                const canvasRect = document.querySelector('.canvas-area').getBoundingClientRect();
+                
+                const sourceRect = sourcePort.getBoundingClientRect();
+                const startX = sourceRect.left + sourceRect.width/2 - canvasRect.left;
+                const startY = sourceRect.top + sourceRect.height/2 - canvasRect.top;
+                
+                // 束ね線の終点（右側に伸ばす）
+                const endX = startX + 100;
+                const endY = startY;
+                
+                const svg = document.getElementById('connectionSvg');
+                this.ensureMarkers(svg);
+                
+                // 束ね線を描画
+                const bundlePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const pathData = `M ${startX} ${startY} L ${endX} ${endY}`;
+                
+                // 接続数に応じて線の太さと色を変更
+                const connectionCount = connections.length;
+                const strokeWidth = Math.min(3 + connectionCount, 12); // 最大12px
+                const intensity = Math.min(connectionCount / 10, 1); // 最大1.0
+                const strokeColor = `rgb(${74 + intensity * 100}, ${144}, ${226})`;
+                
+                bundlePath.setAttribute('d', pathData);
+                bundlePath.setAttribute('stroke', strokeColor);
+                bundlePath.setAttribute('stroke-width', strokeWidth);
+                bundlePath.setAttribute('fill', 'none');
+                bundlePath.setAttribute('marker-end', 'url(#arrowhead)');
+                bundlePath.setAttribute('class', 'bundled-connection');
+                bundlePath.setAttribute('data-bundled-source', sourceNodeId);
+                // bundlePath.style.filter = `drop-shadow(0 0 8px ${strokeColor}80)`; // 重いエフェクト削除
+                bundlePath.style.cursor = 'pointer';
+                
+                // 接続数ラベル
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', startX + 50);
+                label.setAttribute('y', startY - 10);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('fill', '#ffffff');
+                label.setAttribute('font-size', '12');
+                label.setAttribute('font-weight', 'bold');
+                label.setAttribute('data-bundled-source', sourceNodeId);
+                label.textContent = `(${connectionCount})`;
+                // label.style.filter = 'drop-shadow(0 0 3px rgba(0, 0, 0, 0.8))'; // 重いエフェクト削除
+                
+                // ダブルクリックで削除メニュー
+                bundlePath.addEventListener('dblclick', (e) => {
+                    e.stopPropagation();
+                    this.showBundledConnectionMenu(sourceNodeId, connections, e.clientX, e.clientY);
+                });
+                
+                svg.appendChild(bundlePath);
+                svg.appendChild(label);
+            }
+            
+            // 束ね線削除メニュー表示
+            showBundledConnectionMenu(sourceNodeId, connections, x, y) {
+                // 既存メニューを削除
+                const existingMenu = document.querySelector('.bundled-connection-menu');
+                if (existingMenu) existingMenu.remove();
+                
+                const menu = document.createElement('div');
+                menu.className = 'bundled-connection-menu';
+                menu.style.cssText = `
+                    position: fixed;
+                    top: ${y}px;
+                    left: ${x}px;
+                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                    border: 2px solid #4a90e2;
+                    border-radius: 8px;
+                    padding: 10px;
+                    z-index: 10000;
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+                    min-width: 200px;
+                `;
+                
+                const sourceNode = voidFlowEngine.nodes.get(sourceNodeId);
+                menu.innerHTML = `
+                    <div style="color: #4a90e2; font-weight: bold; margin-bottom: 10px;">
+                        🔗 ${getNodeDisplayName(sourceNode.type)} の接続 (${connections.length}本)
+                    </div>
+                    ${connections.map(conn => {
+                        const targetNode = voidFlowEngine.nodes.get(conn.targetNodeId);
+                        return `
+                            <div style="display: flex; justify-content: space-between; align-items: center; 
+                                        padding: 5px; margin-bottom: 5px; background: rgba(0,0,0,0.3); 
+                                        border-radius: 4px; font-size: 12px;">
+                                <span style="color: #aaa;">→ ${getNodeDisplayName(targetNode.type)}</span>
+                                <button onclick="connectionManager.deleteConnection('${conn.id}'); document.querySelector('.bundled-connection-menu').remove();"
+                                        style="background: #ff6b6b; color: white; border: none; padding: 2px 6px; 
+                                               border-radius: 3px; cursor: pointer; font-size: 10px;">
+                                    削除
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                    <div style="text-align: center; margin-top: 10px;">
+                        <button onclick="document.querySelector('.bundled-connection-menu').remove();"
+                                style="background: #666; color: white; border: none; padding: 5px 10px; 
+                                       border-radius: 4px; cursor: pointer; font-size: 11px;">
+                            閉じる
+                        </button>
+                    </div>
+                `;
+                
+                document.body.appendChild(menu);
+                
+                // クリック外でメニューを閉じる
+                setTimeout(() => {
+                    document.addEventListener('click', function closeMenu(e) {
+                        if (!menu.contains(e.target)) {
+                            menu.remove();
+                            document.removeEventListener('click', closeMenu);
+                        }
+                    });
+                }, 100);
+            }
+            
+            // 接続削除
+            deleteConnection(edgeId) {
+                const edge = voidFlowEngine.edges.get(edgeId);
+                if (!edge) return;
+                
+                const sourceNodeId = edge.sourceNodeId;
+                
+                // エッジを削除
+                voidFlowEngine.edges.delete(edgeId);
+                
+                // 接続線を再描画
+                this.redrawConnectionsFromNode(sourceNodeId);
+                
+                voidFlowEngine.log(`🗑️ 接続削除: ${edgeId}`);
+            }
+            
+            // SVGマーカーを確保
+            ensureMarkers(svg) {
+                let defs = svg.querySelector('defs');
+                if (!defs) {
+                    defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                    svg.appendChild(defs);
+                    
+                    // 通常矢印マーカー
+                    const arrowMarker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                    arrowMarker.setAttribute('id', 'arrowhead');
+                    arrowMarker.setAttribute('markerWidth', '10');
+                    arrowMarker.setAttribute('markerHeight', '7');
+                    arrowMarker.setAttribute('refX', '9');
+                    arrowMarker.setAttribute('refY', '3.5');
+                    arrowMarker.setAttribute('orient', 'auto');
+                    
+                    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                    polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+                    polygon.setAttribute('fill', '#4a90e2');
+                    // polygon.style.filter = 'drop-shadow(0 0 3px rgba(74, 144, 226, 0.5))'; // 重いエフェクト削除
+                    
+                    arrowMarker.appendChild(polygon);
+                    defs.appendChild(arrowMarker);
+                    
+                    // 光る矢印マーカー
+                    const glowArrowMarker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+                    glowArrowMarker.setAttribute('id', 'glow-arrowhead');
+                    glowArrowMarker.setAttribute('markerWidth', '10');
+                    glowArrowMarker.setAttribute('markerHeight', '7');
+                    glowArrowMarker.setAttribute('refX', '9');
+                    glowArrowMarker.setAttribute('refY', '3.5');
+                    glowArrowMarker.setAttribute('orient', 'auto');
+                    
+                    const glowPolygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                    glowPolygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+                    glowPolygon.setAttribute('fill', '#00ff88');
+                    // glowPolygon.style.filter = 'drop-shadow(0 0 5px rgba(0, 255, 136, 0.8))'; // 重いエフェクト削除
+                    
+                    glowArrowMarker.appendChild(glowPolygon);
+                    defs.appendChild(glowArrowMarker);
+                }
+            }
+        }
+        
+        // グローバル接続マネージャー
+        window.connectionManager = new ConnectionManager();
+        
+        // 接続線を描画（グローバル関数）- 新システム対応
+        window.drawConnection = function(edge) {
+            // 新システムで再描画
+            connectionManager.redrawConnectionsFromNode(edge.sourceNodeId);
+        };
+
+        // 接続成功時のアニメーション
+        function animateConnectionSuccess(edge) {
+            const svg = document.getElementById('connectionSvg');
+            const path = svg.querySelector(`[data-edge-id="${edge.id}"]`);
+            if (!path) return;
+            
+            // 光の粒子エフェクト
+            const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            particle.setAttribute('r', '4');
+            particle.setAttribute('fill', '#00ff88');
+            particle.style.filter = 'drop-shadow(0 0 8px rgba(0, 255, 136, 0.8))';
+            
+            const pathLength = path.getTotalLength();
+            particle.innerHTML = `
+                <animateMotion dur="1s" repeatCount="1">
+                    <mpath href="#${path.id || 'connection-path'}"/>
+                </animateMotion>
+            `;
+            
+            svg.appendChild(particle);
+            
+            setTimeout(() => {
+                if (particle.parentNode) particle.parentNode.removeChild(particle);
+            }, 1000);
+        }
+
+        // ドラッグ開始（最軽量版）
+        function startDrag(e) {
+            if (e.target.classList.contains('node-input') || 
+                e.target.classList.contains('connection-port') ||
+                isConnecting) return;
+            
+            const nodeElement = e.currentTarget;
+            isDragging = true;
+            draggedNode = nodeElement;
+            
+            // キャッシュクリア（ウィンドウサイズ変更対応）
+            window.cachedCanvasRect = null;
+            
+            // 最もシンプルな座標計算
+            const rect = nodeElement.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+            
+            nodeElement.style.zIndex = '1000';
+            nodeElement.style.cursor = 'grabbing';
+            document.body.style.cursor = 'grabbing';
+            
+            // DOM操作を最小限に
+            const svg = document.getElementById('connectionSvg');
+            if (svg) svg.style.opacity = '0.3';
+            
+            // passive: false で確実にpreventDefault
+            document.addEventListener('mousemove', handleDrag, { passive: false });
+            document.addEventListener('mouseup', stopDrag);
+            
+            e.preventDefault();
+        }
+
+        // ドラッグ処理（test-drag.html方式）
+        function handleDrag(e) {
+            if (!isDragging || !draggedNode) {
+                return;
+            }
+            
+            // test-drag.htmlと同じ方式
+            const areaRect = document.querySelector('.canvas-area').getBoundingClientRect();
+            
+            const x = e.clientX - areaRect.left - dragOffset.x;
+            const y = e.clientY - areaRect.top - dragOffset.y;
+            
+            // 境界チェック
+            const maxX = areaRect.width - draggedNode.offsetWidth;
+            const maxY = areaRect.height - draggedNode.offsetHeight;
+            const clampedX = Math.max(0, Math.min(x, maxX));
+            const clampedY = Math.max(0, Math.min(y, maxY));
+            
+            // test-drag.htmlと同じ方式で位置設定
+            draggedNode.style.left = clampedX + 'px';
+            draggedNode.style.top = clampedY + 'px';
+            
+            // VoidFlowEngine更新を最小限に（もしかして重い？）
+            // const nodeId = draggedNode.dataset.nodeId;
+            // const node = voidFlowEngine.nodes.get(nodeId);
+            // if (node) {
+            //     node.position = { x: clampedX, y: clampedY };
+            // }
+        }
+
+        // ドラッグ終了（超シンプル版）
+        function stopDrag() {
+            console.log('🛑 ドラッグ終了 (超シンプル)');
+            
+            if (draggedNode) {
+                const nodeId = draggedNode.dataset.nodeId;
+                
+                draggedNode.style.zIndex = '';
+                draggedNode.style.cursor = 'grab';
+                draggedNode = null;
+                
+                // 接続線を元に戻す＆最終更新
+                const svg = document.getElementById('connectionSvg');
+                svg.style.opacity = '1';
+                updateConnectionLines(nodeId);
+            }
+            
+            // カーソルリセット
+            document.body.style.cursor = '';
+            document.querySelectorAll('.voidflow-node').forEach(node => {
+                node.style.cursor = 'grab';
+            });
+            
+            // ドラッグカウンターリセット
+            window.dragFrameCount = 0;
+            isDragging = false;
+            
+            // マウスイベントのみ削除
+            document.removeEventListener('mousemove', handleDrag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+
+        // 接続線を更新（リアルタイム対応）
+        function updateConnectionLines(nodeId) {
+            console.log('🔗 updateConnectionLines開始:', nodeId);
+            
+            try {
+                // ソースノードとしての接続を更新
+                console.log('📤 ソースノード更新:', nodeId);
+                connectionManager.redrawConnectionsFromNode(nodeId);
+                
+                // ターゲットノードとしての接続も更新
+                const allSourceNodes = new Set();
+                for (const [edgeId, edge] of voidFlowEngine.edges) {
+                    if (edge.targetNodeId === nodeId) {
+                        allSourceNodes.add(edge.sourceNodeId);
+                    }
+                }
+                
+                console.log('📥 ターゲット関連ソース:', Array.from(allSourceNodes));
+                
+                // 各ソースノードの接続を再描画
+                allSourceNodes.forEach(sourceNodeId => {
+                    console.log('🔄 ソース再描画:', sourceNodeId);
+                    connectionManager.redrawConnectionsFromNode(sourceNodeId);
+                });
+                
+                console.log('✅ updateConnectionLines完了');
+            } catch (error) {
+                console.error('❌ updateConnectionLines エラー:', error);
+            }
+        }
+
+        // スマート接続管理システム
+        class SmartConnectionManager {
+            constructor() {
+                this.firstSelected = null;
+                this.secondSelected = null;
+                this.connectionMode = false;
+                this.connectionCandidates = [];
+            }
+            
+            async handleNodeClick(nodeId) {
+                if (!this.firstSelected) {
+                    // 最初のノード選択
+                    this.firstSelected = nodeId;
+                    this.highlightNode(nodeId, 'first');
+                    voidFlowEngine.log(`🎯 接続ソース選択: ${getNodeDisplayName(voidFlowEngine.nodes.get(nodeId).type)}`);
+                    voidFlowEngine.log('💡 次に接続先ノードをクリックしてください');
+                    this.connectionMode = true;
+                } else if (this.firstSelected === nodeId) {
+                    // 同じノードクリック = キャンセル
+                    this.resetSelection();
+                    voidFlowEngine.log('❌ 接続モードキャンセル');
+                } else {
+                    // 2番目のノード選択 = 接続候補分析
+                    this.secondSelected = nodeId;
+                    this.highlightNode(nodeId, 'second');
+                    voidFlowEngine.log(`🎯 接続ターゲット選択: ${getNodeDisplayName(voidFlowEngine.nodes.get(nodeId).type)}`);
+                    
+                    // 接続候補を分析・表示
+                    this.connectionCandidates = await this.analyzeConnectionCandidates(this.firstSelected, this.secondSelected);
+                    this.showConnectionCandidates(this.connectionCandidates);
+                }
+            }
+            
+            highlightNode(nodeId, type) {
+                const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
+                if (nodeElement) {
+                    if (type === 'first') {
+                        nodeElement.style.borderColor = '#00ff88';
+                        nodeElement.style.boxShadow = '0 0 15px rgba(0, 255, 136, 0.5)';
+                    } else if (type === 'second') {
+                        nodeElement.style.borderColor = '#ff6b6b';
+                        nodeElement.style.boxShadow = '0 0 15px rgba(255, 107, 107, 0.5)';
+                    }
+                }
+            }
+            
+            async analyzeConnectionCandidates(sourceId, targetId) {
+                const sourceNode = voidFlowEngine.nodes.get(sourceId);
+                const targetNode = voidFlowEngine.nodes.get(targetId);
+                
+                if (!sourceNode || !targetNode) {
+                    console.log('❌ ノードが見つかりません:', sourceId, targetId);
+                    return [];
+                }
+                
+                const candidates = [];
+                
+                // 出力ポートから入力ポートへの接続を分析
+                let outputPorts = voidFlowEngine.getOutputPorts(sourceNode.type);
+                let inputPorts = voidFlowEngine.getInputPorts(targetNode.type);
+                
+                // console.log('🔍 ポート分析:', {
+                //     sourceType: sourceNode.type,
+                //     targetType: targetNode.type,
+                //     outputPorts: outputPorts,
+                //     inputPorts: inputPorts
+                // });
+                
+                // ポートが定義されていない場合のフォールバック
+                if (!outputPorts || outputPorts.length === 0) {
+                    outputPorts = [{ name: 'Output', dataType: 'any' }];
+                }
+                if (!inputPorts || inputPorts.length === 0) {
+                    inputPorts = [{ name: 'Input', dataType: 'any' }];
+                }
+                
+                for (const outputPort of outputPorts) {
+                    for (const inputPort of inputPorts) {
+                        const compatibility = this.calculateCompatibility(outputPort, inputPort, sourceNode, targetNode);
+                        // console.log('💡 互換性チェック:', compatibility);
+                        if (compatibility.score > 0) {
+                            candidates.push({
+                                sourcePort: outputPort,
+                                targetPort: inputPort,
+                                compatibility: compatibility,
+                                connectionType: compatibility.connectionType,
+                                description: compatibility.description
+                            });
+                        }
+                    }
+                }
+                
+                // 信頼度順にソート
+                candidates.sort((a, b) => b.compatibility.score - a.compatibility.score);
+                
+                // console.log('🎯 接続候補:', candidates);
+                return candidates;
+            }
+            
+            calculateCompatibility(outputPort, inputPort, sourceNode, targetNode) {
+                let score = 60; // ベーススコア上げる
+                let connectionType = 'data-flow';
+                let description = '';
+                let reason = '';
+                
+                const sourceType = sourceNode.type;
+                const targetType = targetNode.type;
+                
+                // 明らかに良い組み合わせは100%にする
+                if (sourceType === 'input.text' && targetType === 'string.uppercase') {
+                    score = 100;
+                    description = 'テキストを大文字に変換';
+                    reason = '定番の組み合わせ';
+                } else if (sourceType === 'string.uppercase' && targetType === 'output.console') {
+                    score = 100;
+                    description = '処理結果をコンソールに表示';
+                    reason = '結果表示';
+                } else if (sourceType === 'web.fetch' && targetType === 'json.parser') {
+                    score = 100;
+                    description = 'API レスポンスを JSON として解析';
+                    reason = 'API → JSON の定番';
+                } else if (sourceType === 'json.parser' && targetType === 'ui.card') {
+                    score = 100;
+                    description = 'JSON データをカードで表示';
+                    reason = 'データ表示';
+                } else if (sourceType === 'button.send' && (targetType === 'input.text' || targetType === 'web.fetch')) {
+                    score = 100;
+                    connectionType = 'control-flow';
+                    description = 'ボタンでプラグインを実行';
+                    reason = 'トリガー実行';
+                } else if (sourceType === 'core.plugin-lister' && targetType === 'ui.card') {
+                    score = 100;
+                    description = 'プラグイン一覧をカードで表示';
+                    reason = '自己観測表示';
+                
+                // データ型互換性チェック
+                } else if (outputPort.dataType === inputPort.dataType) {
+                    score = 95; // 型一致は高スコア
+                    description = `${outputPort.dataType} データを渡す`;
+                    reason = '型が一致';
+                } else if (this.isCompatibleDataType(outputPort.dataType, inputPort.dataType)) {
+                    score = 85; // 互換性ありも高スコア
+                    description = `${outputPort.dataType} → ${inputPort.dataType} 変換`;
+                    reason = '自動変換可能';
+                } else {
+                    score = 70; // 基本的な互換性も悪くない
+                    description = `${outputPort.dataType} → ${inputPort.dataType} 接続`;
+                    reason = '基本的な互換性';
+                }
+                
+                // 既存接続がある場合のみ表示変更（スコアは下げない）
+                const existingConnection = this.findExistingConnection(sourceNode.id, targetNode.id);
+                if (existingConnection) {
+                    reason += ' (既に接続済み)';
+                }
+                
+                return {
+                    score: Math.max(70, Math.min(100, score)), // 最低70%に
+                    connectionType,
+                    description,
+                    reason,
+                    confidence: score >= 95 ? 'perfect' : score >= 85 ? 'high' : 'good'
+                };
+            }
+            
+            isCompatibleDataType(sourceType, targetType) {
+                const compatibilityMap = {
+                    'string': ['string', 'json', 'any'],
+                    'json': ['string', 'json', 'any'],
+                    'signal': ['signal', 'any'],
+                    'any': ['string', 'json', 'signal', 'any']
+                };
+                
+                return compatibilityMap[sourceType]?.includes(targetType) || false;
+            }
+            
+            findExistingConnection(sourceId, targetId) {
+                for (const [edgeId, edge] of voidFlowEngine.edges) {
+                    if (edge.sourceNodeId === sourceId && edge.targetNodeId === targetId) {
+                        return edge;
+                    }
+                }
+                return null;
+            }
+            
+            showConnectionCandidates(candidates) {
+                if (candidates.length === 0) {
+                    this.showNoConnectionMessage();
+                    return;
+                }
+                
+                const modal = this.createCandidateModal(candidates);
+                document.body.appendChild(modal);
+                
+                // モーダルを表示
+                setTimeout(() => {
+                    modal.style.opacity = '1';
+                    modal.style.transform = 'scale(1)';
+                }, 10);
+            }
+            
+            createCandidateModal(candidates) {
+                const modal = document.createElement('div');
+                modal.className = 'connection-candidates-modal';
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%) scale(0.9);
+                    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                    border: 2px solid #4a90e2;
+                    border-radius: 12px;
+                    padding: 20px;
+                    width: 500px;
+                    max-height: 400px;
+                    overflow-y: auto;
+                    z-index: 10000;
+                    opacity: 0;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                `;
+                
+                const sourceNode = voidFlowEngine.nodes.get(this.firstSelected);
+                const targetNode = voidFlowEngine.nodes.get(this.secondSelected);
+                
+                modal.innerHTML = `
+                    <div style="margin-bottom: 20px; text-align: center;">
+                        <h3 style="color: #4a90e2; margin: 0 0 10px 0;">🔗 接続候補を選択</h3>
+                        <div style="font-size: 14px; color: #aaa;">
+                            <span style="color: #00ff88;">${getNodeDisplayName(sourceNode.type)}</span>
+                            <span style="color: #666;"> → </span>
+                            <span style="color: #ff6b6b;">${getNodeDisplayName(targetNode.type)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="candidates-list">
+                        ${candidates.map((candidate, index) => this.createCandidateItem(candidate, index)).join('')}
+                    </div>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button onclick="event.stopPropagation(); smartConnectionManager.closeModal()" 
+                                style="background: #666; color: white; border: none; padding: 8px 16px; 
+                                       border-radius: 4px; cursor: pointer; margin-right: 10px;">
+                            キャンセル
+                        </button>
+                    </div>
+                `;
+                
+                return modal;
+            }
+            
+            createCandidateItem(candidate, index) {
+                const confidenceColor = {
+                    'perfect': '#00ff88',
+                    'high': '#00ff88', 
+                    'good': '#4a90e2'
+                }[candidate.compatibility.confidence];
+                
+                const confidenceText = {
+                    'perfect': '✅ 完璧',
+                    'high': '🌟 推奨',
+                    'good': '👍 良好'
+                }[candidate.compatibility.confidence];
+                
+                return `
+                    <div class="candidate-item" onclick="event.stopPropagation(); smartConnectionManager.selectCandidate(${index})"
+                         style="background: rgba(0, 0, 0, 0.3); border: 1px solid #333; border-radius: 8px; 
+                                padding: 15px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s ease;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                            <div style="font-size: 14px; color: #fff;">
+                                <span style="color: #00ff88;">${candidate.sourcePort?.name || 'Output'}</span>
+                                <span style="color: #666;"> ───➤ </span>
+                                <span style="color: #ff6b6b;">${candidate.targetPort?.name || 'Input'}</span>
+                            </div>
+                            <div style="color: ${confidenceColor}; font-size: 12px; font-weight: bold;">
+                                ${confidenceText} (${candidate.compatibility.score}%)
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: #aaa; margin-bottom: 5px;">
+                            🔄 ${candidate.description}
+                        </div>
+                        <div style="font-size: 11px; color: #888;">
+                            💡 ${candidate.compatibility.reason} | 種別: ${candidate.connectionType}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            showNoConnectionMessage() {
+                voidFlowEngine.log('❌ 互換性のある接続候補が見つかりませんでした');
+                this.resetSelection();
+            }
+            
+            async selectCandidate(index) {
+                const modal = document.querySelector('.connection-candidates-modal');
+                if (modal) modal.remove();
+                
+                // 選択された候補を取得
+                const selectedCandidate = this.connectionCandidates[index];
+                
+                // 接続を実行
+                try {
+                    const connectionData = {
+                        source: {
+                            nodeId: this.firstSelected,
+                            portId: 'output'
+                        },
+                        target: {
+                            nodeId: this.secondSelected,
+                            portId: 'input'
+                        },
+                        connectionType: selectedCandidate.connectionType,
+                        schema: {
+                            sourceType: 'string',
+                            targetType: 'string'
+                        }
+                    };
+                    
+                    const result = await voidFlowEngine.establishConnection(connectionData);
+                    voidFlowEngine.log(`✅ スマート接続完了: ${result.id}`);
+                    
+                    // 接続成功エフェクト
+                    this.animateConnectionSuccess();
+                    
+                } catch (error) {
+                    voidFlowEngine.log(`❌ 接続エラー: ${error.message}`);
+                }
+                
+                this.resetSelection();
+            }
+            
+            animateConnectionSuccess() {
+                const sourceElement = document.querySelector(`[data-node-id="${this.firstSelected}"]`);
+                const targetElement = document.querySelector(`[data-node-id="${this.secondSelected}"]`);
+                
+                if (sourceElement && targetElement) {
+                    // 成功時の光エフェクト
+                    [sourceElement, targetElement].forEach(element => {
+                        element.style.animation = 'pulse 0.5s ease-in-out';
+                        setTimeout(() => {
+                            element.style.animation = '';
+                        }, 500);
+                    });
+                }
+            }
+            
+            closeModal() {
+                const modal = document.querySelector('.connection-candidates-modal');
+                if (modal) {
+                    modal.style.opacity = '0';
+                    modal.style.transform = 'translate(-50%, -50%) scale(0.9)';
+                    setTimeout(() => modal.remove(), 300);
+                }
+                this.resetSelection();
+            }
+            
+            resetSelection() {
+                // ハイライト解除
+                if (this.firstSelected) {
+                    const firstElement = document.querySelector(`[data-node-id="${this.firstSelected}"]`);
+                    if (firstElement) {
+                        firstElement.style.borderColor = '#4a90e2';
+                        firstElement.style.boxShadow = '';
+                    }
+                }
+                
+                if (this.secondSelected) {
+                    const secondElement = document.querySelector(`[data-node-id="${this.secondSelected}"]`);
+                    if (secondElement) {
+                        secondElement.style.borderColor = '#4a90e2';
+                        secondElement.style.boxShadow = '';
+                    }
+                }
+                
+                this.firstSelected = null;
+                this.secondSelected = null;
+                this.connectionMode = false;
+            }
+        }
+        
+        // スマート接続マネージャーのインスタンス作成（グローバル）
+        window.smartConnectionManager = new SmartConnectionManager();
+        
+        // パルスアニメーション用CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+            
+            .candidate-item:hover {
+                background: rgba(74, 144, 226, 0.1) !important;
+                border-color: #4a90e2 !important;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ノード選択（スマート接続対応版）
+        function selectNode(e) {
+            if (isDragging) return;
+            
+            const nodeElement = e.currentTarget;
+            const nodeId = nodeElement.dataset.nodeId;
+            
+            // スマート接続モードの場合
+            if (window.smartConnectionManager.connectionMode || !selectedNode) {
+                window.smartConnectionManager.handleNodeClick(nodeId);
+                return;
+            }
+            
+            // 通常の選択処理
+            document.querySelectorAll('.voidflow-node').forEach(el => {
+                el.style.borderColor = '#4a90e2';
+                el.style.boxShadow = '';
+            });
+            
+            nodeElement.style.borderColor = '#00ff88';
+            selectedNode = nodeId;
+            
+            updatePropertiesPanel(nodeId);
+        }
+
+        // プロパティパネル更新
+        function updatePropertiesPanel(nodeId) {
+            const node = voidFlowEngine.nodes.get(nodeId);
+            if (!node) return;
+            
+            const content = document.getElementById('propertiesContent');
+            content.innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <strong>${getNodeDisplayName(node.type)}</strong><br>
+                    <small style="color: #888;">ID: ${node.id}</small>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="color: #aaa; font-size: 12px;">位置:</label><br>
+                    <small style="color: #666;">X: ${node.position.x}, Y: ${node.position.y}</small>
+                </div>
+                ${createPropertyControls(node)}
+            `;
+        }
+
+        // プロパティコントロール作成
+        function createPropertyControls(node) {
+            switch (node.type) {
+                case 'button.send':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <p style="color: #aaa; font-size: 12px;">
+                                このボタンは'send'メッセージをブロードキャストして、<br>
+                                Input:TextとWeb:FetchAPIプラグインを刺激します。
+                            </p>
+                        </div>
+                    `;
+                case 'input.text':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <label style="color: #aaa; font-size: 12px;">テキスト:</label><br>
+                            <input type="text" value="${node.properties.text || 'Hello VoidFlow!'}" 
+                                   onchange="updateNodeProperty('${node.id}', 'text', this.value)"
+                                   style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                          border-radius: 4px; padding: 8px; color: #fff; font-size: 12px;">
+                            <small style="color: #666; font-size: 10px;">'send'メッセージで自動送信されます</small>
+                        </div>
+                    `;
+                case 'web.fetch':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <label style="color: #aaa; font-size: 12px;">URL:</label><br>
+                            <input type="text" value="${node.properties.url || 'https://httpbin.org/json'}" 
+                                   onchange="updateNodeProperty('${node.id}', 'url', this.value)"
+                                   style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                          border-radius: 4px; padding: 8px; color: #fff; font-size: 12px;">
+                            <small style="color: #666; font-size: 10px;">'send'メッセージで自動実行されます</small>
+                        </div>
+                    `;
+                case 'json.parser':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <label style="color: #aaa; font-size: 12px;">JSONパス:</label><br>
+                            <input type="text" value="${node.properties.path || ''}" 
+                                   onchange="updateNodeProperty('${node.id}', 'path', this.value)"
+                                   placeholder="例: data.name"
+                                   style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                          border-radius: 4px; padding: 8px; color: #fff; font-size: 12px;">
+                            <small style="color: #666; font-size: 10px;">空白の場合は全体を出力</small>
+                        </div>
+                    `;
+                case 'ui.card':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <label style="color: #aaa; font-size: 12px;">カードタイトル:</label><br>
+                            <input type="text" value="${node.properties.title || 'VoidFlow Card'}" 
+                                   onchange="updateNodeProperty('${node.id}', 'title', this.value)"
+                                   style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; 
+                                          border-radius: 4px; padding: 8px; color: #fff; font-size: 12px;">
+                        </div>
+                    `;
+                case 'core.plugin-lister':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <p style="color: #aaa; font-size: 12px; line-height: 1.5;">
+                                🔍 <strong>VoidCore自己観測システム (参照型)</strong><br><br>
+                                このノードは、VoidCoreの真の知識に問い合わせ、<br>
+                                現在利用可能なすべてのプラグイン情報を取得します。<br><br>
+                                <span style="color: #7b68ee;">参照プラグイン</span> - 
+                                VoidCoreへの窓口として機能
+                            </p>
+                        </div>
+                    `;
+                case 'core.connection-manager':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <p style="color: #aaa; font-size: 12px; line-height: 1.5;">
+                                🔗 <strong>VoidCore接続管理システム (参照型)</strong><br><br>
+                                このノードは、VoidCoreの接続管理機能に直接アクセスし、<br>
+                                メッセージベースの接続操作を実行します。<br><br>
+                                <span style="color: #7b68ee;">参照プラグイン</span> - 
+                                真のメッセージベース接続を実現
+                            </p>
+                        </div>
+                    `;
+                case 'flow.connector':
+                    return `
+                        <div style="margin-bottom: 15px;">
+                            <p style="color: #aaa; font-size: 12px; line-height: 1.5;">
+                                🔗 <strong>フロー自己編集システム</strong><br><br>
+                                このノードは、VoidFlowが自分自身のフロー構造を<br>
+                                動的に変更・拡張できる究極のメタシステムです。<br><br>
+                                <span style="color: #7b68ee;">創造性の永久機関</span> - 
+                                システムが自分を創造し続ける
+                            </p>
+                        </div>
+                    `;
+                default:
+                    return '<p style="color: #666; font-size: 12px;">このノードに設定可能なプロパティはありません。</p>';
+            }
+        }
+
+        // フロー実行（グローバル関数）
+        window.executeFlow = async function() {
+            await voidFlowEngine.executeFlow();
+        };
+
+        // 特定ノードから開始（グローバル関数）
+        window.startFromNode = async function(nodeId) {
+            const node = voidFlowEngine.nodes.get(nodeId);
+            if (node) {
+                voidFlowEngine.log(`🎯 手動開始: ${getNodeDisplayName(node.type)}`);
+                await voidFlowEngine.executeFromNode(nodeId);
+                voidFlowEngine.log('✨ 実行完了!');
+            }
+        };
+
+        // 初期化
+        voidFlowEngine.log('🌟 VoidFlow - Constellation Zero 初期化完了');
+        voidFlowEngine.log('🚀 Phase R Integration: VoidCore v14.0統合システム作動中');
+        voidFlowEngine.log('💫 レベル1: 動くよろこびセット 準備完了');
+        voidFlowEngine.log('🎯 ノードをキャンバスに配置して、創造性の永久機関を開始してください');
+        
+        // 既存ノードのカーソル修正（安全対策）
+        function fixAllNodeCursors() {
+            document.querySelectorAll('.voidflow-node').forEach(node => {
+                node.style.cursor = 'grab';
+            });
+        }
+        
+        // Phase 5.1: Node Context Menu for Plugin Editing
+        window.showNodeContextMenu = function(nodeId, x, y) {
+            // Remove existing context menu
+            const existingMenu = document.querySelector('.node-context-menu');
+            if (existingMenu) existingMenu.remove();
+            
+            const node = voidFlowEngine.nodes.get(nodeId);
+            if (!node) return;
+            
+            const menu = document.createElement('div');
+            menu.className = 'node-context-menu';
+            menu.style.cssText = `
+                position: fixed;
+                top: ${y}px;
+                left: ${x}px;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                border: 2px solid #4a90e2;
+                border-radius: 8px;
+                padding: 10px;
+                z-index: 10001;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+                min-width: 200px;
+                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            `;
+            
+            menu.innerHTML = `
+                <div style="color: #4a90e2; font-weight: bold; margin-bottom: 10px; text-align: center;">
+                    🔧 ${getNodeDisplayName(node.type)}
+                </div>
+                <div style="border-bottom: 1px solid #333; margin-bottom: 8px;"></div>
+                
+                <div class="context-menu-item" onclick="voidFlowEngine.editPluginCode('${nodeId}'); document.querySelector('.node-context-menu').remove();"
+                     style="padding: 8px; margin: 4px 0; border-radius: 4px; cursor: pointer; 
+                            background: rgba(0,0,0,0.3); border: 1px solid #333; text-align: center;
+                            transition: all 0.2s ease;">
+                    <span style="color: #00ff88;">🎨 Edit Plugin Code</span>
+                </div>
+                
+                <div class="context-menu-item" onclick="startFromNode('${nodeId}'); document.querySelector('.node-context-menu').remove();"
+                     style="padding: 8px; margin: 4px 0; border-radius: 4px; cursor: pointer; 
+                            background: rgba(0,0,0,0.3); border: 1px solid #333; text-align: center;
+                            transition: all 0.2s ease;">
+                    <span style="color: #ffa502;">🚀 Execute Node</span>
+                </div>
+                
+                <div style="border-bottom: 1px solid #333; margin: 8px 0 4px 0;"></div>
+                
+                <div class="context-menu-item" onclick="document.querySelector('.node-context-menu').remove();"
+                     style="padding: 6px; margin: 4px 0; border-radius: 4px; cursor: pointer; 
+                            background: rgba(0,0,0,0.2); border: 1px solid #555; text-align: center;
+                            color: #aaa; font-size: 12px;">
+                    ❌ Cancel
+                </div>
+            `;
+            
+            // Add hover effects
+            const items = menu.querySelectorAll('.context-menu-item');
+            items.forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    item.style.background = 'rgba(74, 144, 226, 0.2)';
+                    item.style.borderColor = '#4a90e2';
+                });
+                item.addEventListener('mouseleave', () => {
+                    item.style.background = 'rgba(0,0,0,0.3)';
+                    item.style.borderColor = '#333';
+                });
+            });
+            
+            document.body.appendChild(menu);
+            
+            // Close menu when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', function closeContextMenu(e) {
+                    if (!menu.contains(e.target)) {
+                        menu.remove();
+                        document.removeEventListener('click', closeContextMenu);
+                    }
+                });
+            }, 100);
+        };
+
+        // 定期的にカーソルを修正（バグ防止）- 軽量化のため停止
+        // setInterval(fixAllNodeCursors, 5000);
+
+        // 🔧 デバッグ用LV3チェーン自動配置
+        setTimeout(() => {
+            // ノード作成
+            createNodeOnCanvas('button.send', { x: 50, y: 150 });
+            createNodeOnCanvas('core.plugin-lister', { x: 250, y: 150 });
+            createNodeOnCanvas('flow.connector', { x: 450, y: 150 });
+            createNodeOnCanvas('core.connection-manager', { x: 650, y: 150 });
+            
+            // 0.5秒後に接続作成
+            setTimeout(() => {
+                const button = Array.from(voidFlowEngine.nodes.values()).find(n => n.type === 'button.send');
+                const lister = Array.from(voidFlowEngine.nodes.values()).find(n => n.type === 'core.plugin-lister');
+                const connector = Array.from(voidFlowEngine.nodes.values()).find(n => n.type === 'flow.connector');
+                const manager = Array.from(voidFlowEngine.nodes.values()).find(n => n.type === 'core.connection-manager');
+                
+                if (button && lister && connector && manager) {
+                    // Flow Connectorのモード設定
+                    connector.properties.connectionMode = 'create-nodes';
+                    
+                    // 接続作成
+                    const edge1 = voidFlowEngine.createEdge(button.id, 'output', lister.id, 'input');
+                    const edge2 = voidFlowEngine.createEdge(lister.id, 'output', connector.id, 'input');
+                    const edge3 = voidFlowEngine.createEdge(connector.id, 'output', manager.id, 'input');
+                    
+                    // 接続線描画
+                    window.drawConnection(edge1);
+                    window.drawConnection(edge2);
+                    window.drawConnection(edge3);
+                    
+                    voidFlowEngine.log('🔧 デバッグ用LV3チェーン自動配置完了');
+                    voidFlowEngine.log('🎯 Button: Sendをクリックしてテストにゃー！');
+                }
+            }, 500);
+        }, 1000);
+    </script>
+</body>
+</html>

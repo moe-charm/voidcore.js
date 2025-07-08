@@ -1,198 +1,117 @@
-// src/voidcore.js - 静寂の器 (The Vessel of Silence) v14.0
-// セリンの大改革版: 純粋メッセージベースシステム
-// 基底クラス継承完全排除、紳士協定システム実装
-
+// VoidCore v14.0 - Phase S5: Complete Plugin-ization Revolution
 import { ChannelManager } from './channel-manager.js'
 import { CoreFusion } from './core-fusion.js'
 import { SimpleMessagePool } from './simple-message-pool.js'
 import { Message } from './message.js'
 import { IPlugin, ICorePlugin, isCorePlugin } from './plugin-interface.js'
+import { PluginStore } from './plugin-store.js'
+import SystemBootManager from './plugins/system-boot-manager.js'
+import { globalMessageBus, globalUIChannel } from './core-communication.js'
 
 class VoidCore {
-  constructor(transport = null) {
-    // v13.0: ChannelManager with optional Transport injection
+  constructor(transport = null, options = {}) {
     this.channelManager = new ChannelManager(transport)
     this.initialized = false
-    
-    // v11.0 backward compatibility
-    this.subscribers = new Map() // type -> Set<handler> (legacy access)
-    this.logElement = null
-    
-    // v13.0: Auto-initialize for backward compatibility (lazy)
-    this.initPromise = null
-    
-    // v14.0: CoreFusion v1.2 & SimpleMessagePool
     this.coreId = `core-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    this.plugins = []
     this.messagePool = new SimpleMessagePool()
     this.coreFusion = new CoreFusion()
+    this.pluginStore = new PluginStore(10)
     
-    // Phase 5.2: Dynamic Plugin Management System
-    this.pendingRequests = new Map() // correlationId -> Promise resolver
-    this.maxDepth = 10 // Default maximum hierarchy depth
-    this.resourceCost = new Map() // coreId -> resource consumption
+    // Phase S5: SystemBootManager 統合
+    this.systemBootManager = new SystemBootManager()
     
-    // システムメッセージハンドラーの初期化（非同期）
+    // Phase S5: ハイブリッド通信システム統合
+    this.messageBus = globalMessageBus
+    this.uiChannel = globalUIChannel
+    
+    // デバッグモード設定
+    this.debugMode = options.debug !== undefined ? options.debug : false
+    this.logElement = null
+    
     this._initializeSystemMessageHandlers().catch(error => {
       console.error('System message handlers initialization failed:', error)
     })
   }
 
-  setLogElement(element) {
-    this.logElement = element
-    this.channelManager.setLogElement(element)
-  }
-
-  // === v13.0 TRANSPORT METHODS ===
-
-  // Heart transplant! Swap the transport layer at runtime
-  async setTransport(newTransport) {
-    await this.channelManager.setTransport(newTransport)
-    this.log(`💓 VoidCore v13.0: Transport swapped to ${newTransport.constructor.name}`)
-  }
-
-  // Ensure ChannelManager is initialized with proper Promise pattern
   async _ensureInitialized() {
-    // Phase S4: 早期return + 三項演算子でif文削減
     if (this.initialized) return
     this.initPromise = this.initPromise || this._performInitialization()
     await this.initPromise
   }
   
-  // 実際の初期化処理
   async _performInitialization() {
     try {
-      await this.channelManager.initialize();
-      this.initialized = true;
-      this.log('🎆 VoidCore fully initialized');
+      await this.channelManager.initialize()
+      
+      // Phase S5: ハイブリッド通信システムに自動登録
+      this.messageBus.registerCore(this.coreId, this)
+      
+      this.initialized = true
+      this.log('🎆 VoidCore fully initialized with hybrid communication')
     } catch (error) {
-      this.log(`❌ VoidCore initialization failed: ${error.message}`);
-      throw error;
+      this.log(`❌ VoidCore initialization failed: ${error.message}`)
+      throw error
     }
   }
 
-  // === v12.0 CHANNEL METHODS ===
-
-  // Enable multi-channel mode for high performance
-  enableMultiChannel(config = {}) {
-    this.channelManager.enableMultiChannel(config)
-    this.log(`🌟 VoidCore v12.0: Multi-channel mode activated`)
+  setLogElement(element) {
+    this.logElement = element
   }
 
-  // Disable multi-channel mode (back to v11.0 compatibility)
-  disableMultiChannel() {
-    this.channelManager.disableMultiChannel()
-    this.log(`📡 VoidCore v12.0: Single-channel compatibility mode`)
+  enableDebug(enabled = true) {
+    this.debugMode = enabled
+    this.log(`🐱 Debug mode: ${enabled ? 'ON' : 'OFF'}`)
   }
 
   log(msg) {
-    // Phase S4: 三項演算子でif文削減
+    if (!this.debugMode) return
     this.logElement ? 
       (this.logElement.innerHTML += msg + "<br>", 
        setTimeout(() => this.logElement.scrollTop = this.logElement.scrollHeight, 0)) :
       console.log(msg)
   }
 
-  // メッセージ購読（typeのみを知る） with proper async
-  async subscribe(type, handler) {
-    // v13.0: 必ず初期化を待つ
-    await this._ensureInitialized();
-    
-    // v12.0: Delegate to ChannelManager
-    const unsubscribe = await this.channelManager.subscribe(type, handler);
-    
-    // v11.0 backward compatibility: maintain legacy subscribers map
-    if (!this.subscribers.has(type)) {
-      this.subscribers.set(type, new Set())
-    }
-    this.subscribers.get(type).add(handler)
-    
-    this.log(`🔔 Subscribe: ${type}`)
-    return unsubscribe // v12.0: return unsubscribe function
+  debugLog(msg) {
+    if (this.debugMode) this.log(`🔍 DEBUG: ${msg}`)
   }
 
-  // 購読解除
+  async subscribe(type, handler) {
+    await this._ensureInitialized()
+    const unsubscribe = await this.channelManager.subscribe(type, handler)
+    this.log(`🔔 Subscribe: ${type}`)
+    return unsubscribe
+  }
+
   unsubscribe(type, handler) {
     const handlers = this.subscribers.get(type)
-    if (handlers) {
-      handlers.delete(handler)
-      if (handlers.size === 0) {
-        this.subscribers.delete(type)
-      }
-      this.log(`🔕 Unsubscribe: ${type}`)
-    }
+    handlers && (handlers.delete(handler), 
+                 handlers.size === 0 && this.subscribers.delete(type),
+                 this.log(`🔕 Unsubscribe: ${type}`))
   }
 
-  // メッセージ発行（中身は見ない、typeだけでルーティング）
   async publish(message) {
-    if (!message || !message.type) {
-      this.log("⚠️ Invalid message: missing type")
-      return 0
-    }
-
-    // v13.0: Ensure initialization
+    return !message || !message.type ? 
+      (this.log("⚠️ Invalid message: missing type"), 0) : 
+      await this._publishValidMessage(message)
+  }
+  
+  async _publishValidMessage(message) {
     await this._ensureInitialized()
-
-    // v12.0: Delegate to ChannelManager for smart routing
-    const deliveredCount = await this.channelManager.publish(message)
-    
-    return deliveredCount
+    return await this.channelManager.publish(message)
   }
 
-  // ==========================================
-  // 🎯 Phase R: ChatGPT統一Intentシステム
-  // ==========================================
-
-  /**
-   * Intent送信API - ChatGPT提案の統一操作インターフェース
-   * 
-   * Before: system.createPlugin(config)
-   * After:  await voidCore.sendIntent('system.createPlugin', config)
-   * 
-   * @param {string} intentName - Intent名 ("system.createPlugin" etc.)
-   * @param {Object} data - Intentデータ
-   * @param {Object} options - オプション（correlationId等）
-   * @returns {Promise<Object>} Intent処理結果
-   */
   async sendIntent(intentName, data = {}, options = {}) {
     await this._ensureInitialized()
-    
-    // Intent統一メッセージ作成
     const intentMessage = Message.intent(intentName, data, options)
-    
     this.log(`🎯 Sending Intent: ${intentName}`)
-    this.log(`🔍 Intent message structure: ${JSON.stringify(intentMessage, null, 2)}`)
-    
-    // Intent処理ハンドラーを探す
-    const result = await this._processIntent(intentMessage)
-    
-    return result
+    return await this._processIntent(intentMessage)
   }
 
-  /**
-   * Intent処理の内部実装
-   * @param {Object} intentMessage - Intent付きメッセージ
-   * @returns {Promise<Object>} 処理結果
-   */
   async _processIntent(intentMessage) {
-    // デバッグ: メッセージ全体を出力
-    this.log(`🔍 Full intentMessage: ${JSON.stringify(intentMessage, null, 2)}`)
-    
-    // 正しくintentフィールドを取得
     const intent = intentMessage.intent
-    const payload = intentMessage.payload
-    
-    // デバッグログ
-    this.log(`🔍 Processing intent: ${intent}, payload keys: ${Object.keys(payload || {}).join(', ')}`)
-    this.log(`🔍 typeof intent: ${typeof intent}, intent value: "${intent}"`)
-    
-    if (!intent) {
-      this.log(`❌ Intent is falsy: ${intent}`)
-      throw new Error('Intent name is required')
-    }
+    if (!intent) throw new Error('Intent name is required')
     
     try {
-      // Phase S4: Intent prefix HandlerMapパターン
       const intentPrefixHandlers = [
         { prefix: 'system.', handler: (msg) => this._handleSystemIntent(msg) },
         { prefix: 'plugin.', handler: (msg) => this._handlePluginIntent(msg) }
@@ -202,287 +121,144 @@ class VoidCore {
       return prefixHandler ? 
         await prefixHandler.handler(intentMessage) : 
         await this._handleCustomIntent(intentMessage)
-      
     } catch (error) {
       this.log(`❌ Intent processing failed: ${intent} - ${error.message}`)
       throw error
     }
   }
 
-  /**
-   * システムIntent処理
-   * @param {Object} intentMessage - システムIntent
-   * @returns {Promise<Object>} 処理結果
-   */
-  // Phase S4: HandlerMapパターンでif文撲滅運動
   static SYSTEM_INTENT_HANDLERS = {
     'system.createPlugin': async (payload, ctx) => await ctx._handleCreatePluginIntent(payload),
     'system.reparentPlugin': async (payload, ctx) => await ctx._handleReparentPluginIntent(payload),
     'system.destroyPlugin': async (payload, ctx) => await ctx._handleDestroyPluginIntent(payload),
-    'system.getStats': async (payload, ctx) => ctx.getSystemStats()
+    'system.getStats': async (payload, ctx) => ctx.getSystemStats(),
+    'system.clear': async (payload, ctx) => await ctx.clear(),
+    'system.getMessagePoolStats': async (payload, ctx) => ctx.getMessagePoolStats(),
+    'system.clearFusionHistory': async (payload, ctx) => ctx.clearFusionHistory(),
+    'system.getPluginCount': async (payload, ctx) => ctx.getPluginCount(),
+    'system.initialize': async (payload, ctx) => await ctx._ensureInitialized()
   }
 
   async _handleSystemIntent(intentMessage) {
     const intent = intentMessage.intent
     const payload = intentMessage.payload
-    
     this.log(`🔧 System intent: ${intent}, data: ${JSON.stringify(payload)}`)
-    
     const handler = VoidCore.SYSTEM_INTENT_HANDLERS[intent]
     if (!handler) throw new Error(`Unknown system intent: ${intent}`)
     return await handler(payload, this)
   }
 
-  /**
-   * プラグインIntent処理
-   * @param {Object} intentMessage - プラグインIntent
-   * @returns {Promise<Object>} 処理結果
-   */
   async _handlePluginIntent(intentMessage) {
     const intent = intentMessage.intent
     const payload = intentMessage.payload
-    
-    // 既存プラグインシステムへの転送（後で実装）
     this.log(`📨 Forwarding plugin intent: ${intent}, data: ${JSON.stringify(payload)}`)
-    
-    // 暫定実装：既存システムを呼び出し
     return await this._forwardToExistingSystem(intentMessage)
   }
-
-  /**
-   * カスタムIntent処理
-   * @param {Object} intentMessage - カスタムIntent
-   * @returns {Promise<Object>} 処理結果
-   */
   async _handleCustomIntent(intentMessage) {
-    // 暫定実装：通常のメッセージとして発行
     await this.publish(intentMessage)
     return { status: 'forwarded', intent: intentMessage.intent }
   }
 
-  // ==========================================
-  // 🔧 Intent実装詳細
-  // ==========================================
-
   async _handleCreatePluginIntent(payload) {
-    // 暫定実装：既存のcreateDynamicPluginを呼び出し
     this.log(`🔧 Creating plugin via Intent: ${payload.type}`)
-    
-    // 既存システムへの移行コード（後で詳細実装）
-    return await this._createPluginViaIntent(payload)
+    return { status: 'created', pluginId: `plugin_${Date.now()}`, message: 'Plugin created via Intent system' }
   }
 
   async _handleReparentPluginIntent(payload) {
     const { childId, newParentId } = payload
     this.log(`🔧 Reparenting plugin via Intent: ${childId} -> ${newParentId}`)
-    
-    // 戸籍異動届の統一処理
-    return await this._reparentPluginViaIntent(payload)
+    return { status: 'reparented', ...payload, message: 'Plugin reparented via Intent system' }
   }
 
   async _handleDestroyPluginIntent(payload) {
     const { pluginId } = payload
     this.log(`🔧 Destroying plugin via Intent: ${pluginId}`)
-    
-    return await this._destroyPluginViaIntent(payload)
-  }
-
-  // ==========================================
-  // 🚀 移行用ヘルパーメソッド
-  // ==========================================
-
-  async _createPluginViaIntent(payload) {
-    // 既存のプラグイン作成システムとの統合
-    // 実装詳細は次のステップで
-    return { 
-      status: 'created', 
-      pluginId: `plugin_${Date.now()}`,
-      message: 'Plugin created via Intent system'
-    }
-  }
-
-  async _reparentPluginViaIntent(payload) {
-    // 既存の戸籍異動届システムとの統合
-    return { 
-      status: 'reparented', 
-      ...payload,
-      message: 'Plugin reparented via Intent system'
-    }
-  }
-
-  async _destroyPluginViaIntent(payload) {
-    // 既存のプラグイン削除システムとの統合
-    return { 
-      status: 'destroyed', 
-      pluginId: payload.pluginId,
-      message: 'Plugin destroyed via Intent system'
-    }
+    return { status: 'destroyed', pluginId: payload.pluginId, message: 'Plugin destroyed via Intent system' }
   }
 
   async _forwardToExistingSystem(intentMessage) {
-    // 既存システムへの転送処理
-    return { 
-      status: 'forwarded', 
-      intent: intentMessage.intent,
-      message: 'Forwarded to existing system'
-    }
+    return { status: 'forwarded', intent: intentMessage.intent, message: 'Forwarded to existing system' }
   }
 
-  // 購読者数取得
   getSubscriberCount(type) {
-    // v12.0: Use ChannelManager for accurate count across all channels
     return this.channelManager.getSubscriberCount(type)
   }
 
-  // 全購読解除
-  async clear() {
-    // v13.0: Clear ChannelManager
-    await this.channelManager.clear()
-    this.initialized = false
-    
-    // v11.0 backward compatibility
-    this.subscribers.clear()
-    this.log("🧹 All subscriptions cleared")
-  }
-
-  // 統計情報
   getStats() {
-    // v12.0: Get comprehensive stats from ChannelManager
     const channelStats = this.channelManager.getStats()
     const poolStats = this.messagePool.getStats()
-    
     return {
       ...channelStats,
       messagePool: poolStats,
       coreId: this.coreId,
-      pluginCount: this.plugins.length,
+      pluginCount: this.pluginStore.getPluginCount(),
       fusionHistory: this.coreFusion.getFusionHistory().length
     }
   }
   
-  // === v14.0 CORE FUSION & MESSAGE POOL METHODS ===
-  
-  // 🧩 CoreFusion v1.2 - 複数コア統合
   async fuseWith(targetCore, config = {}) {
     const result = await this.coreFusion.fuseWith(this, targetCore, config)
-    
-    if (result.success) {
-      this.log(`🧩 CoreFusion v1.2: Successfully fused with target core (${result.pluginsMoved} plugins moved in ${result.processingTime}ms)`)
-    } else {
+    result.success ? 
+      this.log(`🧩 CoreFusion v1.2: Successfully fused with target core (${result.pluginsMoved} plugins moved in ${result.processingTime}ms)`) :
       this.log(`❌ CoreFusion v1.2: Fusion failed - ${result.error}`)
-    }
-    
     return result
   }
   
-  // 📦 プラグイン登録
   registerPlugin(plugin) {
-    if (!plugin || !plugin.pluginId) {
-      this.log('⚠️ Invalid plugin: missing pluginId')
-      return false
-    }
-    
-    // 既存プラグインの重複チェック
-    const existingPlugin = this.plugins.find(p => p.pluginId === plugin.pluginId)
-    if (existingPlugin) {
-      this.log(`⚠️ Plugin ${plugin.pluginId} already registered`)
-      return false
-    }
-    
-    // プラグインにコア参照を設定
-    plugin.core = this
-    
-    // プラグインリストに追加
-    this.plugins.push(plugin)
-    
-    this.log(`🔌 Plugin registered: ${plugin.pluginId}`)
-    return true
+    return !plugin?.pluginId ? 
+      (this.log('⚠️ Invalid plugin: missing pluginId'), false) :
+      this.pluginStore.getPlugin(plugin.pluginId) ?
+      (this.log(`⚠️ Plugin ${plugin.pluginId} already registered`), false) :
+      (plugin.core = this, this.pluginStore.addPlugin(plugin), 
+       this.log(`🔌 Plugin registered: ${plugin.pluginId}`), true)
   }
   
-  // 🗑️ プラグイン削除
   unregisterPlugin(pluginId) {
-    const index = this.plugins.findIndex(p => p.pluginId === pluginId)
-    if (index !== -1) {
-      const plugin = this.plugins.splice(index, 1)[0]
+    const plugin = this.pluginStore.removePlugin(pluginId)
+    if (plugin) {
       plugin.core = null
       this.log(`🗑️ Plugin unregistered: ${pluginId}`)
       return true
     }
-    
     this.log(`⚠️ Plugin not found: ${pluginId}`)
     return false
   }
   
-  // 🔍 プラグイン取得
-  getPlugin(pluginId) {
-    return this.plugins.find(p => p.pluginId === pluginId)
-  }
+  getPlugin(pluginId) { return this.pluginStore.getPlugin(pluginId) }
+  getAllPlugins() { return this.pluginStore.getAllPlugins() }
+  getPluginCount() { return this.pluginStore.getPluginCount() }
   
-  // 📦 すべてのプラグインを取得
-  getAllPlugins() {
-    return [...this.plugins]
-  }
-  
-  // 🚀 SimpleMessagePool - バッチ送信
   async publishBatch(messages) {
     if (!Array.isArray(messages)) {
       this.log('⚠️ publishBatch: messages must be an array')
       return { success: false, error: 'Invalid messages array' }
     }
-    
-    // MessagePoolにTransportを設定
-    this.messagePool.setTransport({
-      send: async (message) => {
-        return await this.publish(message)
-      }
-    })
-    
+    this.messagePool.setTransport({ send: async (message) => await this.publish(message) })
     const result = await this.messagePool.submitBatch(messages)
-    
-    if (result.success) {
-      this.log(`🚀 Batch published: ${result.processedCount} messages (${result.parallelCount} parallel, ${result.sequentialCount} sequential) in ${result.processingTime}ms`)
-    } else {
+    result.success ? 
+      this.log(`🚀 Batch published: ${result.processedCount} messages (${result.parallelCount} parallel, ${result.sequentialCount} sequential) in ${result.processingTime}ms`) :
       this.log(`❌ Batch publish failed: ${result.errors}`)
-    }
-    
     return result
   }
   
-  // 📊 MessagePool統計情報
-  getMessagePoolStats() {
-    return this.messagePool.getStats()
-  }
-  
-  // 🧹 MessagePool統計リセット
-  resetMessagePoolStats() {
-    this.messagePool.resetStats()
-    this.log('📊 MessagePool stats reset')
-  }
-  
-  // 📈 Fusion履歴取得
-  getFusionHistory() {
-    return this.coreFusion.getFusionHistory()
-  }
-  
-  // 🧹 Fusion履歴クリア
-  clearFusionHistory() {
-    this.coreFusion.clearFusionHistory()
-    this.log('🧹 Fusion history cleared')
-  }
-  
-  // === Phase 5.2: DYNAMIC PLUGIN MANAGEMENT SYSTEM ===
-  
-  // Phase S4: IntentRequest HandlerMapパターン
+  getMessagePoolStats() { return this.messagePool.getStats() }
+  resetMessagePoolStats() { this.messagePool.resetStats(); this.log('📊 MessagePool stats reset') }
+  getFusionHistory() { return this.coreFusion.getFusionHistory() }
+  clearFusionHistory() { this.coreFusion.clearFusionHistory(); this.log('🧹 Fusion history cleared') }
   static INTENT_REQUEST_HANDLERS = {
     'system.createPlugin': async (message, ctx) => await ctx._handleCreatePlugin(message),
     'system.destroyPlugin': async (message, ctx) => await ctx._handleDestroyPlugin(message),
     'system.reparentPlugin': async (message, ctx) => await ctx._handleReparentPlugin(message),
-    'system.connect': async (message, ctx) => await ctx._handleConnect(message)
+    'system.connect': async (message, ctx) => await ctx._handleConnect(message),
+    
+    // Phase S5: SystemBootManager Intent統合
+    'system.bootPlan.request': async (message, ctx) => await ctx._handleBootPlanRequest(message),
+    'system.bootPlan.execute': async (message, ctx) => await ctx._handleBootPlanExecute(message),
+    'system.bootPlan.status': async (message, ctx) => await ctx._handleBootPlanStatus(message),
+    'system.bootError': async (message, ctx) => await ctx._handleBootError(message)
   }
 
-  // 🚀 システムメッセージハンドラー初期化
   async _initializeSystemMessageHandlers() {
-    // 統一システムメッセージハンドラー (HandlerMapパターン)
     await this.subscribe('IntentRequest', async (message) => {
       try {
         const handler = VoidCore.INTENT_REQUEST_HANDLERS[message.action]
@@ -493,146 +269,127 @@ class VoidCore {
       }
     })
   }
-
-  // Phase S4: 共通レスポンス関数 (重複削減)
-  async _sendSystemErrorResponse(action, error, correlationId) {
-    await this._sendSystemResponse(action, {
-      success: false,
-      error: error.message,
-      correlationId,
+  _createStandardResponse(success, action, data = {}, correlationId = null, error = null) {
+    return {
+      success,
+      ...data,
+      ...(error && { error: error.message || error }),
+      ...(correlationId && { correlationId }),
       timestamp: Date.now()
-    }, correlationId)
+    }
+  }
+
+  _createIntentResponse(action, success, data = {}, correlationId = null, error = null) {
+    return new Message('IntentResponse', {
+      action,
+      payload: this._createStandardResponse(success, action, data, correlationId, error),
+      correlationId
+    })
+  }
+
+  _createNoticeMessage(event, payload = {}, metadata = {}) {
+    return new Message('Notice', {
+      event,
+      payload,
+      timestamp: Date.now(),
+      ...metadata
+    })
+  }
+
+  // Phase S4 Week 3: 統一エラーハンドリング & レスポンス送信
+  async _executeWithErrorHandling(action, correlationId, operation) {
+    try {
+      const result = await operation()
+      if (result.success !== false) {
+        await this._sendSystemSuccessResponse(action, result.data || result, correlationId, result.logMessage)
+      }
+      return result
+    } catch (error) {
+      await this._sendSystemErrorResponse(action, error, correlationId)
+      return { success: false, error: error.message }
+    }
+  }
+
+  async _sendSystemErrorResponse(action, error, correlationId) {
+    const response = this._createStandardResponse(false, action, {}, correlationId, error)
+    await this._sendSystemResponse(action, response, correlationId)
     this.log(`❌ System: ${action} failed - ${error.message}`)
   }
 
   async _sendSystemSuccessResponse(action, data, correlationId, logMessage) {
-    await this._sendSystemResponse(action, {
-      success: true,
-      ...data,
-      correlationId,
-      timestamp: Date.now()
-    }, correlationId)
+    const response = this._createStandardResponse(true, action, data, correlationId)
+    await this._sendSystemResponse(action, response, correlationId)
     if (logMessage) this.log(logMessage)
   }
   
-  // 🔧 system.createPlugin ハンドラー
+  // 🔧 system.createPlugin ハンドラー - Phase S4 Week 3: 統合エラーハンドリング
   async _handleCreatePlugin(message) {
     const { type, config, parent, correlationId, maxDepth, resourceCost, displayName } = message.payload
     
-    try {
-      // 階層深度チェック
+    return await this._executeWithErrorHandling('system.createPlugin', correlationId, async () => {
+      // バリデーション
       if (maxDepth && this._getCurrentDepth(parent) >= maxDepth) {
         throw new Error(`Maximum depth exceeded: ${maxDepth}`)
       }
-      
-      // リソースコストチェック
       if (resourceCost && !this._checkResourceAvailability(parent, resourceCost)) {
         throw new Error(`Insufficient resources for plugin creation`)
       }
       
-      // 動的プラグイン生成
+      // プラグイン生成・登録
       const pluginId = `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`
+      const plugin = this._createPluginObject({ pluginId, type, config: config || {}, parent, createdAt: Date.now(), correlationId, displayName })
       
-      // プラグインオブジェクト作成
-      const plugin = this._createPluginObject({
-        pluginId,
-        type,
-        config: config || {},
-        parent,
-        createdAt: Date.now(),
-        correlationId,
-        displayName  // ChatGPT案: displayName追加
-      })
-      
-      // プラグイン登録
-      const success = this.registerPlugin(plugin)
-      
-      if (success) {
-        // リソース消費を記録
-        if (resourceCost) {
-          this._consumeResource(parent, resourceCost)
-        }
-        
-        // 成功レスポンス
-        await this._sendSystemSuccessResponse('system.createPlugin', 
-          { pluginId, type, parent }, 
-          correlationId, 
-          `🚀 System: Plugin created - ${pluginId} (type: ${type}, parent: ${parent})`)
-      } else {
+      if (!this.registerPlugin(plugin)) {
         throw new Error(`Failed to register plugin: ${pluginId}`)
       }
       
-    } catch (error) {
-      await this._sendSystemErrorResponse('system.createPlugin', error, correlationId)
-    }
+      // リソース消費
+      if (resourceCost) this._consumeResource(parent, resourceCost)
+      
+      return {
+        data: { pluginId, type, parent },
+        logMessage: `🚀 System: Plugin created - ${pluginId} (type: ${type}, parent: ${parent})`
+      }
+    })
   }
   
-  // 🗑️ system.destroyPlugin ハンドラー
+  // 🗑️ system.destroyPlugin ハンドラー - Phase S4 Week 3: 統合エラーハンドリング
   async _handleDestroyPlugin(message) {
     const { pluginId, correlationId } = message.payload
     
-    try {
+    return await this._executeWithErrorHandling('system.destroyPlugin', correlationId, async () => {
       const success = this.unregisterPlugin(pluginId)
-      
-      await this._sendSystemSuccessResponse('system.destroyPlugin', 
-        { success, pluginId }, 
-        correlationId, 
-        `🗑️ System: Plugin ${success ? 'destroyed' : 'not found'} - ${pluginId}`)
-      
-    } catch (error) {
-      await this._sendSystemErrorResponse('system.destroyPlugin', error, correlationId)
-    }
+      return {
+        data: { success, pluginId },
+        logMessage: `🗑️ System: Plugin ${success ? 'destroyed' : 'not found'} - ${pluginId}`
+      }
+    })
   }
   
-  // 🔗 system.connect ハンドラー
+  // 🔗 system.connect ハンドラー - Phase S4 Week 3: 統合エラーハンドリング
   async _handleConnect(message) {
     const { source, target, sourcePort, targetPort, correlationId } = message.payload
     
-    try {
+    return await this._executeWithErrorHandling('system.connect', correlationId, async () => {
       // 動的接続の実装（将来拡張）
-      // 現在はログ出力のみ
-      
-      await this._sendSystemResponse('system.connect', {
-        success: true,
-        source,
-        target,
-        sourcePort,
-        targetPort,
-        correlationId,
-        timestamp: Date.now()
-      }, correlationId)
-      
-      this.log(`🔗 System: Connection established - ${source}:${sourcePort} -> ${target}:${targetPort}`)
-      
-    } catch (error) {
-      await this._sendSystemResponse('system.connect', {
-        success: false,
-        error: error.message,
-        correlationId,
-        timestamp: Date.now()
-      }, correlationId)
-      
-      this.log(`❌ System: Connection failed - ${error.message}`)
-    }
+      return {
+        data: { source, target, sourcePort, targetPort },
+        logMessage: `🔗 System: Connection established - ${source}:${sourcePort} -> ${target}:${targetPort}`
+      }
+    })
   }
   
-  // 🏘️ system.reparentPlugin ハンドラー（戸籍異動届）
+  // 🏘️ system.reparentPlugin ハンドラー（戸籍異動届）- Phase S4 Week 3: 統合エラーハンドリング  
   async _handleReparentPlugin(message) {
     const { pluginId, newParentId, oldParentId, correlationId } = message.payload
     
-    try {
-      // プラグインの存在確認
+    return await this._executeWithErrorHandling('system.reparentPlugin', correlationId, async () => {
+      // バリデーション
       const plugin = this.getPlugin(pluginId)
-      if (!plugin) {
-        throw new Error(`Plugin not found: ${pluginId}`)
-      }
-      
-      // 旧親の確認（オプション）
+      if (!plugin) throw new Error(`Plugin not found: ${pluginId}`)
       if (oldParentId && plugin.parentId !== oldParentId) {
         throw new Error(`Parent mismatch: expected ${oldParentId}, got ${plugin.parentId}`)
       }
-      
-      // 循環参照チェック
       if (newParentId && this._wouldCreateCircularReference(pluginId, newParentId)) {
         throw new Error(`Circular reference detected: ${pluginId} -> ${newParentId}`)
       }
@@ -641,37 +398,14 @@ class VoidCore {
       const oldParent = plugin.parentId
       plugin.parentId = newParentId
       
-      // 成功レスポンス
-      await this._sendSystemResponse('system.reparentPlugin', {
-        success: true,
-        pluginId,
-        oldParentId: oldParent,
-        newParentId,
-        correlationId,
-        timestamp: Date.now()
-      }, correlationId)
-      
       // 戸籍異動通知（Notice発行）
-      await this.publish(Message.notice('plugin.reparented', {
-        pluginId,
-        oldParentId: oldParent,
-        newParentId,
-        timestamp: Date.now()
-      }))
+      await this.publish(this._createNoticeMessage('plugin.reparented', { pluginId, oldParentId: oldParent, newParentId }))
       
-      this.log(`🏘️ Plugin reparented: ${pluginId} moved from ${oldParent || 'null'} to ${newParentId || 'null'}`)
-      
-    } catch (error) {
-      // エラーレスポンス
-      await this._sendSystemResponse('system.reparentPlugin', {
-        success: false,
-        error: error.message,
-        correlationId,
-        timestamp: Date.now()
-      }, correlationId)
-      
-      this.log(`❌ System: Reparenting failed - ${error.message}`)
-    }
+      return {
+        data: { pluginId, oldParentId: oldParent, newParentId },
+        logMessage: `🏘️ Plugin reparented: ${pluginId} moved from ${oldParent || 'null'} to ${newParentId || 'null'}`
+      }
+    })
   }
   
   // 🏭 プラグインオブジェクト作成
@@ -688,23 +422,18 @@ class VoidCore {
       },
       core: this,
       
-      // 基本的なプラグインAPI
+      // 基本的なプラグインAPI - Phase S4 Week 3: Factory統合
       sendIntent: async (action, payload) => {
-        const intentMessage = {
-          type: 'IntentRequest',
+        const intentMessage = new Message('IntentRequest', {
           action,
-          payload: {
-            ...payload,
-            sourcePlugin: pluginId,
-            causationId: correlationId // 因果関係追跡
-          },
+          payload: { ...payload, sourcePlugin: pluginId, causationId: correlationId },
           timestamp: Date.now()
-        }
+        })
         return await this.publish(intentMessage)
       },
       
       notice: async (eventName, payload) => {
-        const noticeMessage = Message.notice(eventName, {
+        const noticeMessage = this._createNoticeMessage(eventName, {
           ...payload,
           sourcePlugin: pluginId,
           causationId: correlationId
@@ -722,16 +451,9 @@ class VoidCore {
     }
   }
   
-  // 📤 システムレスポンス送信
+  // 📤 システムレスポンス送信 - Phase S4 Week 3: Factory統合
   async _sendSystemResponse(action, payload, correlationId) {
-    const responseMessage = {
-      type: 'IntentResponse',
-      action,
-      payload,
-      correlationId,
-      timestamp: Date.now()
-    }
-    
+    const responseMessage = this._createIntentResponse(action, payload.success, payload, correlationId, payload.error)
     return await this.publish(responseMessage)
   }
   
@@ -782,81 +504,67 @@ class VoidCore {
     return false;  // 循環参照なし
   }
   
-  // 🔍 階層構造の整合性チェック
-  validateHierarchyIntegrity() {
-    const issues = [];
+  // Phase S4 Week 3: 統一バリデーションシステム - HandlerMap拡張版
+  static VALIDATION_HANDLERS = {
+    missing_parent: (plugin, ctx) => !ctx.pluginStore.hasValidParent(plugin) ? {
+      type: 'missing_parent', pluginId: plugin.pluginId, parentId: plugin.parentId,
+      message: `Plugin ${plugin.pluginId} has non-existent parent ${plugin.parentId}`
+    } : null,
     
-    for (const plugin of this.plugins) {
-      // 親プラグインの存在チェック（共通化）
-      if (!this.hasValidParent(plugin)) {
-        issues.push({
-          type: 'missing_parent',
-          pluginId: plugin.pluginId,
-          parentId: plugin.parentId,
-          message: `Plugin ${plugin.pluginId} has non-existent parent ${plugin.parentId}`
-        });
-      }
-      
-      // 循環参照チェック
-      if (plugin.parentId && this._wouldCreateCircularReference(plugin.pluginId, plugin.parentId)) {
-        issues.push({
-          type: 'circular_reference',
-          pluginId: plugin.pluginId,
-          parentId: plugin.parentId,
-          message: `Circular reference detected for plugin ${plugin.pluginId}`
-        });
-      }
-      
-      // 階層深度チェック
-      const level = this.getPluginLevel(plugin.pluginId);
-      if (level > this.maxDepth) {
-        issues.push({
-          type: 'max_depth_exceeded',
-          pluginId: plugin.pluginId,
-          currentLevel: level,
-          maxDepth: this.maxDepth,
-          message: `Plugin ${plugin.pluginId} exceeds maximum depth (${level} > ${this.maxDepth})`
-        });
-      }
+    circular_reference: (plugin, ctx) => plugin.parentId && ctx.pluginStore.wouldCreateCircularReference(plugin.pluginId, plugin.parentId) ? {
+      type: 'circular_reference', pluginId: plugin.pluginId, parentId: plugin.parentId,
+      message: `Circular reference detected for plugin ${plugin.pluginId}`
+    } : null,
+    
+    max_depth_exceeded: (plugin, ctx) => {
+      const level = ctx.getPluginLevel(plugin.pluginId);
+      return level > ctx.pluginStore.maxDepth ? {
+        type: 'max_depth_exceeded', pluginId: plugin.pluginId, currentLevel: level, maxDepth: ctx.pluginStore.maxDepth,
+        message: `Plugin ${plugin.pluginId} exceeds maximum depth (${level} > ${ctx.pluginStore.maxDepth})`
+      } : null;
     }
-    
-    return {
-      isValid: issues.length === 0,
-      issues: issues
-    };
+  }
+
+  // Phase S4 Week 3: 統一バリデーション実行器
+  _validateEntity(entity, validationRules = []) {
+    const issues = []
+    for (const rule of validationRules) {
+      const issue = typeof rule === 'string' ? VoidCore.VALIDATION_HANDLERS[rule]?.(entity, this) : rule(entity, this)
+      if (issue) issues.push(issue)
+    }
+    return { isValid: issues.length === 0, issues }
+  }
+
+  _validateRequired(obj, fields) {
+    const missing = fields.filter(field => obj[field] == null)
+    return missing.length > 0 ? { isValid: false, missing } : { isValid: true }
+  }
+
+  // 🔍 階層構造の整合性チェック - Phase S4 Week 3: 統一バリデーション適用
+  validateHierarchyIntegrity() {
+    const allIssues = []
+    for (const plugin of this.pluginStore.getAllPlugins()) {
+      const validation = this._validateEntity(plugin, ['missing_parent', 'circular_reference', 'max_depth_exceeded'])
+      if (!validation.isValid) allIssues.push(...validation.issues)
+    }
+    return { isValid: allIssues.length === 0, issues: allIssues }
   }
   
-  // 💰 リソース可用性チェック
+  // 💰 リソース可用性チェック - Phase S4 Week 3: PluginStore委譲完了
   _checkResourceAvailability(coreId, requiredCost) {
-    const currentCost = this.resourceCost.get(coreId) || 0
+    const currentCost = this.pluginStore.getResourceUsage(coreId)
     const maxCost = 100 // デフォルト最大リソース
-    
     return (currentCost + requiredCost) <= maxCost
   }
   
-  // 💸 リソース消費
-  _consumeResource(coreId, cost) {
-    const currentCost = this.resourceCost.get(coreId) || 0
-    this.resourceCost.set(coreId, currentCost + cost)
-  }
-  
-  // 🔄 リソース解放
-  _releaseResource(coreId, cost) {
-    const currentCost = this.resourceCost.get(coreId) || 0
-    this.resourceCost.set(coreId, Math.max(0, currentCost - cost))
-  }
-  
-  // 🏷️ ChatGPT案: UIヘルパー関数
+  // 🏷️ ChatGPT案: UIヘルパー関数 - Phase S4: 三項演算子で簡潔化
   getPluginLabel(plugin) {
-    if (plugin.displayName) {
-      return plugin.displayName;
-    }
-    
-    // pluginIdを短縮表示 (例: "util.logger-1751849234289-p676za" → "logger#p676")
-    const parts = plugin.pluginId.split('-');
-    const typeShort = plugin.type.split('.').pop();
-    const randomShort = parts[parts.length - 1].substring(0, 4);
-    return `${typeShort}#${randomShort}`;
+    return plugin.displayName || (() => {
+      const parts = plugin.pluginId.split('-');
+      const typeShort = plugin.type.split('.').pop();
+      const randomShort = parts[parts.length - 1].substring(0, 4);
+      return `${typeShort}#${randomShort}`;
+    })()
   }
   
   // 🏗️ 親子関係API - 階層構造探索機能
@@ -899,97 +607,198 @@ class VoidCore {
         ancestors.push(parent);
         currentPlugin = parent;
       } else {
-        break; // 親が見つからない場合は終了
+        break
       }
     }
     
     return ancestors;
   }
 
-  // Phase S4: 親プラグイン存在チェック共通化
-  hasValidParent(plugin) {
-    return !plugin.parentId || !!this.getPlugin(plugin.parentId)
-  }
-
-  // Phase S4: 階層探索共通関数
+  hasValidParent(plugin) { return this.pluginStore.hasValidParent(plugin) }
   _traverseParentChain(startId, maxDepth = 100, visitor = null) {
-    const visited = new Set()
-    let current = startId
-    let depth = 0
-    
+    const visited = new Set(); let current = startId; let depth = 0
     while (current && depth < maxDepth && !visited.has(current)) {
       if (visitor && visitor(current, depth, visited)) return { stopped: true, current, depth }
-      visited.add(current)
-      const plugin = this.getPlugin(current)
-      if (!plugin) break
-      current = plugin.parentId
-      depth++
+      visited.add(current); const plugin = this.getPlugin(current)
+      if (!plugin) break; current = plugin.parentId; depth++
     }
-    
     return { stopped: false, current, depth, visited }
   }
-  
-  // 指定プラグインの兄弟プラグインを取得（同じ親を持つ）
   getSiblings(pluginId) {
-    const plugin = this.getPlugin(pluginId);
-    if (!plugin) return [];
-    
-    return this.plugins.filter(p => 
-      p.pluginId !== pluginId && // 自分自身は除外
-      p.parentId === plugin.parentId // 同じ親を持つ
-    );
+    const plugin = this.pluginStore.getPlugin(pluginId)
+    return plugin ? this.pluginStore.getAllPlugins().filter(p => p.pluginId !== pluginId && p.parentId === plugin.parentId) : []
   }
-  
-  // 指定プラグインがルートプラグインかどうか
-  isRootPlugin(pluginId) {
-    const plugin = this.getPlugin(pluginId);
-    return plugin ? !plugin.parentId : false;
-  }
-  
-  // 指定プラグインの階層レベルを取得（ルートが0）
-  getPluginLevel(pluginId) {
-    const ancestors = this.getAncestors(pluginId);
-    return ancestors.length;
-  }
-  
-  // 階層構造をツリー形式で取得
+  isRootPlugin(pluginId) { const plugin = this.getPlugin(pluginId); return plugin ? !plugin.parentId : false }
+  getPluginLevel(pluginId) { return this.getAncestors(pluginId).length }
   getPluginTree() {
-    const rootPlugins = this.plugins.filter(p => !p.parentId);
-    
-    const buildTree = (plugin) => {
-      const children = this.getChildren(plugin.pluginId);
-      return {
-        ...plugin,
-        children: children.map(child => buildTree(child))
-      };
-    };
-    
-    return rootPlugins.map(root => buildTree(root));
+    const rootPlugins = this.pluginStore.getAllPlugins().filter(p => !p.parentId)
+    const buildTree = (plugin) => ({ ...plugin, children: this.pluginStore.getChildren(plugin.pluginId).map(child => buildTree(child)) })
+    return rootPlugins.map(root => buildTree(root))
   }
   
-  // 📊 システム統計情報
-  getSystemStats() {
-    const rootPlugins = this.plugins.filter(p => !p.parentId);
-    const maxLevel = Math.max(0, ...this.plugins.map(p => this.getPluginLevel(p.pluginId)));
-    
+  _generateHierarchyStats(allPlugins, rootPlugins) {
+    const maxLevel = Math.max(0, ...allPlugins.map(p => this.getPluginLevel(p.pluginId)))
     return {
-      ...this.getStats(),
-      pendingRequests: this.pendingRequests.size,
-      maxDepth: this.maxDepth,
-      resourceUsage: Object.fromEntries(this.resourceCost),
-      systemPlugins: this.plugins.filter(p => p.type && p.type.startsWith('system')).length,
-      dynamicPlugins: this.plugins.filter(p => p.metadata?.correlationId).length,
-      // 新しい親子関係統計
-      hierarchyStats: {
-        rootPlugins: rootPlugins.length,
-        maxHierarchyLevel: maxLevel,
-        averageChildren: rootPlugins.length > 0 ? 
-          rootPlugins.reduce((sum, p) => sum + this.getChildren(p.pluginId).length, 0) / rootPlugins.length : 0,
-        totalHierarchyLevels: maxLevel + 1
-      }
+      rootPlugins: rootPlugins.length, maxHierarchyLevel: maxLevel,
+      averageChildren: rootPlugins.length > 0 ? rootPlugins.reduce((sum, p) => sum + this.pluginStore.getChildren(p.pluginId).length, 0) / rootPlugins.length : 0,
+      totalHierarchyLevels: maxLevel + 1
     }
+  }
+
+  getSystemStats() {
+    const pluginStoreStats = this.pluginStore.getStats(); const allPlugins = this.pluginStore.getAllPlugins(); const rootPlugins = allPlugins.filter(p => !p.parentId)
+    return {
+      ...this.getStats(), ...pluginStoreStats,
+      systemPlugins: allPlugins.filter(p => p.type?.startsWith('system')).length,
+      dynamicPlugins: allPlugins.filter(p => p.metadata?.correlationId).length,
+      hierarchyStats: this._generateHierarchyStats(allPlugins, rootPlugins)
+    }
+  }
+
+  async clear() {
+    // Phase S5: ハイブリッド通信システムから登録解除
+    this.messageBus.unregisterCore(this.coreId)
+    
+    this.pluginStore.clear(); await this.channelManager.clear(); this.messagePool.clear(); this.coreFusion.clear()
+    this.log('🧹 VoidCore system cleared')
+  }
+
+  // ==========================================
+  // Phase S5: SystemBootManager Intent統合
+  // ==========================================
+
+  /**
+   * 🚀 system.bootPlan.request ハンドラー
+   */
+  async _handleBootPlanRequest(message) {
+    const { correlationId } = message
+    
+    return await this._executeWithErrorHandling('system.bootPlan.request', correlationId, async () => {
+      const result = await this.systemBootManager.handleCustomIntent(message)
+      return {
+        data: result,
+        logMessage: result.success 
+          ? `🎯 Boot plan created: ${result.bootPlan?.id} (${result.bootPlan?.sequence?.length} plugins)`
+          : `❌ Boot plan creation failed: ${result.error}`
+      }
+    })
+  }
+
+  /**
+   * 🚀 system.bootPlan.execute ハンドラー
+   */
+  async _handleBootPlanExecute(message) {
+    const { correlationId } = message
+    
+    return await this._executeWithErrorHandling('system.bootPlan.execute', correlationId, async () => {
+      const result = await this.systemBootManager.handleCustomIntent(message)
+      return {
+        data: result,
+        logMessage: result.success 
+          ? `🎉 Boot plan completed: ${result.totalTime}ms, ${result.pluginCount} plugins`
+          : `❌ Boot plan execution failed: ${result.error}`
+      }
+    })
+  }
+
+  /**
+   * 📊 system.bootPlan.status ハンドラー
+   */
+  async _handleBootPlanStatus(message) {
+    const { correlationId } = message
+    
+    return await this._executeWithErrorHandling('system.bootPlan.status', correlationId, async () => {
+      const result = await this.systemBootManager.handleCustomIntent(message)
+      return {
+        data: result,
+        logMessage: `📊 Boot status retrieved`
+      }
+    })
+  }
+
+  /**
+   * 🚨 system.bootError ハンドラー
+   */
+  async _handleBootError(message) {
+    const { correlationId } = message
+    
+    return await this._executeWithErrorHandling('system.bootError', correlationId, async () => {
+      const result = await this.systemBootManager.handleCustomIntent(message)
+      return {
+        data: result,
+        logMessage: `🚨 Boot error handled: ${message.payload?.type}`
+      }
+    })
+  }
+
+  /**
+   * 🎯 便利メソッド: 起動計画作成・実行のワンストップ
+   */
+  async createAndExecuteBootPlan(pluginDependencies) {
+    try {
+      // 1. 起動計画作成
+      const planResult = await this.sendIntent('system.bootPlan.request', {
+        pluginDependencies
+      })
+      
+      if (!planResult.success) {
+        throw new Error(planResult.error)
+      }
+      
+      // 2. 起動計画実行
+      const executeResult = await this.sendIntent('system.bootPlan.execute', 
+        planResult.bootPlan
+      )
+      
+      return executeResult
+    } catch (error) {
+      this.log(`❌ Boot plan creation and execution failed: ${error.message}`)
+      throw error
+    }
+  }
+
+  // ==========================================
+  // Phase S5: ハイブリッド通信システム API
+  // ==========================================
+
+  /**
+   * 🌐 MessageBus経由でのコア間通信
+   */
+  async broadcastToAllCores(message) {
+    return await this.messageBus.broadcast(message, this.coreId)
+  }
+
+  async sendToCore(targetCoreId, message) {
+    return await this.messageBus.sendToCore(targetCoreId, message, this.coreId)
+  }
+
+  /**
+   * ⚡ DirectUIChannel経由での高速通信
+   */
+  async fastUIUpdate(targetCoreId, updateData) {
+    return await this.uiChannel.fastUpdate(targetCoreId, updateData)
+  }
+
+  /**
+   * 📊 ハイブリッド通信システム統計
+   */
+  getCommunicationStats() {
+    return {
+      messageBus: this.messageBus.getCommunicationStats(),
+      uiChannel: this.uiChannel.getUIStats(),
+      registeredCores: this.messageBus.getRegisteredCores(),
+      thisCoreId: this.coreId
+    }
+  }
+
+  /**
+   * 🔧 UI高速チャンネル設定
+   */
+  configureUIChannel(enabled = true, batchInterval = 16) {
+    this.uiChannel.configureBatching(enabled, batchInterval)
+    this.log(`⚡ UI Channel configured: batching ${enabled ? 'enabled' : 'disabled'} (${batchInterval}ms)`)
   }
 }
 
 export { VoidCore }
-export const voidCore = new VoidCore()
+export const voidCore = new VoidCore(null, { debug: false })

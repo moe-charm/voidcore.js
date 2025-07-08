@@ -1,0 +1,30 @@
+/* VoidFlow - Base Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    background: #1a1a2e;
+    color: #ffffff;
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* デバッグ・アニメーション無効化 */
+/* グラデーション停止でGPU負荷軽減 */
+
+/* @keyframes titleGlow {
+    from { filter: brightness(1); }
+    to { filter: brightness(1.3); }
+} */
+
+/* @keyframes gridPulse {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.3; }
+} */
+
+/* アニメーション・エフェクト無効化でパフォーマンス向上 */

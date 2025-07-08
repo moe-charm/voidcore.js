@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 VoidFlow VoidCore統合版 - Constellation Zero | 創造性の永久機関</title>
+    
+    <!-- CSS分離 -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/nodes.css">
+    <link rel="stylesheet" href="css/canvas.css">
+    
+    <!-- VoidCore統合版専用スタイル -->
+    <style>
+        /* VoidCore統合版専用スタイル */
+        .voidcore-status {
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: rgba(74, 144, 226, 0.1);
+            border: 1px solid #4a90e2;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 10px;
+            color: #4a90e2;
+            max-width: 200px;
+        }
+        
+        .hybrid-indicator {
+            background: linear-gradient(90deg, #ff6b6b, #4a90e2);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .voidcore-ui-element {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #4a90e2;
+            border-radius: 8px;
+            padding: 10px;
+            color: #ffffff;
+            min-width: 150px;
+            min-height: 80px;
+            cursor: move;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.2);
+        }
+        
+        .voidcore-ui-element:hover {
+            border-color: #00ff88;
+            box-shadow: 0 6px 25px rgba(0, 255, 136, 0.3);
+        }
+        
+        .voidcore-ui-element.selected {
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+        
+        .voidcore-ui-element.executing {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+            animation: pulse 1s infinite;
+        }
+        
+        .voidcore-ui-element.success {
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.7);
+        }
+        
+        .voidcore-ui-element.error {
+            border-color: #ff4757;
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.7);
+        }
+        
+        .voidcore-ui-element.connecting-source {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+            animation: glow 0.5s ease-in-out infinite alternate;
+        }
+        
+        .voidcore-ui-element.connecting-target {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+            animation: glow-green 0.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(255, 107, 107, 0.8); }
+            to { box-shadow: 0 0 30px rgba(255, 107, 107, 1); }
+        }
+        
+        @keyframes glow-green {
+            from { box-shadow: 0 0 20px rgba(0, 255, 136, 0.8); }
+            to { box-shadow: 0 0 30px rgba(0, 255, 136, 1); }
+        }
+        
+        .connection-ports {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .connection-port {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4a90e2;
+            border: 2px solid #ffffff;
+            cursor: crosshair;
+            pointer-events: auto;
+            transition: all 0.2s ease;
+        }
+        
+        .connection-port:hover {
+            width: 16px;
+            height: 16px;
+            background: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.7);
+        }
+        
+        .input-port {
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .output-port {
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .integration-panel {
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            border-left: 3px solid #4a90e2;
+        }
+    </style>
+</head>
+<body>
+    <div class="voidflow-container">
+        <header class="header">
+            <h1>🌟 VoidFlow VoidCore統合版 - Constellation Zero | 創造性の永久機関</h1>
+        </header>
+
+        <!-- VoidCore統合ステータス表示 -->
+        <div class="voidcore-status" id="voidcoreStatus">
+            <div class="hybrid-indicator">🔄 HYBRID MODE</div>
+            <div>VoidCore統合版 v1.0</div>
+            <div>SystemBootManager: <span id="bootStatus">Loading...</span></div>
+            <div>Message Adapter: <span id="adapterStatus">Loading...</span></div>
+        </div>
+
+        <div class="node-palette">
+            <div class="level-section">
+                <div class="level-title">🎒 レベル1: 動くよろこびセット</div>
+                <div class="node-item" data-node-type="button.send">
+                    <div class="node-name">Button: Send</div>
+                    <div class="node-description">自律プラグインを刺激する</div>
+                </div>
+                <div class="node-item" data-node-type="input.text">
+                    <div class="node-name">Input: Text</div>
+                    <div class="node-description">宇宙の起源、意志の表明</div>
+                </div>
+                <div class="node-item" data-node-type="string.uppercase">
+                    <div class="node-name">String: UpperCase</div>
+                    <div class="node-description">意志が変化する様を体感</div>
+                </div>
+                <div class="node-item" data-node-type="output.console">
+                    <div class="node-name">Output: Console</div>
+                    <div class="node-description">観測手段＝現実の確定</div>
+                </div>
+            </div>
+
+            <div class="level-section">
+                <div class="level-title">✨ レベル2: 世界とつながる</div>
+                <div class="node-item" data-node-type="web.fetch">
+                    <div class="node-name">Web: Fetch API</div>
+                    <div class="node-description">外宇宙に扉を開ける</div>
+                </div>
+                <div class="node-item" data-node-type="json.parser">
+                    <div class="node-name">JSON: Parser</div>
+                    <div class="node-description">混沌に意味を与える</div>
+                </div>
+                <div class="node-item" data-node-type="ui.card">
+                    <div class="node-name">UI: Simple Card</div>
+                    <div class="node-description">美しさは意味の完成</div>
+                </div>
+            </div>
+
+            <div class="level-section">
+                <div class="level-title">🌀 レベル3: メタへの昇華</div>
+                <div class="node-item" data-node-type="core.plugin-lister">
+                    <div class="node-name">Core: Plugin Lister</div>
+                    <div class="node-description">🔗 VoidCore自己観測への参照</div>
+                    <div class="proxy-badge">参照</div>
+                </div>
+                <div class="node-item" data-node-type="core.connection-manager">
+                    <div class="node-name">Core: Connection Manager</div>
+                    <div class="node-description">🔗 VoidCore接続管理への参照</div>
+                    <div class="proxy-badge">参照</div>
+                </div>
+                <div class="node-item" data-node-type="flow.connector">
+                    <div class="node-name">Flow: Connector</div>
+                    <div class="node-description">自己編集＝創造の完成</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-area">
+            <div class="canvas-grid"></div>
+            <div class="zen-message" id="zenMessage">
+                <div class="zen-title">🔄 ハイブリッド宇宙で星座を描く</div>
+                <div class="zen-subtitle">従来VoidFlow + VoidCore統合モード<br>ノードをドラッグして配置し、創造性の永久機関を始動させよ<br><br>
+                🔗 <strong>Stage 3 接続機能:</strong> VoidCoreモードでプラグインをクリックして線で繋ぐ</div>
+            </div>
+            <svg id="connectionSvg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
+            </svg>
+        </div>
+
+        <div class="properties-panel">
+            <div class="panel-title">⚙️ プロパティ</div>
+            <div id="propertiesContent">
+                <p style="color: #888; font-size: 12px;">ノードを選択してプロパティを表示</p>
+            </div>
+            
+            <button class="execute-button" onclick="executeFlow()">🚀 フロー実行</button>
+            
+            <!-- VoidCore統合専用実行ボタン -->
+            <button class="execute-button" onclick="executeFlowVoidCore()" 
+                    style="background: linear-gradient(145deg, #4a90e2, #357abd); margin-top: 5px;">
+                🎨 VoidCore実行
+            </button>
+            
+            <div class="panel-title">📊 実行ログ</div>
+            <div id="executionLog" style="background: rgba(0,0,0,0.5); border-radius: 6px; padding: 10px; font-size: 11px; color: #80c0ff; max-height: 150px; overflow-y: auto; font-family: 'Monaco', monospace;">
+                VoidFlow VoidCore統合版 起動中...<br>
+                SystemBootManager初期化中...<br>
+                VoidCoreUI初期化中...<br>
+            </div>
+            
+            <!-- VoidCore統合パネル -->
+            <div class="integration-panel">
+                <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px;">🔄 統合情報</div>
+                <div style="font-size: 10px; color: #aaa;">
+                    モード: <span id="currentMode">ハイブリッド</span><br>
+                    VoidCore: <span id="voidcoreElements">0</span>要素<br>
+                    従来: <span id="legacyNodes">0</span>ノード<br>
+                    アダプター: <span id="adapterMessages">0</span>メッセージ
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <span>🌟 VoidCore v14.0 + VoidFlow統合版 - Hybrid Message System | 創造性の永久機関 × 自己構造操作宇宙</span>
+        </footer>
+    </div>
+
+    <!-- JavaScript分離 -->
+    <script type="module" src="js/main-voidcore.js"></script>
+    
+    <!-- 統合版専用スクリプト -->
+    <script>
+        // ステータス更新
+        function updateIntegrationStatus() {
+            if (window.voidCoreUI) {
+                const uiState = window.voidCoreUI.getUIState()
+                document.getElementById('voidcoreElements').textContent = uiState.elementCount
+                document.getElementById('bootStatus').textContent = 'Ready'
+            }
+            
+            if (window.messageAdapter) {
+                const adapterStats = window.messageAdapter.getAdapterStats()
+                document.getElementById('adapterMessages').textContent = adapterStats.totalMessages
+                document.getElementById('adapterStatus').textContent = 'Active'
+            }
+            
+            if (window.voidFlowEngine) {
+                const nodeCount = window.voidFlowEngine.nodes ? window.voidFlowEngine.nodes.size : 0
+                document.getElementById('legacyNodes').textContent = nodeCount
+            }
+        }
+        
+        // 1秒ごとにステータス更新
+        setInterval(updateIntegrationStatus, 1000)
+        
+        // デバッグ用
+        window.debugVoidCore = function() {
+            if (window.getVoidCoreDebugInfo) {
+                console.log('🧪 VoidCore Debug Info:', window.getVoidCoreDebugInfo())
+            }
+        }
+        
+        // 初期化完了チェック
+        function checkInitialization() {
+            if (window.voidCoreUI && window.messageAdapter) {
+                console.log('🎉 VoidCore統合版初期化完了！')
+                document.getElementById('bootStatus').textContent = 'Ready'
+                document.getElementById('adapterStatus').textContent = 'Active'
+                
+                // ログに初期化完了メッセージ
+                const logElement = document.getElementById('executionLog')
+                if (logElement) {
+                    logElement.innerHTML += '🎉 VoidCore統合版初期化完了！<br>'
+                    logElement.innerHTML += '💡 ハイブリッドモード: 従来機能 + VoidCore機能併用<br>'
+                }
+                
+                clearInterval(initCheckInterval)
+            }
+        }
+        
+        const initCheckInterval = setInterval(checkInitialization, 500)
+        
+        // 5秒でタイムアウト
+        setTimeout(() => {
+            clearInterval(initCheckInterval)
+            if (!window.voidCoreUI) {
+                console.warn('⚠️ VoidCore統合版初期化タイムアウト')
+                document.getElementById('bootStatus').textContent = 'Timeout'
+            }
+        }, 5000)
+    </script>
+</body>
+</html>

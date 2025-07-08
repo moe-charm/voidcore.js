@@ -1,73 +1,90 @@
-# 📚 VoidCore v14.0 ドキュメント
+# 📚 VoidCore Documentation
 
-## 🌟 概要
-VoidCore v14.0 は ChatGPT提案の統一Intentアーキテクチャを実装した、次世代メッセージベース JavaScript フレームワークです。
+> **VoidCore v14.0** - Pure Message-Based System Documentation  
+> **最終更新**: 2025-07-08  
+> **ステータス**: Phase S4最適化完了、VoidFlow開発環境整備完了  
 
-## 📋 ドキュメント一覧
+---
 
-### 📖 主要ドキュメント
-- **[完全仕様書](./VoidCore_v14.0_完全仕様書.md)** - VoidCore v14.0の全体像・アーキテクチャ・使用例
-- **[API リファレンス](./VoidCore_v14.0_API_リファレンス.md)** - 全API・メソッド・パラメータの詳細
+## 📁 **ドキュメント構造**
 
-### 📋 計画・進捗
-- **[次にやる.txt](../次にやる.txt)** - Phase R後の段階的改善計画
-- **[統合計画書](./VoidFlow-VoidCore_統合計画書.md)** - VoidFlow統合の戦略文書
+### **📋 00-current/ - 現在有効な文書**
+- **VoidCore_統合開発計画書_2025.md** - メイン開発計画書
+  - 短期・中期・長期の開発ロードマップ
+  - Phase S4完了状況、VoidFlow分割版開発環境
+  - Web便利ツール製造エンジン構想
 
-### 🏛️ アーキテクチャ仕様書 (歴代)
-- **[v13.0仕様書](./VoidCore_Architecture_Specification_v13.0.md)** - Transport/Multi-channel
-- **[v12.0仕様書](./VoidCore_Architecture_Specification_v12.0.md)** - メッセージ分類システム  
-- **[v11.0仕様書](./VoidCore_Architecture_Specification_v11.0.md)** - 基本メッセージシステム
-- **[v10.0仕様書](./VoidCore_Architecture_Specification_v10.0.md)** - 初期アーキテクチャ
+### **📊 01-specifications/ - 最新仕様書**
+- **VoidCore_v14.0_完全仕様書.md** - v14.0の完全仕様
+- **VoidCore_v14.0_API_リファレンス.md** - API詳細リファレンス
 
-### 🧩 専門ドキュメント
-- **[Message分類設計 Phase2.0](./Message_Classification_Design_Phase2.0.md)** - 4種類メッセージ分類
-- **[Plugin Lifecycle Guide v2.0](./Plugin_Lifecycle_Guide_v2.0.md)** - プラグインライフサイクル
-- **[JavaScript実装ガイド](./JavaScript_Implementation_Guide.md)** - 実装詳細
+### **🛠️ 02-implementation-guides/ - 実装ガイド**
+- **JavaScript_Implementation_Guide.md** - JavaScript版実装ガイド
+- **Plugin_Lifecycle_Guide_v2.0.md** - プラグインライフサイクルガイド
 
-### 💬 開発会議録
-- **[chatter/chatgpt/](./chatter/chatgpt/)** - ChatGPT提案・相談記録
-- **[chatter/gemini/](./chatter/gemini/)** - Gemini設計相談記録  
-- **[chatter/development/](./chatter/development/)** - 開発進捗・アクション計画
+### **📚 03-archive/ - アーカイブ**
+- **legacy-versions/** - 過去バージョンの仕様書 (v10.0-v13.0)
+- **old-chatter/** - 開発会議記録・ChatGPT/Gemini相談
+- **completed-projects/** - 完了プロジェクトの記録
+- **recent-archive/** - 最近のアーカイブ (Phase S4記録等)
 
-## 🎯 VoidCore v14.0 主要特徴
+---
 
-### ✨ Phase R: ChatGPT統一Intentアーキテクチャ
-```javascript
-// 統一Intent操作
-const result = await voidCore.sendIntent('system.createPlugin', config)
-const stats = await voidCore.sendIntent('system.getStats')
-```
+## 🎯 **クイックスタート**
 
-### 🧩 プラグインシステム
-```javascript
-// IPlugin/ICorePlugin統一インターフェース
-class MyPlugin extends IPlugin {
-  async handleMessage(message) {
-    // 統一メッセージハンドラー
-  }
-}
-```
+### **開発者向け**
+1. **最新計画確認**: `00-current/VoidCore_統合開発計画書_2025.md`
+2. **API詳細**: `01-specifications/VoidCore_v14.0_API_リファレンス.md`
+3. **実装ガイド**: `02-implementation-guides/JavaScript_Implementation_Guide.md`
 
-### 📨 4種類メッセージ分類
-- **IntentRequest** - 要求メッセージ
-- **IntentResponse** - 応答メッセージ  
-- **Notice** - 通知メッセージ (1対多)
-- **Proposal** - 提案メッセージ (非強制)
+### **新規参加者向け**
+1. **プロジェクト概要**: `01-specifications/VoidCore_v14.0_完全仕様書.md`
+2. **哲学・コンセプト理解**: アーカイブ内の理論文書
+3. **実装例確認**: 実装ガイド + 実際のソースコード
 
-### 🔄 完全下位互換性
-- v11.0-v13.0 API完全サポート
-- 既存システム無変更で動作
-- 段階的移行可能
+---
 
-## 🚀 クイックスタート
+## 🌟 **VoidCore の特徴**
 
-### インストール
-```bash
-git clone <repository>
-cd voidcore-js
-```
+### **核心哲学**
+> 「すべての存在は、メッセージで生まれ、メッセージで終わる」
 
-### 基本使用例
+### **主要特徴**
+- **Pure Message-Based System**: 全通信がメッセージベース
+- **自律プラグインシステム**: プラグインが独立動作
+- **創造性の永久機関**: システムが自己拡張可能
+- **ゼロ依存**: 外部ライブラリ不要
+
+### **Phase S4最適化成果**
+- **645行に削減**: 元963行から35%削減
+- **HandlerMapパターン**: if文撲滅による高速化
+- **状態管理分離**: PluginStoreによる責任分割
+- **総削減効果**: 1,187行削減達成
+
+---
+
+## 🚀 **現在の開発状況**
+
+### **✅ 完了済み**
+- Phase S4: ChatGPT提案コアスリム化
+- VoidFlow開発環境分割 (3,155行→8ファイル)
+- VoidCore純化プロジェクト
+
+### **🔄 進行中**
+- VoidFlow分割版動作確認
+- Web便利ツール第一弾作成
+- プラグイン編集機能追加
+
+### **📋 次期計画**
+- Phase 5.3: VoidFlow-VoidCore統合
+- VoidIDE Genesis実装
+- JavaScript→C++橋渡しシステム
+
+---
+
+## 🎯 **使用例**
+
+### **基本使用例**
 ```javascript
 import { VoidCore } from './src/voidcore.js'
 import { Message } from './src/message.js'
@@ -82,90 +99,36 @@ const notice = Message.notice('user.login', { userId: 'user123' })
 await voidCore.publish(notice)
 ```
 
-### プラグイン開発
+### **プラグイン開発**
 ```javascript
 import { IPlugin } from './src/plugin-interface.js'
 
 class MyPlugin extends IPlugin {
-  async handleIntent(message) {
-    switch (message.intent) {
-      case 'my.action':
-        return await this.handleMyAction(message)
-    }
+  async handleMessage(message) {
+    // 統一メッセージハンドラー
+    return await this.processMessage(message)
   }
 }
 ```
 
-## 📊 システム構成
+---
 
-```
-🎯 VoidCore v14.0 アーキテクチャ
-├── 📱 VoidCore (コアシステム)
-│   ├── 🎯 統一Intentシステム
-│   ├── 📨 メッセージ分類システム (4種類)
-│   ├── 📡 ChannelManager (マルチチャンネル)
-│   └── 🔄 下位互換レイヤー
-│
-├── 🧩 プラグインシステム  
-│   ├── 🔷 IPlugin (基本プラグイン)
-│   ├── 🏢 ICorePlugin (コアプラグイン)
-│   └── 🌊 VoidFlowNodePlugin (統合プラグイン)
-│
-└── 🔌 統合システム
-    ├── 🌊 VoidFlow統合
-    ├── ⚡ CoreFusion (コア融合)
-    └── 📊 SimpleMessagePool (メッセージプール)
-```
+## 📞 **サポート・問い合わせ**
 
-## 🎯 次のステップ
+### **開発チーム**
+- **メイン開発**: にゃーさん + Claude Code
+- **アーキテクト**: Gemini AI (設計相談)
+- **実装支援**: ChatGPT (実装アドバイス)
 
-### Phase S1: コアテスト完了・安定化
-- [ ] 既存システム移行テスト完了
-- [ ] Phase R統合ストレステスト
-- [ ] パフォーマンスベンチマーク
-
-### Phase S2: VoidFlow移植
-- [ ] VoidFlow環境動作確認
-- [ ] 実用ワークフロー検証
-- [ ] VoidFlow専用コード分析
-
-### Phase S3: 汎用システム実現
-- [ ] VoidFlowNodePlugin → IPlugin継承統一
-- [ ] 重複コード削減 (1,600行削除目標)
-- [ ] 他システム統合ガイド作成
-
-## 🔗 関連リンク
-
-### テスト環境
-- **Phase R テストスイート:** `http://localhost:8081/test-phase-r-refactoring.html`
-- **Intent修正テスト:** `http://localhost:8081/test-intent-fix.html`
-- **VoidFlow統合テスト:** `http://localhost:8081/test-voidflow-integration-phase2.html`
-
-### ソースコード構成
-```
-📁 src/ (12,484行・24ファイル)
-├── 🎯 コアシステム (1,737行)
-├── 🌊 VoidFlow統合 (3,145行) ← 削減対象
-├── 🛠️ システム基盤 (528行)
-└── 🔧 ユーティリティ・統合 (7,074行)
-```
+### **重要リソース**
+- **最新開発計画**: `00-current/VoidCore_統合開発計画書_2025.md`
+- **技術仕様**: `01-specifications/` フォルダ
+- **過去の知見**: `03-archive/` フォルダ
 
 ---
 
-## 📝 貢献・フィードバック
-
-### 問題報告
-- GitHub Issues で報告
-- テスト結果の共有
-- パフォーマンス測定結果
-
-### 開発参加
-- プラグイン開発
-- 統合システム実装
-- ドキュメント改善
+**🌟 VoidCore - 創造性の永久機関による新しいコンピューティングパラダイム**
 
 ---
-
-*VoidCore v14.0 Documentation*  
-*Generated: 2025-01-07*  
-*ChatGPT統一Intentアーキテクチャ*
+*最終更新: 2025-07-08*  
+*次回更新: VoidFlow分割版テスト完了時*

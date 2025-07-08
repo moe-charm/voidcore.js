@@ -174,18 +174,49 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
+## 📁 完了プロジェクト管理ルール
+
+### **📦 アーカイブ場所**
+- **場所**: `docs/completed-projects/`
+- **目的**: 終わったプロジェクトの体系的整理・保存
+
+### **🗂️ フォルダ命名規則**
+```
+docs/completed-projects/YYYY-MM-DD-project-name/
+```
+
+### **📋 必須ファイル**
+- `README.md` - プロジェクト完了報告書
+- 技術仕様・実装詳細ドキュメント
+- 削除ファイル情報（該当時）
+
+### **🎯 アーカイブ対象**
+- ✅ 明確な成果物があり完了したプロジェクト
+- ✅ 技術革新・新手法を確立したプロジェクト
+- ✅ アーキテクチャに重要な影響を与えた変更
+- ✅ 将来の開発に参考価値のあるプロジェクト
+
+### **📚 現在のアーカイブ**
+- `2025-07-08-voidcore-purification/` - VoidCore純化（3,251行削減）
+- `2025-07-06-voidflow-phase4/` - VoidFlow Phase 4完成
+- `2025-01-26-phase5-initialization-fix/` - 初期化競合解決
+- `2025-01-07-voidflow-analysis/` - VoidFlow分析・統合計画
+
+---
+
 ## 📋 Phase管理
 
 ### **現在のPhase状況**
 - ✅ Phase R: VoidCore統一Intentアーキテクチャ (完了)
 - ✅ Phase S3: VoidFlowNodePlugin → IPlugin統合 (完了)
-- 🔄 Phase S3後続: メッセージアダプター汎用化、コード削減継続
+- ✅ VoidCore純化プロジェクト: 後方互換性削除・ローカルコピー戦略 (完了)
+- 🔄 Phase S4準備: コアスリム化計画 (次回作業)
 
 ### **参考: 将来戦略ノート**
 - 詳細な次回作業は `次にやる.txt` 参照
-- ChatGPT提案の戦略分析は `docs/` 内に保存予定
+- 完了プロジェクトは `docs/completed-projects/` に整理済み
 
 ---
 
-*Last Updated: 2025-01-07*  
-*VoidCore v14.0 Phase R + S3統合完了版 + ChatGPT戦略追加*
+*Last Updated: 2025-07-08*  
+*VoidCore v14.0純化プロジェクト完了版 + 完了プロジェクト管理ルール追加*

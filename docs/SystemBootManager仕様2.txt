@@ -1,0 +1,92 @@
+# SystemBootManager 設計指針（VoidCore Phase S5）
+
+## 1. はじめに
+
+VoidCoreは**構造的中立な意図通信プラットフォーム**であり、  
+すべてのプラグインはIntent駆動で動作します。
+
+しかし、システム起動時に最初のIntentを発行する役割を持つ  
+`SystemBootManager` は特別なプラグインとして存在します。
+
+---
+
+## 2. SystemBootManager の役割
+
+- システム全体の最初の起動処理を担当する。
+- 起動時にIntentを生成し、VoidCore内の構造やプラグイン生成を促進する。
+- 他のプラグイン（特にUI層のVoidFlowBootManager）とは責務を明確に分離。
+
+---
+
+## 3. VoidCoreにおける扱い
+
+- `SystemBootManager` は **特権的プラグイン** として明示的に登録される。
+- `isCore: true` フラグを付け、VoidCoreの初期化時に生成・登録される。
+- 以降の操作はIntentルーティングを通じて行われる。
+
+---
+
+## 4. 実装例
+
+```typescript
+import { IPlugin } from "../core/plugin-interface.js";
+
+export class SystemBootManager extends IPlugin {
+  constructor() {
+    super({
+      id: "system.boot.manager",
+      type: "system.boot",
+      isCore: true,
+      displayName: "System Boot Manager"
+    });
+  }
+
+  async handleCustomIntent(intent) {
+    if (intent.type === "system.queryStatus") {
+      this.sendIntent("system.status", {
+        from: this.id,
+        status: "ready"
+      });
+      return { success: true };
+    }
+    return { success: false, error: "Unsupported intent type" };
+  }
+}
+
+
+5. VoidCore初期化例（voidcore.js）
+
+import { SystemBootManager } from "./plugins/system-boot-manager.js";
+
+class VoidCore {
+  constructor() {
+    this.pluginManager = new PluginManager();
+    
+    // 明示的にSystemBootManagerを登録
+    this.systemBootManager = new SystemBootManager();
+    this.pluginManager.registerPlugin(this.systemBootManager);
+  }
+
+  // その他のメソッド省略
+}
+
+6. 設計上の注意点
+ポイント	内容
+VoidFlowBootManagerとは別物	VoidFlow専用のBootManagerはUI層の責務。SystemBootManagerはVoidCore全体の起動を担う。
+依存関係の分離	VoidCoreはUIに依存しない設計を保つ。UIプラグインは別途VoidFlow内で管理。
+将来の拡張	SystemBootManagerは最小限の起動管理に留め、複雑な処理は他プラグインやIntent連携に任せる。
+7. まとめ
+
+    SystemBootManager はVoidCoreにおける「最初の火種」的プラグインとして明示登録する。
+
+    VoidFlowBootManager とは明確に分離し、それぞれの責務を厳格に管理する。
+
+    これによりVoidCoreの汎用性を維持しつつ、堅牢な起動構造を実現できる。
+
+8. 参考情報
+
+    Phase S5 進行中の設計方針
+
+    VoidCore プラグイン登録とIntent処理の基本ルール
+
+    VoidFlow と VoidCore の役割分担に関する議論

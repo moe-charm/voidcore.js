@@ -43,7 +43,7 @@
 
     <script type="module">
         import { voidCore, Message, createPlugin } from '../src/index.js';
-        import { VoidFlowMonacoIntegration } from '../src/voidflow-monaco-integration.js';
+        // import { VoidFlowMonacoIntegration } from '../src/voidflow-monaco-integration.js'; // 削除済み
         import { UniversalNodeIntegration } from '../src/universal-node-integration.js';
 
         function log(message) {
@@ -63,22 +63,35 @@
                 log(`📦 Message: ${typeof Message}`);
                 log(`📦 createPlugin: ${typeof createPlugin}`);
                 
-                // Test 2: VoidFlow Monaco Integration
+                // Test 2: VoidFlow Monaco Integration (削除済み)
                 log('🎨 Test 2: VoidFlow Monaco Integration');
-                const mockEngine = {
-                    log: (msg) => log(`MockEngine: ${msg}`)
-                };
-                const monacoIntegration = new VoidFlowMonacoIntegration(mockEngine);
-                log('✅ Monaco Integration instantiated successfully');
+                log('⚠️ Monaco Integration は削除されました');
+                log('✅ VoidCore純化により不要になりました');
                 
                 // Test 3: Universal Node Integration
                 log('🌍 Test 3: Universal Node Integration');
+                const mockEngine = {
+                    log: (msg) => log(`MockEngine: ${msg}`)
+                };
                 const universalConfig = {
                     engineType: 'VoidFlow',
                     engine: mockEngine,
                     messageConfig: {
-                        format: 'voidflow',
-                        version: '14.0'
+                        sourceFormat: 'voidflow',
+                        targetFormat: 'universal',
+                        version: '14.0',
+                        transformRules: {
+                            'voidflow->universal': {
+                                payloadKey: 'payload',
+                                metadataKey: 'metadata',
+                                timestampKey: 'timestamp'
+                            },
+                            'universal->voidflow': {
+                                payloadKey: 'data',
+                                metadataKey: 'meta',
+                                timestampKey: 'time'
+                            }
+                        }
                     },
                     executionMode: 'unified',
                     sandboxConfig: {
