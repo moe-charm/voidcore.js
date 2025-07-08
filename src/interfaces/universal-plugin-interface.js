@@ -2,7 +2,8 @@
 // Phase S3後続: 全システム対応の究極プラグインインターフェース
 
 import { IPlugin } from './plugin-interface.js';
-// ICorePluginが必要な場合は './legacy/icore-plugin.js' から import
+import { VoidCore } from '../core/voidcore.js';
+// 🔧 大工事Phase1: ICorePlugin継承エラー修正完了
 
 /**
  * 🌐 IUniversalPlugin - 汎用プラグインインターフェース
@@ -449,8 +450,9 @@ export class IUniversalPlugin extends IPlugin {
  * 🌟 IUniversalCorePlugin - 汎用コアプラグイン
  * 
  * 汎用プラグインの管理機能を持つコアプラグイン
+ * 🔧 大工事Phase1: VoidCore継承に修正 (設計者指示通り)
  */
-export class IUniversalCorePlugin extends ICorePlugin {
+export class IUniversalCorePlugin extends VoidCore {
   constructor(config) {
     super(config);
     

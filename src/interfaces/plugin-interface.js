@@ -15,7 +15,7 @@ export class IPlugin {
     this.pluginId = this.id  // VoidCore互換性のため
     this.type = config.type || 'generic'
     this.parent = config.parent || null
-    this.isCore = config.isCore || false
+    // 🔧 大工事Phase1: isCore削除 (設計者指示: instanceof VoidCore で判定)
     
     // Phase R追加プロパティ
     this.displayName = config.displayName || this.type
@@ -117,13 +117,7 @@ export class IPlugin {
   // ユーティリティメソッド
   // ==========================================
 
-  /**
-   * プラグインがコアかどうかの判定
-   * @returns {boolean}
-   */
-  isCorePlugin() {
-    return this.isCore === true
-  }
+  // 🔧 大工事Phase1: isCorePlugin()削除 (設計者指示: instanceof VoidCore で判定)
 
   /**
    * プラグイン情報の要約取得
@@ -134,7 +128,7 @@ export class IPlugin {
       id: this.id,
       type: this.type,
       displayName: this.displayName,
-      isCore: this.isCore,
+      // 🔧 大工事Phase1: isCore削除
       parent: this.parent,
       status: this.status
     }
@@ -146,19 +140,12 @@ export class IPlugin {
    */
   log(message) {
     const timestamp = new Date().toLocaleTimeString()
-    const prefix = this.isCore ? '🔷 Core' : '🧩 Plugin'
+    const prefix = '🧩 Plugin' // 🔧 大工事Phase1: isCore削除
     console.log(`[${timestamp}] ${prefix} ${this.displayName}: ${message}`)
   }
 }
 
-/**
- * プラグイン型判定ユーティリティ
- * @param {Object} plugin - 判定対象プラグイン
- * @returns {boolean}
- */
-export function isCorePlugin(plugin) {
-  return plugin && plugin.isCore === true
-}
+// 🔧 大工事Phase1: isCorePlugin()削除 (設計者指示: instanceof VoidCore で判定)
 
 // デフォルトエクスポート
 export default IPlugin
