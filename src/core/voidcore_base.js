@@ -109,6 +109,7 @@ class VoidCoreBase {
   }
   
   registerPlugin(plugin) {
+    // 🔧 大工事Phase3: プラグイン管理統合対象（重複実装マーキング）
     return !plugin?.pluginId ? 
       (this.log('⚠️ Invalid plugin: missing pluginId'), false) :
       this.pluginStore.getPlugin(plugin.pluginId) ?
@@ -118,6 +119,7 @@ class VoidCoreBase {
   }
   
   unregisterPlugin(pluginId) {
+    // 🔧 大工事Phase3: プラグイン管理統合対象（重複実装マーキング）
     const plugin = this.pluginStore.removePlugin(pluginId)
     if (plugin) {
       plugin.core = null

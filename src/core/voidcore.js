@@ -296,11 +296,13 @@ class VoidCore {
   }
 
   async _handleCreatePluginIntent(payload) {
+    // 🔧 大工事Phase3: プラグイン管理統合対象（重複実装マーキング）
     this.log(`🔧 Creating plugin via Intent: ${payload.type}`)
     return { status: 'created', pluginId: `plugin_${Date.now()}`, message: 'Plugin created via Intent system' }
   }
 
   async _handleDestroyPluginIntent(payload) {
+    // 🔧 大工事Phase3: プラグイン管理統合対象（重複実装マーキング）
     const pluginId = payload.pluginId
     this.log(`🔧 Destroying plugin via Intent: ${pluginId}`)
     return { status: 'destroyed', pluginId: payload.pluginId, message: 'Plugin destroyed via Intent system' }

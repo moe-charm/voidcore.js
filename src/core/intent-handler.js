@@ -7,6 +7,8 @@
  * VoidCore v14.0のIntent処理を担当する分離されたコアモジュール
  * 暫定実装から本格実装への移行
  * 
+ * 🔧 大工事Phase3: Intent処理統合対象（重複実装削除予定）
+ * 
  * 哲学: 「Intent処理の統一と効率化」
  */
 export class IntentHandler {
