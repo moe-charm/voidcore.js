@@ -108,25 +108,15 @@ class VoidCoreBase {
     }
   }
   
+  // 🔧 大工事Phase3: プラグイン管理統合済み（UnifiedPluginManagerに移行）
   registerPlugin(plugin) {
-    // 🔧 大工事Phase3: プラグイン管理統合対象（重複実装マーキング）
-    return !plugin?.pluginId ? 
-      (this.log('⚠️ Invalid plugin: missing pluginId'), false) :
-      this.pluginStore.getPlugin(plugin.pluginId) ?
-      (this.log(`⚠️ Plugin ${plugin.pluginId} already registered`), false) :
-      (plugin.core = this, this.pluginStore.addPlugin(plugin), 
-       this.log(`🔌 Plugin registered: ${plugin.pluginId}`), true)
+    this.log('⚠️ Deprecated: Use UnifiedPluginManager instead')
+    return false
   }
   
+  // 🔧 大工事Phase3: プラグイン管理統合済み（UnifiedPluginManagerに移行）
   unregisterPlugin(pluginId) {
-    // 🔧 大工事Phase3: プラグイン管理統合対象（重複実装マーキング）
-    const plugin = this.pluginStore.removePlugin(pluginId)
-    if (plugin) {
-      plugin.core = null
-      this.log(`🗑️ Plugin unregistered: ${pluginId}`)
-      return true
-    }
-    this.log(`⚠️ Plugin not found: ${pluginId}`)
+    this.log('⚠️ Deprecated: Use UnifiedPluginManager instead')
     return false
   }
   

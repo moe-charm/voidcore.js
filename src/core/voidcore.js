@@ -24,6 +24,11 @@
  * - 依存性注入による疎結合設計
  * - 明確な責任分離実現
  * 
+ * 🌟 大工事Phase3完了: 機能統合・重複実装削除
+ * - UnifiedPluginManager統合
+ * - UnifiedIntentHandler統合
+ * - UnifiedStatsManager統合
+ * 
  * 🌟 Phase 5.2機能追加:
  * - SimpleMessagePool統合
  * - CoreFusion統合
@@ -40,6 +45,9 @@ import { Message } from '../messaging/message.js'
 import { SimpleMessagePool } from '../messaging/simple-message-pool.js'
 import { CoreFusion } from './core-fusion.js'
 import { globalMessageBus, globalUIChannel } from './core-communication.js'
+import { UnifiedPluginManager } from './unified-plugin-manager.js'
+import { UnifiedIntentHandler } from './unified-intent-handler.js'
+import { UnifiedStatsManager } from './unified-stats-manager.js'
 
 class VoidCore {
   constructor(transport = null, options = {}) {
@@ -68,6 +76,24 @@ class VoidCore {
     // ハイブリッド通信システム統合
     this.messageBus = globalMessageBus
     this.uiChannel = globalUIChannel
+    
+    // 🔧 大工事Phase3: 統合システム初期化
+    this.unifiedPluginManager = new UnifiedPluginManager({ 
+      coreId: this.coreId, 
+      core: this 
+    })
+    this.unifiedIntentHandler = new UnifiedIntentHandler({ 
+      coreId: this.coreId, 
+      core: this, 
+      pluginManager: this.unifiedPluginManager 
+    })
+    this.unifiedStatsManager = new UnifiedStatsManager({ 
+      coreId: this.coreId, 
+      core: this, 
+      pluginManager: this.unifiedPluginManager, 
+      intentHandler: this.unifiedIntentHandler,
+      channelManager: this.channelManager 
+    })
     
     // SystemBootManager機能（内蔵）
     this.systemBootManager = {
@@ -209,25 +235,25 @@ class VoidCore {
   // ==========================================
 
   /**
-   * プラグイン登録
+   * プラグイン登録（大工事Phase3: 統合システム委譲）
    */
   async registerPlugin(plugin) {
     await this._ensureInitialized()
-    return this.base.registerPlugin(plugin)
+    return await this.unifiedPluginManager.registerPlugin(plugin)
   }
 
   /**
-   * プラグイン取得
+   * プラグイン取得（大工事Phase3: 統合システム委譲）
    */
   getPlugins() {
-    return this.base.getPlugins()
+    return this.unifiedPluginManager.getAllPlugins()
   }
 
   /**
-   * プラグイン削除
+   * プラグイン削除（大工事Phase3: 統合システム委譲）
    */
   removePlugin(pluginId) {
-    return this.base.removePlugin(pluginId)
+    return this.unifiedPluginManager.unregisterPlugin(pluginId)
   }
 
   // ==========================================
@@ -235,82 +261,18 @@ class VoidCore {
   // ==========================================
 
   /**
-   * Intent処理の統一エントリポイント
+   * Intent処理の統一エントリポイント（大工事Phase3: 統合システム委譲）
    */
   async _processIntent(intentMessage) {
-    const { action, payload } = intentMessage
-    
-    // システム起動関連Intent処理
-    if (action?.startsWith('system.boot.')) {
-      return await this._handleSystemBootIntent(action, payload)
-    }
-    
-    // プラグイン管理Intent処理
-    if (action?.startsWith('system.plugin.')) {
-      return await this._handlePluginManagementIntent(action, payload)
-    }
-    
-    // CoreFusion Intent処理
-    if (action?.startsWith('system.fusion.')) {
-      return await this._handleCoreFusionIntent(action, payload)
-    }
-    
-    // 通常のIntent処理
-    return await this._handleRegularIntent(action, payload)
+    return await this.unifiedIntentHandler.processIntent(intentMessage)
   }
 
-  async _handleSystemBootIntent(action, payload) {
-    switch (action) {
-      case 'system.boot.ready':
-        return { status: 'acknowledged', message: 'System boot ready acknowledged' }
-      case 'system.boot.status':
-        return { status: 'success', systemStatus: this.systemBootManager.systemStatus }
-      default:
-        return { status: 'unknown', message: `Unknown system boot intent: ${action}` }
-    }
-  }
 
-  async _handlePluginManagementIntent(action, payload) {
-    switch (action) {
-      case 'system.plugin.create':
-        return await this._handleCreatePluginIntent(payload)
-      case 'system.plugin.destroy':
-        return await this._handleDestroyPluginIntent(payload)
-      default:
-        return { status: 'unknown', message: `Unknown plugin management intent: ${action}` }
-    }
-  }
 
-  async _handleCoreFusionIntent(action, payload) {
-    switch (action) {
-      case 'system.fusion.fuse':
-        return await this._handleFusionIntent(payload)
-      default:
-        return { status: 'unknown', message: `Unknown fusion intent: ${action}` }
-    }
-  }
 
-  async _handleRegularIntent(action, payload) {
-    // 通常Intent処理またはシステムに転送
-    return await this._forwardToExistingSystem({ action, payload })
-  }
 
-  async _handleCreatePluginIntent(payload) {
-    // 🔧 大工事Phase3: プラグイン管理統合対象（重複実装マーキング）
-    this.log(`🔧 Creating plugin via Intent: ${payload.type}`)
-    return { status: 'created', pluginId: `plugin_${Date.now()}`, message: 'Plugin created via Intent system' }
-  }
 
-  async _handleDestroyPluginIntent(payload) {
-    // 🔧 大工事Phase3: プラグイン管理統合対象（重複実装マーキング）
-    const pluginId = payload.pluginId
-    this.log(`🔧 Destroying plugin via Intent: ${pluginId}`)
-    return { status: 'destroyed', pluginId: payload.pluginId, message: 'Plugin destroyed via Intent system' }
-  }
 
-  async _forwardToExistingSystem(intentMessage) {
-    return { status: 'forwarded', intent: intentMessage.action, message: 'Forwarded to existing system' }
-  }
 
   // ==========================================
   // CoreFusion機能
@@ -342,29 +304,13 @@ class VoidCore {
   // ==========================================
   
   getStats() {
-    return {
-      ...this.base.getStats(),
-      systemBootManager: {
-        systemStatus: this.systemBootManager.systemStatus,
-        isBootComplete: this.systemBootManager.isBootComplete,
-        parentCoreReady: this.systemBootManager.parentCoreReady,
-        childCoreCount: this.systemBootManager.childCoreCount,
-        bootSequence: this.systemBootManager.bootSequence
-      }
-    }
+    // 🔧 大工事Phase3: 統合統計システム委譲
+    return this.unifiedStatsManager.collectAllStats()
   }
 
   getSystemStats() {
-    const poolStats = this.messagePool.getStats()
-    return {
-      coreId: this.coreId,
-      systemStatus: this.systemBootManager.systemStatus,
-      isBootComplete: this.systemBootManager.isBootComplete,
-      parentCoreReady: this.systemBootManager.parentCoreReady,
-      childCoreCount: this.systemBootManager.childCoreCount,
-      messagePool: poolStats,
-      fusionHistory: this.coreFusion.getFusionHistory().length
-    }
+    // 🔧 大工事Phase3: 統合統計システム委譲
+    return this.unifiedStatsManager.collectAllStats()
   }
 
   // ==========================================
@@ -404,6 +350,11 @@ class VoidCore {
    * クリーンアップ
    */
   async clear() {
+    // 🔧 大工事Phase3: 統合システムクリーンアップ
+    await this.unifiedStatsManager.clear()
+    await this.unifiedIntentHandler.clear()
+    await this.unifiedPluginManager.clear()
+    
     // ハイブリッド通信システムから登録解除
     this.messageBus.unregisterCore(this.coreId)
     
@@ -421,23 +372,13 @@ class VoidCore {
     this.log('🧹 VoidCore cleared')
   }
 
-  // ==========================================
-  // システムハンドラー登録
-  // ==========================================
-
-  static INTENT_REQUEST_HANDLERS = {
-    'system.createPlugin': async (message, ctx) => await ctx._handleCreatePlugin(message),
-    'system.destroyPlugin': async (message, ctx) => await ctx._handleDestroyPlugin(message),
-    'system.reparentPlugin': async (message, ctx) => await ctx._handleReparentPlugin(message),
-    'system.connect': async (message, ctx) => await ctx._handleConnect(message)
-  }
 
   async _initializeSystemMessageHandlers() {
-    // 🔧 大工事Phase2: subscribe→コンポジション委譲
+    // 🔧 大工事Phase3: Intent処理統合対応
     await this.base.subscribe('IntentRequest', async (message) => {
       try {
-        const handler = VoidCore.INTENT_REQUEST_HANDLERS[message.action]
-        if (handler) await handler(message, this)
+        const result = await this.unifiedIntentHandler.processIntent(message)
+        this.log(`✅ Intent processed: ${message.action} - ${result.status}`)
       } catch (error) {
         this.log(`❌ System message handler error: ${error.message}`)
         console.error('System handler error:', error)
@@ -445,22 +386,9 @@ class VoidCore {
     })
   }
 
-  // 基本的なシステムハンドラー実装
-  async _handleCreatePlugin(message) {
-    return this._handleCreatePluginIntent(message.payload)
-  }
 
-  async _handleDestroyPlugin(message) {
-    return this._handleDestroyPluginIntent(message.payload)
-  }
 
-  async _handleReparentPlugin(message) {
-    return { status: 'reparented', pluginId: message.payload.pluginId, newParent: message.payload.newParent }
-  }
 
-  async _handleConnect(message) {
-    return { status: 'connected', source: message.payload.source, target: message.payload.target }
-  }
 }
 
 // 🎯 デフォルトインスタンス作成

@@ -4,10 +4,16 @@
 /**
  * 🧩 PluginManager - プラグイン管理専門モジュール
  * 
- * VoidCore v14.0のプラグイン管理を担当する分離されたコアモジュール
- * 暫定実装から本格実装への移行
+ * 🔧 大工事Phase3完了: 本ファイルは廃止予定
+ * ⚠️ 統合完了: UnifiedPluginManagerに機能統合済み
  * 
- * 🔧 大工事Phase3: プラグイン管理統合対象（重複実装削除予定）
+ * 新しいプラグイン管理:
+ * - UnifiedPluginManager (/src/core/unified-plugin-manager.js)
+ * - 統一されたプラグインライフサイクル管理
+ * - Intent処理統合
+ * - 効率的な統計収集
+ * 
+ * 🚨 DEPRECATED: このファイルは削除予定です
  * 
  * 哲学: 「プラグインライフサイクルの完全制御」
  */

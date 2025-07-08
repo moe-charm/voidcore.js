@@ -4,10 +4,16 @@
 /**
  * 🎯 IntentHandler - Intent処理専門モジュール
  * 
- * VoidCore v14.0のIntent処理を担当する分離されたコアモジュール
- * 暫定実装から本格実装への移行
+ * 🔧 大工事Phase3完了: 本ファイルは廃止予定
+ * ⚠️ 統合完了: UnifiedIntentHandlerに機能統合済み
  * 
- * 🔧 大工事Phase3: Intent処理統合対象（重複実装削除予定）
+ * 新しいIntent処理:
+ * - UnifiedIntentHandler (/src/core/unified-intent-handler.js)
+ * - 統一されたIntent処理フロー
+ * - 効率的な並行処理制御
+ * - 統一された統計収集
+ * 
+ * 🚨 DEPRECATED: このファイルは削除予定です
  * 
  * 哲学: 「Intent処理の統一と効率化」
  */

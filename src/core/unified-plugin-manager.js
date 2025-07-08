@@ -17,7 +17,6 @@
  */
 
 import { IPlugin } from '../interfaces/plugin-interface.js'
-import { VoidCore } from './voidcore.js'
 
 export class UnifiedPluginManager {
   constructor(config = {}) {
