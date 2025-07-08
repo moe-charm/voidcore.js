@@ -1,7 +1,7 @@
 // core-communication.js - Phase S5: ハイブリッドコア間通信システム
 // にゃー提案のMessageBus + 専用チャンネル方式
 
-import { Message } from './message.js'
+import { Message } from '../messaging/message.js'
 
 /**
  * 🌐 CoreMessageBus - コア間通信の統一MessageBus

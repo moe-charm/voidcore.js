@@ -2,7 +2,9 @@
 // VoidCoreプラグインとしてのIDE実装
 // 「VoidCoreでVoidCoreを育てる」究極のメタシステム
 
-import { createPlugin, voidCore, Message } from './index.js';
+import { VoidCore } from '../core/voidcore.js';
+import { Message } from '../messaging/message.js';
+import { IPlugin } from '../interfaces/plugin-interface.js';
 
 /**
  * 🌟 VoidIDE Genesis - 自己創造システムの中核
@@ -16,20 +18,27 @@ import { createPlugin, voidCore, Message } from './index.js';
  * 「すべての存在は、メッセージで生まれ、メッセージで終わる」
  */
 
-export const VoidIDEGenesis = createPlugin({
-  pluginId: 'void-ide-genesis',
-  name: 'VoidIDE Genesis - Self-Creating IDE',
-  version: '1.0.0-alpha',
-  capabilities: [
-    'code-editor',
-    'plugin-builder', 
-    'runtime-eval',
-    'message-visualization',
-    'project-management'
-  ],
-  autoHealth: true,
-  autoProcess: true
-}, {
+export class VoidIDEGenesis extends IPlugin {
+  constructor() {
+    super({
+      id: 'void-ide-genesis',
+      type: 'experimental.ide',
+      displayName: 'VoidIDE Genesis - Self-Creating IDE',
+      metadata: { 
+        version: '1.0.0-alpha',
+        capabilities: [
+          'code-editor',
+          'plugin-builder', 
+          'runtime-eval',
+          'message-visualization',
+          'project-management'
+        ],
+        autoHealth: true,
+        autoProcess: true
+      }
+    })
+  }
+  
   // ==========================================
   // 🚀 初期化・セットアップ
   // ==========================================
@@ -62,7 +71,7 @@ export const VoidIDEGenesis = createPlugin({
       capabilities: this.capabilities,
       timestamp: Date.now()
     });
-  },
+  }
 
   // ==========================================
   // 🎨 UI初期化
@@ -514,19 +523,19 @@ return myPlugin;`;
       createdPlugins: Array.from(this.runtime.createdPlugins.keys()),
       executionHistory: this.runtime.executionHistory.slice(-10) // 最新10件
     };
-  },
+  }
 
   // 統計情報取得
   getIDEStats() {
     return {
-      version: this.version,
+      version: this.metadata.version,
       uptime: Date.now() - this.startTime,
       pluginsCreated: this.runtime.createdPlugins.size,
       executionsCount: this.runtime.executionHistory.length,
       activeProject: this.project.name
     };
   }
-});
+}
 
 // VoidIDE Genesis を自動実行対応プラグインとしてエクスポート
 export default VoidIDEGenesis;

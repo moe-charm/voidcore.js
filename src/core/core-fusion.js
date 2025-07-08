@@ -1,8 +1,8 @@
 // core-fusion.js - 複数コア統合システム v1.2
 // CoreFusion v1.2 - 複数のVoidCoreインスタンスを1つに統合する革命的システム
 
-import { Message } from './message.js';
-import { SimpleMessagePool } from './simple-message-pool.js';
+import { Message } from '../messaging/message.js';
+import { SimpleMessagePool } from '../messaging/simple-message-pool.js';
 
 /**
  * 🧩 CoreFusion v1.2 - 複数コア統合システム

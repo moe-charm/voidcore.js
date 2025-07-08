@@ -1,7 +1,7 @@
 // src/channel-manager.js - Channel Management for VoidCore v13.0
 // Elegant Transport Adapter integration with backward compatibility
 
-import { DefaultTransport } from './transport.js'
+import { DefaultTransport } from '../messaging/transport.js'
 
 export class ChannelManager {
   constructor(transport = null) {

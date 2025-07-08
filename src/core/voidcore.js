@@ -478,4 +478,5 @@ class VoidCore extends VoidCoreBase {
 }
 
 export { VoidCore }
-export const voidCore = new VoidCore(null, { debug: false })
+// voidCoreインスタンスは非同期初期化が必要なため、使用時にVoidCore.create()を呼び出してください
+// export const voidCore = await VoidCore.create(null, { debug: false }) // ← これは直接書けない

@@ -1,8 +1,8 @@
 // pure_plugin_system.js - 純粋メッセージベースプラグインシステム
 // セリンの大改革: 基底クラス継承を完全排除！
 
-import { voidCore } from './voidcore.js';
-import { Message } from './message.js';
+import { VoidCore } from '../core/voidcore.js';
+import { Message } from '../messaging/message.js';
 
 /**
  * 🌟 VoidCore 純粋メッセージベース プラグインシステム
