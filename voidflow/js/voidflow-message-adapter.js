@@ -1,6 +1,6 @@
 // voidflow-message-adapter.js - VoidPacket ↔ VoidCore Message 変換アダプター
 
-import { Message } from '/src/message.js'
+import { Message } from '/src/messaging/message.js'
 
 /**
  * 🔄 VoidFlowMessageAdapter - VoidPacketとVoidCore Messageの双方向変換

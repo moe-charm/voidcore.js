@@ -1,5 +1,5 @@
 // VoidFlow Engine - ヘッドレス型フロー実行エンジン
-import { voidCore, Message, createPlugin } from '../../src/index.js';
+import { VoidCore, Message } from '../../src/index.js';
 
 export class VoidFlowEngine {
     constructor() {

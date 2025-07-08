@@ -1,8 +1,8 @@
 // voidflow-boot-manager.js - VoidFlow専用起動管理プラグイン
 // VoidFlowのコンポーネント起動を管理する自己完結型プラグイン
 
-import { IPlugin } from '../../src/plugin-interface.js'
-import { Message } from '../../src/message.js'
+import { IPlugin } from '../../src/interfaces/plugin-interface.js'
+import { Message } from '../../src/messaging/message.js'
 
 /**
  * 🚀 VoidFlowBootManager - VoidFlow専用起動管理プラグイン
@@ -64,6 +64,67 @@ export class VoidFlowBootManager extends IPlugin {
         return await this.checkVoidFlowComponentsReady()
       default:
         return await super.handleMessage(message)
+    }
+  }
+
+  /**
+   * 🎯 VoidFlow専用カスタムIntent処理
+   * 新VoidCore Intent処理システム対応
+   */
+  async handleCustomIntent(message) {
+    const { intent, payload } = message
+    
+    switch (intent) {
+      case 'voidflow.boot.start':
+        return await this.handleVoidFlowBootStart(payload)
+      case 'voidflow.boot.status':
+        return await this.getVoidFlowBootStatus()
+      case 'voidflow.component.initialize':
+        return await this.initializeVoidFlowComponent(payload)
+      case 'voidflow.visual.initialize':
+        return await this.initializeVisualCore(payload)
+      case 'voidflow.editor.initialize':
+        return await this.initializeNodeEditor(payload)
+      case 'voidflow.engine.initialize':
+        return await this.initializeExecuteEngine(payload)
+      default:
+        return await super.handleCustomIntent(message)
+    }
+  }
+
+  /**
+   * 🚀 VoidFlow専用起動開始Intent処理
+   */
+  async handleVoidFlowBootStart(payload) {
+    this.log('🚀 VoidFlow boot start Intent received')
+    
+    try {
+      await this.initializeVoidFlow(payload.config || {})
+      
+      return {
+        success: true,
+        message: 'VoidFlow boot sequence completed',
+        timestamp: Date.now(),
+        components: this.requiredComponents
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        timestamp: Date.now()
+      }
+    }
+  }
+
+  /**
+   * 📊 VoidFlow起動状況取得
+   */
+  async getVoidFlowBootStatus() {
+    return {
+      success: true,
+      status: this.bootStatus,
+      components: this.componentStatus,
+      bootDuration: this.bootTimestamp ? Date.now() - this.bootTimestamp : null
     }
   }
 

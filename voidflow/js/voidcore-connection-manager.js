@@ -1,7 +1,7 @@
 // voidcore-connection-manager.js - VoidCoreプラグイン間接続管理
 
-import { IPlugin } from '/src/plugin-interface.js'
-import { Message } from '/src/message.js'
+import { IPlugin } from '/src/interfaces/plugin-interface.js'
+import { Message } from '/src/messaging/message.js'
 
 /**
  * 🔗 VoidCoreConnectionManager - VoidCoreプラグイン間の接続・データフロー管理
@@ -65,9 +65,24 @@ export class VoidCoreConnectionManager extends IPlugin {
     // 接続ポート作成（左クリック）
     document.addEventListener('click', (e) => {
       console.log('🔍 Document click detected:', e.target)
-      const pluginElement = e.target.closest('.voidcore-ui-element')
+      console.log('🔍 Click target tagName:', e.target.tagName)
+      console.log('🔍 Click target className:', e.target.className)
+      
+      // VoidCoreUI要素の検索
+      const pluginElement = e.target.closest('.voidcore-ui-element') || 
+                          e.target.closest('[data-plugin-id]')
+      
+      console.log('🔍 Found plugin element:', pluginElement)
+      
       if (!pluginElement) {
         this.log('🔍 Click: No plugin element found')
+        return
+      }
+      
+      // 接続ポートのクリックかチェック
+      const isConnectionPort = e.target.closest('.connection-port')
+      if (isConnectionPort) {
+        this.log('🔍 Click: Connection port clicked, skipping plugin click')
         return
       }
       
@@ -75,10 +90,14 @@ export class VoidCoreConnectionManager extends IPlugin {
       e.stopPropagation()
       
       const pluginId = pluginElement.dataset.pluginId
+      console.log('🔍 Plugin ID from element:', pluginId)
+      
       if (!pluginId) {
         this.log('🔍 Click: No plugin ID found')
         return
       }
+      
+      this.log(`🔍 Delegating to SmartConnectionManager: ${pluginId}`)
       
       // SmartConnectionManagerに処理を委譲
       this.smartConnectionManager.handlePluginClick(pluginId, e)
@@ -198,12 +217,25 @@ export class VoidCoreConnectionManager extends IPlugin {
    */
   async executeDataFlow(sourcePluginId, data) {
     this.log(`📊 executeDataFlow called: ${sourcePluginId}`)
+    this.log(`📊 Data to send:`, data)
+    
     const connections = this.getOutgoingConnections(sourcePluginId)
     this.log(`📊 Found ${connections.length} outgoing connections`)
     
+    if (connections.length === 0) {
+      this.log(`⚠️ No outgoing connections found for: ${sourcePluginId}`)
+      return
+    }
+    
     for (const connectionId of connections) {
       const connection = this.connections.get(connectionId)
-      if (!connection || !connection.active) continue
+      if (!connection || !connection.active) {
+        this.log(`⚠️ Connection not found or inactive: ${connectionId}`)
+        continue
+      }
+      
+      this.log(`📊 Processing connection: ${connectionId}`)
+      this.log(`📊 Target plugin: ${connection.targetPluginId}`)
       
       try {
         // データフローメッセージ作成
@@ -216,6 +248,8 @@ export class VoidCoreConnectionManager extends IPlugin {
           flowId: `flow-${Date.now()}`
         })
         
+        this.log(`📊 Sending flow message to: ${connection.targetPluginId}`)
+        
         // ターゲットプラグインに送信（自動実行されるはず）
         await this.sendToPlugin(connection.targetPluginId, flowMessage)
         
@@ -223,13 +257,14 @@ export class VoidCoreConnectionManager extends IPlugin {
         connection.dataCount++
         connection.lastDataFlow = Date.now()
         
-        // 視覚フィードバック
-        this.animateConnection(connectionId)
+        // 視覚フィードバックを無効化（パフォーマンス最適化）
+        // this.animateConnection(connectionId)
         
-        this.log(`📊 Data flow: ${sourcePluginId} → ${connection.targetPluginId}`)
+        this.log(`📊 Data flow completed: ${sourcePluginId} → ${connection.targetPluginId}`)
         
       } catch (error) {
         this.log(`❌ Data flow failed: ${connectionId} - ${error.message}`)
+        this.log(`❌ Error details:`, error)
       }
     }
   }
@@ -248,6 +283,13 @@ export class VoidCoreConnectionManager extends IPlugin {
         await plugin.handleMessage(message)
         return
       }
+    }
+    
+    // VoidCoreUIプラグインの場合
+    if (window.voidCoreUI && window.voidCoreUI.uiElements.has(pluginId)) {
+      this.log(`📤 VoidCoreUI plugin found, sending to handleDataFlowReceived`)
+      await window.voidCoreUI.handleDataFlowReceived(pluginId, message.payload)
+      return
     }
     
     // フォールバック: FlowExecutorでデータフロー処理
@@ -335,8 +377,26 @@ export class VoidCoreConnectionManager extends IPlugin {
    * 🔍 プラグイン要素取得
    */
   getPluginElement(pluginId) {
-    return document.querySelector(`[data-plugin-id="${pluginId}"]`) ||
-           document.getElementById(`voidflow-node-${pluginId}`)
+    // VoidCoreUI要素を優先的に検索
+    const voidcoreElement = document.querySelector(`[data-plugin-id="${pluginId}"]`)
+    if (voidcoreElement) {
+      return voidcoreElement
+    }
+    
+    // レガシーVoidFlow要素もチェック
+    const legacyElement = document.getElementById(`voidflow-node-${pluginId}`)
+    if (legacyElement) {
+      return legacyElement
+    }
+    
+    // UI要素IDでも検索
+    const uiElement = document.getElementById(`ui-element-${pluginId}`)
+    if (uiElement) {
+      return uiElement
+    }
+    
+    this.log(`⚠️ Plugin element not found for ID: ${pluginId}`)
+    return null
   }
 
   /**
@@ -493,7 +553,7 @@ export class VoidCoreConnectionManager extends IPlugin {
         font-weight: bold;
         z-index: 1000;
         pointer-events: none;
-        transition: all 0.3s ease;
+        /* transition: all 0.3s ease; パフォーマンス最適化で無効化 */
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         border: 2px solid rgba(255,255,255,0.3);
       `
@@ -539,6 +599,43 @@ export class VoidCoreConnectionManager extends IPlugin {
   }
 
   /**
+   * 🔄 特定ノードからの接続線再描画（main.js互換）
+   */
+  redrawConnectionsFromNode(sourceNodeId) {
+    // ログ出力を無効化（パフォーマンス最適化）
+    // this.log(`🔄 redrawConnectionsFromNode called for: ${sourceNodeId}`)
+    
+    // 該当ノードの接続を取得
+    const connections = this.getOutgoingConnections(sourceNodeId)
+    // this.log(`🔄 Found ${connections.length} outgoing connections`)
+    
+    // 現在の接続状態をログ（無効化）
+    // this.log(`🔍 Current connections:`, Array.from(this.connections.keys()))
+    // this.log(`🔍 Plugin connections:`, Array.from(this.pluginConnections.keys()))
+    
+    // 既存の接続線を削除
+    connections.forEach(connectionId => {
+      const connection = this.connections.get(connectionId)
+      if (connection) {
+        this.removeConnectionLine(connectionId)
+        // this.log(`🗑️ Removed connection line: ${connectionId}`)
+      }
+    })
+    
+    // 接続線を再描画
+    connections.forEach(connectionId => {
+      const connection = this.connections.get(connectionId)
+      if (connection) {
+        this.drawConnectionLine(connection)
+        // this.log(`🎨 Redrawn connection line: ${connectionId}`)
+      }
+    })
+    
+    // 完了ログを無効化
+    // this.log(`🔄 接続線再描画完了: ${sourceNodeId} (${connections.length}本)`)
+  }
+
+  /**
    * 🧪 デバッグ情報
    */
   getDebugInfo() {
@@ -569,6 +666,9 @@ class VoidCoreSmartConnectionManager {
   }
   
   async handlePluginClick(pluginId, event) {
+    this.log(`🎯 handlePluginClick called with: ${pluginId}`)
+    this.log(`🎯 Current state: firstSelected=${this.firstSelected}, isConnecting=${this.isConnecting}`)
+    
     if (!this.firstSelected) {
       // 最初のプラグイン選択
       this.firstSelected = pluginId
@@ -585,8 +685,8 @@ class VoidCoreSmartConnectionManager {
       
     } else if (this.firstSelected === pluginId) {
       // 同じプラグインクリック = キャンセル
+      this.log('❌ 接続モードキャンセル - 同じプラグインクリック')
       this.resetSelection()
-      this.log('❌ 接続モードキャンセル')
       
     } else {
       // 2番目のプラグイン選択 = 接続候補分析
@@ -596,6 +696,7 @@ class VoidCoreSmartConnectionManager {
       
       // 接続候補を分析・表示
       this.connectionCandidates = this.analyzeConnectionCandidates(this.firstSelected, this.secondSelected)
+      this.log(`🎯 接続候補数: ${this.connectionCandidates.length}`)
       this.showConnectionCandidates(this.connectionCandidates)
     }
   }
@@ -668,18 +769,23 @@ class VoidCoreSmartConnectionManager {
   }
   
   showConnectionCandidates(candidates) {
+    this.log(`🎯 showConnectionCandidates called with ${candidates.length} candidates`)
+    
     if (candidates.length === 0) {
       this.log('❌ 互換性のある接続候補が見つかりませんでした')
       this.resetSelection()
       return
     }
     
+    this.log('🎯 Creating connection modal...')
     const modal = this.createCandidateModal(candidates)
     document.body.appendChild(modal)
+    this.log('🎯 Modal appended to body')
     
     setTimeout(() => {
       modal.style.opacity = '1'
       modal.style.transform = 'translate(-50%, -50%) scale(1)'
+      this.log('🎯 Modal displayed')
     }, 10)
   }
   
@@ -699,7 +805,7 @@ class VoidCoreSmartConnectionManager {
       min-width: 400px;
       max-width: 600px;
       opacity: 0;
-      transition: all 0.3s ease;
+      /* transition: all 0.3s ease; パフォーマンス最適化で無効化 */
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       color: white;
     `

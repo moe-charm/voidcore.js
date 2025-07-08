@@ -1096,6 +1096,12 @@ class ConnectionManager {
             this.showConnectionDeleteDialog([edge]);
         });
         
+        // 右クリックメニューで削除オプション
+        path.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            this.showConnectionContextMenu(e, [edge]);
+        });
+        
         svg.appendChild(path);
     }
     
@@ -1170,6 +1176,12 @@ class ConnectionManager {
         // ダブルクリックで削除確認
         path.addEventListener('dblclick', () => {
             this.showConnectionDeleteDialog([edge]);
+        });
+        
+        // 右クリックメニューで削除オプション
+        path.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            this.showConnectionContextMenu(e, [edge]);
         });
         
         svg.appendChild(path);
@@ -1543,11 +1555,147 @@ class ConnectionManager {
         
         voidFlowEngine.log(`✅ ${connections.length}本の接続を削除完了`);
     }
+
+    // 右クリックコンテキストメニュー表示
+    showConnectionContextMenu(event, connections) {
+        // 既存のコンテキストメニューを削除
+        const existingMenu = document.getElementById('connection-context-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+        }
+
+        // コンテキストメニュー作成
+        const menu = document.createElement('div');
+        menu.id = 'connection-context-menu';
+        menu.style.cssText = `
+            position: fixed;
+            left: ${event.clientX}px;
+            top: ${event.clientY}px;
+            background: rgba(26, 26, 46, 0.95);
+            border: 1px solid #4a90e2;
+            border-radius: 8px;
+            padding: 8px 0;
+            z-index: 10000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            min-width: 160px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            backdrop-filter: blur(10px);
+        `;
+
+        // 削除オプション
+        const deleteOption = document.createElement('div');
+        deleteOption.innerHTML = `
+            <div style="
+                padding: 8px 16px;
+                color: #ff6b6b;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            " class="menu-item">
+                🗑️ 接続を削除
+            </div>
+        `;
+        deleteOption.addEventListener('click', () => {
+            this.showConnectionDeleteDialog(connections);
+            menu.remove();
+        });
+        deleteOption.addEventListener('mouseenter', () => {
+            deleteOption.firstElementChild.style.backgroundColor = 'rgba(255, 107, 107, 0.1)';
+        });
+        deleteOption.addEventListener('mouseleave', () => {
+            deleteOption.firstElementChild.style.backgroundColor = 'transparent';
+        });
+
+        // 情報表示オプション
+        const infoOption = document.createElement('div');
+        infoOption.innerHTML = `
+            <div style="
+                padding: 8px 16px;
+                color: #4a90e2;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            " class="menu-item">
+                ℹ️ 接続情報
+            </div>
+        `;
+        infoOption.addEventListener('click', () => {
+            this.showConnectionInfo(connections);
+            menu.remove();
+        });
+        infoOption.addEventListener('mouseenter', () => {
+            infoOption.firstElementChild.style.backgroundColor = 'rgba(74, 144, 226, 0.1)';
+        });
+        infoOption.addEventListener('mouseleave', () => {
+            infoOption.firstElementChild.style.backgroundColor = 'transparent';
+        });
+
+        menu.appendChild(deleteOption);
+        menu.appendChild(infoOption);
+        document.body.appendChild(menu);
+
+        // 外部クリックでメニューを閉じる
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        };
+        setTimeout(() => {
+            document.addEventListener('click', closeMenu);
+        }, 100);
+    }
+
+    // 接続情報表示
+    showConnectionInfo(connections) {
+        const connection = connections[0];
+        const sourceNode = document.getElementById(`voidflow-node-${connection.sourceNodeId}`);
+        const targetNode = document.getElementById(`voidflow-node-${connection.targetNodeId}`);
+        
+        const sourceType = sourceNode?.dataset.nodeType || 'unknown';
+        const targetType = targetNode?.dataset.nodeType || 'unknown';
+        
+        const info = `
+            🔗 接続情報:
+            
+            ソース: ${sourceType} (${connection.sourceNodeId})
+            ターゲット: ${targetType} (${connection.targetNodeId})
+            接続ID: ${connection.id}
+            作成時間: ${new Date(connection.created || Date.now()).toLocaleString()}
+        `;
+        
+        voidFlowEngine.log(info);
+        
+        // 簡単な通知表示
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(74, 144, 226, 0.9);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            max-width: 300px;
+            white-space: pre-line;
+        `;
+        notification.textContent = info;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 4000);
+    }
 }
 
 // グローバル接続マネージャー
 const connectionManager = new ConnectionManager();
 window.connectionManager = connectionManager;
+
+// エクスポート削除 - VoidCoreConnectionManagerを使用
 
 // 接続線を再描画（互換性のため）
 function redrawConnection(edge) {

@@ -1,7 +1,7 @@
 // plugin-flow-executor.js - VoidCoreプラグインフロー実行制御
 
-import { IPlugin } from '/src/plugin-interface.js'
-import { Message } from '/src/message.js'
+import { IPlugin } from '/src/interfaces/plugin-interface.js'
+import { Message } from '/src/messaging/message.js'
 
 /**
  * 🚀 PluginFlowExecutor - VoidCoreプラグイン実行順序・フロー制御

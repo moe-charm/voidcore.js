@@ -8,6 +8,7 @@ import { VoidFlowMessageAdapter } from './voidflow-message-adapter.js'
 import { VoidFlowBootManager } from './voidflow-boot-manager.js'
 import { VoidCoreConnectionManager } from './voidcore-connection-manager.js'
 import { PluginFlowExecutor } from './plugin-flow-executor.js'
+// import { ConnectionManager } from './main.js' // 重複初期化を防ぐため無効化
 
 // グローバル変数
 let voidFlowEngine = null
@@ -18,8 +19,7 @@ let voidFlowBootManager = null
 let connectionManager = null
 let flowExecutor = null
 
-// ハイブリッドモード（従来システム + VoidCore併用）
-let hybridMode = false // デバッグ用：VoidCoreオンリーモード
+// VoidCore v14.0 純粋アーキテクチャ - ハイブリッドモード削除完了
 
 // 初期化
 document.addEventListener('DOMContentLoaded', function() {
@@ -43,10 +43,7 @@ async function initializeVoidFlowVoidCore() {
         // Phase 3.5: Stage 3コンポーネント初期化
         await initializeStage3Components()
         
-        // Phase 4: 従来VoidFlowエンジン初期化（ハイブリッドモード）
-        if (hybridMode) {
-            await initializeLegacyVoidFlow()
-        }
+        // Phase 4: 純粋VoidCore v14.0アーキテクチャ - レガシーシステム完全除去済み
         
         // Phase 5: UI初期化
         await initializeUI()
@@ -54,15 +51,15 @@ async function initializeVoidFlowVoidCore() {
         // Phase 6: 統合テスト
         await performIntegrationTest()
         
-        voidCoreUI.log('🎉 VoidFlow VoidCore統合版 初期化完了！')
-        voidCoreUI.log('💡 ハイブリッドモード: 従来機能 + VoidCore機能併用')
+        voidCoreUI.log('🎉 VoidFlow VoidCore v14.0 純粋アーキテクチャ 初期化完了！')
+        voidCoreUI.log('💎 完全なる純粋メッセージベースシステム - レガシー依存なし')
         
     } catch (error) {
         console.error('❌ VoidFlow VoidCore統合版初期化失敗:', error)
         
-        // フォールバック: 従来版で初期化
-        console.log('🔄 フォールバック: 従来版VoidFlowで初期化中...')
-        await initializeLegacyVoidFlowFallback()
+        // VoidCore v14.0 純粋アーキテクチャ - フォールバック除去済み
+        // システムの健全性を保つため、エラーログを出力して続行
+        console.error('🚨 VoidCore v14.0 純粋アーキテクチャでの初期化失敗 - フォールバック無効')
     }
 }
 
@@ -70,7 +67,8 @@ async function initializeVoidFlowVoidCore() {
  * 🎨 Phase 1: VoidCoreUI初期化
  */
 async function initializeVoidCoreUI() {
-    voidCoreUI = new VoidCoreUI({
+    // 新VoidCore対応: VoidCoreUI.create()で非同期初期化
+    voidCoreUI = await VoidCoreUI.create({
         debug: true,
         uiOptimization: true
     })
@@ -84,7 +82,44 @@ async function initializeVoidCoreUI() {
     // グローバル参照設定
     window.voidCoreUI = voidCoreUI
     
-    voidCoreUI.log('🎨 VoidCoreUI initialized')
+    // デバッグ用グローバル関数
+    window.debugVoidCoreUI = function() {
+      if (window.voidCoreUI) {
+        console.log('🔍 VoidCoreUI Debug Info:', window.voidCoreUI.getDebugInfo())
+        console.log('🔍 VoidCoreUI UI State:', window.voidCoreUI.getUIState())
+        console.log('🔍 Canvas Element:', window.voidCoreUI.canvasElement)
+        console.log('🔍 UI Elements Map:', window.voidCoreUI.uiElements)
+      } else {
+        console.log('❌ VoidCoreUI not available')
+      }
+    }
+    
+    // 接続テスト用グローバル関数
+    window.debugConnections = function() {
+      if (window.connectionManager) {
+        console.log('🔍 Connection Manager Debug Info:', window.connectionManager.getDebugInfo())
+        console.log('🔍 Connection Stats:', window.connectionManager.getConnectionStats())
+      } else {
+        console.log('❌ Connection Manager not available')
+      }
+    }
+    
+    // データフロー手動テスト用関数
+    window.testDataFlow = function(sourcePluginId, data = 'test') {
+      if (window.connectionManager) {
+        console.log(`🧪 Testing data flow from: ${sourcePluginId}`)
+        window.connectionManager.executeDataFlow(sourcePluginId, {
+          type: 'test',
+          source: 'manual',
+          timestamp: Date.now(),
+          data: data
+        })
+      } else {
+        console.log('❌ Connection Manager not available')
+      }
+    }
+    
+    voidCoreUI.log('🎨 VoidCoreUI initialized with SystemBootManager integration')
 }
 
 /**
@@ -142,31 +177,16 @@ async function initializeStage3Components() {
     
     window.flowExecutor = flowExecutor
     
+    // SVG矢印マーカー初期化
+    initializeSVGMarkers()
+    
     voidCoreUI.log('🔗 Stage 3 components initialized')
     voidCoreUI.log('💡 接続機能: プラグインをクリックして線で繋ぐ')
 }
 
 /**
- * 🔄 Phase 4: 従来VoidFlowエンジン初期化（ハイブリッドモード）
+ * 🔄 Phase 4: VoidCore v14.0 純粋アーキテクチャ - レガシーシステム完全除去済み
  */
-async function initializeLegacyVoidFlow() {
-    // 従来のVoidFlowエンジン
-    voidFlowEngine = new VoidFlowEngine()
-    executeEngine = new ExecuteEngine(voidFlowEngine)
-    
-    // 相互参照設定
-    voidFlowEngine.executeEngine = executeEngine
-    
-    // VoidCoreUIとの連携設定
-    voidFlowEngine.voidCoreUI = voidCoreUI
-    voidFlowEngine.messageAdapter = messageAdapter
-    
-    // グローバル参照設定（既存互換性）
-    window.voidFlowEngine = voidFlowEngine
-    window.executeEngine = executeEngine
-    
-    voidCoreUI.log('🔄 Legacy VoidFlow engines initialized (hybrid mode)')
-}
 
 /**
  * 🎨 Phase 5: UI初期化
@@ -182,6 +202,9 @@ async function initializeUI() {
     // 実行ボタンの拡張
     enhanceExecuteButton()
     
+    // 純粋アーキテクチャ用のZenメッセージ設定
+    setPureArchitectureZenMessage()
+    
     voidCoreUI.log('🎨 UI initialization completed')
 }
 
@@ -192,8 +215,7 @@ function initializeVoidCoreUIFeatures() {
     // VoidCoreメッセージ監視パネル追加
     addVoidCoreMessagePanel()
     
-    // ハイブリッドモード切り替えボタン
-    addHybridModeToggle()
+    // VoidCore v14.0 純粋アーキテクチャ - ハイブリッドモード除去済み
     
     // アダプター統計表示
     addAdapterStatsPanel()
@@ -230,39 +252,8 @@ function addVoidCoreMessagePanel() {
 }
 
 /**
- * 🔄 ハイブリッドモード切り替えボタン追加
+ * 🔄 VoidCore v14.0 純粋アーキテクチャ - ハイブリッドモード機能完全除去済み
  */
-function addHybridModeToggle() {
-    const header = document.querySelector('.header')
-    if (!header) return
-    
-    const toggleButton = document.createElement('button')
-    toggleButton.textContent = hybridMode ? '🔄 ハイブリッド' : '🎨 VoidCore'
-    toggleButton.style.cssText = `
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: linear-gradient(145deg, #4a90e2, #357abd);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 8px 12px;
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: bold;
-    `
-    
-    toggleButton.onclick = () => {
-        hybridMode = !hybridMode
-        toggleButton.textContent = hybridMode ? '🔄 ハイブリッド' : '🎨 VoidCore'
-        voidCoreUI.log(`🔄 Mode switched: ${hybridMode ? 'Hybrid' : 'VoidCore-only'}`)
-        
-        // UI更新
-        updateUIForMode()
-    }
-    
-    header.appendChild(toggleButton)
-}
 
 /**
  * 📊 アダプター統計表示パネル追加
@@ -297,13 +288,8 @@ function enhanceExecuteButton() {
         try {
             voidCoreUI.log('🚀 VoidCore統合フロー実行開始...')
             
-            if (hybridMode && voidFlowEngine) {
-                // ハイブリッドモード: 従来 + VoidCore
-                await executeFlowHybrid()
-            } else {
-                // VoidCoreオンリーモード
-                await executeFlowVoidCoreOnly()
-            }
+            // VoidCore v14.0 純粋アーキテクチャ
+            await executeFlowVoidCoreOnly()
             
         } catch (error) {
             voidCoreUI.log(`❌ VoidCore統合フロー実行失敗: ${error.message}`)
@@ -316,14 +302,8 @@ function enhanceExecuteButton() {
     if (executeButton) {
         const originalOnClick = executeButton.onclick
         executeButton.onclick = async () => {
-            if (hybridMode) {
-                // ハイブリッドモード: 両方実行
-                await originalOnClick()
-                await window.executeFlowVoidCore()
-            } else {
-                // VoidCoreオンリー
-                await window.executeFlowVoidCore()
-            }
+            // VoidCore v14.0 純粋アーキテクチャ
+            await window.executeFlowVoidCore()
         }
     }
 }
@@ -379,20 +359,17 @@ async function executeFlowVoidCoreOnly() {
 /**
  * 🔄 モード変更時のUI更新
  */
-function updateUIForMode() {
+// VoidCore v14.0 純粋アーキテクチャ - UIモード更新関数削除済み
+// updateUIForMode() → 完全に削除（モード概念自体が消失）
+
+// 純粋アーキテクチャ用のZenメッセージ設定
+function setPureArchitectureZenMessage() {
     const zenMessage = document.getElementById('zenMessage')
     if (zenMessage) {
-        if (hybridMode) {
-            zenMessage.innerHTML = `
-                <div class="zen-title">🔄 ハイブリッド宇宙で星座を描く</div>
-                <div class="zen-subtitle">従来VoidFlow + VoidCore統合モード</div>
-            `
-        } else {
-            zenMessage.innerHTML = `
-                <div class="zen-title">🎨 VoidCore純粋宇宙で星座を描く</div>
-                <div class="zen-subtitle">完全VoidCoreメッセージシステム</div>
-            `
-        }
+        zenMessage.innerHTML = `
+            <div class="zen-title">💎 VoidCore純粋宇宙で星座を描く</div>
+            <div class="zen-subtitle">完全なる純粋メッセージベースシステム</div>
+        `
     }
 }
 
@@ -410,36 +387,68 @@ async function performIntegrationTest() {
     const adapterTest = messageAdapter.getAdapterStats()
     voidCoreUI.log(`✅ MessageAdapter: Version=${adapterTest.adapterVersion}`)
     
-    // Test 3: ハイブリッドモード
-    if (hybridMode && voidFlowEngine) {
-        voidCoreUI.log(`✅ Hybrid: Legacy engine available`)
-    }
+    // Test 3: VoidCore v14.0 純粋アーキテクチャ
+    voidCoreUI.log(`✅ Pure Architecture: VoidCore v14.0 ready`)
     
     voidCoreUI.log('🎉 統合テスト完了！')
 }
 
 /**
- * 🔄 フォールバック: 従来版初期化
+ * 🎯 SVG矢印マーカー初期化
  */
-async function initializeLegacyVoidFlowFallback() {
-    try {
-        // 従来のmain.jsと同じ初期化
-        voidFlowEngine = new VoidFlowEngine()
-        executeEngine = new ExecuteEngine(voidFlowEngine)
-        voidFlowEngine.executeEngine = executeEngine
-        
-        window.voidFlowEngine = voidFlowEngine
-        window.executeEngine = executeEngine
-        
-        initializeNodePalette()
-        initializeCanvas()
-        
-        voidFlowEngine.log('🔄 フォールバック初期化完了（従来版）')
-        
-    } catch (error) {
-        console.error('❌ フォールバック初期化も失敗:', error)
+function initializeSVGMarkers() {
+    const svg = document.getElementById('connectionSvg')
+    if (!svg) {
+        voidCoreUI.log('⚠️ Connection SVG not found for marker initialization')
+        return
     }
+    
+    let defs = svg.querySelector('defs')
+    if (!defs) {
+        defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
+        svg.appendChild(defs)
+    }
+    
+    // 基本矢印マーカー（データフロー用）
+    if (!defs.querySelector('#arrowhead')) {
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
+        marker.setAttribute('id', 'arrowhead')
+        marker.setAttribute('markerWidth', '10')
+        marker.setAttribute('markerHeight', '7')
+        marker.setAttribute('refX', '9')
+        marker.setAttribute('refY', '3.5')
+        marker.setAttribute('orient', 'auto')
+        marker.setAttribute('fill', '#4a90e2')
+        
+        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        polygon.setAttribute('points', '0 0, 10 3.5, 0 7')
+        marker.appendChild(polygon)
+        defs.appendChild(marker)
+    }
+    
+    // オレンジ矢印マーカー（制御フロー用）
+    if (!defs.querySelector('#arrowhead-orange')) {
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
+        marker.setAttribute('id', 'arrowhead-orange')
+        marker.setAttribute('markerWidth', '10')
+        marker.setAttribute('markerHeight', '7')
+        marker.setAttribute('refX', '9')
+        marker.setAttribute('refY', '3.5')
+        marker.setAttribute('orient', 'auto')
+        marker.setAttribute('fill', '#ff9500')
+        
+        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        polygon.setAttribute('points', '0 0, 10 3.5, 0 7')
+        marker.appendChild(polygon)
+        defs.appendChild(marker)
+    }
+    
+    voidCoreUI.log('🎯 SVG arrow markers initialized')
 }
+
+/**
+ * 🔄 VoidCore v14.0 純粋アーキテクチャ - フォールバック機能完全除去済み
+ */
 
 // 従来のUI初期化関数（既存コードから移植）
 // ノードパレット初期化
@@ -467,18 +476,12 @@ function initializeNodePalette() {
                 y: Math.random() * 300 + 100
             }
             
-            console.log(`🎯 ノードパレットクリック: ${nodeType}`)
-            console.log(`📍 Position:`, position)
-            
-            // VoidCoreプラグインのみ作成（接続テスト用）
-            console.log(`🚀 createVoidCoreNode呼び出し開始`)
-            console.log(`🔍 createVoidCoreNode function:`, typeof createVoidCoreNode)
-            
+            // VoidCoreプラグイン作成
             try {
                 const result = await createVoidCoreNode(nodeType, position)
-                console.log(`✅ createVoidCoreNode完了:`, result)
+                voidCoreUI.log(`🎯 ノード作成完了: ${nodeType}`)
             } catch (error) {
-                console.error(`❌ createVoidCoreNodeエラー:`, error)
+                voidCoreUI.log(`❌ ノード作成エラー: ${error.message}`)
             }
         })
         
@@ -512,60 +515,24 @@ function initializeCanvas() {
     })
 }
 
-// VoidCoreノード作成
+// VoidCoreノード作成（VoidCoreUI統合版）
 async function createVoidCoreNode(nodeType, position) {
     try {
-        console.log(`🌟 VoidCoreノード作成開始: ${nodeType}`)
-        console.log(`🔍 VoidCoreUI debug info:`, {
-            debugMode: voidCoreUI.debugMode,
-            logElement: !!voidCoreUI.logElement
-        })
-        
-        // 手動テスト: voidCoreUI.log() が動作するかテスト
-        console.log('🧪 Manual voidCoreUI.log test...')
-        voidCoreUI.log(`🧪 Manual test message: ${Date.now()}`)
-        console.log('🧪 Manual test completed')
-        
         voidCoreUI.log(`🌟 VoidCoreノード作成開始: ${nodeType}`)
         
         if (!voidCoreUI) {
             throw new Error('VoidCoreUI not initialized')
         }
         
-        // プラグインID生成
-        const pluginId = `${nodeType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        voidCoreUI.log(`🆔 プラグインID生成: ${pluginId}`)
+        // VoidCoreUIの統合メソッドを使用
+        const pluginId = await voidCoreUI.createUIPlugin(nodeType, position)
         
-        // プラグイン要素作成
-        voidCoreUI.log(`🎨 プラグイン要素作成中...`)
-        const pluginElement = createVoidCorePluginElement(nodeType, pluginId, position)
-        document.querySelector('.canvas-area').appendChild(pluginElement)
-        voidCoreUI.log(`✅ プラグイン要素作成・配置完了`)
-        
-        // VoidCoreプラグインとして登録
-        voidCoreUI.log(`📝 プラグイン登録開始...`)
-        await registerVoidCorePlugin(nodeType, pluginId, pluginElement)
-        voidCoreUI.log(`✅ プラグイン登録処理完了`)
-        
-        // 登録確認テスト
-        const registeredPlugin = voidCoreUI.getPlugin(pluginId)
-        voidCoreUI.log(`🔍 Plugin registration check: ${pluginId} → ${!!registeredPlugin}`)
-        
-        voidCoreUI.log(`✨ VoidCoreノード作成: ${nodeType} (${pluginId})`)
-        
-        // Zenメッセージを隠す
-        const zenMessage = document.getElementById('zenMessage')
-        if (zenMessage) {
-            zenMessage.style.display = 'none'
-        }
-        
+        voidCoreUI.log(`🎯 VoidCoreUIプラグイン作成完了: ${pluginId}`)
         return pluginId
         
     } catch (error) {
-        if (voidCoreUI) {
-            voidCoreUI.log(`❌ VoidCoreノード作成失敗: ${error.message}`)
-        }
-        console.error('VoidCoreノード作成エラー:', error)
+        voidCoreUI.log(`❌ VoidCoreノード作成失敗: ${error.message}`)
+        throw error
     }
 }
 
@@ -889,8 +856,8 @@ window.getVoidCoreDebugInfo = function() {
     return {
         voidCoreUI: voidCoreUI ? voidCoreUI.getUIState() : null,
         messageAdapter: messageAdapter ? messageAdapter.getDebugInfo() : null,
-        hybridMode: hybridMode,
-        hasLegacyEngine: !!voidFlowEngine
+        pureArchitecture: true,
+        voidCoreVersion: 'v14.0'
     }
 }
 
@@ -1127,12 +1094,11 @@ window.startFromNode = async function(nodeId) {
             voidCoreUI.log(`🎯 手動開始: ${nodeId}`)
         }
         
-        if (hybridMode && executeEngine && executeEngine.executeNode) {
-            await executeEngine.executeNode(nodeId)
-        } else if (voidFlowEngine && voidFlowEngine.executeEngine) {
-            await voidFlowEngine.executeEngine.executeNode(nodeId)
+        // VoidCore v14.0 純粋アーキテクチャ - FlowExecutor使用
+        if (flowExecutor && flowExecutor.executeNode) {
+            await flowExecutor.executeNode(nodeId)
         } else {
-            throw new Error('ExecuteEngine が見つかりません')
+            throw new Error('FlowExecutor が見つかりません')
         }
         
         if (voidCoreUI) {

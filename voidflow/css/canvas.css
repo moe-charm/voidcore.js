@@ -71,7 +71,7 @@
     background: #4a90e2;
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.2s ease;
+    /* transition: all 0.2s ease; パフォーマンス最適化で無効化 */
 }
 
 .connection-port:hover {
@@ -117,18 +117,18 @@
 /* ノード状態別アニメーション（必要最小限） */
 .voidflow-node.executing {
     border-color: #00ff88;
-    animation: heartbeat 1s infinite;
+    /* animation: heartbeat 1s infinite; パフォーマンス最適化で無効化 */
     box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
 }
 
 .voidflow-node.success {
     border-color: #00ff88;
-    animation: successGlow 0.5s ease-out;
+    /* animation: successGlow 0.5s ease-out; パフォーマンス最適化で無効化 */
 }
 
 .voidflow-node.error {
     border-color: #ff4757;
-    animation: errorShake 0.3s;
+    /* animation: errorShake 0.3s; パフォーマンス最適化で無効化 */
 }
 
 /* ノード入力フィールド */

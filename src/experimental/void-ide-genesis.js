@@ -108,7 +108,7 @@ export class VoidIDEGenesis extends IPlugin {
     };
     
     this.log('✅ UI state initialized');
-  },
+  }
 
   // ==========================================
   // 🖥️ Monaco Editor準備
@@ -137,7 +137,7 @@ export class VoidIDEGenesis extends IPlugin {
     this.voidcoreCompletions = this.generateVoidCoreCompletions();
     
     this.log('✅ Monaco Editor configuration ready');
-  },
+  }
 
   // ==========================================
   // ⚡ プラグイン実行環境
@@ -167,7 +167,7 @@ export class VoidIDEGenesis extends IPlugin {
     };
     
     this.log('✅ Plugin runtime environment ready');
-  },
+  }
 
   // ==========================================
   // 📡 メッセージ監視
@@ -203,7 +203,7 @@ export class VoidIDEGenesis extends IPlugin {
     });
     
     this.log('✅ Message monitoring active');
-  },
+  }
 
   // ==========================================
   // 📝 デフォルトプロジェクト
@@ -223,7 +223,7 @@ export class VoidIDEGenesis extends IPlugin {
     });
     
     this.log('✅ Default project created');
-  },
+  }
 
   // ==========================================
   // 🔧 コア機能: コード実行
@@ -307,7 +307,7 @@ export class VoidIDEGenesis extends IPlugin {
     } finally {
       this.editorState.isExecuting = false;
     }
-  },
+  }
 
   // ==========================================
   // 🔒 セキュアeval環境
@@ -383,7 +383,7 @@ export class VoidIDEGenesis extends IPlugin {
       
       return { success: false, error: error.message };
     }
-  },
+  }
 
   // ==========================================
   // 📋 デフォルトテンプレート
@@ -428,7 +428,7 @@ const myPlugin = createPlugin({
 
 // Return the plugin (VoidIDE will register it automatically)
 return myPlugin;`;
-  },
+  }
 
   // ==========================================
   // 💬 VoidCore API補完
@@ -467,7 +467,7 @@ return myPlugin;`;
         documentation: 'Initialize the plugin (call in run method)'
       }
     ];
-  },
+  }
 
   // ==========================================
   // 🎮 イベントハンドラー
@@ -476,12 +476,12 @@ return myPlugin;`;
   handlePluginCreated(message) {
     this.log(`🔧 Plugin created: ${message.payload.pluginId}`);
     // UI更新通知などを送信
-  },
+  }
   
   handlePluginExecuted(message) {
     this.log(`⚡ Plugin executed: ${message.payload.pluginId}`);
     // 実行結果の表示など
-  },
+  }
   
   async handleExecuteCodeRequest(message) {
     const { code, options } = message.payload;
@@ -492,17 +492,17 @@ return myPlugin;`;
       requestId: message.payload.requestId,
       result: result
     });
-  },
+  }
   
   async handleLoadProjectRequest(message) {
     // プロジェクト読み込み処理
     this.log(`📁 Loading project: ${message.payload.projectName}`);
-  },
+  }
   
   recordMessage(message, type) {
     // メッセージ可視化のための記録
     // 実装は後のフェーズで詳細化
-  },
+  }
 
   // ==========================================
   // 🛠️ ユーティリティ
@@ -514,7 +514,7 @@ return myPlugin;`;
     this.log(message);
     
     // UI出力パネルにも表示（後のフェーズで実装）
-  },
+  }
 
   // プラグイン状態取得
   getPluginStatus() {

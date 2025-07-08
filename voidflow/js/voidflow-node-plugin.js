@@ -1,7 +1,7 @@
 // voidflow-node-plugin.js - VoidFlowノードのVoidCoreプラグイン基底クラス
 
-import { IPlugin } from '../../src/plugin-interface.js'
-import { Message } from '../../src/message.js'
+import { IPlugin } from '../../src/interfaces/plugin-interface.js'
+import { Message } from '../../src/messaging/message.js'
 
 /**
  * 🧩 VoidFlowNodePlugin - VoidFlowノードのVoidCoreプラグイン基底クラス

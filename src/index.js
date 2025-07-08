@@ -12,8 +12,8 @@ export { Message } from './messaging/message.js';
 export { CoreFusion, coreFusion } from './core/core-fusion.js';
 export { SimpleMessagePool, simpleMessagePool } from './messaging/simple-message-pool.js';
 
-// v14.0: VoidIDE Genesis - Self-Creating IDE (一時的に無効化)
-// export { VoidIDEGenesis } from './experimental/void-ide-genesis.js';
+// v14.0: VoidIDE Genesis - Self-Creating IDE
+export { VoidIDEGenesis } from './experimental/void-ide-genesis.js';
 export { MonacoIntegration } from './experimental/monaco-integration.js';
 
 // v14.0: VoidIDE Genesis Phase 2 - Advanced Analytics & Visualization
