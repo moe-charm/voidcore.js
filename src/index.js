@@ -1,31 +1,31 @@
 // VoidCore v14.0 - 純粋メッセージベースシステム
 // セリンの大改革完了版
 
-export { voidCore } from './voidcore.js';
-export { Message } from './message.js';
+export { voidCore } from './core/voidcore.js';
+export { Message } from './messaging/message.js';
 export { 
   createPlugin,
   createComfortablePlugin,
   registerHealthCheck,
   declareProcess
-} from './pure_plugin_system.js';
+} from './legacy/pure_plugin_system.js';
 
 // 後方互換性export削除完了 - ローカルVoidCoreコピー戦略により不要
 
 // v14.0: CoreFusion v1.2 & SimpleMessagePool
-export { CoreFusion, coreFusion } from './core-fusion.js';
-export { SimpleMessagePool, simpleMessagePool } from './simple-message-pool.js';
+export { CoreFusion, coreFusion } from './core/core-fusion.js';
+export { SimpleMessagePool, simpleMessagePool } from './messaging/simple-message-pool.js';
 
 // v14.0: VoidIDE Genesis - Self-Creating IDE
-export { VoidIDEGenesis } from './void-ide-genesis.js';
-export { MonacoIntegration } from './monaco-integration.js';
+export { VoidIDEGenesis } from './experimental/void-ide-genesis.js';
+export { MonacoIntegration } from './experimental/monaco-integration.js';
 
 // v14.0: VoidIDE Genesis Phase 2 - Advanced Analytics & Visualization
-export { MessageFlowVisualizer } from './message-flow-visualizer.js';
-export { PluginMonitorDashboard } from './plugin-monitor-dashboard.js';
-export { PerformanceMetricsSystem } from './performance-metrics-system.js';
+export { MessageFlowVisualizer } from './utils/message-flow-visualizer.js';
+export { PluginMonitorDashboard } from './experimental/plugin-monitor-dashboard.js';
+export { PerformanceMetricsSystem } from './utils/performance-metrics-system.js';
 
 // v14.0: VoidIDE Genesis Phase 3 - Project Management
-export { ProjectManager } from './project-manager.js';
+export { ProjectManager } from './experimental/project-manager.js';
 
 console.log('🌟 VoidCore v14.0 - Pure Message-Based System Loaded!');

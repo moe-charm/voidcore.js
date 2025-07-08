@@ -1,7 +1,8 @@
 // universal-plugin-interface.js - 汎用プラグインインターフェース完成版
 // Phase S3後続: 全システム対応の究極プラグインインターフェース
 
-import { IPlugin, ICorePlugin } from './plugin-interface.js';
+import { IPlugin } from './plugin-interface.js';
+// ICorePluginが必要な場合は './legacy/icore-plugin.js' から import
 
 /**
  * 🌐 IUniversalPlugin - 汎用プラグインインターフェース

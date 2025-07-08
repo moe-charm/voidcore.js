@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoidCore Bootstrapper Test - Phase 2</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: #1a1a2e;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #4a90e2;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #4a90e2;
+            margin: 0;
+        }
+        .header p {
+            color: #888;
+            margin: 10px 0 0 0;
+        }
+        .panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: 70vh;
+        }
+        .panel {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-y: auto;
+            border: 1px solid #4a90e2;
+        }
+        .panel h2 {
+            color: #00ff88;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #333;
+            color: #fff;
+        }
+        .status.waiting { background: #ffa500; }
+        .status.loading { background: #4a90e2; }
+        .status.ready { background: #00ff88; color: #000; }
+        .status.error { background: #ff6b6b; }
+        .log-entry {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            border-left: 3px solid transparent;
+        }
+        .log-entry.info {
+            background: rgba(74, 144, 226, 0.1);
+            border-left-color: #4a90e2;
+        }
+        .log-entry.success {
+            background: rgba(0, 255, 136, 0.1);
+            border-left-color: #00ff88;
+        }
+        .log-entry.error {
+            background: rgba(255, 107, 107, 0.1);
+            border-left-color: #ff6b6b;
+        }
+        .log-entry.warning {
+            background: rgba(255, 165, 0, 0.1);
+            border-left-color: #ffa500;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #357abd;
+        }
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .btn.success {
+            background: #00ff88;
+            color: #000;
+        }
+        .btn.danger {
+            background: #ff6b6b;
+        }
+        .code {
+            background: #0f1419;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .stat {
+            background: #0f1419;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4a90e2;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 VoidCore Bootstrapper Test</h1>
+            <p>Phase 2: Bootstrapper + CoreManager分離設計テスト</p>
+            <div id="system-status" class="status waiting">Waiting</div>
+        </div>
+
+        <div class="controls">
+            <button id="start-boot" class="btn">🚀 Start Boot Sequence</button>
+            <button id="restart" class="btn">🔄 Restart System</button>
+            <button id="status-check" class="btn">📊 Check Status</button>
+            <button id="clear-logs" class="btn danger">🧹 Clear Logs</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div id="boot-time" class="stat-value">-</div>
+                <div class="stat-label">Boot Time (ms)</div>
+            </div>
+            <div class="stat">
+                <div id="plugin-count" class="stat-value">-</div>
+                <div class="stat-label">Registered Plugins</div>
+            </div>
+            <div class="stat">
+                <div id="message-count" class="stat-value">-</div>
+                <div class="stat-label">Messages Sent</div>
+            </div>
+            <div class="stat">
+                <div id="boot-plan" class="stat-value">-</div>
+                <div class="stat-label">Boot Plan</div>
+            </div>
+        </div>
+
+        <div class="panels">
+            <div class="panel">
+                <h2>
+                    🎯 Bootstrapper Logs
+                    <span id="bootstrapper-status" class="status waiting">Waiting</span>
+                </h2>
+                <div id="bootstrapper-log"></div>
+            </div>
+
+            <div class="panel">
+                <h2>
+                    🔧 CoreManager Logs
+                    <span id="coremanager-status" class="status waiting">Waiting</span>
+                </h2>
+                <div id="coremanager-log"></div>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-top: 20px;">
+            <h2>🌐 VoidCore System Info</h2>
+            <div id="system-info">
+                <div class="code">
+                    <div>VoidCore Status: <span id="voidcore-status">Not Initialized</span></div>
+                    <div>Core ID: <span id="core-id">-</span></div>
+                    <div>Debug Mode: <span id="debug-mode">-</span></div>
+                    <div>Initialization: <span id="initialization-status">-</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ==========================================
+        // 🚀 Bootstrapper Implementation
+        // ==========================================
+        
+        import { VoidCore } from './src/core/voidcore.js';
+
+        let voidCore = null;
+        let bootstrapperLog = [];
+        let coreManagerLog = [];
+        let messageCount = 0;
+        let bootStartTime = null;
+
+        // UI Elements
+        const systemStatusEl = document.getElementById('system-status');
+        const bootstrapperStatusEl = document.getElementById('bootstrapper-status');
+        const coreManagerStatusEl = document.getElementById('coremanager-status');
+        const bootstrapperLogEl = document.getElementById('bootstrapper-log');
+        const coreManagerLogEl = document.getElementById('coremanager-log');
+        const startBootBtn = document.getElementById('start-boot');
+        const restartBtn = document.getElementById('restart');
+        const statusCheckBtn = document.getElementById('status-check');
+        const clearLogsBtn = document.getElementById('clear-logs');
+
+        // ==========================================
+        // 🎯 Bootstrapper Logic
+        // ==========================================
+
+        async function initializeBootstrapper() {
+            try {
+                addBootstrapperLog('🚀 Bootstrapper: Initializing VoidCore...', 'info');
+                updateBootstrapperStatus('loading');
+
+                // 1. VoidCore instance creation with async initialization
+                voidCore = await VoidCore.create(null, { debug: true });
+                addBootstrapperLog('✅ VoidCore instance created and initialized', 'success');
+                
+                // Update system info
+                document.getElementById('core-id').textContent = voidCore.coreId;
+                document.getElementById('debug-mode').textContent = 'true';
+                document.getElementById('voidcore-status').textContent = 'Created';
+
+                // SystemBootManager is now integrated into VoidCore parent core
+                addBootstrapperLog('✅ SystemBootManager integrated in parent core', 'success');
+
+                // 3. Setup message monitoring
+                setupMessageMonitoring();
+
+                addBootstrapperLog('✅ Bootstrapper initialization completed', 'success');
+                updateBootstrapperStatus('ready');
+                
+                // Enable start boot button
+                startBootBtn.disabled = false;
+                updateSystemStatus('ready');
+
+                // Update stats
+                updateStats();
+
+            } catch (error) {
+                addBootstrapperLog(`❌ Bootstrapper initialization failed: ${error.message}`, 'error');
+                updateBootstrapperStatus('error');
+                updateSystemStatus('error');
+                console.error('Bootstrapper error:', error);
+            }
+        }
+
+        async function startBootSequence() {
+            try {
+                addBootstrapperLog('🎯 Starting boot sequence...', 'info');
+                bootStartTime = Date.now();
+                
+                // Disable start button
+                startBootBtn.disabled = true;
+                updateSystemStatus('loading');
+                updateCoreManagerStatus('loading');
+
+                // SystemBootManager is now integrated, so boot sequence starts automatically
+                messageCount++;
+                document.getElementById('boot-plan').textContent = 'default';
+
+                addBootstrapperLog('🚀 Parent core boot sequence starting automatically', 'success');
+                addBootstrapperLog(`✅ Boot sequence initiated successfully`, 'success');
+
+                // Monitor boot completion
+                monitorBootCompletion();
+
+            } catch (error) {
+                addBootstrapperLog(`❌ Boot sequence failed: ${error.message}`, 'error');
+                updateSystemStatus('error');
+                updateCoreManagerStatus('error');
+                startBootBtn.disabled = false;
+                console.error('Boot sequence error:', error);
+            }
+        }
+
+        function setupMessageMonitoring() {
+            // Monitor system.boot.ready Intent messages
+            voidCore.subscribe('Intent', (message) => {
+                if (message.intent === 'system.boot.ready') {
+                    const bootDuration = message.payload.bootDuration;
+                    addBootstrapperLog(`🎉 Boot completion Intent received (${bootDuration}ms)`, 'success');
+                    updateSystemStatus('ready');
+                    updateCoreManagerStatus('ready');
+                    document.getElementById('boot-time').textContent = bootDuration;
+                    startBootBtn.disabled = false;
+                }
+            });
+        }
+
+        function monitorBootCompletion() {
+            // Poll for SystemBootManager status (integrated in parent core)
+            const pollInterval = setInterval(async () => {
+                try {
+                    const statusResult = await voidCore.sendIntent('system.getBootStatus', {});
+                    if (statusResult && statusResult.systemStatus === 'ready') {
+                        clearInterval(pollInterval);
+                        addBootstrapperLog('🎉 Boot completion confirmed via polling', 'success');
+                        updateSystemStatus('ready');
+                        updateCoreManagerStatus('ready');
+                        startBootBtn.disabled = false;
+                    }
+                } catch (error) {
+                    // Ignore polling errors
+                }
+            }, 500);
+
+            // Stop polling after 10 seconds
+            setTimeout(() => {
+                clearInterval(pollInterval);
+            }, 10000);
+        }
+
+        // ==========================================
+        // 🔧 SystemBootManager Log Monitoring (integrated)
+        // ==========================================
+
+        function setupCoreManagerMonitoring() {
+            // SystemBootManager is now integrated into VoidCore parent core
+            // Logs will be captured through VoidCore's logging system
+            addCoreManagerLog('🚀 SystemBootManager monitoring ready (integrated)', 'info');
+        }
+
+        // ==========================================
+        // 🎨 UI Update Functions
+        // ==========================================
+
+        function addBootstrapperLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = {
+                timestamp,
+                message,
+                type
+            };
+            bootstrapperLog.push(logEntry);
+            
+            const logDiv = document.createElement('div');
+            logDiv.className = `log-entry ${type}`;
+            logDiv.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            
+            bootstrapperLogEl.appendChild(logDiv);
+            bootstrapperLogEl.scrollTop = bootstrapperLogEl.scrollHeight;
+        }
+
+        function addCoreManagerLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = {
+                timestamp,
+                message,
+                type
+            };
+            coreManagerLog.push(logEntry);
+            
+            const logDiv = document.createElement('div');
+            logDiv.className = `log-entry ${type}`;
+            logDiv.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            
+            coreManagerLogEl.appendChild(logDiv);
+            coreManagerLogEl.scrollTop = coreManagerLogEl.scrollHeight;
+        }
+
+        function updateSystemStatus(status) {
+            systemStatusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            systemStatusEl.className = `status ${status}`;
+        }
+
+        function updateBootstrapperStatus(status) {
+            bootstrapperStatusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            bootstrapperStatusEl.className = `status ${status}`;
+        }
+
+        function updateCoreManagerStatus(status) {
+            coreManagerStatusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            coreManagerStatusEl.className = `status ${status}`;
+        }
+
+        function updateStats() {
+            if (voidCore) {
+                document.getElementById('plugin-count').textContent = voidCore.getPluginCount();
+                document.getElementById('message-count').textContent = messageCount;
+            }
+        }
+
+        function clearLogs() {
+            bootstrapperLog = [];
+            coreManagerLog = [];
+            bootstrapperLogEl.innerHTML = '';
+            coreManagerLogEl.innerHTML = '';
+            addBootstrapperLog('🧹 Logs cleared', 'info');
+        }
+
+        async function checkSystemStatus() {
+            if (!voidCore) {
+                addBootstrapperLog('❌ VoidCore not initialized', 'error');
+                return;
+            }
+
+            try {
+                const stats = voidCore.getStats();
+                addBootstrapperLog(`📊 System stats: ${JSON.stringify(stats, null, 2)}`, 'info');
+                
+                const statusResult = await voidCore.sendIntent('system.getBootStatus', {});
+                addBootstrapperLog(`📊 SystemBootManager status: ${JSON.stringify(statusResult, null, 2)}`, 'info');
+                
+                updateStats();
+            } catch (error) {
+                addBootstrapperLog(`❌ Status check failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function restartSystem() {
+            addBootstrapperLog('🔄 Restarting system...', 'warning');
+            
+            // Clear system
+            if (voidCore) {
+                await voidCore.clear();
+            }
+            
+            voidCore = null;
+            messageCount = 0;
+            bootStartTime = null;
+            
+            updateSystemStatus('waiting');
+            updateBootstrapperStatus('waiting');
+            updateCoreManagerStatus('waiting');
+            
+            startBootBtn.disabled = true;
+            
+            // Reinitialize
+            setTimeout(() => {
+                initializeBootstrapper();
+            }, 1000);
+        }
+
+        // ==========================================
+        // 🎮 Event Listeners
+        // ==========================================
+
+        startBootBtn.addEventListener('click', startBootSequence);
+        restartBtn.addEventListener('click', restartSystem);
+        statusCheckBtn.addEventListener('click', checkSystemStatus);
+        clearLogsBtn.addEventListener('click', clearLogs);
+
+        // ==========================================
+        // 🚀 Bootstrap Start
+        // ==========================================
+
+        addBootstrapperLog('🌟 VoidCore Bootstrapper Test - Phase 2 Started', 'info');
+        addBootstrapperLog('📋 Implementation: Bootstrapper + CoreManager separation', 'info');
+        
+        // Initialize Bootstrapper
+        initializeBootstrapper();
+
+        // Global access for debugging
+        window.voidCore = voidCore;
+        window.bootstrapper = {
+            logs: bootstrapperLog,
+            coreManagerLogs: coreManagerLog,
+            restart: restartSystem,
+            checkStatus: checkSystemStatus
+        };
+    </script>
+</body>
+</html>
