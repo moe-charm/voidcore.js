@@ -1,0 +1,81 @@
+{
+  "id": "media-image-processor-plugin"
+  "name": "Image Processor"
+  "displayName": "🖼️ Image Processor"
+  "version": "1.8.0"
+  "author": "MediaFlow Team"
+  "description": "Advanced image processing with filters, transformations, and format conversion capabilities"
+  "category": "Media"
+  "tags": ["image", "processing", "filter", "resize", "crop", "transform", "canvas"]
+  "type": "media.image"
+  "priority": "medium"
+  "performance": {
+    "memory": "high"
+    "cpu": "high"
+    "network": "none"
+  }
+  "attributes": {
+    "category": "Media"
+    "subcategory": "Image"
+    "tags": ["image", "processing", "filter", "resize", "crop", "transform", "canvas"]
+    "priority": "medium"
+    "experimental": false
+    "deprecated": false
+    "hidden": false
+    "performance": {
+      "memory": "high"
+      "cpu": "high"
+      "network": "none"
+    }
+    "ui": {
+      "icon": "🖼️"
+      "color": "#e74c3c"
+      "size": "large"
+    }
+    "compatibility": {
+      "voidcore": "14.0+"
+      "browser": "modern"
+      "mobile": true
+    }
+  }
+  "config": {
+    "quality": 0.8
+    "format": "jpeg"
+    "preserveMetadata": false
+    "maxSize": 2048
+  }
+  "inputs": [
+    {
+      "name": "image"
+      "type": "file"
+      "description": "Input image file or data URL"
+    }
+    {
+      "name": "operation"
+      "type": "string"
+      "description": "Processing operation (resize, crop, filter, etc.)"
+    }
+    {
+      "name": "params"
+      "type": "object"
+      "description": "Operation parameters"
+    }
+  ]
+  "outputs": [
+    {
+      "name": "processed"
+      "type": "string"
+      "description": "Processed image data URL"
+    }
+    {
+      "name": "metadata"
+      "type": "object"
+      "description": "Image metadata"
+    }
+    {
+      "name": "error"
+      "type": "string"
+      "description": "Processing error message"
+    }
+  ]
+  "dependencies": ["konva"]

@@ -1,0 +1,58 @@
+{
+  "id": "ui-button-plugin"
+  "name": "Interactive Button"
+  "displayName": "🔘 Interactive Button"
+  "version": "1.2.0"
+  "author": "VoidFlow Team"
+  "description": "Multi-purpose interactive button with customizable actions and styling"
+  "category": "UI"
+  "tags": ["button", "interactive", "ui", "click", "action"]
+  "type": "ui.button"
+  "priority": "high"
+  "performance": {
+    "memory": "low"
+    "cpu": "low"
+    "network": "none"
+  }
+  "attributes": {
+    "category": "UI"
+    "subcategory": "Input"
+    "tags": ["button", "interactive", "ui", "click", "action"]
+    "priority": "high"
+    "experimental": false
+    "deprecated": false
+    "hidden": false
+    "performance": {
+      "memory": "low"
+      "cpu": "low"
+      "network": "none"
+    }
+    "ui": {
+      "icon": "🔘"
+      "color": "#4fc1ff"
+      "size": "medium"
+    }
+    "compatibility": {
+      "voidcore": "14.0+"
+      "browser": "modern"
+      "mobile": true
+    }
+  }
+  "config": {
+    "text": "Click Me"
+    "style": "primary"
+    "size": "medium"
+    "disabled": false
+    "ripple": true
+  }
+  "inputs": []
+  "outputs": [
+    {
+      "name": "click"
+      "type": "event"
+      "description": "Emitted when button is clicked"
+    }
+  ]
+  "dependencies": []
+  "codeFile": "ui-button-plugin.js"
+}

@@ -1,0 +1,97 @@
+{
+  "id": "network-http-client-plugin"
+  "name": "HTTP Client"
+  "displayName": "🌐 HTTP Client"
+  "version": "3.0.1"
+  "author": "NetFlow Systems"
+  "description": "Full-featured HTTP client with support for REST APIs, authentication, and request/response transformation"
+  "category": "Network"
+  "tags": ["http", "api", "rest", "client", "request", "response", "fetch"]
+  "type": "network.http"
+  "priority": "high"
+  "performance": {
+    "memory": "medium"
+    "cpu": "low"
+    "network": "high"
+  }
+  "attributes": {
+    "category": "Network"
+    "subcategory": "HTTP"
+    "tags": ["http", "api", "rest", "client", "request", "response", "fetch"]
+    "priority": "high"
+    "experimental": false
+    "deprecated": false
+    "hidden": false
+    "performance": {
+      "memory": "medium"
+      "cpu": "low"
+      "network": "high"
+    }
+    "ui": {
+      "icon": "🌐"
+      "color": "#3498db"
+      "size": "medium"
+    }
+    "compatibility": {
+      "voidcore": "14.0+"
+      "browser": "modern"
+      "mobile": true
+    }
+  }
+  "config": {
+    "timeout": 30000
+    "retries": 3
+    "followRedirects": true
+    "validateSSL": true
+    "userAgent": "VoidFlow HTTP Client"
+  }
+  "inputs": [
+    {
+      "name": "url"
+      "type": "string"
+      "description": "Request URL"
+    }
+    {
+      "name": "method"
+      "type": "string"
+      "description": "HTTP method (GET, POST, PUT, DELETE, etc.)"
+    }
+    {
+      "name": "headers"
+      "type": "object"
+      "description": "Request headers"
+    }
+    {
+      "name": "body"
+      "type": "any"
+      "description": "Request body"
+    }
+    {
+      "name": "auth"
+      "type": "object"
+      "description": "Authentication credentials"
+    }
+  ]
+  "outputs": [
+    {
+      "name": "response"
+      "type": "object"
+      "description": "HTTP response object"
+    }
+    {
+      "name": "data"
+      "type": "any"
+      "description": "Response data"
+    }
+    {
+      "name": "status"
+      "type": "number"
+      "description": "HTTP status code"
+    }
+    {
+      "name": "error"
+      "type": "object"
+      "description": "Request error"
+    }
+  ]
+  "dependencies": ["axios"]

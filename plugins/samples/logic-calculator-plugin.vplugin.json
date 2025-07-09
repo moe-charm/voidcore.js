@@ -1,0 +1,71 @@
+{
+  "id": "logic-calculator-plugin"
+  "name": "Mathematical Calculator"
+  "displayName": "🧮 Math Calculator"
+  "version": "2.1.0"
+  "author": "VoidFlow Community"
+  "description": "Advanced mathematical calculator with support for complex expressions and functions"
+  "category": "Logic"
+  "tags": ["math", "calculator", "expression", "function", "computation"]
+  "type": "logic.calculator"
+  "priority": "medium"
+  "performance": {
+    "memory": "medium"
+    "cpu": "medium"
+    "network": "none"
+  }
+  "attributes": {
+    "category": "Logic"
+    "subcategory": "Math"
+    "tags": ["math", "calculator", "expression", "function", "computation"]
+    "priority": "medium"
+    "experimental": false
+    "deprecated": false
+    "hidden": false
+    "performance": {
+      "memory": "medium"
+      "cpu": "medium"
+      "network": "none"
+    }
+    "ui": {
+      "icon": "🧮"
+      "color": "#f39c12"
+      "size": "medium"
+    }
+    "compatibility": {
+      "voidcore": "14.0+"
+      "browser": "modern"
+      "mobile": true
+    }
+  }
+  "config": {
+    "precision": 10
+    "angleMode": "radians"
+    "allowVariables": true
+    "customFunctions": []
+  }
+  "inputs": [
+    {
+      "name": "expression"
+      "type": "string"
+      "description": "Mathematical expression to evaluate"
+    }
+    {
+      "name": "variables"
+      "type": "object"
+      "description": "Variables to substitute in expression"
+    }
+  ]
+  "outputs": [
+    {
+      "name": "result"
+      "type": "number"
+      "description": "Calculation result"
+    }
+    {
+      "name": "error"
+      "type": "string"
+      "description": "Error message if calculation fails"
+    }
+  ]
+  "dependencies": ["math.js"]

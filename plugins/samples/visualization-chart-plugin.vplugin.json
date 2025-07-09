@@ -1,0 +1,88 @@
+{
+  "id": "visualization-chart-plugin"
+  "name": "Interactive Chart"
+  "displayName": "📈 Interactive Chart"
+  "version": "2.3.0"
+  "author": "VizFlow Studios"
+  "description": "Create beautiful interactive charts with support for multiple chart types and real-time data updates"
+  "category": "Visualization"
+  "tags": ["chart", "graph", "visualization", "data", "interactive", "realtime"]
+  "type": "visualization.chart"
+  "priority": "medium"
+  "performance": {
+    "memory": "high"
+    "cpu": "medium"
+    "network": "none"
+  }
+  "attributes": {
+    "category": "Visualization"
+    "subcategory": "Charts"
+    "tags": ["chart", "graph", "visualization", "data", "interactive", "realtime"]
+    "priority": "medium"
+    "experimental": false
+    "deprecated": false
+    "hidden": false
+    "performance": {
+      "memory": "high"
+      "cpu": "medium"
+      "network": "none"
+    }
+    "ui": {
+      "icon": "📈"
+      "color": "#9b59b6"
+      "size": "large"
+    }
+    "compatibility": {
+      "voidcore": "14.0+"
+      "browser": "modern"
+      "mobile": false
+    }
+  }
+  "config": {
+    "type": "line"
+    "responsive": true
+    "animation": true
+    "legend": true
+    "tooltip": true
+    "theme": "default"
+  }
+  "inputs": [
+    {
+      "name": "data"
+      "type": "array"
+      "description": "Chart data array"
+    }
+    {
+      "name": "labels"
+      "type": "array"
+      "description": "Data labels"
+    }
+    {
+      "name": "options"
+      "type": "object"
+      "description": "Chart configuration options"
+    }
+    {
+      "name": "update"
+      "type": "any"
+      "description": "Data update trigger"
+    }
+  ]
+  "outputs": [
+    {
+      "name": "click"
+      "type": "object"
+      "description": "Chart click event"
+    }
+    {
+      "name": "hover"
+      "type": "object"
+      "description": "Chart hover event"
+    }
+    {
+      "name": "rendered"
+      "type": "boolean"
+      "description": "Chart render completion"
+    }
+  ]
+  "dependencies": ["chart.js"]

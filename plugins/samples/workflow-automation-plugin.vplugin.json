@@ -1,0 +1,92 @@
+{
+  "id": "workflow-automation-plugin"
+  "name": "Workflow Automation"
+  "displayName": "⚡ Workflow Automation"
+  "version": "1.9.0"
+  "author": "AutoFlow Systems"
+  "description": "Create and execute complex automated workflows with conditional logic and parallel execution"
+  "category": "Workflow"
+  "tags": ["workflow", "automation", "schedule", "trigger", "condition", "parallel"]
+  "type": "workflow.automation"
+  "priority": "high"
+  "performance": {
+    "memory": "medium"
+    "cpu": "medium"
+    "network": "low"
+  }
+  "attributes": {
+    "category": "Workflow"
+    "subcategory": "Automation"
+    "tags": ["workflow", "automation", "schedule", "trigger", "condition", "parallel"]
+    "priority": "high"
+    "experimental": false
+    "deprecated": false
+    "hidden": false
+    "performance": {
+      "memory": "medium"
+      "cpu": "medium"
+      "network": "low"
+    }
+    "ui": {
+      "icon": "⚡"
+      "color": "#f1c40f"
+      "size": "medium"
+    }
+    "compatibility": {
+      "voidcore": "14.0+"
+      "browser": "modern"
+      "mobile": true
+    }
+  }
+  "config": {
+    "maxConcurrentTasks": 5
+    "retryAttempts": 3
+    "retryDelay": 1000
+    "timeoutMs": 30000
+    "enableLogging": true
+  }
+  "inputs": [
+    {
+      "name": "workflow"
+      "type": "object"
+      "description": "Workflow definition"
+    }
+    {
+      "name": "trigger"
+      "type": "any"
+      "description": "Workflow trigger data"
+    }
+    {
+      "name": "variables"
+      "type": "object"
+      "description": "Workflow variables"
+    }
+    {
+      "name": "action"
+      "type": "string"
+      "description": "Workflow action (start, stop, pause, resume)"
+    }
+  ]
+  "outputs": [
+    {
+      "name": "started"
+      "type": "object"
+      "description": "Workflow started event"
+    }
+    {
+      "name": "completed"
+      "type": "object"
+      "description": "Workflow completed event"
+    }
+    {
+      "name": "failed"
+      "type": "object"
+      "description": "Workflow failed event"
+    }
+    {
+      "name": "progress"
+      "type": "object"
+      "description": "Workflow progress update"
+    }
+  ]
+  "dependencies": ["cron"]

@@ -8,6 +8,8 @@ import { VoidFlowMessageAdapter } from './voidflow-message-adapter.js'
 import { VoidFlowBootManager } from './voidflow-boot-manager.js'
 import { VoidCoreConnectionManager } from './voidcore-connection-manager.js'
 import { PluginFlowExecutor } from './plugin-flow-executor.js'
+import MonacoPluginEditor from './monaco-plugin-editor.js'
+import { PluginPalettePlugin } from './plugin-palette-plugin.js'
 // import { ConnectionManager } from './main.js' // 重複初期化を防ぐため無効化
 
 // グローバル変数
@@ -18,6 +20,7 @@ let messageAdapter = null
 let voidFlowBootManager = null
 let connectionManager = null
 let flowExecutor = null
+let pluginPalette = null
 
 // VoidCore v14.0 純粋アーキテクチャ - ハイブリッドモード削除完了
 
@@ -48,8 +51,19 @@ async function initializeVoidFlowVoidCore() {
         // Phase 5: UI初期化
         await initializeUI()
         
+        // Phase 5.5: プラグインパレット初期化
+        try {
+            await initializePluginPalette()
+        } catch (error) {
+            console.error('⚠️ PluginPalette初期化失敗 - 続行します:', error)
+            voidCoreUI.log('⚠️ PluginPalette初期化失敗 - 続行します')
+        }
+        
         // Phase 6: 統合テスト
         await performIntegrationTest()
+        
+        // Phase 7: Monaco Editor初期化確認
+        await initializeMonacoEditor()
         
         voidCoreUI.log('🎉 VoidFlow VoidCore v14.0 純粋アーキテクチャ 初期化完了！')
         voidCoreUI.log('💎 完全なる純粋メッセージベースシステム - レガシー依存なし')
@@ -395,6 +409,42 @@ async function performIntegrationTest() {
     voidCoreUI.log(`✅ Pure Architecture: VoidCore v14.0 ready`)
     
     voidCoreUI.log('🎉 統合テスト完了！')
+}
+
+/**
+ * 🎨 Phase 7: Monaco Editor初期化確認
+ */
+async function initializeMonacoEditor() {
+    try {
+        voidCoreUI.log('🎨 Monaco Editor初期化確認中...')
+        
+        // Monaco Plugin Editorインスタンス確認
+        if (window.monacoPluginEditor) {
+            voidCoreUI.log('✅ Monaco Plugin Editor: Available')
+        } else {
+            voidCoreUI.log('⚠️ Monaco Plugin Editor: Not found, creating instance...')
+            
+            // 手動でインスタンス作成
+            const { default: MonacoPluginEditor } = await import('./monaco-plugin-editor.js')
+            window.monacoPluginEditor = new MonacoPluginEditor()
+            
+            voidCoreUI.log('✅ Monaco Plugin Editor: Created manually')
+        }
+        
+        // Monaco CDN確認
+        if (typeof require !== 'undefined') {
+            voidCoreUI.log('✅ Monaco Editor CDN: Loaded')
+        } else {
+            voidCoreUI.log('⚠️ Monaco Editor CDN: Loading...')
+        }
+        
+        voidCoreUI.log('🎨 Monaco Editor準備完了！')
+        voidCoreUI.log('💡 使い方: ノードをダブルクリックしてコード編集')
+        
+    } catch (error) {
+        voidCoreUI.log(`❌ Monaco Editor初期化失敗: ${error.message}`)
+        console.error('Monaco Editor initialization error:', error)
+    }
 }
 
 /**
@@ -1255,5 +1305,48 @@ window.executeFlow = async function() {
         } else {
             console.error(message, error)
         }
+    }
+}
+
+/**
+ * 🎨 Phase 5.5: プラグインパレット初期化
+ */
+async function initializePluginPalette() {
+    try {
+        console.log('🎨 PluginPalette初期化開始...')
+        
+        // パレットマウント要素の確認
+        const paletteMount = document.getElementById('pluginPaletteMount')
+        if (!paletteMount) {
+            throw new Error('pluginPaletteMount element not found')
+        }
+        
+        console.log('📦 PluginPalettePlugin作成中...')
+        
+        // PluginPalettePlugin作成
+        pluginPalette = new PluginPalettePlugin({
+            width: '100%',
+            height: '100%',
+            showStats: true,
+            enableVirtualScroll: true
+        })
+        
+        console.log('🔧 パレット作成中...')
+        await pluginPalette.createPalette(paletteMount)
+        
+        // グローバル参照設定
+        window.pluginPalette = pluginPalette
+        
+        console.log('✅ PluginPalette初期化完了！')
+        if (voidCoreUI) {
+            voidCoreUI.log('✅ PluginPalette初期化完了！')
+        }
+        
+    } catch (error) {
+        console.error('❌ PluginPalette初期化失敗:', error)
+        if (voidCoreUI) {
+            voidCoreUI.log(`❌ PluginPalette初期化失敗: ${error.message}`)
+        }
+        throw error
     }
 }

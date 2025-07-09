@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌟 VoidFlow VoidCore統合版 - Constellation Zero | 創造性の永久機関</title>
     
+    <!-- Monaco Editor CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+    
     <!-- CSS分離 -->
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/layout.css">
@@ -148,6 +151,80 @@
             border-radius: 4px;
             border-left: 3px solid #4a90e2;
         }
+        
+        /* Monaco Editor Modal */
+        .monaco-editor-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: none;
+        }
+        
+        .monaco-editor-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 70%;
+            background: #1e1e1e;
+            border: 2px solid #4a90e2;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .monaco-editor-header {
+            background: #2d2d30;
+            padding: 10px 15px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #d4d4d4;
+        }
+        
+        .monaco-editor-title {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .monaco-editor-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .monaco-editor-btn {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .monaco-editor-btn:hover {
+            background: #1177bb;
+        }
+        
+        .monaco-editor-btn.save {
+            background: #00ff88;
+            color: #000;
+        }
+        
+        .monaco-editor-btn.close {
+            background: #ff4757;
+        }
+        
+        .monaco-editor-content {
+            flex: 1;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
@@ -164,59 +241,11 @@
             <div>Message Adapter: <span id="adapterStatus">Loading...</span></div>
         </div>
 
-        <div class="node-palette">
-            <div class="level-section">
-                <div class="level-title">🎒 レベル1: 動くよろこびセット</div>
-                <div class="node-item" data-node-type="button.send">
-                    <div class="node-name">Button: Send</div>
-                    <div class="node-description">自律プラグインを刺激する</div>
-                </div>
-                <div class="node-item" data-node-type="input.text">
-                    <div class="node-name">Input: Text</div>
-                    <div class="node-description">宇宙の起源、意志の表明</div>
-                </div>
-                <div class="node-item" data-node-type="string.uppercase">
-                    <div class="node-name">String: UpperCase</div>
-                    <div class="node-description">意志が変化する様を体感</div>
-                </div>
-                <div class="node-item" data-node-type="output.console">
-                    <div class="node-name">Output: Console</div>
-                    <div class="node-description">観測手段＝現実の確定</div>
-                </div>
-            </div>
-
-            <div class="level-section">
-                <div class="level-title">✨ レベル2: 世界とつながる</div>
-                <div class="node-item" data-node-type="web.fetch">
-                    <div class="node-name">Web: Fetch API</div>
-                    <div class="node-description">外宇宙に扉を開ける</div>
-                </div>
-                <div class="node-item" data-node-type="json.parser">
-                    <div class="node-name">JSON: Parser</div>
-                    <div class="node-description">混沌に意味を与える</div>
-                </div>
-                <div class="node-item" data-node-type="ui.card">
-                    <div class="node-name">UI: Simple Card</div>
-                    <div class="node-description">美しさは意味の完成</div>
-                </div>
-            </div>
-
-            <div class="level-section">
-                <div class="level-title">🌀 レベル3: メタへの昇華</div>
-                <div class="node-item" data-node-type="core.plugin-lister">
-                    <div class="node-name">Core: Plugin Lister</div>
-                    <div class="node-description">🔗 VoidCore自己観測への参照</div>
-                    <div class="proxy-badge">参照</div>
-                </div>
-                <div class="node-item" data-node-type="core.connection-manager">
-                    <div class="node-name">Core: Connection Manager</div>
-                    <div class="node-description">🔗 VoidCore接続管理への参照</div>
-                    <div class="proxy-badge">参照</div>
-                </div>
-                <div class="node-item" data-node-type="flow.connector">
-                    <div class="node-name">Flow: Connector</div>
-                    <div class="node-description">自己編集＝創造の完成</div>
-                </div>
+        <!-- 左側: プラグインパレット (20%) -->
+        <div class="plugin-palette-section">
+            <div class="palette-header">🎨 Plugin Palette</div>
+            <div id="pluginPaletteMount">
+                <!-- PluginPalettePluginがここにマウントされる -->
             </div>
         </div>
 
@@ -267,6 +296,23 @@
         <footer class="footer">
             <span>🌟 VoidCore v14.0 + VoidFlow統合版 - Hybrid Message System | 創造性の永久機関 × 自己構造操作宇宙</span>
         </footer>
+    </div>
+
+    <!-- Monaco Editor Modal -->
+    <div id="monacoEditorModal" class="monaco-editor-modal">
+        <div class="monaco-editor-container">
+            <div class="monaco-editor-header">
+                <div class="monaco-editor-title" id="editorTitle">🎨 Plugin Code Editor</div>
+                <div class="monaco-editor-controls">
+                    <button class="monaco-editor-btn save" onclick="savePluginCode()">💾 Save & Apply</button>
+                    <button class="monaco-editor-btn" onclick="resetPluginCode()">🔄 Reset</button>
+                    <button class="monaco-editor-btn close" onclick="closeCodeEditor()">✕ Close</button>
+                </div>
+            </div>
+            <div class="monaco-editor-content" id="monacoEditorContent">
+                <!-- Monaco Editor will be mounted here -->
+            </div>
+        </div>
     </div>
 
     <!-- JavaScript分離 -->

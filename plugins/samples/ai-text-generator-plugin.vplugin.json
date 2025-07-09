@@ -1,0 +1,83 @@
+{
+  "id": "ai-text-generator-plugin"
+  "name": "AI Text Generator"
+  "displayName": "🤖 AI Text Generator"
+  "version": "2.0.0"
+  "author": "AI Flow Labs"
+  "description": "Advanced AI-powered text generation with multiple models and customizable parameters"
+  "category": "AI"
+  "tags": ["ai", "text", "generation", "nlp", "gpt", "language", "model"]
+  "type": "ai.text"
+  "priority": "high"
+  "performance": {
+    "memory": "high"
+    "cpu": "medium"
+    "network": "high"
+  }
+  "attributes": {
+    "category": "AI"
+    "subcategory": "Text"
+    "tags": ["ai", "text", "generation", "nlp", "gpt", "language", "model"]
+    "priority": "high"
+    "experimental": true
+    "deprecated": false
+    "hidden": false
+    "performance": {
+      "memory": "high"
+      "cpu": "medium"
+      "network": "high"
+    }
+    "ui": {
+      "icon": "🤖"
+      "color": "#ff6b6b"
+      "size": "large"
+    }
+    "compatibility": {
+      "voidcore": "14.0+"
+      "browser": "modern"
+      "mobile": false
+    }
+  }
+  "config": {
+    "model": "gpt-3.5-turbo"
+    "maxTokens": 1000
+    "temperature": 0.7
+    "topP": 1.0
+    "presencePenalty": 0.0
+    "frequencyPenalty": 0.0
+  }
+  "inputs": [
+    {
+      "name": "prompt"
+      "type": "string"
+      "description": "Text prompt for generation"
+    }
+    {
+      "name": "context"
+      "type": "string"
+      "description": "Additional context"
+    }
+    {
+      "name": "parameters"
+      "type": "object"
+      "description": "Generation parameters"
+    }
+  ]
+  "outputs": [
+    {
+      "name": "generated"
+      "type": "string"
+      "description": "Generated text"
+    }
+    {
+      "name": "metadata"
+      "type": "object"
+      "description": "Generation metadata"
+    }
+    {
+      "name": "error"
+      "type": "string"
+      "description": "Generation error"
+    }
+  ]
+  "dependencies": ["openai"]

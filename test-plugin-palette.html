@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Plugin Palette Test</title>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .test-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .palette-container {
+            width: 320px;
+            background: #1a1a1a;
+            border-right: 2px solid #333;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            background: #0a0a0a;
+            padding: 20px;
+            overflow: auto;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            padding: 15px 20px;
+            border-bottom: 2px solid #333;
+            color: #4fc1ff;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .canvas-content {
+            background: #2a2a2a;
+            border: 2px dashed #444;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: #888;
+            min-height: 300px;
+            margin-top: 20px;
+        }
+        
+        .canvas-content h2 {
+            color: #4fc1ff;
+            margin-bottom: 10px;
+        }
+        
+        .canvas-content p {
+            margin: 5px 0;
+        }
+        
+        .stats-display {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-title {
+            color: #4fc1ff;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        
+        .test-controls {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .test-btn {
+            background: #4fc1ff;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 12px;
+        }
+        
+        .test-btn:hover {
+            background: #6fd3ff;
+        }
+        
+        .drop-zone {
+            border: 2px dashed #4fc1ff;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: #4fc1ff;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+        
+        .drop-zone.dragover {
+            background: rgba(79, 193, 255, 0.1);
+            border-color: #00ff88;
+        }
+        
+        .plugin-instance {
+            background: #333;
+            border: 1px solid #4fc1ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .plugin-instance-icon {
+            font-size: 24px;
+        }
+        
+        .plugin-instance-info {
+            flex: 1;
+        }
+        
+        .plugin-instance-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .plugin-instance-desc {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .plugin-instance-remove {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .plugin-instance-remove:hover {
+            background: #c0392b;
+        }
+        
+        .log-output {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <!-- パレットコンテナ -->
+        <div class="palette-container">
+            <div class="header">🎨 Plugin Palette</div>
+            <div id="paletteMount">
+                <!-- PluginPalettePluginがここにマウントされる -->
+            </div>
+        </div>
+        
+        <!-- キャンバスコンテナ -->
+        <div class="canvas-container">
+            <div class="header">🖼️ Canvas Area</div>
+            
+            <!-- 統計表示 -->
+            <div class="stats-display">
+                <div class="stats-title">📊 Palette Statistics</div>
+                <div class="stats-item">
+                    <span>Total Plugins:</span>
+                    <span id="totalPlugins">0</span>
+                </div>
+                <div class="stats-item">
+                    <span>Displayed:</span>
+                    <span id="displayedPlugins">0</span>
+                </div>
+                <div class="stats-item">
+                    <span>Favorites:</span>
+                    <span id="favoriteCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span>Recently Used:</span>
+                    <span id="recentCount">0</span>
+                </div>
+            </div>
+            
+            <!-- テスト操作 -->
+            <div class="test-controls">
+                <div class="stats-title">🧪 Test Controls</div>
+                <button class="test-btn" onclick="testSearchFunction()">Test Search</button>
+                <button class="test-btn" onclick="testFilterFunction()">Test Filter</button>
+                <button class="test-btn" onclick="testSortFunction()">Test Sort</button>
+                <button class="test-btn" onclick="resetPalette()">Reset Palette</button>
+                <button class="test-btn" onclick="clearLocalStorage()">Clear Storage</button>
+            </div>
+            
+            <!-- ドロップゾーン -->
+            <div class="drop-zone" id="dropZone">
+                <h3>📦 Plugin Drop Zone</h3>
+                <p>プラグインをダブルクリックまたはドラッグ&ドロップしてください</p>
+                <p>Drop plugins here by double-clicking or drag & drop</p>
+            </div>
+            
+            <!-- プラグインインスタンス一覧 -->
+            <div id="pluginInstances">
+                <!-- プラグインインスタンスが表示される -->
+            </div>
+            
+            <!-- ログ出力 -->
+            <div class="log-output" id="logOutput">
+                Plugin Palette Test initialized...<br>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { PluginPalettePlugin } from './voidflow/js/plugin-palette-plugin.js';
+        
+        // グローバル変数
+        let pluginPalette = null;
+        let pluginInstances = [];
+        let logOutput = null;
+        
+        // ログ出力関数
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logOutput.innerHTML += `[${timestamp}] ${message}<br>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        // 初期化
+        async function initialize() {
+            logOutput = document.getElementById('logOutput');
+            
+            try {
+                log('🚀 Initializing Plugin Palette...');
+                
+                // PluginPalettePluginを作成
+                pluginPalette = new PluginPalettePlugin({
+                    width: 320,
+                    height: 'calc(100vh - 60px)',
+                    showStats: true
+                });
+                
+                // パレットマウント
+                const paletteMount = document.getElementById('paletteMount');
+                await pluginPalette.createPalette(paletteMount);
+                
+                // ドロップゾーンを設定
+                setupDropZone();
+                
+                // 模擬VoidCoreUIを設定
+                setupMockVoidCoreUI();
+                
+                // 統計を更新
+                updateStats();
+                
+                log('✅ Plugin Palette initialized successfully!');
+                
+            } catch (error) {
+                log(`❌ Initialization failed: ${error.message}`);
+                console.error('Initialization error:', error);
+            }
+        }
+        
+        // ドロップゾーンの設定
+        function setupDropZone() {
+            const dropZone = document.getElementById('dropZone');
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                
+                try {
+                    const pluginData = JSON.parse(e.dataTransfer.getData('application/json'));
+                    addPluginInstance(pluginData);
+                    log(`📦 Plugin dropped: ${pluginData.displayName}`);
+                } catch (error) {
+                    log(`❌ Drop failed: ${error.message}`);
+                }
+            });
+        }
+        
+        // 模擬VoidCoreUIの設定
+        function setupMockVoidCoreUI() {
+            window.voidCoreUI = {
+                createUIElement: async (plugin) => {
+                    addPluginInstance(plugin);
+                    log(`🎨 Plugin added via VoidCoreUI: ${plugin.displayName}`);
+                    return { success: true, pluginId: plugin.id };
+                }
+            };
+        }
+        
+        // プラグインインスタンスを追加
+        function addPluginInstance(plugin) {
+            const instance = {
+                id: plugin.id + '-' + Date.now(),
+                plugin: plugin,
+                timestamp: Date.now()
+            };
+            
+            pluginInstances.push(instance);
+            renderPluginInstances();
+            updateStats();
+        }
+        
+        // プラグインインスタンスを削除
+        function removePluginInstance(instanceId) {
+            const index = pluginInstances.findIndex(instance => instance.id === instanceId);
+            if (index !== -1) {
+                const instance = pluginInstances[index];
+                pluginInstances.splice(index, 1);
+                renderPluginInstances();
+                updateStats();
+                log(`🗑️ Plugin instance removed: ${instance.plugin.displayName}`);
+            }
+        }
+        
+        // プラグインインスタンスを表示
+        function renderPluginInstances() {
+            const container = document.getElementById('pluginInstances');
+            container.innerHTML = '';
+            
+            pluginInstances.forEach(instance => {
+                const instanceDiv = document.createElement('div');
+                instanceDiv.className = 'plugin-instance';
+                instanceDiv.innerHTML = `
+                    <div class="plugin-instance-icon">${instance.plugin.attributes?.ui?.icon || '📦'}</div>
+                    <div class="plugin-instance-info">
+                        <div class="plugin-instance-name">${instance.plugin.displayName}</div>
+                        <div class="plugin-instance-desc">${instance.plugin.description}</div>
+                    </div>
+                    <button class="plugin-instance-remove" onclick="removePluginInstance('${instance.id}')">
+                        Remove
+                    </button>
+                `;
+                container.appendChild(instanceDiv);
+            });
+        }
+        
+        // 統計を更新
+        function updateStats() {
+            if (pluginPalette) {
+                const stats = pluginPalette.getStats();
+                
+                document.getElementById('totalPlugins').textContent = stats.totalPlugins;
+                document.getElementById('displayedPlugins').textContent = stats.displayedPlugins;
+                document.getElementById('favoriteCount').textContent = stats.favoriteCount;
+                document.getElementById('recentCount').textContent = stats.recentCount;
+            }
+        }
+        
+        // テスト関数
+        window.testSearchFunction = function() {
+            const searchInput = document.querySelector('.palette-search-input');
+            searchInput.value = 'button';
+            searchInput.dispatchEvent(new Event('input'));
+            log('🔍 Test: Search function triggered with "button"');
+        };
+        
+        window.testFilterFunction = function() {
+            const categoryTab = document.querySelector('[data-category="UI"]');
+            categoryTab.click();
+            log('🏷️ Test: Filter function triggered for "UI" category');
+        };
+        
+        window.testSortFunction = function() {
+            const sortSelect = document.getElementById('sortSelect');
+            sortSelect.value = 'priority';
+            sortSelect.dispatchEvent(new Event('change'));
+            log('🔄 Test: Sort function triggered with "priority"');
+        };
+        
+        window.resetPalette = function() {
+            if (pluginPalette) {
+                pluginPalette.state = {
+                    searchText: '',
+                    selectedCategory: null,
+                    selectedPriority: null,
+                    selectedTags: [],
+                    showFavorites: false,
+                    showRecent: false,
+                    sortBy: 'name'
+                };
+                
+                pluginPalette.updateDisplay();
+                updateStats();
+                log('🔄 Palette reset to default state');
+            }
+        };
+        
+        window.clearLocalStorage = function() {
+            localStorage.removeItem('voidflow-plugin-usage');
+            localStorage.removeItem('voidflow-plugin-favorites');
+            localStorage.removeItem('voidflow-plugin-recent');
+            
+            if (pluginPalette) {
+                pluginPalette.usageData = {};
+                pluginPalette.favorites = [];
+                pluginPalette.recentPlugins = [];
+                pluginPalette.updateDisplay();
+                updateStats();
+            }
+            
+            log('🗑️ Local storage cleared');
+        };
+        
+        window.removePluginInstance = removePluginInstance;
+        
+        // 統計を定期更新
+        setInterval(updateStats, 1000);
+        
+        // 初期化を開始
+        initialize();
+        
+        log('🎉 Plugin Palette Test page loaded!');
+    </script>
+</body>
+</html>
