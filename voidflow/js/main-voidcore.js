@@ -101,7 +101,7 @@ async function initializeVoidCoreUI() {
       if (window.voidCoreUI) {
         console.log('🔍 VoidCoreUI Debug Info:', window.voidCoreUI.getDebugInfo())
         console.log('🔍 VoidCoreUI UI State:', window.voidCoreUI.getUIState())
-        console.log('🔍 Canvas Element:', window.voidCoreUI.canvasElement)
+        console.log('🔍 Canvas Element:', window.voidCoreUI.canvasManager.canvasElement)
         console.log('🔍 UI Elements Map:', window.voidCoreUI.uiElements)
       } else {
         console.log('❌ VoidCoreUI not available')

@@ -4,6 +4,15 @@
 import { VoidCore } from '/src/core/voidcore.js'
 import { Message } from '/src/messaging/message.js'
 import { initializeVoidFlowHybridCommunication } from './voidflow-hybrid-communication.js'
+import { ButtonSendUI } from './ui-nodes/button-send-ui.js'
+import { InputTextUI } from './ui-nodes/input-text-ui.js'
+import { OutputConsoleUI } from './ui-nodes/output-console-ui.js'
+import { StringUppercaseUI } from './ui-nodes/string-uppercase-ui.js'
+import { CanvasManager } from './ui-components/canvas-manager.js'
+import { DragDropManager } from './ui-components/drag-drop-manager.js'
+import { SelectionManager } from './ui-components/selection-manager.js'
+import { ConnectionManager } from './ui-components/connection-manager.js'
+import { ElementManager } from './ui-components/element-manager.js'
 
 /**
  * 🎨 VoidCoreUI - UI操作専用のVoidCore拡張クラス
@@ -40,11 +49,15 @@ export class VoidCoreUI {
     this.unifiedStatsManager = this.voidCore.unifiedStatsManager
     
     // UI専用設定
-    this.canvasElement = null
-    this.selectedElements = new Set()
-    this.dragState = null
-    this.uiElements = new Map() // elementId → DOM element
-    this.uiPlugins = new Map()  // pluginId → UI plugin instance
+    this.canvasManager = new CanvasManager(this)
+    this.dragDropManager = new DragDropManager(this)
+    this.selectionManager = new SelectionManager(this)
+    this.connectionManager = new ConnectionManager(this)
+    this.elementManager = new ElementManager(this)
+    
+    // 後方互換性のためのエイリアス
+    this.uiElements = this.elementManager.uiElements
+    this.uiPlugins = this.elementManager.uiPlugins
     
     // 高頻度UI操作用の直接チャンネル
     this.uiChannel = {
@@ -141,9 +154,7 @@ export class VoidCoreUI {
    * 🖥️ Canvas要素設定
    */
   setCanvas(canvasElement) {
-    this.canvasElement = canvasElement
-    this.setupCanvasEvents()
-    this.log('🖥️ Canvas element registered')
+    this.canvasManager.setCanvas(canvasElement)
   }
 
   /**
@@ -228,10 +239,10 @@ export class VoidCoreUI {
         this.updateElementPosition(data)
         break
       case 'selection':
-        this.updateElementSelection(data)
+        this.selectionManager.updateElementSelection(data)
         break
       case 'connection':
-        this.updateConnectionLine(data)
+        this.connectionManager.updateConnectionLine(data)
         break
     }
   }
@@ -247,7 +258,7 @@ export class VoidCoreUI {
     
     this.log(`📍 updateElementPosition called with elementId: ${safeElementId} (type: ${typeof elementId})`)
     
-    const element = this.uiElements.get(safeElementId)
+    const element = this.elementManager.getElement(safeElementId)
     
     if (element) {
       // ログ出力を無効化（パフォーマンス最適化）
@@ -258,7 +269,7 @@ export class VoidCoreUI {
       element.style.top = `${y}px`
       
       // 接続線の再描画を無効化（パフォーマンス最適化）
-      // this.redrawConnectionsForElement(safeElementId)
+      // this.connectionManager.redrawConnectionsForElement(safeElementId)
       
       // VoidCoreメッセージ発行も無効化（パフォーマンス最適化）
       // this.publish(Message.notice('ui.element.moved', {
@@ -272,73 +283,8 @@ export class VoidCoreUI {
     }
   }
 
-  /**
-   * 🎯 要素選択更新
-   */
-  updateElementSelection(data) {
-    const { elementId, selected } = data
-    const element = this.uiElements.get(elementId)
-    
-    if (element) {
-      if (selected) {
-        element.classList.add('selected')
-        this.selectedElements.add(elementId)
-      } else {
-        element.classList.remove('selected')
-        this.selectedElements.delete(elementId)
-      }
-      
-      this.voidCore.base.publish(Message.notice('ui.element.selected', {
-        elementId: elementId,
-        selected: selected,
-        selectedCount: this.selectedElements.size
-      }))
-    }
-  }
 
-  /**
-   * 🔗 接続線更新
-   */
-  updateConnectionLine(data) {
-    // 接続線の描画更新（SVG操作）
-    const { sourceId, targetId, connectionType } = data
-    
-    this.voidCore.base.publish(Message.notice('ui.connection.updated', {
-      sourceId: sourceId,
-      targetId: targetId,
-      connectionType: connectionType || 'data-flow'
-    }))
-  }
 
-  /**
-   * 🖱️ Canvas イベント設定
-   */
-  setupCanvasEvents() {
-    if (!this.canvasElement) return
-    
-    // ドラッグ&ドロップ
-    this.canvasElement.addEventListener('dragover', (e) => {
-      e.preventDefault()
-    })
-    
-    this.canvasElement.addEventListener('drop', (e) => {
-      e.preventDefault()
-      const nodeType = e.dataTransfer.getData('text/plain')
-      const rect = this.canvasElement.getBoundingClientRect()
-      const position = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      }
-      
-      this.createUIPlugin(nodeType, position)
-    })
-    
-    // 右クリックでの接続キャンセル
-    this.canvasElement.addEventListener('contextmenu', (e) => {
-      e.preventDefault()
-      this.cancelConnectionMode()
-    })
-  }
 
   /**
    * 🧩 UIプラグイン作成
@@ -348,7 +294,7 @@ export class VoidCoreUI {
       this.log(`🧩 createUIPlugin called: ${nodeType} at (${position.x}, ${position.y})`)
       
       // Canvas要素チェック
-      if (!this.canvasElement) {
+      if (!this.canvasManager.hasCanvas()) {
         throw new Error('Canvas element not set')
       }
       
@@ -399,14 +345,14 @@ export class VoidCoreUI {
       const uiElement = this.createUIElement(nodeType, position, pluginId)
       
       // UI要素をMapに保存（確実に文字列キーで保存）
-      this.uiElements.set(pluginId, uiElement)
+      this.elementManager.registerElement(pluginId, uiElement, nodeType)
       this.log(`📋 UI element stored in Map: ${pluginId} (type: ${typeof pluginId})`)
       this.log(`📋 Current uiElements Map size: ${this.uiElements.size}`)
       this.log(`📋 All stored IDs: ${Array.from(this.uiElements.keys())}`)
       this.log(`📋 All stored ID types: ${Array.from(this.uiElements.keys()).map(id => typeof id)}`)
       
       // Canvas要素に追加
-      this.canvasElement.appendChild(uiElement)
+      this.canvasManager.appendChild(uiElement)
       this.log(`📌 UI element appended to canvas: ${pluginId}`)
       
       // DOM要素の確認
@@ -452,7 +398,7 @@ export class VoidCoreUI {
     this.addVisualContent(element, nodeType, pluginId)
     
     // ドラッグ可能にする
-    this.makeElementDraggable(element, pluginId)
+    this.dragDropManager.makeElementDraggable(element, pluginId)
     
     // クリック選択
     element.addEventListener('click', (e) => {
@@ -470,14 +416,8 @@ export class VoidCoreUI {
     
     this.log(`🎨 UI element created: ${nodeType} (${pluginId})`)
     
-    // ここで要素がcanvasElementに追加される直前と直後にログを追加
-    if (this.canvasElement) {
-        this.log(`🎨 Attempting to append element to canvas: ${this.canvasElement.id}`);
-        this.canvasElement.appendChild(element);
-        this.log(`🎨 Element appended to canvas. Current child count: ${this.canvasElement.children.length}`);
-    } else {
-        this.log(`❌ Canvas element is null or undefined. Cannot append UI element.`);
-    }
+    // Canvas要素に追加
+    this.canvasManager.appendChild(element)
 
     return element
   }
@@ -518,54 +458,16 @@ export class VoidCoreUI {
    * 📄 ノードタイプに応じた追加コンテンツ
    */
   getAdditionalContent(nodeType, pluginId) {
+    // 🎨 モジュール化された UI コンポーネントを使用
     switch (nodeType) {
       case 'button.send':
-        return `
-          <div style="margin: 8px 0;">
-            <button class="send-button" data-plugin-id="${pluginId}" style="
-              background: linear-gradient(145deg, #ff6b6b, #ee5a52);
-              border: none;
-              color: white;
-              padding: 6px 12px;
-              border-radius: 4px;
-              font-size: 11px;
-              cursor: pointer;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            ">🚀 送信</button>
-          </div>
-        `
+        return ButtonSendUI.getAdditionalContent(pluginId)
       case 'input.text':
-        return `
-          <div style="margin: 8px 0;">
-            <input type="text" class="text-input" data-plugin-id="${pluginId}" placeholder="テキストを入力" style="
-              background: rgba(255,255,255,0.1);
-              border: 1px solid #4a90e2;
-              color: white;
-              padding: 4px 8px;
-              border-radius: 3px;
-              font-size: 10px;
-              width: 100%;
-              box-sizing: border-box;
-            ">
-          </div>
-        `
+        return InputTextUI.getAdditionalContent(pluginId)
       case 'output.console':
-        return `
-          <div style="margin: 8px 0;">
-            <div class="console-output" data-plugin-id="${pluginId}" style="
-              background: rgba(0,0,0,0.3);
-              border: 1px solid #555;
-              color: #80c0ff;
-              padding: 4px 6px;
-              border-radius: 3px;
-              font-size: 9px;
-              font-family: monospace;
-              min-height: 20px;
-              max-height: 40px;
-              overflow-y: auto;
-            ">出力待機中...</div>
-          </div>
-        `
+        return OutputConsoleUI.getAdditionalContent(pluginId)
+      case 'string.uppercase':
+        return StringUppercaseUI.getAdditionalContent(pluginId)
       default:
         return ''
     }
@@ -575,42 +477,17 @@ export class VoidCoreUI {
    * 🔧 ノードタイプに応じた追加機能初期化
    */
   initializeNodeFeatures(element, nodeType, pluginId) {
+    // 🎨 モジュール化された UI コンポーネントを使用
     switch (nodeType) {
       case 'button.send':
-        const sendButton = element.querySelector('.send-button')
-        if (sendButton) {
-          sendButton.addEventListener('click', (e) => {
-            e.stopPropagation()
-            this.handleSendButtonClick(pluginId)
-          })
-          
-          // ホバーエフェクト
-          // ホバーエフェクトを無効化（パフォーマンス最適化）
-          // sendButton.addEventListener('mouseenter', () => {
-          //   sendButton.style.transform = 'scale(1.05)'
-          //   sendButton.style.boxShadow = '0 4px 8px rgba(255,107,107,0.3)'
-          // })
-          
-          // sendButton.addEventListener('mouseleave', () => {
-          //   sendButton.style.transform = 'scale(1)'
-          //   sendButton.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)'
-          // })
-        }
+        ButtonSendUI.initializeNodeFeatures(element, pluginId, this)
         break
-        
       case 'input.text':
-        const textInput = element.querySelector('.text-input')
-        if (textInput) {
-          textInput.addEventListener('input', (e) => {
-            this.handleTextInputChange(pluginId, e.target.value)
-          })
-          
-          textInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-              this.handleTextInputSubmit(pluginId, e.target.value)
-            }
-          })
-        }
+        InputTextUI.initializeNodeFeatures(element, pluginId, this)
+        break
+      case 'output.console':
+      case 'string.uppercase':
+        // 初期化処理が不要なコンポーネント
         break
     }
   }
@@ -629,7 +506,7 @@ export class VoidCoreUI {
       }
       
       // 🎨 視覚的フィードバック復活
-      const element = this.uiElements.get(pluginId)
+      const element = this.elementManager.getElement(pluginId)
       if (element) {
         element.classList.add('executing')
         setTimeout(() => {
@@ -645,7 +522,7 @@ export class VoidCoreUI {
       this.log(`❌ Send button execution failed: ${error.message}`)
       
       // 🎨 エラー視覚的フィードバック復活
-      const element = this.uiElements.get(pluginId)
+      const element = this.elementManager.getElement(pluginId)
       if (element) {
         element.classList.add('error')
         setTimeout(() => {
@@ -662,7 +539,7 @@ export class VoidCoreUI {
     this.log(`📝 Text input changed for ${pluginId}: ${value}`)
     
     // 入力値を保存
-    const element = this.uiElements.get(pluginId)
+    const element = this.elementManager.getElement(pluginId)
     if (element) {
       element.setAttribute('data-current-value', value)
     }
@@ -689,7 +566,7 @@ export class VoidCoreUI {
    * 📊 コンソール出力処理
    */
   updateConsoleOutput(pluginId, data) {
-    const element = this.uiElements.get(pluginId)
+    const element = this.elementManager.getElement(pluginId)
     if (!element) return
     
     const consoleOutput = element.querySelector('.console-output')
@@ -722,7 +599,7 @@ export class VoidCoreUI {
   async handleDataFlowReceived(pluginId, data) {
     this.log(`🔄 Data flow received for ${pluginId}:`, data)
     
-    const element = this.uiElements.get(pluginId)
+    const element = this.elementManager.getElement(pluginId)
     if (!element) {
       this.log(`❌ Element not found for plugin: ${pluginId}`)
       return
@@ -974,94 +851,6 @@ export class VoidCoreUI {
     }
   }
 
-  /**
-   * 🖱️ 要素ドラッグ機能
-   */
-  makeElementDraggable(element, pluginId) {
-    // ドラッグ初期化ログを無効化（パフォーマンス最適化）
-    // this.log(`🖱️ Making element draggable: ${pluginId}`)
-    let isDragging = false
-    let startX, startY
-    let animationFrameId = null
-    
-    // 要素に一意のドラッグIDを付与（デバッグ用）
-    const dragId = `drag-${pluginId}-${Date.now()}`
-    element.setAttribute('data-drag-id', dragId)
-    
-    element.addEventListener('mousedown', (e) => {
-      if (e.target.tagName === 'INPUT') return // 入力フィールドは除外
-      
-      // ドラッグ開始ログを無効化（パフォーマンス最適化）
-      // this.log(`🖱️ Mouse down detected for: ${pluginId} (${dragId})`)
-      // this.log(`🖱️ Element ID: ${element.id}, Class: ${element.className}`)
-      // this.log(`🖱️ data-plugin-id: ${element.getAttribute('data-plugin-id')}`)
-      
-      // 接続ポートのクリックでない場合のみstopPropagation
-      const isConnectionPort = e.target.closest('.connection-port')
-      if (!isConnectionPort) {
-        e.stopPropagation() // VoidCoreConnectionManagerとの競合を防ぐ
-      }
-      
-      isDragging = true
-      
-      // Canvas基準での相対座標計算
-      const canvasRect = this.canvasElement.getBoundingClientRect()
-      const elementRect = element.getBoundingClientRect()
-      
-      startX = e.clientX - elementRect.left
-      startY = e.clientY - elementRect.top
-      
-      // 開始位置ログを無効化（パフォーマンス最適化）
-      // this.log(`🖱️ Start position: mouse(${e.clientX}, ${e.clientY}), element(${elementRect.left}, ${elementRect.top}), offset(${startX}, ${startY})`)
-      
-      const onMouseMove = (e) => {
-        if (!isDragging) return
-        
-        // フレーム制限でスムーズなドラッグ
-        if (animationFrameId) return
-        
-        animationFrameId = requestAnimationFrame(() => {
-          // Canvas基準での新しい座標計算
-          const newX = e.clientX - canvasRect.left - startX
-          const newY = e.clientY - canvasRect.top - startY
-          
-          // 境界チェック（Canvas内に制限）
-          const constrainedX = Math.max(0, Math.min(newX, canvasRect.width - element.offsetWidth))
-          const constrainedY = Math.max(0, Math.min(newY, canvasRect.height - element.offsetHeight))
-          
-          // 即座にDOM要素の位置を更新（この要素のみ）
-          element.style.left = `${constrainedX}px`
-          element.style.top = `${constrainedY}px`
-          
-          // ドラッグ中にリアルタイムで接続線を更新
-          this.redrawConnectionsForElement(pluginId)
-          
-          animationFrameId = null
-        })
-      }
-      
-      const onMouseUp = () => {
-        isDragging = false
-        document.removeEventListener('mousemove', onMouseMove)
-        document.removeEventListener('mouseup', onMouseUp)
-        
-        // アニメーションフレームをクリア
-        if (animationFrameId) {
-          cancelAnimationFrame(animationFrameId)
-          animationFrameId = null
-        }
-        
-        // ドラッグ終了時に接続線を再描画（矢印追従のため）
-        // this.log(`🖱️ Mouse up detected for: ${pluginId} (${dragId})`)
-        this.redrawConnectionsForElement(pluginId)
-      }
-      
-      document.addEventListener('mousemove', onMouseMove)
-      document.addEventListener('mouseup', onMouseUp)
-      
-      e.preventDefault()
-    })
-  }
 
   /**
    * 🎯 UI要素選択（ハイブリッド通信システム統合版）
@@ -1071,75 +860,35 @@ export class VoidCoreUI {
       // ハイブリッド通信システムを使用
       this.hybridComm.fastUIUpdate('selection', {
         selectedIds: [pluginId],
-        deselectedIds: Array.from(this.selectedElements)
+        deselectedIds: this.selectionManager.getSelectedElementIds()
       })
     } else {
       // フォールバック: 従来の処理
-      // 他の選択を解除
-      this.selectedElements.forEach(id => {
-        this.uiChannel.updateSelection.update({
-          elementId: id,
-          selected: false
-        })
-      })
-      
-      // 新しい選択
-      this.uiChannel.updateSelection.update({
-        elementId: pluginId,
-        selected: true
-      })
+      // 選択管理をSelectionManagerに委譲
+      this.selectionManager.clearAllSelections()
+      this.selectionManager.selectElement(pluginId)
     }
-    
-    this.selectedElements.clear()
-    this.selectedElements.add(pluginId)
   }
 
   /**
-   * ❌ 接続モードキャンセル
+   * ❌ 接続モードキャンセル（ConnectionManagerに委譲）
    */
   cancelConnectionMode() {
-    this.voidCore.base.publish(Message.notice('ui.connection.cancelled', {
-      timestamp: Date.now()
-    }))
+    this.connectionManager.cancelConnectionMode()
   }
 
   /**
-   * 🔄 要素の接続線再描画
+   * 🔄 要素の接続線再描画（ConnectionManagerに委譲）
    */
   redrawConnectionsForElement(pluginId) {
-    // pluginIdを安全に文字列に変換
-    const safePluginId = String(pluginId)
-    
-    // ログ出力を無効化（パフォーマンス最適化）
-    // this.log(`🔄 Redrawing connections for: ${safePluginId} (type: ${typeof pluginId})`)
-    
-    // ConnectionManagerがある場合は使用
-    if (window.connectionManager && window.connectionManager.redrawConnectionsFromNode) {
-      // this.log(`🔄 Using window.connectionManager.redrawConnectionsFromNode`)
-      window.connectionManager.redrawConnectionsFromNode(safePluginId)
-    } else {
-      // エラーログは残す
-      this.log(`❌ window.connectionManager.redrawConnectionsFromNode not found`)
-    }
-    
-    // VoidCoreConnectionManagerがある場合も使用
-    if (this.hybridComm && this.hybridComm.updateConnection) {
-      // this.log(`🔄 Using hybridComm.fastUIUpdate`)
-      this.hybridComm.fastUIUpdate('connection', {
-        elementId: safePluginId,
-        action: 'redraw'
-      })
-    }
-    
-    // 完了ログを無効化
-    // this.log(`🔄 Connections redrawn for element: ${safePluginId}`)
+    this.connectionManager.redrawConnectionsForElement(pluginId)
   }
 
   /**
    * 🔍 UIプラグイン取得
    */
   getUIPlugin(pluginId) {
-    return this.uiPlugins.get(pluginId)
+    return this.elementManager.getPlugin(pluginId)
   }
 
   /**
@@ -1147,14 +896,14 @@ export class VoidCoreUI {
    */
   async removeUIPlugin(pluginId) {
     // UI要素削除
-    const element = this.uiElements.get(pluginId)
+    const element = this.elementManager.getElement(pluginId)
     if (element && element.parentNode) {
       element.parentNode.removeChild(element)
     }
     
-    this.uiElements.delete(pluginId)
-    this.uiPlugins.delete(pluginId)
-    this.selectedElements.delete(pluginId)
+    this.elementManager.removeElement(pluginId)
+    this.elementManager.removePlugin(pluginId)
+    this.selectionManager.deselectElement(pluginId)
     
     // 🔧 Phase3対応: VoidCoreプラグイン削除
     await this.voidCore.unifiedIntentHandler.processIntent({
@@ -1172,10 +921,10 @@ export class VoidCoreUI {
    */
   getUIState() {
     return {
-      elementCount: this.uiElements.size,
-      selectedCount: this.selectedElements.size,
-      pluginCount: this.uiPlugins.size,
-      canvasAttached: !!this.canvasElement
+      elementCount: this.elementManager.uiElements.size,
+      selectedCount: this.selectionManager.getSelectedCount(),
+      pluginCount: this.elementManager.uiPlugins.size,
+      canvasAttached: this.canvasManager.hasCanvas()
     }
   }
 
@@ -1184,16 +933,17 @@ export class VoidCoreUI {
    * 🔍 デバッグ情報取得
    */
   getDebugInfo() {
+    const canvasInfo = this.canvasManager.getCanvasInfo()
     return {
-      canvasElement: !!this.canvasElement,
-      canvasElementId: this.canvasElement?.id,
-      canvasElementClassName: this.canvasElement?.className,
-      elementCount: this.uiElements.size,
-      elementIds: Array.from(this.uiElements.keys()),
-      selectedCount: this.selectedElements.size,
-      selectedIds: Array.from(this.selectedElements),
-      pluginCount: this.uiPlugins.size,
-      pluginIds: Array.from(this.uiPlugins.keys()),
+      canvasElement: canvasInfo.attached,
+      canvasElementId: canvasInfo.id,
+      canvasElementClassName: canvasInfo.className,
+      elementCount: this.elementManager.uiElements.size,
+      elementIds: this.elementManager.getElementIds(),
+      selectedCount: this.selectionManager.getSelectedCount(),
+      selectedIds: this.selectionManager.getSelectedElementIds(),
+      pluginCount: this.elementManager.uiPlugins.size,
+      pluginIds: this.elementManager.getPluginIds(),
       hybridCommAvailable: !!this.hybridComm
     }
   }

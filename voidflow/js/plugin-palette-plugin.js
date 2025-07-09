@@ -493,7 +493,12 @@ export class PluginPalettePlugin {
     if (window.voidCoreUI) {
       try {
         // VoidCore v14.0 IPlugin互換のプラグインオブジェクトを作成
-        const canvasRect = window.voidCoreUI.canvasElement.getBoundingClientRect();
+        const canvasElement = window.voidCoreUI.canvasManager?.canvasElement;
+        if (!canvasElement) {
+          console.error('❌ Canvas element not found in canvasManager');
+          return;
+        }
+        const canvasRect = canvasElement.getBoundingClientRect();
         const position = {
             x: Math.random() * (canvasRect.width - 150) + 50, // 左右に少し余白を持たせるにゃ
             y: Math.random() * (canvasRect.height - 100) + 50 // 上下に少し余白を持たせるにゃ
