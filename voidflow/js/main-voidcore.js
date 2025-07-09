@@ -156,20 +156,24 @@ async function initializeVoidFlowBootManager() {
  * 🔗 Phase 3.5: Stage 3コンポーネント初期化
  */
 async function initializeStage3Components() {
-    // 接続マネージャー初期化
+    // 🔧 Phase3対応: 接続マネージャー初期化
     connectionManager = new VoidCoreConnectionManager()
     await voidCoreUI.registerPlugin(connectionManager)
     
     // 手動でonActivated呼び出し（デバッグ用）
-    await connectionManager.onActivated()
+    if (connectionManager.onActivated) {
+      await connectionManager.onActivated()
+    }
     
     // グローバル参照設定（FlowExecutor初期化前に）
     window.connectionManager = connectionManager
     
-    // フロー実行エンジン初期化
+    // 🔧 Phase3対応: フロー実行エンジン初期化
     flowExecutor = new PluginFlowExecutor()
     await voidCoreUI.registerPlugin(flowExecutor)
-    await flowExecutor.onActivated()
+    if (flowExecutor.onActivated) {
+      await flowExecutor.onActivated()
+    }
     
     // FlowExecutorにConnectionManagerを直接設定
     flowExecutor.connectionManager = connectionManager

@@ -115,20 +115,33 @@
 }
 
 /* ノード状態別アニメーション（必要最小限） */
-.voidflow-node.executing {
+.voidflow-node.executing,
+.voidcore-ui-element.executing {
     border-color: #00ff88;
     /* animation: heartbeat 1s infinite; パフォーマンス最適化で無効化 */
     box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
 }
 
-.voidflow-node.success {
+.voidflow-node.success,
+.voidcore-ui-element.success {
     border-color: #00ff88;
     /* animation: successGlow 0.5s ease-out; パフォーマンス最適化で無効化 */
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
 }
 
-.voidflow-node.error {
+.voidflow-node.error,
+.voidcore-ui-element.error {
     border-color: #ff4757;
     /* animation: errorShake 0.3s; パフォーマンス最適化で無効化 */
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
+}
+
+.voidflow-node.completed,
+.voidcore-ui-element.completed {
+    border-color: #9c88ff !important;
+    box-shadow: 0 0 25px rgba(156, 136, 255, 0.8) !important;
+    /* シンプルフェードアウト用のトランジション */
+    transition: border-color 3s ease-out, box-shadow 3s ease-out;
 }
 
 /* ノード入力フィールド */

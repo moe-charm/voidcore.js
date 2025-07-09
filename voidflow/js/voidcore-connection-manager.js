@@ -1,6 +1,5 @@
 // voidcore-connection-manager.js - VoidCoreプラグイン間接続管理
 
-import { IPlugin } from '/src/interfaces/plugin-interface.js'
 import { Message } from '/src/messaging/message.js'
 
 /**
@@ -11,15 +10,17 @@ import { Message } from '/src/messaging/message.js'
  * - データフローの制御・追跡
  * - 実行順序の管理
  * - 接続線の視覚化
+ * 
+ * 🔧 Phase3対応: IPlugin継承 → 統合プラグイン管理
  */
-export class VoidCoreConnectionManager extends IPlugin {
+export class VoidCoreConnectionManager {
   constructor() {
-    super({
-      id: 'VoidCore.ConnectionManager',
-      type: 'system.connection',
-      displayName: 'VoidCore Connection Manager',
-      isCore: true
-    })
+    // 🔧 Phase3対応: 統合プラグイン管理
+    this.id = 'VoidCore.ConnectionManager'
+    this.type = 'system.connection'
+    this.displayName = 'VoidCore Connection Manager'
+    this.isCore = true
+    this.status = 'active'
     
     // 接続管理
     this.connections = new Map() // connectionId → connection info
@@ -32,6 +33,11 @@ export class VoidCoreConnectionManager extends IPlugin {
     this.svgElement = null
     
     this.log('🔗 VoidCoreConnectionManager initialized')
+  }
+  
+  // 🔧 Phase3対応: logメソッド追加
+  log(message) {
+    console.log(`[${this.id}] ${message}`)
   }
 
   /**
@@ -103,14 +109,18 @@ export class VoidCoreConnectionManager extends IPlugin {
       this.smartConnectionManager.handlePluginClick(pluginId, e)
     })
     
-    // 右クリックキャンセル機能（どこでも右クリックでキャンセル）
+    // 右クリックキャンセル機能（どこでも右クリックでキャンセル＆色リセット）
     document.addEventListener('contextmenu', (e) => {
+      console.log('🔍 RIGHT CLICK DETECTED:', e.target, 'isConnecting:', this.smartConnectionManager.isConnecting)
       if (this.smartConnectionManager.isConnecting) {
         e.preventDefault() // 右クリックメニューを無効化
         this.log('🚫 右クリックで接続モードキャンセル')
         this.smartConnectionManager.resetSelection()
         this.showConnectionStatus('🚫 接続モードキャンセル')
+      } else {
+        console.log('🔍 Right click ignored - not in connecting mode')
       }
+      // 👈 一旦、通常時の右クリック処理を無効化
     })
     
     // マウス移動で一時的な線を更新
@@ -326,7 +336,10 @@ export class VoidCoreConnectionManager extends IPlugin {
     const targetX = targetRect.left - canvasRect.left
     const targetY = targetRect.top + targetRect.height/2 - canvasRect.top
     
-    // SVG線要素作成
+    // 矢印マーカーが存在しない場合は作成
+    this._ensureArrowMarker()
+    
+    // SVG線要素作成（矢印付き）
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
     line.setAttribute('x1', sourceX)
     line.setAttribute('y1', sourceY)
@@ -335,6 +348,7 @@ export class VoidCoreConnectionManager extends IPlugin {
     line.setAttribute('stroke', '#4a90e2')
     line.setAttribute('stroke-width', '2')
     line.setAttribute('stroke-opacity', '0.8')
+    line.setAttribute('marker-end', 'url(#arrow-marker)')
     line.setAttribute('id', `connection-line-${connection.id}`)
     line.style.filter = 'drop-shadow(0 0 3px rgba(74, 144, 226, 0.5))'
     
@@ -344,6 +358,44 @@ export class VoidCoreConnectionManager extends IPlugin {
     })
     
     this.svgElement.appendChild(line)
+  }
+
+  /**
+   * 🎯 矢印マーカー作成・確保
+   */
+  _ensureArrowMarker() {
+    // 既存のマーカーがあるかチェック
+    if (this.svgElement.querySelector('#arrow-marker')) {
+      return
+    }
+    
+    // defsセクションを作成または取得
+    let defs = this.svgElement.querySelector('defs')
+    if (!defs) {
+      defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
+      this.svgElement.appendChild(defs)
+    }
+    
+    // 矢印マーカー定義
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
+    marker.setAttribute('id', 'arrow-marker')
+    marker.setAttribute('markerWidth', '10')
+    marker.setAttribute('markerHeight', '10')
+    marker.setAttribute('refX', '9')
+    marker.setAttribute('refY', '3')
+    marker.setAttribute('orient', 'auto')
+    marker.setAttribute('markerUnits', 'strokeWidth')
+    
+    // 矢印の形状（三角形）
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    path.setAttribute('d', 'M0,0 L0,6 L9,3 z')
+    path.setAttribute('fill', '#4a90e2')
+    path.setAttribute('opacity', '0.8')
+    
+    marker.appendChild(path)
+    defs.appendChild(marker)
+    
+    this.log('🎯 Arrow marker created for connection lines')
   }
 
   /**
@@ -601,38 +653,32 @@ export class VoidCoreConnectionManager extends IPlugin {
   /**
    * 🔄 特定ノードからの接続線再描画（main.js互換）
    */
-  redrawConnectionsFromNode(sourceNodeId) {
-    // ログ出力を無効化（パフォーマンス最適化）
-    // this.log(`🔄 redrawConnectionsFromNode called for: ${sourceNodeId}`)
+  redrawConnectionsFromNode(nodeId) {
+    // 🔧 修正: 発信・受信両方の接続を再描画
+    const outgoingConnections = this.getOutgoingConnections(nodeId)
+    const incomingConnections = this.getIncomingConnections(nodeId)
+    const allConnections = [...outgoingConnections, ...incomingConnections]
     
-    // 該当ノードの接続を取得
-    const connections = this.getOutgoingConnections(sourceNodeId)
-    // this.log(`🔄 Found ${connections.length} outgoing connections`)
+    // 重複除去
+    const uniqueConnections = [...new Set(allConnections)]
     
-    // 現在の接続状態をログ（無効化）
-    // this.log(`🔍 Current connections:`, Array.from(this.connections.keys()))
-    // this.log(`🔍 Plugin connections:`, Array.from(this.pluginConnections.keys()))
+    // this.log(`🔄 redrawConnectionsFromNode: ${nodeId} - ${uniqueConnections.length}本 (out:${outgoingConnections.length} + in:${incomingConnections.length})`)
     
     // 既存の接続線を削除
-    connections.forEach(connectionId => {
+    uniqueConnections.forEach(connectionId => {
       const connection = this.connections.get(connectionId)
       if (connection) {
         this.removeConnectionLine(connectionId)
-        // this.log(`🗑️ Removed connection line: ${connectionId}`)
       }
     })
     
     // 接続線を再描画
-    connections.forEach(connectionId => {
+    uniqueConnections.forEach(connectionId => {
       const connection = this.connections.get(connectionId)
       if (connection) {
         this.drawConnectionLine(connection)
-        // this.log(`🎨 Redrawn connection line: ${connectionId}`)
       }
     })
-    
-    // 完了ログを無効化
-    // this.log(`🔄 接続線再描画完了: ${sourceNodeId} (${connections.length}本)`)
   }
 
   /**
@@ -886,9 +932,15 @@ class VoidCoreSmartConnectionManager {
   }
   
   resetSelection() {
-    // ハイライト解除
+    // ハイライト解除と元の色復元
     document.querySelectorAll('.connecting-source, .connecting-target').forEach(el => {
+      console.log('🔍 Resetting element:', el, 'Classes before:', el.className)
       el.classList.remove('connecting-source', 'connecting-target')
+      // 強制的に元の色に復元（success状態・selected状態もクリア）
+      el.classList.remove('success', 'executing', 'error', 'completed', 'selected')
+      el.style.borderColor = ''
+      el.style.boxShadow = ''
+      console.log('🔍 Element after reset:', el, 'Classes after:', el.className)
     })
     
     // 一時的な線削除
@@ -899,6 +951,15 @@ class VoidCoreSmartConnectionManager {
     this.secondSelected = null
     this.isConnecting = false
     this.connectionCandidates = []
+    
+    this.log('🔄 Connection selection reset - all elements restored to default colors')
+    
+    // デバッグ：1秒後に再確認
+    setTimeout(() => {
+      document.querySelectorAll('.voidcore-ui-element').forEach(el => {
+        console.log('🔍 1秒後の状態:', el, 'Classes:', el.className, 'Border:', getComputedStyle(el).borderColor)
+      })
+    }, 1000)
   }
 }
 

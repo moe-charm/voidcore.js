@@ -9,17 +9,35 @@ import { initializeVoidFlowHybridCommunication } from './voidflow-hybrid-communi
  * 🎨 VoidCoreUI - UI操作専用のVoidCore拡張クラス
  * 
  * 設計原則:
- * - VoidCoreを継承してUI専用機能を追加
+ * - VoidCoreをコンポジションでUI専用機能を追加
  * - 高頻度UI操作のための最適化
  * - DOM操作とVoidCoreメッセージングの橋渡し
  * - UI状態管理の統一
+ * 
+ * 🔧 Phase3対応: 継承 → コンポジション設計
  */
-export class VoidCoreUI extends VoidCore {
+export class VoidCoreUI {
   constructor(options = {}) {
-    super(null, {
+    // 🔧 Phase3対応: コンポジション設計
+    this.voidCore = new VoidCore(null, {
       debug: options.debug || true,
       uiMode: true
     })
+    
+    // VoidCoreの主要メソッドを委譲
+    this.id = this.voidCore.id
+    this.coreId = this.voidCore.coreId
+    this.name = this.voidCore.name
+    this.version = this.voidCore.version
+    this.initialized = this.voidCore.initialized
+    this.enableLogging = this.voidCore.enableLogging
+    this.logLevel = this.voidCore.logLevel
+    this.logElement = this.voidCore.logElement
+    
+    // 統合システムへの参照
+    this.unifiedPluginManager = this.voidCore.unifiedPluginManager
+    this.unifiedIntentHandler = this.voidCore.unifiedIntentHandler
+    this.unifiedStatsManager = this.voidCore.unifiedStatsManager
     
     // UI専用設定
     this.canvasElement = null
@@ -35,7 +53,36 @@ export class VoidCoreUI extends VoidCore {
       updateConnection: this.createDirectUIChannel('connection')
     }
     
-    this.log('🎨 VoidCoreUI initialized - UI-optimized VoidCore ready')
+    this.log('🎨 VoidCoreUI initialized - UI-optimized VoidCore ready (Phase3)')
+  }
+  
+  // 🔧 Phase3対応: VoidCoreメソッドの委譲
+  log(message) {
+    return this.voidCore.log(message)
+  }
+  
+  debugLog(message) {
+    return this.voidCore.base.debugLog(message)
+  }
+  
+  setLogElement(element) {
+    return this.voidCore.setLogElement(element)
+  }
+  
+  getStats() {
+    return this.voidCore.getStats()
+  }
+  
+  getPlugins() {
+    return this.voidCore.getPlugins()
+  }
+  
+  registerPlugin(plugin) {
+    return this.voidCore.unifiedPluginManager.registerPlugin(plugin)
+  }
+  
+  removePlugin(pluginId) {
+    return this.voidCore.unifiedPluginManager.removePlugin(pluginId)
   }
 
   /**
@@ -46,14 +93,14 @@ export class VoidCoreUI extends VoidCore {
     // 1. 基本インスタンス生成
     const instance = new VoidCoreUI(options)
     
-    // 2. 非同期初期化実行（親のSystemBootManager含む）
-    await instance._performAsyncInitialization()
+    // 2. 🔧 Phase3対応: VoidCore初期化
+    await instance.voidCore.initPromise
     
     // 3. UI専用の追加初期化
     await instance._performUIAsyncInitialization()
     
     // 4. 完全に初期化されたインスタンスを返却
-    instance.log('🎨 VoidCoreUI async initialization completed')
+    instance.log('🎨 VoidCoreUI async initialization completed (Phase3)')
     return instance
   }
 
@@ -241,7 +288,7 @@ export class VoidCoreUI extends VoidCore {
         this.selectedElements.delete(elementId)
       }
       
-      this.publish(Message.notice('ui.element.selected', {
+      this.voidCore.base.publish(Message.notice('ui.element.selected', {
         elementId: elementId,
         selected: selected,
         selectedCount: this.selectedElements.size
@@ -256,7 +303,7 @@ export class VoidCoreUI extends VoidCore {
     // 接続線の描画更新（SVG操作）
     const { sourceId, targetId, connectionType } = data
     
-    this.publish(Message.notice('ui.connection.updated', {
+    this.voidCore.base.publish(Message.notice('ui.connection.updated', {
       sourceId: sourceId,
       targetId: targetId,
       connectionType: connectionType || 'data-flow'
@@ -311,19 +358,23 @@ export class VoidCoreUI extends VoidCore {
       const tempPluginId = `voidcore-plugin-${timestamp}-${random}`
       this.log(`🔧 Generated temp plugin ID: ${tempPluginId}`)
       
-      // VoidCoreのプラグイン作成Intent発行
+      // 🔧 Phase3対応: VoidCoreのプラグイン作成Intent発行
       let pluginId
       try {
-        this.log(`📤 Sending system.createPlugin Intent for: ${nodeType}`)
-        pluginId = await this.sendIntent('system.createPlugin', {
-          type: `voidflow.node.${nodeType}`,
-          config: {
-            nodeType: nodeType,
-            position: position,
-            uiMode: true
+        this.log(`📤 Sending system.plugin.create Intent for: ${nodeType}`)
+        const intentResponse = await this.voidCore.unifiedIntentHandler.processIntent({
+          action: 'system.plugin.create',
+          payload: {
+            type: `voidflow.node.${nodeType}`,
+            config: {
+              nodeType: nodeType,
+              position: position,
+              uiMode: true
+            }
           }
         })
-        this.log(`📨 system.createPlugin Intent returned: ${pluginId}`)
+        pluginId = intentResponse.pluginId || intentResponse.id || tempPluginId
+        this.log(`📨 system.plugin.create Intent returned: ${pluginId}`)
       } catch (intentError) {
         this.log(`⚠️ Intent failed, using fallback ID: ${intentError.message}`)
         pluginId = tempPluginId
@@ -563,30 +614,30 @@ export class VoidCoreUI extends VoidCore {
         await window.connectionManager.executeDataFlow(pluginId, 'trigger')
       }
       
-      // 視覚的フィードバックを無効化（パフォーマンス最適化）
-      // const element = this.uiElements.get(pluginId)
-      // if (element) {
-      //   element.classList.add('executing')
-      //   setTimeout(() => {
-      //     element.classList.remove('executing')
-      //     element.classList.add('success')
-      //     setTimeout(() => {
-      //       element.classList.remove('success')
-      //     }, 1000)
-      //   }, 200)
-      // }
+      // 🎨 視覚的フィードバック復活
+      const element = this.uiElements.get(pluginId)
+      if (element) {
+        element.classList.add('executing')
+        setTimeout(() => {
+          element.classList.remove('executing')
+          element.classList.add('success')
+          setTimeout(() => {
+            element.classList.remove('success')
+          }, 1000)
+        }, 200)
+      }
       
     } catch (error) {
       this.log(`❌ Send button execution failed: ${error.message}`)
       
-      // エラー視覚的フィードバックを無効化（パフォーマンス最適化）
-      // const element = this.uiElements.get(pluginId)
-      // if (element) {
-      //   element.classList.add('error')
-      //   setTimeout(() => {
-      //     element.classList.remove('error')
-      //   }, 1000)
-      // }
+      // 🎨 エラー視覚的フィードバック復活
+      const element = this.uiElements.get(pluginId)
+      if (element) {
+        element.classList.add('error')
+        setTimeout(() => {
+          element.classList.remove('error')
+        }, 1000)
+      }
     }
   }
 
@@ -663,6 +714,25 @@ export class VoidCoreUI extends VoidCore {
       return
     }
     
+    // 🎨 シンプル視覚フィードバック: メッセージ受け取ったら緑 → 3秒後に元の色
+    // 接続状態をクリーンアップしてから元の色を記憶
+    element.classList.remove('connecting-source', 'connecting-target')
+    
+    // 元の色を記憶（クリーンアップ後）
+    const originalBorderColor = getComputedStyle(element).borderColor
+    const originalBoxShadow = getComputedStyle(element).boxShadow
+    
+    element.classList.add('success')
+    setTimeout(() => {
+      element.classList.remove('success')
+      // 念のため接続状態も再度クリーンアップ
+      element.classList.remove('connecting-source', 'connecting-target')
+      // 元の色を明示的に復元
+      element.style.borderColor = originalBorderColor
+      element.style.boxShadow = originalBoxShadow
+      this.log(`🔄 ${pluginId}: Visual feedback completed - restored to original colors`)
+    }, 3000)
+    
     const nodeType = element.getAttribute('data-node-type')
     this.log(`🔄 Processing data flow for node type: ${nodeType}`)
     
@@ -693,6 +763,8 @@ export class VoidCoreUI extends VoidCore {
         }
         
         this.updateConsoleOutput(pluginId, displayData)
+        
+        // 🎨 console も同じシンプルフィードバック（3秒緑表示）
         break
         
       case 'string.uppercase':
@@ -755,6 +827,95 @@ export class VoidCoreUI extends VoidCore {
           }
         } catch (error) {
           this.log(`❌ JSON parse failed: ${error.message}`)
+        }
+        break
+        
+      case 'core.plugin-lister':
+        // 🔍 VoidCore自己観測：全プラグイン情報を収集
+        try {
+          // 🔍 複数レイヤーの観測
+          const corePlugins = this.voidCore.getPlugins() // VoidCore内部プラグイン
+          const uiPlugins = Array.from(this.uiElements.keys()) // VoidCoreUI要素
+          const registeredPlugins = this.voidCore.unifiedPluginManager.getAllPlugins() // 統合管理
+          
+          this.log(`🔍 観測範囲詳細:`)
+          this.log(`  - VoidCore内部: ${corePlugins.length}個`)
+          this.log(`  - VoidCoreUI要素: ${uiPlugins.length}個`)
+          this.log(`  - 統合プラグイン管理: ${registeredPlugins.length}個`)
+          
+          const pluginInfo = {
+            timestamp: Date.now(),
+            observationLayers: {
+              corePlugins: {
+                count: corePlugins.length,
+                plugins: corePlugins.map(plugin => ({
+                  id: plugin.id,
+                  type: plugin.type,
+                  status: plugin.status || 'active',
+                  displayName: plugin.displayName || plugin.id
+                }))
+              },
+              uiElements: {
+                count: uiPlugins.length,
+                elements: uiPlugins.map(id => ({
+                  id: id,
+                  type: 'ui-element',
+                  nodeType: this.uiElements.get(id)?.getAttribute('data-node-type') || 'unknown'
+                }))
+              },
+              unifiedPlugins: {
+                count: registeredPlugins.length,
+                plugins: registeredPlugins.map(plugin => ({
+                  id: plugin.id,
+                  type: plugin.type,
+                  status: plugin.status || 'active'
+                }))
+              }
+            },
+            totalVisible: corePlugins.length + uiPlugins.length + registeredPlugins.length,
+            coreInfo: {
+              coreId: this.voidCore.coreId,
+              initialized: this.voidCore.initialized,
+              version: this.voidCore.version
+            }
+          }
+          
+          this.log(`🔍 Plugin Lister: 総観測数 ${pluginInfo.totalVisible}個 (Core:${corePlugins.length} + UI:${uiPlugins.length} + Unified:${registeredPlugins.length})`)
+          
+          // 接続されたプラグインに自己観測データを送信
+          if (window.connectionManager) {
+            await window.connectionManager.executeDataFlow(pluginId, {
+              type: 'core-metadata',
+              source: 'core.plugin-lister',
+              timestamp: Date.now(),
+              data: pluginInfo
+            })
+          }
+        } catch (error) {
+          this.log(`❌ Plugin Lister failed: ${error.message}`)
+        }
+        break
+        
+      case 'flow.connector':
+        // 🌀 Flow Connector：接続線の動的操作
+        try {
+          const connectionStats = window.connectionManager ? 
+            window.connectionManager.getConnectionStats() : 
+            { message: 'ConnectionManager not available' }
+          
+          this.log(`🌀 Flow Connector: Processing connection metadata`)
+          
+          // 接続情報をメタデータとして送信
+          if (window.connectionManager) {
+            await window.connectionManager.executeDataFlow(pluginId, {
+              type: 'connection-metadata', 
+              source: 'flow.connector',
+              timestamp: Date.now(),
+              data: connectionStats
+            })
+          }
+        } catch (error) {
+          this.log(`❌ Flow Connector failed: ${error.message}`)
         }
         break
         
@@ -911,7 +1072,7 @@ export class VoidCoreUI extends VoidCore {
    * ❌ 接続モードキャンセル
    */
   cancelConnectionMode() {
-    this.publish(Message.notice('ui.connection.cancelled', {
+    this.voidCore.base.publish(Message.notice('ui.connection.cancelled', {
       timestamp: Date.now()
     }))
   }
@@ -969,9 +1130,12 @@ export class VoidCoreUI extends VoidCore {
     this.uiPlugins.delete(pluginId)
     this.selectedElements.delete(pluginId)
     
-    // VoidCoreプラグイン削除
-    await this.sendIntent('system.removePlugin', {
-      pluginId: pluginId
+    // 🔧 Phase3対応: VoidCoreプラグイン削除
+    await this.voidCore.unifiedIntentHandler.processIntent({
+      action: 'system.plugin.remove',
+      payload: {
+        pluginId: pluginId
+      }
     })
     
     this.log(`🗑️ UI Plugin removed: ${pluginId}`)
@@ -988,6 +1152,7 @@ export class VoidCoreUI extends VoidCore {
       canvasAttached: !!this.canvasElement
     }
   }
+
 
   /**
    * 🔍 デバッグ情報取得
