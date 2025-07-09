@@ -1,86 +1,37 @@
 {
-  "id": "utility-string-helper-plugin"
-  "name": "String Helper"
-  "displayName": "🔤 String Helper"
-  "version": "1.4.1"
-  "author": "UtilFlow Labs"
-  "description": "Comprehensive string manipulation utilities including formatting, validation, and transformation"
-  "category": "Utility"
-  "tags": ["string", "text", "format", "validate", "transform", "regex"]
-  "type": "utility.string"
-  "priority": "low"
+  "id": "utility-string-helper-plugin",
+  "name": "String Helper",
+  "displayName": "🔤 String Helper",
+  "version": "1.0.0",
+  "author": "VoidFlow Team",
+  "description": "String manipulation and utility functions",
+  "category": "data",
+  "tags": ["string", "utility", "helper"],
+  "type": "utility.string-helper",
+  "priority": "medium",
   "performance": {
-    "memory": "low"
-    "cpu": "low"
+    "memory": "low",
+    "cpu": "low",
     "network": "none"
-  }
+  },
   "attributes": {
-    "category": "Utility"
-    "subcategory": "Text"
-    "tags": ["string", "text", "format", "validate", "transform", "regex"]
-    "priority": "low"
-    "experimental": false
-    "deprecated": false
-    "hidden": false
-    "performance": {
-      "memory": "low"
-      "cpu": "low"
-      "network": "none"
-    }
+    "category": "data",
+    "subcategory": "Utility",
+    "tags": ["string", "utility", "helper"],
+    "priority": "medium",
+    "experimental": false,
+    "deprecated": false,
+    "hidden": false,
     "ui": {
-      "icon": "🔤"
-      "color": "#95a5a6"
-      "size": "small"
+      "icon": "🔤",
+      "color": "#4caf50"
     }
-    "compatibility": {
-      "voidcore": "14.0+"
-      "browser": "modern"
-      "mobile": true
-    }
-  }
+  },
   "config": {
-    "locale": "en-US"
+    "operation": "trim",
     "caseSensitive": false
-    "trimWhitespace": true
-    "maxLength": 10000
-  }
-  "inputs": [
-    {
-      "name": "text"
-      "type": "string"
-      "description": "Input text to process"
-    }
-    {
-      "name": "operation"
-      "type": "string"
-      "description": "String operation to perform"
-    }
-    {
-      "name": "pattern"
-      "type": "string"
-      "description": "Regex pattern or search string"
-    }
-    {
-      "name": "replacement"
-      "type": "string"
-      "description": "Replacement string"
-    }
-  ]
-  "outputs": [
-    {
-      "name": "result"
-      "type": "string"
-      "description": "Processed string result"
-    }
-    {
-      "name": "valid"
-      "type": "boolean"
-      "description": "Validation result"
-    }
-    {
-      "name": "matches"
-      "type": "array"
-      "description": "Regex matches"
-    }
-  ]
+  },
+  "inputs": [],
+  "outputs": [],
   "dependencies": []
+}

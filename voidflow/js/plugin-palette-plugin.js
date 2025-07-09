@@ -81,18 +81,40 @@ export class PluginPalettePlugin {
         this.log(`⚠️ Legacy plugins not loaded: ${fetchError.message}`);
       }
       
-      // 🧪 テスト: 修正済みのui-button-pluginを1つだけ追加
-      try {
-        const response = await fetch('/plugins/categories/ui/ui-button-plugin.vplugin.json');
-        if (response.ok) {
-          const newPlugin = await response.json();
-          newPlugin.category = 'ui'; // カテゴリー情報を追加
-          allPlugins.push(newPlugin);
-          this.log(`✅ 1 new plugin loaded: ${newPlugin.displayName}`);
+      // 🚀 全カテゴリーの新プラグインを読み込み
+      const categories = ['ui', 'data', 'network', 'logic', 'ai', 'media', 'storage', 'workflow'];
+      let newPluginCount = 0;
+      
+      for (const category of categories) {
+        try {
+          const pluginFiles = await this.getCategoryPluginFiles(category);
+          for (const filename of pluginFiles) {
+            try {
+              const response = await fetch(`/plugins/categories/${category}/${filename}`);
+              if (response.ok) {
+                const newPlugin = await response.json();
+                newPlugin.category = category;
+                allPlugins.push(newPlugin);
+                newPluginCount++;
+                this.log(`✅ New plugin loaded: ${newPlugin.displayName} (${category})`);
+              }
+            } catch (fileError) {
+              this.log(`⚠️ Failed to load ${filename}: ${fileError.message}`);
+            }
+          }
+        } catch (categoryError) {
+          this.log(`⚠️ Failed to load ${category} category: ${categoryError.message}`);
         }
-      } catch (fetchError) {
-        this.log(`⚠️ New plugin not loaded: ${fetchError.message}`);
       }
+      
+      this.log(`🎉 ${newPluginCount} new plugins loaded from categories!`);
+      this.log(`📊 Total plugins: ${allPlugins.length} (${10} legacy + ${newPluginCount} new)`);
+      
+      // 🧪 テスト用の詳細ログ
+      this.log(`📋 Plugin list:`)
+      allPlugins.forEach((plugin, index) => {
+        this.log(`  ${index + 1}. ${plugin.displayName} (${plugin.category || 'legacy'})`)
+      })
 
       this.plugins = allPlugins;
       this.filteredPlugins = this.plugins;

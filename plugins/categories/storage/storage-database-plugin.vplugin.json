@@ -1,97 +1,37 @@
 {
-  "id": "storage-database-plugin"
-  "name": "Database Storage"
-  "displayName": "💾 Database Storage"
-  "version": "1.6.0"
-  "author": "DataFlow Systems"
-  "description": "Universal database adapter with support for multiple database types and query builders"
-  "category": "Storage"
-  "tags": ["database", "storage", "sql", "nosql", "query", "orm"]
-  "type": "storage.database"
-  "priority": "medium"
+  "id": "storage-database-plugin",
+  "name": "Database Storage",
+  "displayName": "💾 Database Storage",
+  "version": "1.0.0",
+  "author": "VoidFlow Team",
+  "description": "Store and retrieve data from databases",
+  "category": "storage",
+  "tags": ["database", "storage", "data"],
+  "type": "storage.database",
+  "priority": "high",
   "performance": {
-    "memory": "medium"
-    "cpu": "low"
-    "network": "medium"
-  }
+    "memory": "medium",
+    "cpu": "medium",
+    "network": "high"
+  },
   "attributes": {
-    "category": "Storage"
-    "subcategory": "Database"
-    "tags": ["database", "storage", "sql", "nosql", "query", "orm"]
-    "priority": "medium"
-    "experimental": false
-    "deprecated": false
-    "hidden": false
-    "performance": {
-      "memory": "medium"
-      "cpu": "low"
-      "network": "medium"
-    }
+    "category": "storage",
+    "subcategory": "Database",
+    "tags": ["database", "storage", "data"],
+    "priority": "high",
+    "experimental": false,
+    "deprecated": false,
+    "hidden": false,
     "ui": {
-      "icon": "💾"
-      "color": "#34495e"
-      "size": "medium"
+      "icon": "💾",
+      "color": "#607d8b"
     }
-    "compatibility": {
-      "voidcore": "14.0+"
-      "browser": "modern"
-      "mobile": true
-    }
-  }
+  },
   "config": {
-    "type": "sqlite"
-    "connectionString": ""
-    "poolSize": 10
-    "timeout": 30000
-    "autoCommit": true
-  }
-  "inputs": [
-    {
-      "name": "query"
-      "type": "string"
-      "description": "Database query"
-    }
-    {
-      "name": "params"
-      "type": "array"
-      "description": "Query parameters"
-    }
-    {
-      "name": "operation"
-      "type": "string"
-      "description": "Database operation (select, insert, update, delete)"
-    }
-    {
-      "name": "table"
-      "type": "string"
-      "description": "Target table name"
-    }
-    {
-      "name": "data"
-      "type": "object"
-      "description": "Data for insert/update operations"
-    }
-  ]
-  "outputs": [
-    {
-      "name": "result"
-      "type": "any"
-      "description": "Query result"
-    }
-    {
-      "name": "rowCount"
-      "type": "number"
-      "description": "Number of affected rows"
-    }
-    {
-      "name": "metadata"
-      "type": "object"
-      "description": "Query metadata"
-    }
-    {
-      "name": "error"
-      "type": "string"
-      "description": "Database error"
-    }
-  ]
-  "dependencies": ["sqlite3", "mysql2", "pg"]
+    "driver": "sqlite",
+    "timeout": 5000
+  },
+  "inputs": [],
+  "outputs": [],
+  "dependencies": []
+}

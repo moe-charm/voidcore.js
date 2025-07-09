@@ -338,44 +338,24 @@ export class VoidCoreUI {
       }
       
       // プラグインIDが無効な場合はフォールバック
-      this.log(`🔍 PluginId type: ${typeof pluginId}, value: ${JSON.stringify(pluginId)}`)
       if (!pluginId || pluginId === '' || typeof pluginId === 'object') {
-        this.log(`⚠️ Invalid pluginId received (type: ${typeof pluginId}), using fallback: ${tempPluginId}`)
         pluginId = tempPluginId
       }
       
       // pluginIdを確実に文字列に変換
       if (typeof pluginId === 'object') {
-        this.log(`⚠️ PluginId is object, converting to string: ${JSON.stringify(pluginId)}`)
         pluginId = pluginId.id || pluginId.pluginId || tempPluginId
       }
       pluginId = String(pluginId)
       
       // UI要素作成
-      this.log(`🎨 Creating UI element for: ${pluginId}`)
       const uiElement = this.createUIElement(nodeType, position, pluginId)
       
       // UI要素をMapに保存（確実に文字列キーで保存）
       this.elementManager.registerElement(pluginId, uiElement, nodeType)
-      this.log(`📋 UI element stored in Map: ${pluginId} (type: ${typeof pluginId})`)
-      this.log(`📋 Current uiElements Map size: ${this.uiElements.size}`)
-      this.log(`📋 All stored IDs: ${Array.from(this.uiElements.keys())}`)
-      this.log(`📋 All stored ID types: ${Array.from(this.uiElements.keys()).map(id => typeof id)}`)
       
       // Canvas要素に追加
       this.canvasManager.appendChild(uiElement)
-      this.log(`📌 UI element appended to canvas: ${pluginId}`)
-      
-      // DOM要素の確認
-      const domElement = document.getElementById(`ui-element-${pluginId}`)
-      this.log(`📍 DOM element verification: ${!!domElement}`)
-      if (domElement) {
-        this.log(`📍 DOM element data-plugin-id: ${domElement.getAttribute('data-plugin-id')}`)
-      }
-      
-      // UI要素の可視性チェック
-      const rect = uiElement.getBoundingClientRect()
-      this.log(`📐 UI element bounds: ${rect.width}x${rect.height} at (${rect.left}, ${rect.top})`)
       
       this.log(`🧩 UI Plugin created: ${nodeType} at (${position.x}, ${position.y}) with ID: ${pluginId}`)
       

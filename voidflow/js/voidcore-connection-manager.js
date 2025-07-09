@@ -113,14 +113,11 @@ export class VoidCoreConnectionManager {
     
     // 右クリックキャンセル機能（どこでも右クリックでキャンセル＆色リセット）
     document.addEventListener('contextmenu', (e) => {
-      console.log('🔍 RIGHT CLICK DETECTED:', e.target, 'isConnecting:', this.smartConnectionManager.isConnecting)
       if (this.smartConnectionManager.isConnecting) {
         e.preventDefault() // 右クリックメニューを無効化
         this.log('🚫 右クリックで接続モードキャンセル')
         this.smartConnectionManager.resetSelection()
         this.showConnectionStatus('🚫 接続モードキャンセル')
-      } else {
-        console.log('🔍 Right click ignored - not in connecting mode')
       }
       // 👈 一旦、通常時の右クリック処理を無効化
     })

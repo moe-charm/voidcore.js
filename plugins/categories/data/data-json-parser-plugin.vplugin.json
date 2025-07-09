@@ -1,81 +1,37 @@
 {
-  "id": "data-json-parser-plugin"
-  "name": "JSON Data Parser"
-  "displayName": "📊 JSON Parser"
-  "version": "1.5.2"
-  "author": "DataFlow Labs"
-  "description": "Parse, transform, and validate JSON data with advanced filtering and mapping capabilities"
-  "category": "Data"
-  "tags": ["json", "parser", "data", "transform", "validate", "filter"]
-  "type": "data.json"
-  "priority": "high"
+  "id": "data-json-parser-plugin",
+  "name": "JSON Parser",
+  "displayName": "📋 JSON Parser",
+  "version": "1.0.0",
+  "author": "VoidFlow Team",
+  "description": "Parse JSON data and extract values",
+  "category": "data",
+  "tags": ["json", "parser", "data"],
+  "type": "data.json-parser",
+  "priority": "high",
   "performance": {
-    "memory": "medium"
-    "cpu": "low"
+    "memory": "medium",
+    "cpu": "medium",
     "network": "none"
-  }
+  },
   "attributes": {
-    "category": "Data"
-    "subcategory": "Processing"
-    "tags": ["json", "parser", "data", "transform", "validate", "filter"]
-    "priority": "high"
-    "experimental": false
-    "deprecated": false
-    "hidden": false
-    "performance": {
-      "memory": "medium"
-      "cpu": "low"
-      "network": "none"
-    }
+    "category": "data",
+    "subcategory": "Processing",
+    "tags": ["json", "parser", "data"],
+    "priority": "high",
+    "experimental": false,
+    "deprecated": false,
+    "hidden": false,
     "ui": {
-      "icon": "📊"
-      "color": "#27ae60"
-      "size": "medium"
+      "icon": "📋",
+      "color": "#ff9800"
     }
-    "compatibility": {
-      "voidcore": "14.0+"
-      "browser": "modern"
-      "mobile": true
-    }
-  }
+  },
   "config": {
-    "strictMode": false
-    "allowComments": true
-    "maxDepth": 100
-    "dateFormat": "ISO8601"
-  }
-  "inputs": [
-    {
-      "name": "jsonString"
-      "type": "string"
-      "description": "JSON string to parse"
-    }
-    {
-      "name": "schema"
-      "type": "object"
-      "description": "JSON schema for validation"
-    }
-    {
-      "name": "transform"
-      "type": "object"
-      "description": "Transformation rules"
-    }
-  ]
-  "outputs": [
-    {
-      "name": "parsed"
-      "type": "object"
-      "description": "Parsed JSON object"
-    }
-    {
-      "name": "validated"
-      "type": "boolean"
-      "description": "Validation result"
-    }
-    {
-      "name": "errors"
-      "type": "array"
-      "description": "Validation errors"
-    }
-  ]
-  "dependencies": ["ajv"]
+    "path": "$.data",
+    "strict": false
+  },
+  "inputs": [],
+  "outputs": [],
+  "dependencies": []
+}
