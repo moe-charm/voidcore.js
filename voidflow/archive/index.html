@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 VoidFlow - Constellation Zero | 創造性の永久機関</title>
+    
+    <!-- CSS分離 -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/nodes.css">
+    <link rel="stylesheet" href="css/canvas.css">
+</head>
+<body>
+    <div class="voidflow-container">
+        <header class="header">
+            <h1>🌟 VoidFlow - Constellation Zero | 創造性の永久機関</h1>
+        </header>
+
+        <div class="node-palette">
+            <div class="level-section">
+                <div class="level-title">🎒 レベル1: 動くよろこびセット</div>
+                <div class="node-item" data-node-type="button.send">
+                    <div class="node-name">Button: Send</div>
+                    <div class="node-description">自律プラグインを刺激する</div>
+                </div>
+                <div class="node-item" data-node-type="input.text">
+                    <div class="node-name">Input: Text</div>
+                    <div class="node-description">宇宙の起源、意志の表明</div>
+                </div>
+                <div class="node-item" data-node-type="string.uppercase">
+                    <div class="node-name">String: UpperCase</div>
+                    <div class="node-description">意志が変化する様を体感</div>
+                </div>
+                <div class="node-item" data-node-type="output.console">
+                    <div class="node-name">Output: Console</div>
+                    <div class="node-description">観測手段＝現実の確定</div>
+                </div>
+            </div>
+
+            <div class="level-section">
+                <div class="level-title">✨ レベル2: 世界とつながる</div>
+                <div class="node-item" data-node-type="web.fetch">
+                    <div class="node-name">Web: Fetch API</div>
+                    <div class="node-description">外宇宙に扉を開ける</div>
+                </div>
+                <div class="node-item" data-node-type="json.parser">
+                    <div class="node-name">JSON: Parser</div>
+                    <div class="node-description">混沌に意味を与える</div>
+                </div>
+                <div class="node-item" data-node-type="ui.card">
+                    <div class="node-name">UI: Simple Card</div>
+                    <div class="node-description">美しさは意味の完成</div>
+                </div>
+            </div>
+
+            <div class="level-section">
+                <div class="level-title">🌀 レベル3: メタへの昇華</div>
+                <div class="node-item" data-node-type="core.plugin-lister">
+                    <div class="node-name">Core: Plugin Lister</div>
+                    <div class="node-description">🔗 VoidCore自己観測への参照</div>
+                    <div class="proxy-badge">参照</div>
+                </div>
+                <div class="node-item" data-node-type="core.connection-manager">
+                    <div class="node-name">Core: Connection Manager</div>
+                    <div class="node-description">🔗 VoidCore接続管理への参照</div>
+                    <div class="proxy-badge">参照</div>
+                </div>
+                <div class="node-item" data-node-type="flow.connector">
+                    <div class="node-name">Flow: Connector</div>
+                    <div class="node-description">自己編集＝創造の完成</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-area">
+            <div class="canvas-grid"></div>
+            <div class="zen-message" id="zenMessage">
+                <div class="zen-title">静寂の器に星座を描く</div>
+                <div class="zen-subtitle">ノードをドラッグして配置し、創造性の永久機関を始動させよ</div>
+            </div>
+            <svg id="connectionSvg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
+            </svg>
+        </div>
+
+        <div class="properties-panel">
+            <div class="panel-title">⚙️ プロパティ</div>
+            <div id="propertiesContent">
+                <p style="color: #888; font-size: 12px;">ノードを選択してプロパティを表示</p>
+            </div>
+            <button class="execute-button" onclick="executeFlow()">🚀 フロー実行</button>
+            <div class="panel-title">📊 実行ログ</div>
+            <div id="executionLog" style="background: rgba(0,0,0,0.5); border-radius: 6px; padding: 10px; font-size: 11px; color: #80c0ff; max-height: 200px; overflow-y: auto; font-family: 'Monaco', monospace;">
+                VoidFlow - Constellation Zero 起動完了<br>
+                創造性の永久機関、準備中...<br>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <span>🌟 VoidCore v14.0 - Pure Message System | セリンの大改革による創造性の永久機関</span>
+        </footer>
+    </div>
+
+    <!-- JavaScript分離 -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
