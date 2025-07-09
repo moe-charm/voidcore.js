@@ -48,10 +48,17 @@ export class CanvasManager {
       this.voidCoreUI.createUIPlugin(nodeType, position)
     })
     
-    // 右クリックでの接続キャンセル
+    // 右クリックでの接続キャンセル & メニュー表示
     this.canvasElement.addEventListener('contextmenu', (e) => {
       e.preventDefault()
-      this.voidCoreUI.cancelConnectionMode()
+      
+      // 接続モードの場合はキャンセル
+      if (this.voidCoreUI.connectionManager.isInConnectionMode()) {
+        this.voidCoreUI.cancelConnectionMode()
+      } else {
+        // 通常時はキャンバスメニューを表示
+        this.voidCoreUI.contextMenuManager.showCanvasMenu(e.clientX, e.clientY)
+      }
     })
   }
 

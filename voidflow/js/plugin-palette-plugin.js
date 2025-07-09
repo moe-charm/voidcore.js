@@ -1,7 +1,7 @@
 // plugin-palette-plugin.js - VoidFlow専用プラグインパレット
 // 検索・フィルタリング・グリッド表示機能を持つプラグインパレット
 
-import { simplePlugins } from '/plugins/samples/simple-plugins.js'
+// プラグインは新しいカテゴリー別フォルダ構造から読み込み
 
 /**
  * 🎨 PluginPalettePlugin - VoidFlow専用プラグインパレット
@@ -65,23 +65,33 @@ export class PluginPalettePlugin {
    */
   async initializePlugins() {
     try {
-      this.log('📦 Loading plugin samples...')
+      this.log('📦 Loading plugins - temporarily using legacy only...')
       
-      // simplePluginsを読み込み
-      let allPlugins = [...simplePlugins] // スプレッド構文でコピーするにゃ
+      let allPlugins = []
       
-      // legacy-plugins.json を読み込むにゃ！
+      // 🚨 一時的対応: レガシープラグインのみ読み込み（JSON構文エラー回避）
       try {
-        const response = await fetch('/plugins/samples/legacy-plugins.json');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        const response = await fetch('/plugins/_archive/legacy-plugins.json');
+        if (response.ok) {
+          const legacyPlugins = await response.json();
+          allPlugins = [...allPlugins, ...legacyPlugins];
+          this.log(`✅ ${legacyPlugins.length} legacy plugins loaded from archive.`);
         }
-        const legacyPlugins = await response.json();
-        allPlugins = [...allPlugins, ...legacyPlugins]; // 既存のプラグインに追加するにゃ
-        this.log(`✅ ${legacyPlugins.length} legacy plugins loaded.`);
       } catch (fetchError) {
-        this.log(`❌ Failed to load legacy plugins from JSON: ${fetchError.message}`);
-        console.error('Legacy plugin fetch error:', fetchError);
+        this.log(`⚠️ Legacy plugins not loaded: ${fetchError.message}`);
+      }
+      
+      // 🧪 テスト: 修正済みのui-button-pluginを1つだけ追加
+      try {
+        const response = await fetch('/plugins/categories/ui/ui-button-plugin.vplugin.json');
+        if (response.ok) {
+          const newPlugin = await response.json();
+          newPlugin.category = 'ui'; // カテゴリー情報を追加
+          allPlugins.push(newPlugin);
+          this.log(`✅ 1 new plugin loaded: ${newPlugin.displayName}`);
+        }
+      } catch (fetchError) {
+        this.log(`⚠️ New plugin not loaded: ${fetchError.message}`);
       }
 
       this.plugins = allPlugins;
@@ -93,6 +103,57 @@ export class PluginPalettePlugin {
       this.log(`❌ Failed to load plugins: ${error.message}`)
       console.error('Plugin initialization error:', error)
     }
+  }
+  
+  /**
+   * 🗂️ カテゴリー別プラグイン読み込み
+   */
+  async loadPluginsFromCategory(category) {
+    const plugins = []
+    
+    try {
+      // カテゴリーフォルダ内のvpluginファイルを読み込み
+      const categoryPath = `/plugins/categories/${category}/`
+      
+      // 各カテゴリーの既知のプラグインファイルを読み込み
+      const pluginFiles = await this.getCategoryPluginFiles(category)
+      
+      for (const filename of pluginFiles) {
+        try {
+          const response = await fetch(`${categoryPath}${filename}`)
+          if (response.ok) {
+            const pluginData = await response.json()
+            // カテゴリー情報を追加
+            pluginData.category = category
+            plugins.push(pluginData)
+          }
+        } catch (error) {
+          this.log(`⚠️ Failed to load ${filename}: ${error.message}`)
+        }
+      }
+    } catch (error) {
+      this.log(`❌ Error loading category ${category}: ${error.message}`)
+    }
+    
+    return plugins
+  }
+  
+  /**
+   * 🗂️ カテゴリー別プラグインファイル一覧取得
+   */
+  async getCategoryPluginFiles(category) {
+    const categoryFiles = {
+      'ui': ['ui-button-plugin.vplugin.json'],
+      'data': ['data-json-parser-plugin.vplugin.json', 'utility-string-helper-plugin.vplugin.json'],
+      'network': ['network-http-client-plugin.vplugin.json'],
+      'logic': ['logic-calculator-plugin.vplugin.json'],
+      'ai': ['ai-text-generator-plugin.vplugin.json'],
+      'media': ['media-image-processor-plugin.vplugin.json', 'visualization-chart-plugin.vplugin.json'],
+      'storage': ['storage-database-plugin.vplugin.json'],
+      'workflow': ['workflow-automation-plugin.vplugin.json']
+    }
+    
+    return categoryFiles[category] || []
   }
   
   /**

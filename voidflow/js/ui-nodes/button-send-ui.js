@@ -22,6 +22,14 @@ export class ButtonSendUI {
     const sendButton = element.querySelector('.send-button');
     if (sendButton) {
       sendButton.addEventListener('click', (e) => {
+        console.log(`🖱️ Button clicked for: ${pluginId}`);
+        
+        // 🔗 接続管理のためにConnectionManagerに処理を委譲
+        if (window.connectionManager && window.connectionManager.handlePluginClick) {
+          console.log(`🔗 Delegating button click to ConnectionManager for: ${pluginId}`);
+          window.connectionManager.handlePluginClick(pluginId, e);
+        }
+        
         e.stopPropagation();
         voidCoreUI.handleSendButtonClick(pluginId); // voidCoreUIのメソッドを呼び出す
       });

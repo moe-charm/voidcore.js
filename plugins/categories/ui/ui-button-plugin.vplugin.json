@@ -1,0 +1,37 @@
+{
+  "id": "ui-button-plugin",
+  "name": "Interactive Button",
+  "displayName": "🔘 Interactive Button",
+  "version": "1.2.0",
+  "author": "VoidFlow Team",
+  "description": "Multi-purpose interactive button",
+  "category": "UI",
+  "tags": ["button", "interactive", "ui"],
+  "type": "ui.button",
+  "priority": "high",
+  "performance": {
+    "memory": "low",
+    "cpu": "low",
+    "network": "none"
+  },
+  "attributes": {
+    "category": "UI",
+    "subcategory": "Input",
+    "tags": ["button", "interactive", "ui"],
+    "priority": "high",
+    "experimental": false,
+    "deprecated": false,
+    "hidden": false,
+    "ui": {
+      "icon": "🔘",
+      "color": "#4fc1ff"
+    }
+  },
+  "config": {
+    "text": "Click Me",
+    "style": "primary"
+  },
+  "inputs": [],
+  "outputs": [],
+  "dependencies": []
+}

@@ -13,6 +13,7 @@ import { DragDropManager } from './ui-components/drag-drop-manager.js'
 import { SelectionManager } from './ui-components/selection-manager.js'
 import { ConnectionManager } from './ui-components/connection-manager.js'
 import { ElementManager } from './ui-components/element-manager.js'
+import { ContextMenuManager } from './ui-components/context-menu-manager.js'
 
 /**
  * 🎨 VoidCoreUI - UI操作専用のVoidCore拡張クラス
@@ -54,6 +55,7 @@ export class VoidCoreUI {
     this.selectionManager = new SelectionManager(this)
     this.connectionManager = new ConnectionManager(this)
     this.elementManager = new ElementManager(this)
+    this.contextMenuManager = new ContextMenuManager(this)
     
     // 後方互換性のためのエイリアス
     this.uiElements = this.elementManager.uiElements
@@ -65,6 +67,15 @@ export class VoidCoreUI {
       updateSelection: this.createDirectUIChannel('selection'),
       updateConnection: this.createDirectUIChannel('connection')
     }
+    
+    // 🚨 デバッグ: document レベルでクリックを監視
+    document.addEventListener('click', (e) => {
+      console.log(`🚨 DOCUMENT CLICK DEBUG:`)
+      console.log(`  - Target: ${e.target.tagName}, ID: ${e.target.id}, Class: ${e.target.className}`)
+      console.log(`  - Parent: ${e.target.parentElement?.tagName}, Class: ${e.target.parentElement?.className}`)
+      console.log(`  - Closest .voidcore-ui-element: ${e.target.closest('.voidcore-ui-element')?.id}`)
+      console.log(`  - Event phase: ${e.eventPhase}`)
+    }, true) // キャプチャフェーズで監視
     
     this.log('🎨 VoidCoreUI initialized - UI-optimized VoidCore ready (Phase3)')
   }
@@ -390,6 +401,9 @@ export class VoidCoreUI {
     element.setAttribute('data-plugin-id', pluginId)
     element.setAttribute('data-node-type', nodeType)
     
+    // 🚨 重要: プラグインパレット由来のクラスを削除
+    element.classList.remove('plugin-item', 'plugin-icon')  // パレット由来のクラスを削除
+    
     this.log(`🎨 createUIElement: ID=${element.id}, Class=${element.className}, data-plugin-id=${element.getAttribute('data-plugin-id')}`)
     
     this.log(`🎨 createUIElement: nodeType=${nodeType}, position={x:${position.x}, y:${position.y}}, pluginId=${pluginId}`) // 追加ログ
@@ -400,18 +414,57 @@ export class VoidCoreUI {
     // ドラッグ可能にする
     this.dragDropManager.makeElementDraggable(element, pluginId)
     
-    // クリック選択
+    // クリック選択（キャプチャフェーズで確実に捕捉）
     element.addEventListener('click', (e) => {
-      this.log(`🖱️ Click detected for: ${pluginId}`)
+      this.log(`🖱️ Click detected for: ${pluginId}, target: ${e.target.tagName}, class: ${e.target.className}`)
       
       // 接続ポートのクリックでない場合のみ選択処理
       const isConnectionPort = e.target.closest('.connection-port')
       if (!isConnectionPort) {
+        // 🔗 接続管理のためにConnectionManagerに処理を委譲
+        this.log(`🔍 Checking connectionManager: ${!!window.connectionManager}`)
+        if (window.connectionManager) {
+          this.log(`🔍 handlePluginClick method exists: ${!!window.connectionManager.handlePluginClick}`)
+          if (window.connectionManager.handlePluginClick) {
+            this.log(`🔗 Delegating click to ConnectionManager for: ${pluginId}`)
+            window.connectionManager.handlePluginClick(pluginId, e)
+          }
+        } else {
+          this.log(`❌ window.connectionManager is not available`)
+        }
+        
+        // 通常の選択処理
         this.selectUIElement(pluginId)
+        // e.stopPropagation() // バブリング防止 - 一時的に無効化してConnectionManagerに到達させる
       }
+    }, true) // キャプチャフェーズで処理
+    
+    // 内部要素からのクリックもキャッチ
+    element.addEventListener('click', (e) => {
+      this.log(`🖱️ Bubble click detected for: ${pluginId}, target: ${e.target.tagName}, class: ${e.target.className}`)
       
-      // e.stopPropagation() を削除するにゃ！
-      // e.stopPropagation()
+      // ボタンなどの内部要素がクリックされた場合も処理
+      const isConnectionPort = e.target.closest('.connection-port')
+      if (!isConnectionPort) {
+        // 🔗 接続管理のためにConnectionManagerに処理を委譲
+        if (window.connectionManager && window.connectionManager.handlePluginClick) {
+          this.log(`🔗 Delegating bubble click to ConnectionManager for: ${pluginId}`)
+          window.connectionManager.handlePluginClick(pluginId, e)
+        }
+      }
+    })
+    
+    // 右クリックメニュー
+    element.addEventListener('contextmenu', (e) => {
+      e.preventDefault()
+      e.stopPropagation() // バブリング防止
+      this.log(`🖱️ Right-click detected for: ${pluginId}`)
+      
+      // 接続ポートでなければプラグインメニューを表示
+      const isConnectionPort = e.target.closest('.connection-port')
+      if (!isConnectionPort) {
+        this.contextMenuManager.showPluginMenu(pluginId, e.clientX, e.clientY)
+      }
     })
     
     this.log(`🎨 UI element created: ${nodeType} (${pluginId})`)
@@ -452,6 +505,32 @@ export class VoidCoreUI {
     
     // ノードタイプに応じた追加機能を初期化
     this.initializeNodeFeatures(element, nodeType, pluginId)
+    
+    // 🚨 デバッグ: パレット由来のクラスを完全削除
+    this.removeUnwantedClasses(element)
+  }
+  
+  /**
+   * 🧹 パレット由来の不要なクラスを削除
+   */
+  removeUnwantedClasses(element) {
+    // 自分自身と全ての子要素から不要なクラスを削除
+    const unwantedClasses = ['plugin-item', 'plugin-icon', 'plugin-name', 'plugin-info', 'plugin-description', 'plugin-tags', 'plugin-priority']
+    
+    // 自分自身をチェック
+    unwantedClasses.forEach(className => {
+      element.classList.remove(className)
+    })
+    
+    // 全ての子要素をチェック
+    const allChildren = element.querySelectorAll('*')
+    allChildren.forEach(child => {
+      unwantedClasses.forEach(className => {
+        child.classList.remove(className)
+      })
+    })
+    
+    this.log(`🧹 Removed unwanted classes from element: ${element.id}`)
   }
 
   /**
@@ -856,6 +935,10 @@ export class VoidCoreUI {
    * 🎯 UI要素選択（ハイブリッド通信システム統合版）
    */
   selectUIElement(pluginId) {
+    // 🚨 デバッグ: どこから呼ばれているかスタックトレース
+    console.log(`🎯 selectUIElement called for: ${pluginId}`)
+    console.log(`🎯 Call stack:`, new Error().stack)
+    
     if (this.hybridComm) {
       // ハイブリッド通信システムを使用
       this.hybridComm.fastUIUpdate('selection', {

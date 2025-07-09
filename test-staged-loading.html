@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Staged Loading System Test</title>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #ffffff;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #4fc1ff 0%, #4a90e2 100%);
+            border-radius: 15px;
+        }
+        
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .control-section {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .control-title {
+            color: #4fc1ff;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        
+        .control-btn {
+            background: #2a2a2a;
+            color: #ccc;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .control-btn:hover {
+            border-color: #4fc1ff;
+            color: #4fc1ff;
+            background: #333;
+        }
+        
+        .control-btn:active {
+            background: #4fc1ff;
+            color: #000;
+        }
+        
+        .stats-panel {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-card {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4fc1ff;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .plugin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .plugin-card {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .plugin-card:hover {
+            border-color: #4fc1ff;
+            box-shadow: 0 4px 15px rgba(79, 193, 255, 0.2);
+        }
+        
+        .plugin-card.loading {
+            border-color: #f39c12;
+            animation: pulse 2s infinite;
+        }
+        
+        .plugin-card.loaded {
+            border-color: #27ae60;
+        }
+        
+        .plugin-card.error {
+            border-color: #e74c3c;
+        }
+        
+        .plugin-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .plugin-icon {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+        
+        .plugin-name {
+            font-weight: bold;
+            color: #4fc1ff;
+        }
+        
+        .plugin-status {
+            margin-left: auto;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+        
+        .plugin-status.loading {
+            background: rgba(243, 156, 18, 0.3);
+            color: #f39c12;
+        }
+        
+        .plugin-status.loaded {
+            background: rgba(39, 174, 96, 0.3);
+            color: #27ae60;
+        }
+        
+        .plugin-status.error {
+            background: rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+        }
+        
+        .plugin-priority {
+            font-size: 10px;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        .plugin-attributes {
+            font-size: 10px;
+            color: #888;
+            margin-top: 8px;
+        }
+        
+        .log-output {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+            border: 1px solid #333;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(243, 156, 18, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Staged Loading System Test</h1>
+        <p>1000+プラグインの段階的読み込みシステムのテスト</p>
+    </div>
+    
+    <div class="control-panel">
+        <!-- 基本コントロール -->
+        <div class="control-section">
+            <div class="control-title">⚡ Basic Controls</div>
+            <div class="control-grid">
+                <button class="control-btn" id="generatePluginsBtn">📦 Generate 100 Plugins</button>
+                <button class="control-btn" id="generate1000Btn">🔥 Generate 1000 Plugins</button>
+                <button class="control-btn" id="startLoadingBtn">🚀 Start Loading</button>
+                <button class="control-btn" id="clearCacheBtn">🗑️ Clear Cache</button>
+                <button class="control-btn" id="resetBtn">🔄 Reset All</button>
+            </div>
+        </div>
+        
+        <!-- 優先度コントロール -->
+        <div class="control-section">
+            <div class="control-title">🔥 Priority Loading</div>
+            <div class="control-grid">
+                <button class="control-btn" id="loadHighBtn">🔴 High Priority</button>
+                <button class="control-btn" id="loadMediumBtn">🟡 Medium Priority</button>
+                <button class="control-btn" id="loadLowBtn">🔵 Low Priority</button>
+                <button class="control-btn" id="loadOnDemandBtn">⚡ On Demand</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 統計情報パネル -->
+    <div class="stats-panel">
+        <div class="control-title">📊 Loading Statistics</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalPlugins">0</div>
+                <div class="stat-label">Total Plugins</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="loadedPlugins">0</div>
+                <div class="stat-label">Loaded</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="loadingPlugins">0</div>
+                <div class="stat-label">Loading</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="cachedPlugins">0</div>
+                <div class="stat-label">Cached</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="errorPlugins">0</div>
+                <div class="stat-label">Errors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="averageLoadTime">0</div>
+                <div class="stat-label">Avg Load Time (ms)</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- プラグイン表示エリア -->
+    <div class="control-section">
+        <div class="control-title">📦 Plugin Status</div>
+        <div class="plugin-grid" id="pluginGrid"></div>
+    </div>
+    
+    <!-- ログ出力 -->
+    <div class="log-output" id="logOutput">
+        System initializing...<br>
+    </div>
+    
+    <script type="module">
+        import { VoidCoreUI } from './voidflow/js/voidcore-ui.js';
+        import { PluginAttributes, PluginAttributeTypes } from './src/core/plugin-attributes.js';
+        
+        // システム初期化
+        let voidCoreUI = null;
+        let generatedPlugins = [];
+        let updateInterval = null;
+        
+        // DOM要素
+        const pluginGrid = document.getElementById('pluginGrid');
+        const logOutput = document.getElementById('logOutput');
+        
+        // ログ出力関数
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : '📝';
+            logOutput.innerHTML += `[${timestamp}] ${icon} ${message}<br>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        // VoidCoreUI初期化
+        async function initializeSystem() {
+            try {
+                log('🚀 Initializing VoidCoreUI with staged loading...');
+                
+                voidCoreUI = new VoidCoreUI({ debug: true });
+                
+                // 統計更新開始
+                startStatsUpdate();
+                
+                log('✅ System initialized successfully!', 'success');
+                
+            } catch (error) {
+                log(`❌ Initialization failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // プラグインの生成
+        function generatePlugins(count = 100) {
+            log(`📦 Generating ${count} plugins...`);
+            
+            generatedPlugins = [];
+            
+            const categories = Object.values(PluginAttributeTypes.CATEGORIES);
+            const priorities = Object.values(PluginAttributeTypes.PRIORITIES);
+            const performances = Object.values(PluginAttributeTypes.PERFORMANCES);
+            
+            for (let i = 0; i < count; i++) {
+                const plugin = {
+                    id: `plugin-${i + 1}`,
+                    displayName: `Plugin ${i + 1}`,
+                    type: 'test',
+                    version: '1.0.0',
+                    attributes: new PluginAttributes({
+                        category: categories[Math.floor(Math.random() * categories.length)],
+                        priority: priorities[Math.floor(Math.random() * priorities.length)],
+                        performance: performances[Math.floor(Math.random() * performances.length)],
+                        tags: [
+                            `tag-${Math.floor(Math.random() * 10) + 1}`,
+                            `category-${Math.floor(Math.random() * 5) + 1}`,
+                            `test-${Math.floor(Math.random() * 3) + 1}`
+                        ],
+                        metadata: {
+                            description: `Test plugin ${i + 1} for staged loading system`,
+                            author: 'Test System',
+                            version: '1.0.0'
+                        }
+                    }),
+                    sourceCode: `
+                        // Test Plugin ${i + 1}
+                        const plugin = {
+                            id: 'plugin-${i + 1}',
+                            displayName: 'Plugin ${i + 1}',
+                            async run() {
+                                console.log('Plugin ${i + 1} running...');
+                                // Simulate some work
+                                await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
+                                return { status: 'success', message: 'Plugin ${i + 1} completed' };
+                            }
+                        };
+                        return plugin;
+                    `
+                };
+                
+                generatedPlugins.push(plugin);
+            }
+            
+            log(`✅ Generated ${count} plugins successfully!`, 'success');
+            updatePluginGrid();
+        }
+        
+        // 段階的読み込み開始
+        async function startStagedLoading() {
+            if (generatedPlugins.length === 0) {
+                log('⚠️ No plugins to load. Generate plugins first.');
+                return;
+            }
+            
+            try {
+                log(`🚀 Starting staged loading of ${generatedPlugins.length} plugins...`);
+                
+                await voidCoreUI.startStagedLoading(generatedPlugins);
+                
+                log('✅ Staged loading completed!', 'success');
+                
+            } catch (error) {
+                log(`❌ Staged loading failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // 優先度別読み込み
+        async function loadByPriority(priority) {
+            try {
+                log(`🔥 Loading ${priority} priority plugins...`);
+                
+                await voidCoreUI.loadPluginsByPriority(priority);
+                
+                log(`✅ ${priority} priority plugins loaded!`, 'success');
+                
+            } catch (error) {
+                log(`❌ Priority loading failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // プラグイングリッドの更新
+        function updatePluginGrid() {
+            pluginGrid.innerHTML = '';
+            
+            // 最大50個まで表示（パフォーマンスのため）
+            const displayPlugins = generatedPlugins.slice(0, 50);
+            
+            displayPlugins.forEach(plugin => {
+                const card = document.createElement('div');
+                card.className = 'plugin-card';
+                card.id = `plugin-card-${plugin.id}`;
+                
+                const priorityColor = {
+                    'high': '#e74c3c',
+                    'medium': '#f39c12',
+                    'low': '#95a5a6'
+                };
+                
+                card.innerHTML = `
+                    <div class="plugin-header">
+                        <div class="plugin-icon">${plugin.attributes.visual.icon || '🔧'}</div>
+                        <div class="plugin-name">${plugin.displayName}</div>
+                        <div class="plugin-status" id="status-${plugin.id}">pending</div>
+                    </div>
+                    <div class="plugin-priority" style="color: ${priorityColor[plugin.attributes.priority]}">
+                        Priority: ${plugin.attributes.priority.toUpperCase()}
+                    </div>
+                    <div class="plugin-attributes">
+                        Category: ${plugin.attributes.category}<br>
+                        Performance: ${plugin.attributes.performance}<br>
+                        Tags: ${plugin.attributes.tags.slice(0, 2).join(', ')}
+                    </div>
+                `;
+                
+                pluginGrid.appendChild(card);
+            });
+            
+            if (generatedPlugins.length > 50) {
+                const moreCard = document.createElement('div');
+                moreCard.className = 'plugin-card';
+                moreCard.innerHTML = `
+                    <div class="plugin-header">
+                        <div class="plugin-icon">...</div>
+                        <div class="plugin-name">+ ${generatedPlugins.length - 50} more</div>
+                    </div>
+                `;
+                pluginGrid.appendChild(moreCard);
+            }
+        }
+        
+        // 統計情報の更新
+        function updateStats() {
+            if (!voidCoreUI) return;
+            
+            const stats = voidCoreUI.getLoadingStats();
+            
+            document.getElementById('totalPlugins').textContent = stats.loadingState.total;
+            document.getElementById('loadedPlugins').textContent = stats.loadingState.loaded;
+            document.getElementById('loadingPlugins').textContent = stats.loadingState.loading;
+            document.getElementById('cachedPlugins').textContent = stats.cacheSize;
+            document.getElementById('errorPlugins').textContent = stats.loadingState.error;
+            document.getElementById('averageLoadTime').textContent = Math.round(stats.averageLoadTime);
+        }
+        
+        // 統計更新の開始
+        function startStatsUpdate() {
+            updateInterval = setInterval(updateStats, 1000);
+        }
+        
+        // システムリセット
+        function resetSystem() {
+            log('🔄 Resetting system...');
+            
+            generatedPlugins = [];
+            pluginGrid.innerHTML = '';
+            
+            if (voidCoreUI) {
+                voidCoreUI.clearPluginCache();
+            }
+            
+            updateStats();
+            
+            log('✅ System reset completed!', 'success');
+        }
+        
+        // イベントリスナー設定
+        document.getElementById('generatePluginsBtn').addEventListener('click', () => generatePlugins(100));
+        document.getElementById('generate1000Btn').addEventListener('click', () => generatePlugins(1000));
+        document.getElementById('startLoadingBtn').addEventListener('click', startStagedLoading);
+        document.getElementById('clearCacheBtn').addEventListener('click', () => voidCoreUI?.clearPluginCache());
+        document.getElementById('resetBtn').addEventListener('click', resetSystem);
+        
+        document.getElementById('loadHighBtn').addEventListener('click', () => loadByPriority('high'));
+        document.getElementById('loadMediumBtn').addEventListener('click', () => loadByPriority('medium'));
+        document.getElementById('loadLowBtn').addEventListener('click', () => loadByPriority('low'));
+        document.getElementById('loadOnDemandBtn').addEventListener('click', async () => {
+            if (generatedPlugins.length > 0) {
+                const randomPlugin = generatedPlugins[Math.floor(Math.random() * generatedPlugins.length)];
+                await voidCoreUI.loadPluginOnDemand(randomPlugin.id);
+            }
+        });
+        
+        // システム初期化を開始
+        initializeSystem();
+        
+        // 初期統計更新
+        updateStats();
+        
+        log('🎉 Staged Loading System Test loaded successfully!', 'success');
+    </script>
+</body>
+</html>

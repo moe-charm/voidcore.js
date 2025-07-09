@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎉 VoidFlow Plugin Festival - GUI要件探索</title>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #ffffff;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .plugin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .plugin-card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #4a90e2;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .plugin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.5);
+            border-color: #00ff88;
+        }
+        
+        .plugin-card.active {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+        
+        .plugin-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4fc1ff;
+        }
+        
+        .plugin-type {
+            font-size: 0.9em;
+            color: #888;
+            margin-bottom: 15px;
+        }
+        
+        .plugin-preview {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .plugin-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .plugin-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+        
+        .plugin-btn:hover {
+            background: #357abd;
+        }
+        
+        .plugin-btn.active {
+            background: #00ff88;
+            color: #000;
+        }
+        
+        .gui-requirements {
+            background: #1a1a1a;
+            border: 2px solid #666;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .gui-requirements h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+        }
+        
+        .requirement-category {
+            margin-bottom: 20px;
+        }
+        
+        .requirement-category h3 {
+            color: #4fc1ff;
+            margin-bottom: 10px;
+        }
+        
+        .requirement-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .requirement-item {
+            background: #2a2a2a;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            border: 1px solid #444;
+        }
+        
+        .requirement-item.discovered {
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+        
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border-top: 2px solid #4a90e2;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #888;
+        }
+        
+        .status-indicator.active {
+            background: #00ff88;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* プラグイン固有のスタイル */
+        .audio-visualizer-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .gradient-preview {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+        
+        .controller-joystick {
+            width: 80px;
+            height: 80px;
+            background: #333;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .controller-stick {
+            width: 30px;
+            height: 30px;
+            background: #4a90e2;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s ease;
+        }
+        
+        .connection-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #888;
+        }
+        
+        .connection-status.connected {
+            background: #00ff88;
+        }
+        
+        .connection-status.disconnected {
+            background: #ff4757;
+        }
+        
+        .target-indicator {
+            position: absolute;
+            border: 2px solid #ff0000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            pointer-events: none;
+            animation: targetPulse 1s infinite;
+        }
+        
+        @keyframes targetPulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎉 VoidFlow Plugin Festival</h1>
+        <p>様々なプラグインを試してGUI要件を探索しよう！</p>
+    </div>
+    
+    <div class="gui-requirements">
+        <h2>📋 発見されたGUI要件</h2>
+        
+        <div class="requirement-category">
+            <h3>🖼️ 表示系</h3>
+            <div class="requirement-list" id="displayReqs">
+                <div class="requirement-item">キャンバス表示エリア</div>
+                <div class="requirement-item">リアルタイムグラフ</div>
+                <div class="requirement-item">プレビューエリア</div>
+                <div class="requirement-item">ミニマップ</div>
+                <div class="requirement-item">ステータスインジケーター</div>
+            </div>
+        </div>
+        
+        <div class="requirement-category">
+            <h3>🎮 入力系</h3>
+            <div class="requirement-list" id="inputReqs">
+                <div class="requirement-item">カラーピッカー</div>
+                <div class="requirement-item">スライダー</div>
+                <div class="requirement-item">ジョイスティック</div>
+                <div class="requirement-item">テキストエディター</div>
+                <div class="requirement-item">ドラッグ可能要素</div>
+            </div>
+        </div>
+        
+        <div class="requirement-category">
+            <h3>📐 レイアウト系</h3>
+            <div class="requirement-list" id="layoutReqs">
+                <div class="requirement-item">分割ビュー</div>
+                <div class="requirement-item">タイムライン</div>
+                <div class="requirement-item">スクロール可能ログ</div>
+                <div class="requirement-item">フローティングパネル</div>
+                <div class="requirement-item">ドッキング可能ウィンドウ</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="plugin-grid" id="pluginGrid">
+        <!-- プラグインカードがここに動的に追加される -->
+    </div>
+    
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-indicator active"></span>
+            <span>システム稼働中</span>
+        </div>
+        <div class="status-item">
+            <span>アクティブプラグイン: <span id="activeCount">0</span></span>
+        </div>
+        <div class="status-item">
+            <span>発見GUI要件: <span id="discoveredCount">0</span></span>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { pluginCollection } from './voidflow/js/plugin-collection.js';
+        
+        // プラグイン管理
+        const activePlugins = new Set();
+        const discoveredRequirements = new Set();
+        
+        // プラグインカード生成
+        function createPluginCard(pluginId, plugin) {
+            const card = document.createElement('div');
+            card.className = 'plugin-card';
+            card.id = `card-${pluginId}`;
+            
+            card.innerHTML = `
+                <div class="plugin-title">${plugin.displayName}</div>
+                <div class="plugin-type">Type: ${plugin.type}</div>
+                <div class="plugin-preview" id="preview-${pluginId}">
+                    <span style="color: #666;">Click to activate</span>
+                </div>
+                <div class="plugin-controls">
+                    <button class="plugin-btn" onclick="activatePlugin('${pluginId}')">
+                        Activate
+                    </button>
+                    <button class="plugin-btn" onclick="testPlugin('${pluginId}')">
+                        Test
+                    </button>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // プラグイングリッド初期化
+        function initializePluginGrid() {
+            const grid = document.getElementById('pluginGrid');
+            
+            Object.entries(pluginCollection).forEach(([key, plugin]) => {
+                if (plugin.id) {
+                    const card = createPluginCard(key, plugin);
+                    grid.appendChild(card);
+                }
+            });
+        }
+        
+        // プラグインアクティベート
+        window.activatePlugin = async function(pluginId) {
+            const plugin = pluginCollection[pluginId];
+            if (!plugin) return;
+            
+            const card = document.getElementById(`card-${pluginId}`);
+            const preview = document.getElementById(`preview-${pluginId}`);
+            
+            if (activePlugins.has(pluginId)) {
+                // 非アクティブ化
+                activePlugins.delete(pluginId);
+                card.classList.remove('active');
+                preview.innerHTML = '<span style="color: #666;">Click to activate</span>';
+            } else {
+                // アクティブ化
+                activePlugins.add(pluginId);
+                card.classList.add('active');
+                
+                // プラグイン初期化
+                if (plugin.initialize) {
+                    await plugin.initialize();
+                }
+                
+                // プレビュー更新
+                updatePluginPreview(pluginId, plugin);
+                
+                // GUI要件発見
+                discoverRequirements(plugin.type);
+            }
+            
+            updateStatus();
+        };
+        
+        // プラグインテスト
+        window.testPlugin = async function(pluginId) {
+            const plugin = pluginCollection[pluginId];
+            if (!plugin) return;
+            
+            console.log(`🧪 Testing plugin: ${plugin.displayName}`);
+            
+            // プラグイン固有のテスト実行
+            switch (pluginId) {
+                case 'audioVisualizerPlugin':
+                    // ダミーオーディオデータでテスト
+                    const audioData = new Array(32).fill(0).map(() => Math.random());
+                    await plugin.visualize(audioData);
+                    break;
+                    
+                case 'gradientGeneratorPlugin':
+                    const gradient = await plugin.generateGradient({
+                        colors: ['#ff0000', '#00ff00', '#0000ff'],
+                        angle: 90
+                    });
+                    console.log('Generated gradient:', gradient.css);
+                    break;
+                    
+                case 'mathEvaluatorPlugin':
+                    const result = await plugin.evaluate('2 + 2 * 3');
+                    console.log('Math result:', result);
+                    break;
+                    
+                default:
+                    console.log('Test not implemented for this plugin');
+            }
+        };
+        
+        // プレビュー更新
+        function updatePluginPreview(pluginId, plugin) {
+            const preview = document.getElementById(`preview-${pluginId}`);
+            
+            switch (pluginId) {
+                case 'audioVisualizerPlugin':
+                    if (plugin.canvas) {
+                        preview.innerHTML = '';
+                        preview.appendChild(plugin.canvas);
+                        plugin.canvas.className = 'audio-visualizer-canvas';
+                    }
+                    break;
+                    
+                case 'gradientGeneratorPlugin':
+                    const gradientDiv = document.createElement('div');
+                    gradientDiv.className = 'gradient-preview';
+                    gradientDiv.style.background = 'linear-gradient(45deg, #ff0000, #00ff00, #0000ff)';
+                    preview.innerHTML = '';
+                    preview.appendChild(gradientDiv);
+                    break;
+                    
+                case 'gameControllerPlugin':
+                    preview.innerHTML = `
+                        <div class="controller-joystick">
+                            <div class="controller-stick"></div>
+                        </div>
+                    `;
+                    setupJoystick(preview.querySelector('.controller-joystick'));
+                    break;
+                    
+                case 'websocketStreamPlugin':
+                    preview.innerHTML = `
+                        <div style="text-align: center;">
+                            <div class="connection-status disconnected" style="margin: 0 auto 10px;"></div>
+                            <span style="font-size: 0.9em; color: #888;">WebSocket Ready</span>
+                        </div>
+                    `;
+                    break;
+                    
+                default:
+                    preview.innerHTML = `<span style="color: #4fc1ff;">Plugin Active</span>`;
+            }
+        }
+        
+        // ジョイスティック設定
+        function setupJoystick(joystick) {
+            const stick = joystick.querySelector('.controller-stick');
+            let isDragging = false;
+            
+            joystick.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                updateStickPosition(e);
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    updateStickPosition(e);
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                stick.style.transform = 'translate(-50%, -50%)';
+            });
+            
+            function updateStickPosition(e) {
+                const rect = joystick.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                let x = e.clientX - centerX;
+                let y = e.clientY - centerY;
+                
+                const distance = Math.sqrt(x * x + y * y);
+                const maxDistance = rect.width / 2 - 15;
+                
+                if (distance > maxDistance) {
+                    x = x / distance * maxDistance;
+                    y = y / distance * maxDistance;
+                }
+                
+                stick.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+            }
+        }
+        
+        // GUI要件発見
+        function discoverRequirements(pluginType) {
+            const typeToRequirements = {
+                'media.visualizer': ['キャンバス表示エリア', 'リアルタイム更新'],
+                'visual.generator': ['カラーピッカー', 'プレビューエリア'],
+                'data.visualization': ['リアルタイムグラフ', 'スムーズアニメーション'],
+                'input.controller': ['ジョイスティック', 'ドラッグ可能要素'],
+                'network.stream': ['ステータスインジケーター', 'スクロール可能ログ'],
+                'text.editor': ['分割ビュー', 'テキストエディター'],
+                'animation.control': ['タイムライン', 'キーフレーム'],
+                'ui.navigation': ['ミニマップ', 'ズーム/パン']
+            };
+            
+            const requirements = typeToRequirements[pluginType] || [];
+            requirements.forEach(req => {
+                if (!discoveredRequirements.has(req)) {
+                    discoveredRequirements.add(req);
+                    highlightRequirement(req);
+                }
+            });
+        }
+        
+        // 要件ハイライト
+        function highlightRequirement(requirement) {
+            document.querySelectorAll('.requirement-item').forEach(item => {
+                if (item.textContent === requirement) {
+                    item.classList.add('discovered');
+                }
+            });
+        }
+        
+        // ステータス更新
+        function updateStatus() {
+            document.getElementById('activeCount').textContent = activePlugins.size;
+            document.getElementById('discoveredCount').textContent = discoveredRequirements.size;
+        }
+        
+        // 初期化
+        initializePluginGrid();
+        updateStatus();
+        
+        console.log('🎉 VoidFlow Plugin Festival initialized!');
+    </script>
+</body>
+</html>

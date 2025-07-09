@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Layout System Test</title>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border-bottom: 2px solid #333;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+        
+        .header-title {
+            color: #4fc1ff;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .layout-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .layout-btn {
+            background: #2a2a2a;
+            color: #ccc;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .layout-btn:hover {
+            border-color: #4fc1ff;
+            color: #4fc1ff;
+            background: #333;
+        }
+        
+        .layout-btn.active {
+            background: #4fc1ff;
+            color: #000;
+            border-color: #4fc1ff;
+        }
+        
+        .canvas-container {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            right: 300px;
+            bottom: 0;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
+        
+        .canvas {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .plugin-element {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4fc1ff 0%, #4a90e2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transform-origin: 40px 40px; /* 要素の中心を明示的に設定 */
+        }
+        
+        .plugin-element:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(79, 193, 255, 0.3);
+        }
+        
+        .plugin-element.priority-high {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        }
+        
+        .plugin-element.priority-medium {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+        
+        .plugin-element.priority-low {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+        
+        .control-panel {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 300px;
+            bottom: 0;
+            background: #1a1a1a;
+            border-left: 2px solid #333;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .control-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        
+        .control-title {
+            color: #4fc1ff;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+        }
+        
+        .control-item {
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+        
+        .control-item:hover {
+            border-color: #4fc1ff;
+            background: #444;
+        }
+        
+        .stats-display {
+            font-size: 11px;
+            color: #aaa;
+            line-height: 1.4;
+        }
+        
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .slider-container {
+            margin: 10px 0;
+        }
+        
+        .slider-label {
+            color: #ccc;
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+            outline: none;
+            appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #4fc1ff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .transition-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #4fc1ff;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            z-index: 2000;
+            display: none;
+        }
+        
+        .transition-indicator.active {
+            display: block;
+        }
+        
+        .log-output {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">🎨 Layout System Test</div>
+        <div class="layout-controls">
+            <button class="layout-btn" data-layout="galaxy">🌌 Galaxy</button>
+            <button class="layout-btn" data-layout="grid">🔲 Grid</button>
+            <button class="layout-btn" data-layout="radial">🌟 Radial</button>
+            <button class="layout-btn" id="addElementBtn">➕ Add Element</button>
+            <button class="layout-btn" id="resetBtn">🔄 Reset</button>
+        </div>
+    </div>
+    
+    <div class="canvas-container">
+        <div class="canvas" id="canvas"></div>
+    </div>
+    
+    <div class="control-panel">
+        <!-- レイアウト切り替え -->
+        <div class="control-section">
+            <div class="control-title">🎛️ Layout Controls</div>
+            <div class="control-grid">
+                <div class="control-item" data-action="galaxy">🌌 Galaxy</div>
+                <div class="control-item" data-action="grid">🔲 Grid</div>
+                <div class="control-item" data-action="radial">🌟 Radial</div>
+                <div class="control-item" data-action="preview">👁️ Preview</div>
+            </div>
+        </div>
+        
+        <!-- 要素管理 -->
+        <div class="control-section">
+            <div class="control-title">📦 Element Management</div>
+            <div class="control-grid">
+                <div class="control-item" data-action="add-5">+5</div>
+                <div class="control-item" data-action="add-10">+10</div>
+                <div class="control-item" data-action="add-20">+20</div>
+                <div class="control-item" data-action="clear">Clear</div>
+            </div>
+        </div>
+        
+        <!-- レイアウト設定 -->
+        <div class="control-section">
+            <div class="control-title">⚙️ Layout Settings</div>
+            
+            <div class="slider-container">
+                <div class="slider-label">Animation Speed</div>
+                <input type="range" class="slider" id="animationSpeed" min="100" max="1000" value="300">
+            </div>
+            
+            <div class="slider-container">
+                <div class="slider-label">Spacing</div>
+                <input type="range" class="slider" id="spacing" min="10" max="100" value="20">
+            </div>
+            
+            <div class="slider-container">
+                <div class="slider-label">Scale</div>
+                <input type="range" class="slider" id="scale" min="0.5" max="2" step="0.1" value="1">
+            </div>
+            
+            <div class="control-grid" style="margin-top: 10px;">
+                <div class="control-item" data-action="enable-animation">🎬 Animation</div>
+                <div class="control-item" data-action="enable-transitions">🔄 Transitions</div>
+                <div class="control-item" data-action="show-guides">📐 Guides</div>
+                <div class="control-item" data-action="auto-save">💾 Auto Save</div>
+            </div>
+        </div>
+        
+        <!-- 統計情報 -->
+        <div class="control-section">
+            <div class="control-title">📊 Statistics</div>
+            <div class="stats-display" id="statsDisplay">
+                <div class="stats-item">
+                    <span>Elements:</span>
+                    <span id="elementCount">0</span>
+                </div>
+                <div class="stats-item">
+                    <span>Current Layout:</span>
+                    <span id="currentLayout">None</span>
+                </div>
+                <div class="stats-item">
+                    <span>Transitioning:</span>
+                    <span id="isTransitioning">No</span>
+                </div>
+                <div class="stats-item">
+                    <span>Animation:</span>
+                    <span id="animationStatus">Enabled</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ログ出力 -->
+        <div class="control-section">
+            <div class="control-title">📝 Activity Log</div>
+            <div class="log-output" id="logOutput">
+                System initializing...<br>
+            </div>
+        </div>
+    </div>
+    
+    <div class="transition-indicator" id="transitionIndicator">
+        🔄 Transitioning layouts...
+    </div>
+    
+    <script type="module">
+        import { LayoutManager } from './src/layout/layout-manager.js';
+        
+        // システム初期化
+        let layoutManager = null;
+        let elements = [];
+        let canvas = null;
+        let elementCounter = 0;
+        
+        // DOM要素
+        const logOutput = document.getElementById('logOutput');
+        const transitionIndicator = document.getElementById('transitionIndicator');
+        
+        // ログ出力関数
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : '📝';
+            logOutput.innerHTML += `[${timestamp}] ${icon} ${message}<br>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        // システム初期化
+        async function initializeSystem() {
+            try {
+                log('🚀 Initializing Layout System...');
+                
+                // Canvas要素を取得
+                canvas = document.getElementById('canvas');
+                console.log('📦 Canvas element:', canvas);
+                
+                // レイアウトマネージャーを初期化
+                layoutManager = new LayoutManager();
+                console.log('🎛️ LayoutManager created:', layoutManager);
+                
+                // コンテナを設定
+                layoutManager.setContainer(canvas);
+                log('📦 Container set to canvas');
+                
+                // イベントリスナーを設定
+                setupEventListeners();
+                log('🎧 Event listeners setup complete');
+                
+                // 初期要素を作成
+                log('🔧 Creating initial elements...');
+                createInitialElements();
+                
+                // 要素が作られたかチェック
+                log(`📊 Elements created: ${elements.length}`);
+                log(`📊 Canvas children: ${canvas.children.length}`);
+                
+                // レイアウトマネージャーに要素を設定
+                if (elements.length > 0) {
+                    layoutManager.setElements(elements);
+                    log('📋 Elements set to layout manager');
+                    
+                    // デフォルトレイアウトを適用
+                    await layoutManager.applyDefaultLayout();
+                    log('🎨 Default layout applied');
+                } else {
+                    log('⚠️ No elements to apply layout to');
+                }
+                
+                log('✅ System initialized successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                log(`❌ Initialization failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // 初期要素の作成
+        function createInitialElements() {
+            log('🔧 Creating initial elements...');
+            const priorities = ['high', 'medium', 'low'];
+            const categories = ['UI', 'Logic', 'Visualization', 'Network', 'Media'];
+            
+            for (let i = 0; i < 12; i++) {
+                const priority = priorities[i % priorities.length];
+                const category = categories[i % categories.length];
+                
+                createElement(priority, category);
+            }
+            
+            log(`📦 Created ${elements.length} initial elements`);
+        }
+        
+        // 要素の作成
+        function createElement(priority = 'medium', category = 'default') {
+            console.log(`🔧 Creating element ${elementCounter + 1} with priority: ${priority}, category: ${category}`);
+            
+            const element = document.createElement('div');
+            element.className = `plugin-element priority-${priority}`;
+            element.id = `element-${++elementCounter}`;
+            element.textContent = `P${elementCounter}`;
+            
+            // 要素を絶対配置に設定（初期位置は左上）
+            element.style.position = 'absolute';
+            element.style.left = '0px';
+            element.style.top = '0px';
+            element.style.transform = 'translate(0, 0)';
+            element.style.zIndex = '10';
+            
+            // 属性を設定
+            element.dataset.priority = priority;
+            element.dataset.category = category;
+            element.dataset.type = 'plugin';
+            
+            // 属性オブジェクトを別のプロパティに付与
+            element.pluginAttributes = {
+                priority: priority,
+                category: category
+            };
+            
+            // クリックイベント
+            element.addEventListener('click', () => {
+                log(`🎯 Element clicked: ${element.id}`);
+                // 現在のtransformを保存
+                const originalTransform = element.style.transform;
+                // スケールアップアニメーション
+                element.style.transition = 'transform 0.2s ease';
+                const currentTransform = element.style.transform || '';
+                // scaleを1.2倍に変更
+                if (currentTransform.includes('scale')) {
+                    element.style.transform = currentTransform.replace(/scale\([^)]+\)/, 'scale(1.2)');
+                } else {
+                    element.style.transform = currentTransform + ' scale(1.2)';
+                }
+                
+                setTimeout(() => {
+                    element.style.transform = originalTransform;
+                    setTimeout(() => {
+                        element.style.transition = '';
+                    }, 200);
+                }, 200);
+            });
+            
+            console.log(`📦 Appending element to canvas:`, element);
+            canvas.appendChild(element);
+            elements.push(element);
+            
+            console.log(`📊 Canvas children count: ${canvas.children.length}`);
+            console.log(`📊 Elements array length: ${elements.length}`);
+            
+            // レイアウトマネージャーに追加
+            if (layoutManager) {
+                layoutManager.addElement(element);
+                log(`➕ Element added to layout manager: ${element.id}`);
+            } else {
+                log('⚠️ Layout manager not available');
+            }
+            
+            updateStats();
+        }
+        
+        // 複数要素の作成
+        function createMultipleElements(count) {
+            const priorities = ['high', 'medium', 'low'];
+            const categories = ['UI', 'Logic', 'Visualization', 'Network', 'Media'];
+            
+            for (let i = 0; i < count; i++) {
+                const priority = priorities[Math.floor(Math.random() * priorities.length)];
+                const category = categories[Math.floor(Math.random() * categories.length)];
+                createElement(priority, category);
+            }
+            
+            log(`➕ Added ${count} elements`);
+        }
+        
+        // レイアウトの切り替え
+        async function switchLayout(layoutName) {
+            try {
+                log(`🔄 Switching to ${layoutName} layout...`);
+                
+                // トランジションインジケーターを表示
+                transitionIndicator.classList.add('active');
+                
+                // レイアウトマネージャーに要素を設定
+                layoutManager.setElements(elements);
+                
+                // レイアウト切り替え
+                await layoutManager.switchLayout(layoutName);
+                
+                // UIを更新
+                updateLayoutButtons(layoutName);
+                updateStats();
+                
+                log(`✅ Layout switched to ${layoutName}`, 'success');
+                
+            } catch (error) {
+                log(`❌ Layout switch failed: ${error.message}`, 'error');
+            } finally {
+                transitionIndicator.classList.remove('active');
+            }
+        }
+        
+        // レイアウトボタンの更新
+        function updateLayoutButtons(activeLayout) {
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.querySelector(`[data-layout="${activeLayout}"]`)?.classList.add('active');
+        }
+        
+        // 統計情報の更新
+        function updateStats() {
+            document.getElementById('elementCount').textContent = elements.length;
+            
+            if (layoutManager) {
+                const stats = layoutManager.getStats();
+                document.getElementById('currentLayout').textContent = stats.manager.currentLayout || 'None';
+                document.getElementById('isTransitioning').textContent = stats.manager.isTransitioning ? 'Yes' : 'No';
+            }
+        }
+        
+        // 要素のクリア
+        function clearElements() {
+            elements.forEach(element => {
+                element.remove();
+                layoutManager.removeElement(element.id);
+            });
+            
+            elements = [];
+            elementCounter = 0;
+            updateStats();
+            
+            log('🗑️ All elements cleared');
+        }
+        
+        // イベントリスナーの設定
+        function setupEventListeners() {
+            // ヘッダーのレイアウトボタン
+            document.querySelectorAll('.layout-btn[data-layout]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const layout = btn.dataset.layout;
+                    switchLayout(layout);
+                });
+            });
+            
+            // 要素追加ボタン
+            document.getElementById('addElementBtn').addEventListener('click', () => {
+                createElement();
+            });
+            
+            // リセットボタン
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                clearElements();
+                createInitialElements();
+            });
+            
+            // コントロールパネルのアクション
+            document.querySelectorAll('.control-item[data-action]').forEach(item => {
+                item.addEventListener('click', () => {
+                    const action = item.dataset.action;
+                    handleControlAction(action);
+                });
+            });
+            
+            // スライダー
+            document.getElementById('animationSpeed').addEventListener('input', (e) => {
+                const speed = parseInt(e.target.value);
+                if (layoutManager) {
+                    layoutManager.updateLayoutConfig({ animationDuration: speed });
+                }
+                log(`⚙️ Animation speed: ${speed}ms`);
+            });
+            
+            document.getElementById('spacing').addEventListener('input', (e) => {
+                const spacing = parseInt(e.target.value);
+                if (layoutManager) {
+                    layoutManager.updateLayoutConfig({ spacing: spacing });
+                }
+                log(`⚙️ Spacing: ${spacing}px`);
+            });
+            
+            document.getElementById('scale').addEventListener('input', (e) => {
+                const scale = parseFloat(e.target.value);
+                elements.forEach(element => {
+                    element.style.transform = `scale(${scale})`;
+                });
+                log(`⚙️ Scale: ${scale}x`);
+            });
+            
+            // レイアウトマネージャーのイベント
+            if (layoutManager) {
+                layoutManager.on('layout.changed', (data) => {
+                    log(`🔄 Layout changed: ${data.from} → ${data.to}`, 'success');
+                });
+                
+                layoutManager.on('layout.transition.start', (data) => {
+                    log(`🎬 Transition started: ${data.from} → ${data.to}`);
+                });
+                
+                layoutManager.on('layout.transition.complete', (data) => {
+                    log(`✅ Transition completed: ${data.from} → ${data.to}`, 'success');
+                });
+            }
+        }
+        
+        // コントロールアクションの処理
+        function handleControlAction(action) {
+            switch (action) {
+                case 'galaxy':
+                    switchLayout('galaxy');
+                    break;
+                case 'grid':
+                    switchLayout('grid');
+                    break;
+                case 'radial':
+                    switchLayout('radial');
+                    break;
+                case 'preview':
+                    log('👁️ Preview mode not implemented yet');
+                    break;
+                case 'add-5':
+                    createMultipleElements(5);
+                    break;
+                case 'add-10':
+                    createMultipleElements(10);
+                    break;
+                case 'add-20':
+                    createMultipleElements(20);
+                    break;
+                case 'clear':
+                    clearElements();
+                    break;
+                case 'enable-animation':
+                    log('🎬 Animation toggle not implemented yet');
+                    break;
+                case 'enable-transitions':
+                    log('🔄 Transitions toggle not implemented yet');
+                    break;
+                case 'show-guides':
+                    log('📐 Guides toggle not implemented yet');
+                    break;
+                case 'auto-save':
+                    log('💾 Auto save toggle not implemented yet');
+                    break;
+                default:
+                    log(`⚠️ Unknown action: ${action}`);
+            }
+        }
+        
+        // 統計更新の定期実行
+        setInterval(updateStats, 1000);
+        
+        // システム初期化を開始
+        initializeSystem();
+        
+        log('🎉 Layout System Test loaded successfully!', 'success');
+    </script>
+</body>
+</html>

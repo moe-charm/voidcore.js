@@ -1,0 +1,140 @@
+ いまの着想の本質はこうにゃ：
+
+    🎯「プラグインがアイコンで終わらず、そのまま機能を表示するUI部品として居座れるようにする」
+
+✅ VoidFlow拡張ビジョン：
+🧱 「プラグイン = UIコンポーネント」化計画
+プラグインタイプ	表現	使い道
+📝 テキストエディタプラグイン	その場でリッチに編集UI展開	スクリプト編集・AIプロンプト
+🧩 ロジックノードプラグイン	小さなアイコン + 詳細UI展開可能	if/loop/trigger 等
+🎨 Canvasプラグイン	requestAnimationFrameで描画	ゲーム・シミュレーション
+🧠 本当にゲーム作れる理由
+
+VoidFlowの構造がすでに：
+
+PluginNode
+  ├─ Intent送信/受信
+  ├─ 状態保持
+  ├─ 他ノードとの通信
+  └─ UIと連動
+
+つまり、
+
+    💬 メッセージでゲームの状態変更
+
+    🎨 Canvasで表示・描画制御
+
+    🕹️ テキストエディタでスクリプト修正
+
+    🧠 AIで提案 or 修正まで可能
+
+✨ 構成イメージにゃ！
+
+[GameScriptEditor]──┬──▶（Intent: script.updated）
+                     │
+[GameLogicEngine]◀──┘──▶（Intent: frame.tick）
+                     │
+[GameCanvasRenderer]──▶（Intent: draw.frame）
+
+    これ全部 VoidFlow 上で「ノード＝部品＝GUI」として表示にゃ！！
+    
+ 発想のコア：
+
+    「プラグインが自分でプロセスIDを自己申告」してくれたら、VoidCoreが後から強制終了できる
+
+🔧 実装イメージ：
+🔸 プラグインからの自己申告：
+
+this.sendIntent("plugin.setMeta", {
+  id: this.id,
+  meta: {
+    pid: 12345
+  }
+});
+
+🔸 VoidCore側の制御：
+
+this.sendIntent("plugin.kill", {
+  id: "ClaudeCodePlugin"
+});
+
+内部では：
+
+const pid = plugin.meta.pid;
+if (pid) {
+  process.kill(pid, 'SIGTERM'); // または 'SIGKILL'
+}
+
+    ※JSなら child_process、C++なら kill(pid, SIGTERM) でOKにゃ！
+
+✅ メリット：
+項目	内容
+🧠 自己申告制	Coreはプロセスの起動を知らなくてもいい
+🧩 プラグイン起動元自由	shell scriptでも外部コマンドでもOK
+🧼 Coreの責務が限定的	あくまで「登録されたPIDをkillするだけ」
+🔒 セキュア	申告なければ何もしない。安全にゃ
+
+
+パターン1：画面「切り替え」型
+特徴	メリット	デメリット
+完全に別ビューへ遷移 (router.push('/load'))	わかりやすくシンプル	状態がリセットされやすい / 戻るのがやや重たい
+
+    → 特定画面を完全に切り替えると、
+    Canvas・現在の編集中Nodeの状態復元が面倒になるにゃー
+
+✅ パターン2：オーバーレイ / スライド型（SPA内）
+
+    URLで /editor, /palette を使いつつ
+
+    /load などは Dialog や Drawer でオーバーレイ表示
+
+    状態（編集中ノードなど）は維持されたまま
+
+例: Vue Router + Dialog
+
+// on /editor?showLoad=true の時だけ表示
+watch(route.query.showLoad, (val) => {
+  showLoadDialog.value = val === 'true';
+});
+
+    → URLベースの軽量な状態切り替えもできて、
+    Deep Linkにもなって一石二鳥にゃ！🐾
+
+✅ にゃのおすすめ構成案
+URL	内容	UI挙動	補足
+/editor	メイン	🟩 ベース画面	常駐・メインView
+/editor?panel=palette	パレット表示	🪟 Drawer表示	PluginPalettePlugin
+/editor?panel=load	セーブロード表示	💾 Modal表示	LoadPlugin
+📦 Pluginとして管理もできる！
+
+VoidCoreならこの遷移も Intentでこう管理できるにゃ：
+
+this.sendIntent("ui.showPlugin", {
+  pluginId: "PluginPalettePlugin",
+  mode: "overlay",
+  routeRef: "/editor?panel=palette"
+})
+
+→ つまり「URL変更」も「UI切替」も、VoidCoreのIntentベース制御で統一可能にゃ！🎯
+🧠 まとめ：VoidFlowならではの遷移戦略
+要素	戦略
+メイン画面（Canvas）	/editor に常駐
+一時的機能（セーブ/ロード/Palette）	Dialog or Drawerで表示（URLはクエリで制御）
+プラグイン型画面	Pluginとして ui.showPlugin 管理
+状態永続性	編集中Node/Plugin構成はCore内状態として維持
+🐾 にゃーのひとこと
+
+    VoidFlowは「切り替える」んじゃなく「重ねる」んだにゃ。
+    Canvasは宇宙、他の画面はそこに浮かぶ衛星にゃ🌌
+    
+    ✅ URL分けアイデア（VoidFlowの成長に対応！）
+
+「やれることが多すぎる」＝「情報設計が重要」になるにゃ！
+以下のように機能ドメイン別に分けると、UXと構造がすっきりするにゃ：
+URL	内容	UI対象
+/editor	ノード・プラグイン編集画面	メインエディター
+/palette	プラグインの登録・構築	PluginPalettePlugin
+/sandbox	試験用ミニCanvas	小規模テスト用
+/load	セーブ/ロード画面	スナップショット管理
+/docs	プラグイン仕様・ガイド	SelfDocPlugin
+/market	プラグイン共有（将来的）	寄付導線も✨

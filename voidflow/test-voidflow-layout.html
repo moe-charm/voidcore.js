@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 VoidFlow with Layout System</title>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: rgba(26, 26, 26, 0.95);
+            border-bottom: 2px solid #333;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-title {
+            color: #4fc1ff;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .layout-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .layout-btn {
+            background: #2a2a2a;
+            color: #ccc;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+        
+        .layout-btn:hover {
+            border-color: #4fc1ff;
+            color: #4fc1ff;
+            background: #333;
+        }
+        
+        .layout-btn.active {
+            background: #4fc1ff;
+            color: #000;
+            border-color: #4fc1ff;
+        }
+        
+        #canvas {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
+        
+        .voidflow-plugin-element {
+            transition: all 0.3s ease;
+        }
+        
+        .voidflow-plugin-element:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(79, 193, 255, 0.3);
+            z-index: 100;
+        }
+        
+        .plugin-panel {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            background: rgba(26, 26, 26, 0.95);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            z-index: 900;
+        }
+        
+        .plugin-panel h3 {
+            color: #4fc1ff;
+            font-size: 14px;
+            margin: 0 0 10px 0;
+        }
+        
+        .plugin-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .add-plugin-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .add-plugin-btn:hover {
+            background: #218838;
+        }
+        
+        .stats-panel {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            background: rgba(26, 26, 26, 0.95);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            font-size: 11px;
+            color: #aaa;
+            z-index: 900;
+        }
+        
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+        
+        .transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4fc1ff;
+            font-size: 18px;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .transition-overlay.active {
+            opacity: 1;
+        }
+        
+        /* カスタムスクロールバー */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #4fc1ff;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6fd3ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">🎨 VoidFlow Layout System</div>
+        <div class="layout-controls">
+            <button class="layout-btn active" data-layout="galaxy">🌌 Galaxy</button>
+            <button class="layout-btn" data-layout="grid">🔲 Grid</button>
+            <button class="layout-btn" data-layout="radial">🌟 Radial</button>
+            <div style="border-left: 1px solid #444; height: 20px; margin: 0 10px;"></div>
+            <button class="layout-btn" id="refreshBtn">🔄 Refresh</button>
+            <button class="layout-btn" id="clearBtn">🗑️ Clear</button>
+        </div>
+    </div>
+    
+    <div id="canvas"></div>
+    
+    <div class="plugin-panel">
+        <h3>📦 Plugins</h3>
+        <div class="plugin-list">
+            <button class="add-plugin-btn" data-count="1">+ Add 1 Plugin</button>
+            <button class="add-plugin-btn" data-count="5">+ Add 5 Plugins</button>
+            <button class="add-plugin-btn" data-count="10">+ Add 10 Plugins</button>
+        </div>
+    </div>
+    
+    <div class="stats-panel">
+        <div class="stats-item">
+            <span>Plugins:</span>
+            <span id="pluginCount">0</span>
+        </div>
+        <div class="stats-item">
+            <span>Layout:</span>
+            <span id="currentLayout">Galaxy</span>
+        </div>
+        <div class="stats-item">
+            <span>FPS:</span>
+            <span id="fps">60</span>
+        </div>
+    </div>
+    
+    <div class="transition-overlay" id="transitionOverlay">
+        <div>🔄 Switching Layout...</div>
+    </div>
+    
+    <script type="module">
+        import { VoidCoreUI } from './js/voidcore-ui.js';
+        import { pluginCollection } from './js/plugin-collection.js';
+        
+        // グローバル変数
+        let voidCoreUI = null;
+        let pluginCounter = 0;
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let fps = 60;
+        
+        // 初期化
+        async function initialize() {
+            console.log('🚀 Initializing VoidFlow with Layout System...');
+            
+            // VoidCoreUIを初期化
+            voidCoreUI = new VoidCoreUI({ debug: true });
+            
+            // キャンバスを設定
+            const canvas = document.getElementById('canvas');
+            voidCoreUI.setCanvas(canvas);
+            
+            // レイアウトシステムを初期化
+            await voidCoreUI.initializeLayout();
+            
+            // 初期プラグインを追加
+            addInitialPlugins();
+            
+            // イベントリスナーを設定
+            setupEventListeners();
+            
+            // FPS計測開始
+            startFPSCounter();
+            
+            console.log('✅ VoidFlow Layout System initialized!');
+        }
+        
+        // 初期プラグインの追加
+        function addInitialPlugins() {
+            // サンプルプラグインを追加
+            const samplePlugins = Object.values(pluginCollection).slice(0, 8);
+            
+            samplePlugins.forEach(plugin => {
+                const uiPlugin = {
+                    id: `${plugin.id}-${++pluginCounter}`,
+                    displayName: plugin.displayName,
+                    type: plugin.type,
+                    attributes: plugin.attributes
+                };
+                
+                voidCoreUI.createUIElement(uiPlugin);
+            });
+            
+            updateStats();
+        }
+        
+        // プラグインの追加
+        function addPlugins(count) {
+            const pluginTypes = Object.values(pluginCollection);
+            
+            for (let i = 0; i < count; i++) {
+                const randomPlugin = pluginTypes[Math.floor(Math.random() * pluginTypes.length)];
+                
+                const uiPlugin = {
+                    id: `${randomPlugin.id}-${++pluginCounter}`,
+                    displayName: randomPlugin.displayName,
+                    type: randomPlugin.type,
+                    attributes: randomPlugin.attributes
+                };
+                
+                voidCoreUI.createUIElement(uiPlugin);
+            }
+            
+            // レイアウトをリフレッシュ
+            voidCoreUI.refreshLayout();
+            updateStats();
+        }
+        
+        // レイアウトの切り替え
+        async function switchLayout(layoutName) {
+            const overlay = document.getElementById('transitionOverlay');
+            overlay.classList.add('active');
+            
+            try {
+                await voidCoreUI.switchLayout(layoutName);
+                
+                // ボタンの状態を更新
+                document.querySelectorAll('.layout-btn[data-layout]').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.layout === layoutName);
+                });
+                
+                document.getElementById('currentLayout').textContent = 
+                    layoutName.charAt(0).toUpperCase() + layoutName.slice(1);
+                
+            } catch (error) {
+                console.error('Layout switch failed:', error);
+            } finally {
+                setTimeout(() => {
+                    overlay.classList.remove('active');
+                }, 300);
+            }
+        }
+        
+        // 統計情報の更新
+        function updateStats() {
+            const pluginCount = voidCoreUI.uiElements.size;
+            document.getElementById('pluginCount').textContent = pluginCount;
+            document.getElementById('fps').textContent = Math.round(fps);
+        }
+        
+        // FPSカウンター
+        function startFPSCounter() {
+            function updateFPS(currentTime) {
+                frameCount++;
+                
+                if (currentTime - lastFrameTime >= 1000) {
+                    fps = frameCount;
+                    frameCount = 0;
+                    lastFrameTime = currentTime;
+                    updateStats();
+                }
+                
+                requestAnimationFrame(updateFPS);
+            }
+            
+            requestAnimationFrame(updateFPS);
+        }
+        
+        // イベントリスナーの設定
+        function setupEventListeners() {
+            // レイアウト切り替えボタン
+            document.querySelectorAll('.layout-btn[data-layout]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    switchLayout(btn.dataset.layout);
+                });
+            });
+            
+            // リフレッシュボタン
+            document.getElementById('refreshBtn').addEventListener('click', () => {
+                voidCoreUI.refreshLayout();
+            });
+            
+            // クリアボタン
+            document.getElementById('clearBtn').addEventListener('click', () => {
+                const elements = Array.from(voidCoreUI.uiElements.keys());
+                elements.forEach(id => {
+                    voidCoreUI.removeUIPlugin(id);
+                });
+                updateStats();
+            });
+            
+            // プラグイン追加ボタン
+            document.querySelectorAll('.add-plugin-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const count = parseInt(btn.dataset.count);
+                    addPlugins(count);
+                });
+            });
+            
+            // ウィンドウリサイズ対応
+            window.addEventListener('resize', () => {
+                voidCoreUI.refreshLayout();
+            });
+        }
+        
+        // 初期化を開始
+        initialize();
+        
+        // グローバルに公開（デバッグ用）
+        window.voidCoreUI = voidCoreUI;
+    </script>
+</body>
+</html>

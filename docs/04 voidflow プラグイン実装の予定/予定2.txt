@@ -1,0 +1,58 @@
+# VoidFlow: Plugin Palette 以降の設計とセーブ・ロード構造
+
+## 🎨 Plugin Palette の完了
+
+- Plugin Palette のGUI部分が完成。
+- 見た目と使いやすさの両立に成功。
+- パレット上に登録されたプラグインは、ユーザーの自由な再利用が可能。
+
+---
+
+## 💾 セーブとロードの設計指針
+
+### 基本方針
+
+- **構造保存はJSON**
+- プラグイン情報は **2段構成**で管理：
+
+| 種別 | 保存内容 | コメント |
+|------|----------|----------|
+| システム提供プラグイン | `pluginId` の参照 + config | コアや公式テンプレート群 |
+| ユーザー作成プラグイン | フル構造（type, code, config, etc.） | 編集・保存された状態 |
+
+---
+
+## 🧠 セーブ時のルール
+
+### 1. Flow全体の保存（.vflow）
+
+- 含まれる情報:
+  - Flow構造（ノード配置、接続）
+  - 使用されたPluginのIDまたは構造
+  - Context情報
+  - メタデータ（作成日時、バージョンなど）
+
+```json
+{
+  "flow": {
+    "nodes": [...],
+    "edges": [...]
+  },
+  "plugins": [
+    {
+      "id": "core.Delay",
+      "type": "Delay",
+      "config": { "ms": 500 }
+    },
+    {
+      "id": "user.MyCustomPlugin",
+      "type": "Analyzer",
+      "code": "...",
+      "config": { "threshold": 0.9 }
+    }
+  ],
+  "meta": {
+    "created": "2025-07-10T12:34:56Z",
+    "version": "1.0"
+  }
+}

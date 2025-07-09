@@ -72,9 +72,19 @@ export class VoidCoreConnectionManager {
     document.addEventListener('click', (e) => {
       this.log(`🔍 Document click detected: target=${e.target.tagName}, id=${e.target.id}, class=${e.target.className}`)
       
+      // 🚨 デバッグ: クリックされた要素の詳細情報
+      this.log(`🔍 Click target details:`)
+      this.log(`  - Element: ${e.target.outerHTML.substring(0, 200)}...`)
+      this.log(`  - Parent: ${e.target.parentElement?.className}`)
+      this.log(`  - Closest .plugin-item: ${e.target.closest('.plugin-item')?.className}`)
+      this.log(`  - Closest .voidcore-ui-element: ${e.target.closest('.voidcore-ui-element')?.className}`)
+      
       // クリックされた要素がプラグインパレットのアイテム、またはその内部要素である場合は処理をスキップするにゃ！
       const clickedPaletteItem = e.target.closest('.plugin-item');
-      if (clickedPaletteItem) {
+      const isCanvasUIElement = e.target.closest('.voidcore-ui-element');
+      
+      // 🚨 修正: キャンバス上のUI要素の場合は、パレットアイテムとして扱わない
+      if (clickedPaletteItem && !isCanvasUIElement) {
         this.log('🔍 Click: Detected click on plugin palette item, skipping connection mode entirely.')
         e.stopPropagation(); // イベントの伝播を完全に止めるにゃ
         return;
