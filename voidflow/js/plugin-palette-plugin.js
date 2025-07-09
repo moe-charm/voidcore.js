@@ -67,11 +67,27 @@ export class PluginPalettePlugin {
     try {
       this.log('📦 Loading plugin samples...')
       
-      // シンプルプラグインを直接読み込み
-      this.plugins = simplePlugins
-      this.filteredPlugins = this.plugins
+      // simplePluginsを読み込み
+      let allPlugins = [...simplePlugins] // スプレッド構文でコピーするにゃ
       
-      this.log(`✅ ${this.plugins.length} plugins loaded successfully`)
+      // legacy-plugins.json を読み込むにゃ！
+      try {
+        const response = await fetch('/plugins/samples/legacy-plugins.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const legacyPlugins = await response.json();
+        allPlugins = [...allPlugins, ...legacyPlugins]; // 既存のプラグインに追加するにゃ
+        this.log(`✅ ${legacyPlugins.length} legacy plugins loaded.`);
+      } catch (fetchError) {
+        this.log(`❌ Failed to load legacy plugins from JSON: ${fetchError.message}`);
+        console.error('Legacy plugin fetch error:', fetchError);
+      }
+
+      this.plugins = allPlugins;
+      this.filteredPlugins = this.plugins;
+      
+      this.log(`✅ ${this.plugins.length} total plugins loaded successfully`);
       
     } catch (error) {
       this.log(`❌ Failed to load plugins: ${error.message}`)
@@ -484,10 +500,9 @@ export class PluginPalettePlugin {
         };
         const voidCorePlugin = await this.createVoidCorePlugin(plugin)
         
-        // VoidCoreUIにプラグインを追加
-        // createUIElement(nodeType, position, pluginId) を呼び出すにゃ
-        // voidCorePlugin.metadata.nodeType は、プラグインの実際のタイプを指すにゃ
-        await window.voidCoreUI.createUIElement(voidCorePlugin.metadata.nodeType, position, voidCorePlugin.id);
+        // VoidCoreUIにプラグインを追加（createUIElementではなくcreateUIPluginを呼び出すにゃ！）
+            // createUIPluginは、UI要素の作成と同時にVoidCoreへのプラグイン登録も行うにゃ
+            await window.voidCoreUI.createUIPlugin(voidCorePlugin.metadata.nodeType, position, voidCorePlugin.id);
         this.log(`✅ Plugin added to canvas: ${plugin.displayName}`)
         
       } catch (error) {
