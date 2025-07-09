@@ -70,44 +70,36 @@ export class VoidCoreConnectionManager {
     
     // 接続ポート作成（左クリック）
     document.addEventListener('click', (e) => {
-      console.log('🔍 Document click detected:', e.target)
-      console.log('🔍 Click target tagName:', e.target.tagName)
-      console.log('🔍 Click target className:', e.target.className)
+      this.log(`🔍 Document click detected: target=${e.target.tagName}, id=${e.target.id}, class=${e.target.className}`)
       
-      // VoidCoreUI要素の検索
-      const pluginElement = e.target.closest('.voidcore-ui-element') || 
-                          e.target.closest('[data-plugin-id]')
-      
-      console.log('🔍 Found plugin element:', pluginElement)
-      
-      if (!pluginElement) {
-        this.log('🔍 Click: No plugin element found')
-        return
+      // クリックされた要素がプラグインパレットのアイテム、またはその内部要素である場合は処理をスキップするにゃ！
+      const clickedPaletteItem = e.target.closest('.plugin-item');
+      if (clickedPaletteItem) {
+        this.log('🔍 Click: Detected click on plugin palette item, skipping connection mode entirely.')
+        e.stopPropagation(); // イベントの伝播を完全に止めるにゃ
+        return;
+      }
+
+      // クリックされた要素がvoidcore-ui-elementの内部にあるかチェック
+      const clickedUIElement = e.target.closest('.voidcore-ui-element');
+      this.log(`🔍 clickedUIElement: ${clickedUIElement ? clickedUIElement.id : 'null'}`)
+
+      // ここから、SmartConnectionManagerに処理を委譲するロジックを再構築するにゃ
+      if (clickedUIElement) { // voidcore-ui-element がクリックされた場合
+        const pluginId = clickedUIElement.dataset.pluginId;
+        if (pluginId) {
+          this.log(`🔍 Delegating to SmartConnectionManager: ${pluginId}`);
+          this.smartConnectionManager.handlePluginClick(pluginId, e);
+          e.stopPropagation(); // SmartConnectionManagerが処理したら、それ以上伝播させないにゃ
+        } else {
+          this.log('🔍 Click: voidcore-ui-element found but no pluginId. Skipping SmartConnection.');
+        }
+        return; // voidcore-ui-element のクリックはここで処理を終えるにゃ
       }
       
-      // 接続ポートのクリックかチェック
-      const isConnectionPort = e.target.closest('.connection-port')
-      if (isConnectionPort) {
-        this.log('🔍 Click: Connection port clicked, skipping plugin click')
-        return
-      }
-      
-      // イベント重複防止
-      e.stopPropagation()
-      
-      const pluginId = pluginElement.dataset.pluginId
-      console.log('🔍 Plugin ID from element:', pluginId)
-      
-      if (!pluginId) {
-        this.log('🔍 Click: No plugin ID found')
-        return
-      }
-      
-      this.log(`🔍 Delegating to SmartConnectionManager: ${pluginId}`)
-      
-      // SmartConnectionManagerに処理を委譲
-      this.smartConnectionManager.handlePluginClick(pluginId, e)
-    })
+      // それ以外のクリックは無視（SmartConnectionManagerの対象外）
+      this.log('🔍 Click: Not a plugin palette item or voidcore-ui-element. Ignoring.');
+    }) 
     
     // 右クリックキャンセル機能（どこでも右クリックでキャンセル＆色リセット）
     document.addEventListener('contextmenu', (e) => {

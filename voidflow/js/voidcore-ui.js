@@ -444,6 +444,10 @@ export class VoidCoreUI {
     element.setAttribute('data-plugin-id', pluginId)
     element.setAttribute('data-node-type', nodeType)
     
+    this.log(`🎨 createUIElement: ID=${element.id}, Class=${element.className}, data-plugin-id=${element.getAttribute('data-plugin-id')}`)
+    
+    this.log(`🎨 createUIElement: nodeType=${nodeType}, position={x:${position.x}, y:${position.y}}, pluginId=${pluginId}`) // 追加ログ
+
     // 視覚的コンテンツ追加
     this.addVisualContent(element, nodeType, pluginId)
     
@@ -460,11 +464,21 @@ export class VoidCoreUI {
         this.selectUIElement(pluginId)
       }
       
-      // 接続管理のため、stopPropagationを削除
-      // e.stopPropagation() // 削除: 接続管理でイベントが必要
+      // e.stopPropagation() を削除するにゃ！
+      // e.stopPropagation()
     })
     
     this.log(`🎨 UI element created: ${nodeType} (${pluginId})`)
+    
+    // ここで要素がcanvasElementに追加される直前と直後にログを追加
+    if (this.canvasElement) {
+        this.log(`🎨 Attempting to append element to canvas: ${this.canvasElement.id}`);
+        this.canvasElement.appendChild(element);
+        this.log(`🎨 Element appended to canvas. Current child count: ${this.canvasElement.children.length}`);
+    } else {
+        this.log(`❌ Canvas element is null or undefined. Cannot append UI element.`);
+    }
+
     return element
   }
 
@@ -938,7 +952,19 @@ export class VoidCoreUI {
       'ui.card': { icon: '🎨', name: 'UI: Simple Card', description: '美しさは意味の完成' },
       'core.plugin-lister': { icon: '🔍', name: 'Core: Plugin Lister', description: 'VoidCore自己観測' },
       'core.connection-manager': { icon: '🔗', name: 'Core: Connection Manager', description: 'VoidCore接続管理' },
-      'flow.connector': { icon: '🌀', name: 'Flow: Connector', description: '自己編集＝創造の完成' }
+      'flow.connector': { icon: '🌀', name: 'Flow: Connector', description: '自己編集＝創造の完成' },
+
+      // simple-plugins.js の type に対応するエントリを追加するにゃ！
+      'ui.button': { icon: '🔘', name: 'Interactive Button', description: 'インタラクティブなボタン' },
+      'logic.calculator': { icon: '🧮', name: 'Math Calculator', description: '高度な計算機' },
+      'data.json': { icon: '📊', name: 'JSON Parser', description: 'JSONデータを解析' },
+      'network.http': { icon: '🌐', name: 'HTTP Client', description: 'HTTPリクエストを送信' },
+      'visualization.chart': { icon: '📈', name: 'Interactive Chart', description: 'インタラクティブなグラフ' },
+      'media.image': { icon: '🖼️', name: 'Image Processor', description: '画像処理' },
+      'utility.string': { icon: '🔤', name: 'String Helper', description: '文字列操作ユーティリティ' },
+      'ai.text': { icon: '🤖', name: 'AI Text Generator', description: 'AIによるテキスト生成' },
+      'storage.database': { icon: '💾', name: 'Database Storage', description: 'データベースアダプター' },
+      'workflow.automation': { icon: '⚡', name: 'Workflow Automation', description: 'ワークフロー自動化' }
     }
     
     return nodeMap[nodeType] || { 

@@ -419,9 +419,14 @@ export class PluginPalettePlugin {
       this.toggleFavorite(plugin.id)
     })
     
-    // ダブルクリックでプラグイン追加
-    item.addEventListener('dblclick', async () => {
-      await this.addPluginToCanvas(plugin)
+    // シングルクリックでプラグイン追加
+    item.addEventListener('click', async (e) => {
+      // 接続ポートのクリックでない場合のみプラグイン追加
+      // これにより、プラグインアイテム内のボタンなどがクリックされたときに、
+      // プラグイン追加とボタンクリックの両方が発生するのを防ぎますにゃ。
+      if (!e.target.closest('.favorite-btn')) { // お気に入りボタンなど、内部要素のクリックを除外
+        await this.addPluginToCanvas(plugin)
+      }
     })
     
     // ドラッグ&ドロップ
@@ -472,10 +477,17 @@ export class PluginPalettePlugin {
     if (window.voidCoreUI) {
       try {
         // VoidCore v14.0 IPlugin互換のプラグインオブジェクトを作成
+        const canvasRect = window.voidCoreUI.canvasElement.getBoundingClientRect();
+        const position = {
+            x: Math.random() * (canvasRect.width - 150) + 50, // 左右に少し余白を持たせるにゃ
+            y: Math.random() * (canvasRect.height - 100) + 50 // 上下に少し余白を持たせるにゃ
+        };
         const voidCorePlugin = await this.createVoidCorePlugin(plugin)
         
         // VoidCoreUIにプラグインを追加
-        await window.voidCoreUI.createUIElement(voidCorePlugin)
+        // createUIElement(nodeType, position, pluginId) を呼び出すにゃ
+        // voidCorePlugin.metadata.nodeType は、プラグインの実際のタイプを指すにゃ
+        await window.voidCoreUI.createUIElement(voidCorePlugin.metadata.nodeType, position, voidCorePlugin.id);
         this.log(`✅ Plugin added to canvas: ${plugin.displayName}`)
         
       } catch (error) {
@@ -517,7 +529,8 @@ export class PluginPalettePlugin {
             config: pluginData.config,
             inputs: pluginData.inputs,
             outputs: pluginData.outputs,
-            dependencies: pluginData.dependencies
+            dependencies: pluginData.dependencies,
+            nodeType: pluginData.type // ここを追加するにゃ！
           }
         })
         
@@ -671,14 +684,16 @@ export class PluginPalettePlugin {
     }
     
       // プラグインインスタンスを作成して返す
-      return new PalettePlugin(plugin)
+      const createdPlugin = new PalettePlugin(plugin);
+      this.log(`📦 createVoidCorePlugin: Created plugin with ID=${createdPlugin.id}, nodeType=${createdPlugin.metadata.nodeType}`); // 追加ログ
+      return createdPlugin;
       
     } catch (error) {
       this.log(`❌ VoidCore plugin creation failed: ${error.message}`)
       console.error('VoidCore plugin creation error:', error)
       
       // フォールバック: 簡単なプラグインオブジェクトを返す
-      return {
+      const fallbackPlugin = {
         id: `${plugin.id}-${Date.now()}`,
         type: plugin.type || 'generic',
         displayName: plugin.displayName || plugin.name,
@@ -687,7 +702,9 @@ export class PluginPalettePlugin {
           console.log(`📨 Simple plugin message: ${message.intent}`)
           return { type: 'generic', value: 'Simple plugin response' }
         }
-      }
+      };
+      this.log(`❌ createVoidCorePlugin: Falling back to simple plugin with ID=${fallbackPlugin.id}`); // 追加ログ
+      return fallbackPlugin;
     }
   }
   
