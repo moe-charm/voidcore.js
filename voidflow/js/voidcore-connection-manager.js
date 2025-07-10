@@ -532,35 +532,13 @@ export class VoidCoreConnectionManager {
       }
     }).filter(conn => conn !== null)
     
-    // 束ね線レンダリング
-    const paths = this.lineRenderer.renderBundledConnections(sourcePluginId, sourcePos, targetConnections)
+    // 🎯 純粋束ね線レンダリング（1本のみ）
+    const bundleElements = this.lineRenderer.renderBundledConnections(sourcePluginId, sourcePos, targetConnections)
     
-    this.log(`🔗 束ね線描画完了: ${sourcePluginId} → ${connections.length}本`)
+    this.log(`🔗 純粋束ね線描画完了: ${sourcePluginId} → ${connections.length}本 → 1束ね線`)
     
-    // 各分離パスにイベントリスナー追加
-    if (paths && paths.length > 0) {
-      paths.forEach((path, index) => {
-        if (connections[index]) {
-          const connectionId = connections[index].id
-          
-          // ダブルクリックで削除
-          path.addEventListener('dblclick', () => {
-            this.removeConnection(connectionId)
-          })
-          
-          // ホバーエフェクト（束ね線用）
-          path.addEventListener('mouseenter', () => {
-            path.setAttribute('stroke-width', '2.5')
-            path.setAttribute('opacity', '1.0')
-          })
-          
-          path.addEventListener('mouseleave', () => {
-            path.setAttribute('stroke-width', '1.5')
-            path.setAttribute('opacity', '0.8')
-          })
-        }
-      })
-    }
+    // 🚀 純粋束ね線: イベントリスナーは内部で処理済み
+    // 古い分離パス用のイベントリスナーコードは削除
   }
   
   /**
@@ -916,12 +894,20 @@ export class VoidCoreConnectionManager {
       }
     })
     
-    // 受信側接続も個別処理
+    // 受信側接続も個別処理（束ね線対応）
     incomingConnections.forEach(connectionId => {
       const connection = this.connections.get(connectionId)
       if (connection && !outgoingSourceIds.has(connection.sourcePluginId)) {
         this.removeConnectionLine(connectionId)
-        this.drawConnectionLine(connection)
+        // 🚨 修正: 個別描画せず、ソース単位で束ね線判定
+        const incomingSourceConnections = this.getConnectionsFromSource(connection.sourcePluginId)
+        if (incomingSourceConnections.length === 1) {
+          // 1本のみなら個別描画
+          this.drawConnectionLine(connection)
+        } else {
+          // 複数本なら束ね線として処理（再描画スキップ）
+          this.log(`⏭️ 受信側束ね線スキップ: ${connection.sourcePluginId} (${incomingSourceConnections.length}本)`)
+        }
       }
     })
   }
