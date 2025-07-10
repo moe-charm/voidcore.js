@@ -402,8 +402,13 @@ export class VoidCoreConnectionManager {
     const displayMode = this.lineRenderer.determineDisplayMode(sourceConnections.length)
     this.log(`🔧 表示モード決定: ${displayMode} (${sourceConnections.length}本)`)
     
-    // 🐛 修正: 既存のソース接続を全削除してから再描画
-    this.clearSourceConnections(connection.sourcePluginId)
+    // 🐛 修正: 表示モード変更時のみ全削除
+    const previousDisplayMode = this.getStoredDisplayMode(connection.sourcePluginId)
+    if (previousDisplayMode !== displayMode) {
+      this.log(`🔄 表示モード変更: ${previousDisplayMode} → ${displayMode}`)
+      this.clearSourceConnections(connection.sourcePluginId)
+      this.setStoredDisplayMode(connection.sourcePluginId, displayMode)
+    }
     
     switch (displayMode) {
       case 'bundle':
@@ -940,6 +945,23 @@ export class VoidCoreConnectionManager {
     // 束ね線要素も削除
     const bundleElements = this.svgElement.querySelectorAll(`[id^="bundle-${sourcePluginId}"]`)
     bundleElements.forEach(element => element.remove())
+  }
+  
+  /**
+   * 🔧 表示モード状態管理（Phase 2: バウンス防止）
+   */
+  getStoredDisplayMode(sourcePluginId) {
+    if (!this.displayModeCache) {
+      this.displayModeCache = new Map()
+    }
+    return this.displayModeCache.get(sourcePluginId) || 'individual'
+  }
+  
+  setStoredDisplayMode(sourcePluginId, displayMode) {
+    if (!this.displayModeCache) {
+      this.displayModeCache = new Map()
+    }
+    this.displayModeCache.set(sourcePluginId, displayMode)
   }
 
   /**

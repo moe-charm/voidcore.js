@@ -73,7 +73,7 @@ export class ConnectionLineRenderer {
     // 既存のパスがあれば更新、なければ追加
     const existingPath = this.connectionPaths.get(connectionId)
     if (existingPath) {
-      this.updatePath(existingPath, pathData)
+      this.updatePath(existingPath, pathData, true) // 🐛 束ね線でアニメーション無効化
     } else {
       this.svgElement.appendChild(path)
       this.connectionPaths.set(connectionId, path)
@@ -266,9 +266,15 @@ export class ConnectionLineRenderer {
   }
   
   /**
-   * 🎨 パスを更新（アニメーション付き）
+   * 🎨 パスを更新（束ね線用アニメーション無効化）
    */
-  updatePath(pathElement, newPathData) {
+  updatePath(pathElement, newPathData, disableAnimation = false) {
+    // 🐛 修正: 束ね線でのバウンス防止
+    if (disableAnimation) {
+      pathElement.setAttribute('d', newPathData)
+      return
+    }
+    
     // SMIL アニメーションを使用
     const animate = document.createElementNS('http://www.w3.org/2000/svg', 'animate')
     animate.setAttribute('attributeName', 'd')
