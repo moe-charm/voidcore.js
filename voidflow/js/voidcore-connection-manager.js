@@ -895,21 +895,32 @@ export class VoidCoreConnectionManager {
     })
     
     // 受信側接続も個別処理（束ね線対応）
+    const processedSources = new Set()
     incomingConnections.forEach(connectionId => {
       const connection = this.connections.get(connectionId)
       if (connection && !outgoingSourceIds.has(connection.sourcePluginId)) {
-        this.removeConnectionLine(connectionId)
-        // 🚨 修正: 個別描画せず、ソース単位で束ね線判定
-        const incomingSourceConnections = this.getConnectionsFromSource(connection.sourcePluginId)
-        if (incomingSourceConnections.length === 1) {
-          // 1本のみなら個別描画
-          this.drawConnectionLine(connection)
-        } else {
-          // 複数本なら束ね線として処理（再描画スキップ）
-          this.log(`⏭️ 受信側束ね線スキップ: ${connection.sourcePluginId} (${incomingSourceConnections.length}本)`)
+        // 🔧 修正: 同じソースは一度だけ処理（束ね線保持）
+        if (!processedSources.has(connection.sourcePluginId)) {
+          processedSources.add(connection.sourcePluginId)
+          
+          // ソース単位で束ね線判定・再描画
+          this.clearSourceConnections(connection.sourcePluginId)
+          const incomingSourceConnections = this.getConnectionsFromSource(connection.sourcePluginId)
+          if (incomingSourceConnections.length > 0) {
+            // 最初の接続を使って全体を再描画（束ね線判定含む）
+            this.drawConnectionLine(incomingSourceConnections[0])
+          }
         }
       }
     })
+  }
+
+  /**
+   * 🔄 特定要素の接続線再描画（UI互換）
+   */
+  redrawConnectionsForElement(pluginId) {
+    this.log(`🔄 要素の接続線再描画: ${pluginId}`)
+    this.redrawConnectionsFromNode(pluginId)
   }
 
   /**

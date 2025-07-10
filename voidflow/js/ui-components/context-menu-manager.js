@@ -122,6 +122,7 @@ export class ContextMenuManager {
    */
   showPluginMenu(pluginId, x, y) {
     console.log(`🎯 showPluginMenu called for: ${pluginId} at (${x}, ${y})`)
+    this.voidCoreUI.log(`🎯 右クリックメニュー表示: ${pluginId}`)
     this.currentTarget = pluginId
     this.currentTargetType = 'plugin'
     
@@ -295,10 +296,149 @@ export class ContextMenuManager {
   /**
    * 📄 プラグイン複製
    */
-  duplicatePlugin(pluginId) {
-    this.voidCoreUI.log(`📄 Duplicate plugin: ${pluginId}`)
-    // TODO: 複製機能を実装
-    alert(`Plugin duplicated: ${pluginId}`)
+  async duplicatePlugin(pluginId) {
+    this.voidCoreUI.log(`📄 Duplicate plugin start: ${pluginId}`)
+    console.log(`📄 Duplicate plugin called for: ${pluginId}`)
+    
+    try {
+      // 🔍 デバッグ: 利用可能なプラグインIDをチェック
+      const allPluginIds = this.voidCoreUI.elementManager.getPluginIds()
+      const allElementIds = this.voidCoreUI.elementManager.getElementIds()
+      this.voidCoreUI.log(`📄 Available plugin IDs: ${JSON.stringify(allPluginIds)}`)
+      this.voidCoreUI.log(`📄 Available element IDs: ${JSON.stringify(allElementIds)}`)
+      this.voidCoreUI.log(`📄 Target plugin ID: ${pluginId}`)
+      
+      // 元のプラグイン情報を取得
+      this.voidCoreUI.log(`📄 Getting original plugin: ${pluginId}`)
+      const originalPlugin = this.voidCoreUI.getUIPlugin(pluginId)
+      const originalElement = this.voidCoreUI.elementManager.getElement(pluginId)
+      
+      this.voidCoreUI.log(`📄 Original plugin: ${originalPlugin ? 'found' : 'not found'}`)
+      this.voidCoreUI.log(`📄 Original element: ${originalElement ? 'found' : 'not found'}`)
+      
+      // 🔍 ElementとPluginが別々に管理されている可能性をチェック
+      if (!originalPlugin && originalElement) {
+        // 要素は見つかったがプラグインインスタンスがない場合
+        this.voidCoreUI.log(`📄 Element found but plugin instance missing, proceeding with element-based duplication`)
+        
+        // DOM要素が見つかった場合、それを使って複製
+        const nodeType = originalElement.getAttribute('data-node-type') || 'input.text'
+        this.voidCoreUI.log(`📄 Found element with nodeType: ${nodeType}`)
+        
+        // 位置計算
+        const originalRect = originalElement.getBoundingClientRect()
+        const canvasRect = this.voidCoreUI.canvasManager.canvasElement.getBoundingClientRect()
+        const newPosition = {
+          x: (originalRect.left - canvasRect.left) + 30,
+          y: (originalRect.top - canvasRect.top) + 30
+        }
+        
+        // 新しいプラグインを作成
+        const newPluginId = await this.voidCoreUI.createUIPlugin(nodeType, newPosition)
+        
+        // 元の設定値をコピー
+        if (newPluginId) {
+          const newElement = this.voidCoreUI.elementManager.getElement(newPluginId)
+          if (newElement) {
+            const originalInput = originalElement.querySelector('input[type="text"]')
+            const newInput = newElement.querySelector('input[type="text"]')
+            if (originalInput && newInput && originalInput.value) {
+              newInput.value = originalInput.value
+              newElement.setAttribute('data-current-value', originalInput.value)
+            }
+            
+            this.voidCoreUI.log(`✅ Plugin duplicated via element: ${pluginId} → ${newPluginId}`)
+            return
+          }
+        }
+        
+        throw new Error(`Failed to create duplicate plugin`)
+      }
+      
+      if (!originalPlugin && !originalElement) {
+        // DOM要素から直接探す
+        const domElement = document.getElementById(`ui-element-${pluginId}`)
+        this.voidCoreUI.log(`📄 DOM element search: ${domElement ? 'found' : 'not found'}`)
+        
+        if (domElement) {
+          // DOM要素が見つかった場合、それを使って複製
+          const nodeType = domElement.getAttribute('data-node-type') || 'input.text'
+          this.voidCoreUI.log(`📄 Found DOM element with nodeType: ${nodeType}`)
+          
+          // 位置計算
+          const originalRect = domElement.getBoundingClientRect()
+          const canvasRect = this.voidCoreUI.canvasManager.canvasElement.getBoundingClientRect()
+          const newPosition = {
+            x: (originalRect.left - canvasRect.left) + 30,
+            y: (originalRect.top - canvasRect.top) + 30
+          }
+          
+          // 新しいプラグインを作成
+          const newPluginId = await this.voidCoreUI.createUIPlugin(nodeType, newPosition)
+          
+          // 元の設定値をコピー
+          if (newPluginId) {
+            const newElement = this.voidCoreUI.elementManager.getElement(newPluginId)
+            if (newElement) {
+              const originalInput = domElement.querySelector('input[type="text"]')
+              const newInput = newElement.querySelector('input[type="text"]')
+              if (originalInput && newInput && originalInput.value) {
+                newInput.value = originalInput.value
+                newElement.setAttribute('data-current-value', originalInput.value)
+              }
+              
+              this.voidCoreUI.log(`✅ Plugin duplicated via DOM: ${pluginId} → ${newPluginId}`)
+              return
+            }
+          }
+        }
+        
+        throw new Error(`Plugin not found: ${pluginId}`)
+      }
+      
+      if (!originalPlugin || !originalElement) {
+        throw new Error(`Plugin not found: ${pluginId}`)
+      }
+      
+      // 🎯 通常のプラグイン・要素ベース複製
+      this.voidCoreUI.log(`📄 Using normal plugin-element based duplication`)
+      
+      // 元の位置から少しずらした位置を計算
+      const originalRect = originalElement.getBoundingClientRect()
+      const canvasRect = this.voidCoreUI.canvasManager.canvasElement.getBoundingClientRect()
+      const newPosition = {
+        x: (originalRect.left - canvasRect.left) + 30,
+        y: (originalRect.top - canvasRect.top) + 30
+      }
+      
+      // プラグインタイプを取得
+      const nodeType = originalPlugin.type || originalElement.getAttribute('data-node-type') || 'input.text'
+      
+      this.voidCoreUI.log(`📄 Duplicating ${nodeType} from (${originalRect.left - canvasRect.left}, ${originalRect.top - canvasRect.top}) to (${newPosition.x}, ${newPosition.y})`)
+      
+      // 新しいプラグインを作成
+      const newPluginId = await this.voidCoreUI.createUIPlugin(nodeType, newPosition)
+      
+      // 元の設定値をコピー（テキスト入力値など）
+      if (originalElement && newPluginId) {
+        const newElement = this.voidCoreUI.elementManager.getElement(newPluginId)
+        if (newElement) {
+          // テキスト入力値のコピー
+          const originalInput = originalElement.querySelector('input[type="text"]')
+          const newInput = newElement.querySelector('input[type="text"]')
+          if (originalInput && newInput && originalInput.value) {
+            newInput.value = originalInput.value
+            newElement.setAttribute('data-current-value', originalInput.value)
+          }
+          
+          this.voidCoreUI.log(`✅ Plugin duplicated: ${pluginId} → ${newPluginId}`)
+        }
+      }
+      
+    } catch (error) {
+      this.voidCoreUI.log(`❌ Plugin duplication failed: ${error.message}`)
+      alert(`Duplication failed: ${error.message}`)
+    }
   }
 
   /**

@@ -4,6 +4,7 @@
 import { VoidCore } from '/src/core/voidcore.js'
 import { Message } from '/src/messaging/message.js'
 import { initializeVoidFlowHybridCommunication } from './voidflow-hybrid-communication.js'
+import { debugLogger } from './debug-file-logger.js'
 import { ButtonSendUI } from './ui-nodes/button-send-ui.js'
 import { InputTextUI } from './ui-nodes/input-text-ui.js'
 import { OutputConsoleUI } from './ui-nodes/output-console-ui.js'
@@ -83,8 +84,18 @@ export class VoidCoreUI {
     this.log('🎨 VoidCoreUI initialized - UI-optimized VoidCore ready (Phase3)')
   }
   
-  // 🔧 Phase3対応: VoidCoreメソッドの委譲
+  // 🔧 Phase3対応: VoidCoreメソッドの委譲 + UIログカテゴリ対応
   log(message) {
+    console.log(`[VoidCoreUI] ${message}`)
+    
+    // Phase 1: UIカテゴリのファイル出力デバッグログ
+    if (debugLogger) {
+      debugLogger.log('ui', 'debug', message, {
+        source: 'VoidCoreUI',
+        timestamp: Date.now()
+      })
+    }
+    
     return this.voidCore.log(message)
   }
   
@@ -372,6 +383,21 @@ export class VoidCoreUI {
       
       // UI要素をMapに保存（確実に文字列キーで保存）
       this.elementManager.registerElement(pluginId, uiElement, nodeType)
+      
+      // 🔧 修正: プラグインインスタンスも作成・登録
+      const pluginInstance = {
+        id: pluginId,
+        type: nodeType,
+        position: position,
+        element: uiElement,
+        config: {
+          nodeType: nodeType,
+          uiMode: true,
+          created: Date.now()
+        }
+      }
+      this.elementManager.registerPlugin(pluginId, pluginInstance)
+      this.log(`🧩 Plugin instance registered: ${pluginId}`)
       
       // Canvas要素に追加
       this.canvasManager.appendChild(uiElement)
