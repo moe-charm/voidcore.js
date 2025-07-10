@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 接続デバッグページ</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            font-family: monospace;
+            margin: 20px;
+        }
+        .debug-panel {
+            background: #2a2a2a;
+            border: 1px solid #4a90e2;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #357abd; }
+        #output {
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 VoidFlow接続デバッグ</h1>
+    
+    <div class="debug-panel">
+        <h2>🧪 デバッグ機能</h2>
+        <button onclick="checkConnectionManager()">🔗 ConnectionManager確認</button>
+        <button onclick="checkLineRenderer()">🌀 LineRenderer確認</button>
+        <button onclick="debugConnections()">📊 接続状態デバッグ</button>
+        <button onclick="testManualConnection()">🎯 手動接続テスト</button>
+        <button onclick="clearOutput()">🧹 出力クリア</button>
+    </div>
+    
+    <div class="debug-panel">
+        <h2>📤 出力</h2>
+        <div id="output"></div>
+    </div>
+    
+    <script>
+        let output = document.getElementById('output')
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString()
+            output.innerHTML += `[${timestamp}] ${message}<br>`
+            output.scrollTop = output.scrollHeight
+        }
+        
+        function checkConnectionManager() {
+            log('🔍 ConnectionManager確認開始...')
+            
+            // グローバル変数をチェック
+            if (typeof window.connectionManager !== 'undefined') {
+                log('✅ window.connectionManager 存在')
+                log(`   - connections: ${window.connectionManager.connections.size}個`)
+                log(`   - lineRenderer: ${window.connectionManager.lineRenderer ? '存在' : '未初期化'}`)
+            } else {
+                log('❌ window.connectionManager 不存在')
+            }
+            
+            // VoidFlowページから取得を試行
+            try {
+                const iframe = document.createElement('iframe')
+                iframe.src = '/voidflow/index-voidcore.html'
+                iframe.style.display = 'none'
+                document.body.appendChild(iframe)
+                
+                iframe.onload = () => {
+                    try {
+                        const voidflowWindow = iframe.contentWindow
+                        if (voidflowWindow.connectionManager) {
+                            log('✅ VoidFlowページのconnectionManager発見')
+                            window.testConnectionManager = voidflowWindow.connectionManager
+                        } else {
+                            log('❌ VoidFlowページのconnectionManager未初期化')
+                        }
+                    } catch (e) {
+                        log(`❌ iframeアクセスエラー: ${e.message}`)
+                    }
+                    iframe.remove()
+                }
+            } catch (e) {
+                log(`❌ iframe作成エラー: ${e.message}`)
+            }
+        }
+        
+        function checkLineRenderer() {
+            log('🌀 LineRenderer確認開始...')
+            
+            // モジュールインポートテスト
+            import('/voidflow/js/connection-line-renderer.js')
+                .then(module => {
+                    log('✅ ConnectionLineRenderer モジュール読み込み成功')
+                    log(`   - exports: ${Object.keys(module)}`)
+                    
+                    // テスト用SVG作成
+                    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+                    svg.style.width = '200px'
+                    svg.style.height = '100px'
+                    svg.style.border = '1px solid #4a90e2'
+                    
+                    const renderer = new module.ConnectionLineRenderer(svg)
+                    log('✅ ConnectionLineRenderer インスタンス作成成功')
+                    
+                    // テスト描画
+                    renderer.renderConnection('test-1', {x: 10, y: 50}, {x: 190, y: 50}, {
+                        color: '#00ff88',
+                        width: 3
+                    })
+                    log('✅ テスト接続線描画成功')
+                    
+                    document.body.appendChild(svg)
+                })
+                .catch(error => {
+                    log(`❌ ConnectionLineRenderer読み込み失敗: ${error.message}`)
+                })
+        }
+        
+        function debugConnections() {
+            log('📊 接続状態デバッグ開始...')
+            
+            if (window.testConnectionManager) {
+                const cm = window.testConnectionManager
+                log(`🔗 接続数: ${cm.connections.size}`)
+                log(`🔗 プラグイン接続: ${cm.pluginConnections.size}`)
+                
+                cm.connections.forEach((conn, id) => {
+                    log(`   - ${id}: ${conn.sourcePluginId} → ${conn.targetPluginId}`)
+                })
+                
+                if (cm.lineRenderer) {
+                    log(`🌀 LineRenderer状態:`)
+                    log(`   - 管理パス数: ${cm.lineRenderer.connectionPaths.size}`)
+                } else {
+                    log('❌ LineRenderer未初期化')
+                }
+            } else {
+                log('❌ ConnectionManager未取得 - 先にConnectionManager確認を実行してください')
+            }
+        }
+        
+        function testManualConnection() {
+            log('🎯 手動接続テスト開始...')
+            
+            if (window.testConnectionManager) {
+                try {
+                    const cm = window.testConnectionManager
+                    
+                    // テスト接続作成
+                    const connId = cm.createConnection('test-source', 'test-target-1', 'test-flow')
+                    log(`✅ 接続1作成: ${connId}`)
+                    
+                    const connId2 = cm.createConnection('test-source', 'test-target-2', 'test-flow')
+                    log(`✅ 接続2作成: ${connId2}`)
+                    
+                    const connId3 = cm.createConnection('test-source', 'test-target-3', 'test-flow')
+                    log(`✅ 接続3作成: ${connId3}`)
+                    
+                    log('📊 接続後の状態:')
+                    debugConnections()
+                    
+                } catch (error) {
+                    log(`❌ 手動接続テスト失敗: ${error.message}`)
+                }
+            } else {
+                log('❌ ConnectionManager未取得')
+            }
+        }
+        
+        function clearOutput() {
+            output.innerHTML = ''
+        }
+        
+        // ページ読み込み時に基本チェック
+        window.addEventListener('load', () => {
+            log('🔍 デバッグページ読み込み完了')
+            checkConnectionManager()
+        })
+    </script>
+</body>
+</html>

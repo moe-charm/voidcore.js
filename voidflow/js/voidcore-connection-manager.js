@@ -398,19 +398,36 @@ export class VoidCoreConnectionManager {
     
     this.log(`🌀 接続描画: ${connection.sourcePluginId} から ${sourceConnections.length}本の接続`)
     
-    if (sourceConnections.length >= 2) {
-      // 扇形分散表示を使用（2本以上で扇形）
-      this.log(`🌀 扇形分散モード: ${sourceConnections.length}本`)
-      this.renderFanOutConnections(connection.sourcePluginId)
-    } else {
-      // 通常の線表示（ConnectionLineRenderer使用）
-      this.log(`🎨 通常線描画: ${connection.id}`)
-      const path = this.lineRenderer.renderConnection(connection.id, sourcePos, targetPos, {
-        color: '#4a90e2',
-        width: 2,
-        animated: true,
-        arrow: true
-      })
+    // Phase 2: 表示モード自動決定
+    const displayMode = this.lineRenderer.determineDisplayMode(sourceConnections.length)
+    this.log(`🔧 表示モード決定: ${displayMode} (${sourceConnections.length}本)`)
+    
+    // 🐛 修正: 既存のソース接続を全削除してから再描画
+    this.clearSourceConnections(connection.sourcePluginId)
+    
+    switch (displayMode) {
+      case 'bundle':
+        // 3本以上 → 束ね表示
+        this.log(`🔗 束ね線モード: ${sourceConnections.length}本`)
+        this.renderBundledConnections(connection.sourcePluginId)
+        break
+        
+      case 'fanout':
+        // 2本 → 扇形分散
+        this.log(`🌀 扇形分散モード: ${sourceConnections.length}本`)
+        this.renderFanOutConnections(connection.sourcePluginId)
+        break
+        
+      case 'individual':
+      default:
+        // 1本 → 通常表示
+        this.log(`🎨 通常線描画: ${connection.id}`)
+        const path = this.lineRenderer.renderConnection(connection.id, sourcePos, targetPos, {
+          color: '#4a90e2',
+          width: 2,
+          animated: true,
+          arrow: true
+        })
       
       // ダブルクリックで削除
       path.addEventListener('dblclick', () => {
@@ -471,6 +488,75 @@ export class VoidCoreConnectionManager {
         this.removeConnection(connectionId)
       })
     })
+  }
+  
+  /**
+   * 🔗 Phase 2: 束ね線接続を描画
+   */
+  renderBundledConnections(sourcePluginId) {
+    const connections = this.getConnectionsFromSource(sourcePluginId)
+    if (connections.length < this.lineRenderer.bundleConfig.bundleThreshold) {
+      // 束ね閾値未満の場合は扇形分散にフォールバック
+      this.renderFanOutConnections(sourcePluginId)
+      return
+    }
+    
+    const sourceElement = this.getPluginElement(sourcePluginId)
+    if (!sourceElement) return
+    
+    const sourceRect = sourceElement.getBoundingClientRect()
+    const canvasRect = this.canvasElement.getBoundingClientRect()
+    
+    const sourcePos = {
+      x: sourceRect.right - canvasRect.left,
+      y: sourceRect.top + sourceRect.height/2 - canvasRect.top
+    }
+    
+    // 各ターゲット接続の位置を計算
+    const targetConnections = connections.map(conn => {
+      const targetElement = this.getPluginElement(conn.targetPluginId)
+      if (!targetElement) return null
+      
+      const targetRect = targetElement.getBoundingClientRect()
+      return {
+        id: conn.id,
+        targetPos: {
+          x: targetRect.left - canvasRect.left,
+          y: targetRect.top + targetRect.height/2 - canvasRect.top
+        },
+        options: {
+          color: '#4a90e2',
+          width: 1.5,  // 束ね線用は細めに
+          animated: false
+        }
+      }
+    }).filter(conn => conn !== null)
+    
+    // 束ね線レンダリング
+    const paths = this.lineRenderer.renderBundledConnections(sourcePluginId, sourcePos, targetConnections)
+    
+    // 各分離パスにイベントリスナー追加
+    paths.forEach((path, index) => {
+      const connectionId = connections[index].id
+      
+      // ダブルクリックで削除
+      path.addEventListener('dblclick', () => {
+        this.removeConnection(connectionId)
+      })
+      
+      // ホバーエフェクト（束ね線用）
+      path.addEventListener('mouseenter', () => {
+        path.setAttribute('stroke-width', '2.5')
+        path.setAttribute('opacity', '1.0')
+      })
+      
+      path.addEventListener('mouseleave', () => {
+        path.setAttribute('stroke-width', '1.5')
+        path.setAttribute('opacity', '0.8')
+      })
+    })
+    
+    this.log(`🔗 束ね線描画完了: ${sourcePluginId} → ${targetConnections.length}本`)
   }
   
   /**
@@ -827,6 +913,33 @@ export class VoidCoreConnectionManager {
         this.drawConnectionLine(connection)
       }
     })
+  }
+
+  /**
+   * 🧹 指定ソースからの接続線を全削除（Phase 2: 重複削除対策）
+   */
+  clearSourceConnections(sourcePluginId) {
+    const sourceConnections = this.getConnectionsFromSource(sourcePluginId)
+    this.log(`🧹 ${sourcePluginId}からの接続線を全削除: ${sourceConnections.length}本`)
+    
+    sourceConnections.forEach(connection => {
+      const connectionId = connection.id
+      
+      // ConnectionLineRenderer管理のパスを削除
+      if (this.lineRenderer) {
+        this.lineRenderer.removeConnection(connectionId)
+      }
+      
+      // 旧形式の線要素も削除
+      const lineElement = document.getElementById(`connection-line-${connectionId}`)
+      if (lineElement) {
+        lineElement.remove()
+      }
+    })
+    
+    // 束ね線要素も削除
+    const bundleElements = this.svgElement.querySelectorAll(`[id^="bundle-${sourcePluginId}"]`)
+    bundleElements.forEach(element => element.remove())
   }
 
   /**

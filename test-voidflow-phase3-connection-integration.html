@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 VoidFlow Phase 3 - 接続管理Intent化テスト</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+        }
+        .test-panel {
+            background: #2a2a2a;
+            border: 1px solid #4a90e2;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .test-result {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .success { background: rgba(0, 255, 136, 0.2); }
+        .error { background: rgba(255, 107, 107, 0.2); }
+        .pending { background: rgba(255, 193, 7, 0.2); }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #357abd; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        #console-output {
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .connection-log {
+            background: rgba(255, 107, 107, 0.1);
+            border-left: 3px solid #ff6b6b;
+            padding: 5px;
+            margin: 2px 0;
+        }
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        .stat-item {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .connection-flow {
+            background: #2a2a2a;
+            border: 1px solid #ff6b6b;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .flow-step {
+            background: #333;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 3px solid #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 VoidFlow Phase 3 - 接続管理Intent化テスト</h1>
+    
+    <div class="test-panel">
+        <h2>📊 Phase 3 統合テスト</h2>
+        <div id="phase3-results">
+            <div class="test-result pending">🔄 テスト準備中...</div>
+        </div>
+        <button onclick="runPhase3Tests()">Phase 3テスト実行</button>
+        <button onclick="testConnectionStart()">接続開始テスト</button>
+        <button onclick="testConnectionComplete()">接続完了テスト</button>
+        <button onclick="testConnectionCancel()">接続キャンセルテスト</button>
+        <button onclick="testConnectionFlow()">接続フロー総合テスト</button>
+        <button onclick="loadVoidFlowPage()">VoidFlowページ読み込み</button>
+        <button onclick="clearConsole()">コンソールクリア</button>
+    </div>
+    
+    <div class="test-panel">
+        <h2>🔗 接続フロー可視化</h2>
+        <div class="connection-flow" id="connection-flow">
+            <div class="flow-step">1️⃣ 接続開始 - 最初のプラグインクリック</div>
+            <div class="flow-step">2️⃣ 接続完了 - 2番目のプラグインクリック</div>
+            <div class="flow-step">3️⃣ 接続キャンセル - 右クリックまたは同じプラグインクリック</div>
+        </div>
+        <button onclick="simulateConnectionFlow()">接続フロー シミュレーション</button>
+    </div>
+    
+    <div class="test-panel">
+        <h2>📈 統計情報</h2>
+        <div class="stats-panel" id="stats-panel">
+            <div class="stat-item">
+                <div>接続開始Intent数</div>
+                <div id="connection-start-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div>接続完了Intent数</div>
+                <div id="connection-complete-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div>接続キャンセルIntent数</div>
+                <div id="connection-cancel-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div>総Intent数</div>
+                <div id="total-intent-count">0</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-panel">
+        <h2>🖥️ コンソール出力</h2>
+        <div id="console-output"></div>
+    </div>
+    
+    <div class="test-panel">
+        <h2>🔧 デバッグコンソール</h2>
+        <p>ブラウザ開発者ツールで以下のコマンドを実行できます：</p>
+        <ul>
+            <li><code>testPhase3.startConnection('plugin1')</code> - 接続開始テスト</li>
+            <li><code>testPhase3.completeConnection('plugin1', 'plugin2')</code> - 接続完了テスト</li>
+            <li><code>testPhase3.cancelConnection('user')</code> - 接続キャンセルテスト</li>
+            <li><code>testPhase3.getConnectionStats()</code> - 接続統計確認</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        // VoidFlowCore統合のインポート
+        import { VoidFlowCore } from './voidflow/js/voidflow-core.js'
+        import { VoidFlowIntentBridge } from './voidflow/js/intent-bridge.js'
+        import { INTENT_TYPES, IntentShortcuts } from './voidflow/js/intent-definitions.js'
+        
+        let testVoidFlowCore = null
+        let testIntentBridge = null
+        let connectionStartCount = 0
+        let connectionCompleteCount = 0
+        let connectionCancelCount = 0
+        let totalIntentCount = 0
+        
+        // グローバル関数定義
+        window.runPhase3Tests = runPhase3Tests
+        window.testConnectionStart = testConnectionStart
+        window.testConnectionComplete = testConnectionComplete
+        window.testConnectionCancel = testConnectionCancel
+        window.testConnectionFlow = testConnectionFlow
+        window.simulateConnectionFlow = simulateConnectionFlow
+        window.loadVoidFlowPage = loadVoidFlowPage
+        window.clearConsole = clearConsole
+        
+        // デバッグオブジェクト
+        window.testPhase3 = {
+            startConnection: startConnectionTest,
+            completeConnection: completeConnectionTest,
+            cancelConnection: cancelConnectionTest,
+            getConnectionStats: getConnectionStats,
+            getSystemStatus: getSystemStatus
+        }
+        
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', async function() {
+            log('🌟 VoidFlow Phase 3テストページ初期化開始...')
+            
+            try {
+                // VoidFlowCore初期化
+                testVoidFlowCore = new VoidFlowCore({
+                    enableDebug: true,
+                    enableStats: true
+                })
+                
+                // Intent監視設定
+                setupConnectionIntentMonitoring()
+                
+                // Intent Bridge初期化
+                testIntentBridge = new VoidFlowIntentBridge(testVoidFlowCore)
+                
+                // グローバル参照設定
+                window.testVoidFlowCore = testVoidFlowCore
+                window.testIntentBridge = testIntentBridge
+                
+                log('✅ Phase 3テスト環境初期化完了！')
+                updateTestResult('phase3-results', '✅ 初期化完了', 'success')
+                
+                // 統計情報更新
+                updateStats()
+                
+            } catch (error) {
+                log(`❌ 初期化エラー: ${error.message}`)
+                updateTestResult('phase3-results', `❌ 初期化失敗: ${error.message}`, 'error')
+                updateStats()
+            }
+        })
+        
+        // Phase 3統合テスト実行
+        async function runPhase3Tests() {
+            log('🧪 Phase 3統合テスト開始...')
+            updateTestResult('phase3-results', '🔄 Phase 3テスト実行中...', 'pending')
+            
+            const tests = [
+                { name: 'VoidFlowCore接続機能', test: testVoidFlowCoreConnection },
+                { name: '接続開始Intent', test: testConnectionStartIntent },
+                { name: '接続完了Intent', test: testConnectionCompleteIntent },
+                { name: '接続キャンセルIntent', test: testConnectionCancelIntent },
+                { name: 'Intent定義確認', test: testConnectionIntentDefinitions }
+            ]
+            
+            let passed = 0
+            let failed = 0
+            
+            for (const test of tests) {
+                try {
+                    log(`🔍 ${test.name}テスト開始...`)
+                    await test.test()
+                    log(`✅ ${test.name}テスト成功`)
+                    passed++
+                } catch (error) {
+                    log(`❌ ${test.name}テスト失敗: ${error.message}`)
+                    failed++
+                }
+            }
+            
+            const result = `Phase 3テスト完了: ${passed}成功, ${failed}失敗`
+            const status = failed === 0 ? 'success' : 'error'
+            log(`🎉 ${result}`)
+            updateTestResult('phase3-results', result, status)
+            updateStats()
+        }
+        
+        // 個別テスト関数
+        async function testVoidFlowCoreConnection() {
+            const features = testVoidFlowCore.getAvailableFeatures()
+            if (!features.includes('connection-management')) {
+                throw new Error('Connection management feature not available')
+            }
+        }
+        
+        async function testConnectionStartIntent() {
+            const result = await testVoidFlowCore.sendIntent('voidflow.ui.connection.start', {
+                sourceId: 'test-plugin-1',
+                sourceType: 'plugin',
+                cursor: { x: 100, y: 100 },
+                connectionMode: 'data'
+            })
+            connectionStartCount++
+            totalIntentCount++
+            if (!result || result.status === 'error') {
+                throw new Error('Connection start intent failed')
+            }
+        }
+        
+        async function testConnectionCompleteIntent() {
+            const result = await testVoidFlowCore.sendIntent('voidflow.ui.connection.complete', {
+                sourceId: 'test-plugin-1',
+                targetId: 'test-plugin-2',
+                connectionType: 'data-flow'
+            })
+            connectionCompleteCount++
+            totalIntentCount++
+            if (!result || result.status === 'error') {
+                throw new Error('Connection complete intent failed')
+            }
+        }
+        
+        async function testConnectionCancelIntent() {
+            const result = await testVoidFlowCore.sendIntent('voidflow.ui.connection.cancel', {
+                reason: 'user',
+                sourceId: 'test-plugin-1'
+            })
+            connectionCancelCount++
+            totalIntentCount++
+            if (!result || result.status === 'error') {
+                throw new Error('Connection cancel intent failed')
+            }
+        }
+        
+        async function testConnectionIntentDefinitions() {
+            if (!INTENT_TYPES.UI.CONNECTION.START || 
+                !INTENT_TYPES.UI.CONNECTION.COMPLETE || 
+                !INTENT_TYPES.UI.CONNECTION.CANCEL) {
+                throw new Error('Connection intent definitions not available')
+            }
+        }
+        
+        // 接続開始テスト
+        async function testConnectionStart() {
+            log('🔗 接続開始テスト開始...')
+            
+            try {
+                const result = await testVoidFlowCore.sendIntent('voidflow.ui.connection.start', {
+                    sourceId: 'connection-test-source',
+                    sourceType: 'plugin',
+                    cursor: { x: 150, y: 100 },
+                    connectionMode: 'data',
+                    timestamp: Date.now()
+                })
+                
+                logConnection(`✅ 接続開始Intent送信成功`, result)
+                connectionStartCount++
+                totalIntentCount++
+                updateStats()
+                
+            } catch (error) {
+                log(`❌ 接続開始テスト失敗: ${error.message}`)
+            }
+        }
+        
+        // 接続完了テスト
+        async function testConnectionComplete() {
+            log('🔗 接続完了テスト開始...')
+            
+            try {
+                const result = await testVoidFlowCore.sendIntent('voidflow.ui.connection.complete', {
+                    sourceId: 'connection-test-source',
+                    targetId: 'connection-test-target',
+                    connectionType: 'data-flow',
+                    metadata: {
+                        testConnection: true
+                    },
+                    timestamp: Date.now()
+                })
+                
+                logConnection(`✅ 接続完了Intent送信成功`, result)
+                connectionCompleteCount++
+                totalIntentCount++
+                updateStats()
+                
+            } catch (error) {
+                log(`❌ 接続完了テスト失敗: ${error.message}`)
+            }
+        }
+        
+        // 接続キャンセルテスト
+        async function testConnectionCancel() {
+            log('🔗 接続キャンセルテスト開始...')
+            
+            try {
+                const result = await testVoidFlowCore.sendIntent('voidflow.ui.connection.cancel', {
+                    reason: 'user-test',
+                    sourceId: 'connection-test-source',
+                    timestamp: Date.now()
+                })
+                
+                logConnection(`✅ 接続キャンセルIntent送信成功`, result)
+                connectionCancelCount++
+                totalIntentCount++
+                updateStats()
+                
+            } catch (error) {
+                log(`❌ 接続キャンセルテスト失敗: ${error.message}`)
+            }
+        }
+        
+        // 接続フロー総合テスト
+        async function testConnectionFlow() {
+            log('🔗 接続フロー総合テスト開始...')
+            
+            try {
+                // フロー 1: 接続開始 → 完了
+                log('📍 フロー1: 接続開始 → 完了')
+                await testVoidFlowCore.sendIntent('voidflow.ui.connection.start', {
+                    sourceId: 'flow-test-1',
+                    cursor: { x: 100, y: 50 }
+                })
+                connectionStartCount++
+                totalIntentCount++
+                
+                await new Promise(resolve => setTimeout(resolve, 500))
+                
+                await testVoidFlowCore.sendIntent('voidflow.ui.connection.complete', {
+                    sourceId: 'flow-test-1',
+                    targetId: 'flow-test-2',
+                    connectionType: 'data-flow'
+                })
+                connectionCompleteCount++
+                totalIntentCount++
+                
+                // フロー 2: 接続開始 → キャンセル
+                log('📍 フロー2: 接続開始 → キャンセル')
+                await testVoidFlowCore.sendIntent('voidflow.ui.connection.start', {
+                    sourceId: 'flow-test-3',
+                    cursor: { x: 200, y: 50 }
+                })
+                connectionStartCount++
+                totalIntentCount++
+                
+                await new Promise(resolve => setTimeout(resolve, 500))
+                
+                await testVoidFlowCore.sendIntent('voidflow.ui.connection.cancel', {
+                    reason: 'user',
+                    sourceId: 'flow-test-3'
+                })
+                connectionCancelCount++
+                totalIntentCount++
+                
+                log('🎉 接続フロー総合テスト完了！')
+                updateStats()
+                
+            } catch (error) {
+                log(`❌ 接続フロー総合テスト失敗: ${error.message}`)
+            }
+        }
+        
+        // 接続フローシミュレーション
+        async function simulateConnectionFlow() {
+            log('🎬 接続フローシミュレーション開始...')
+            
+            const steps = [
+                { step: '1️⃣ 接続開始', delay: 1000 },
+                { step: '2️⃣ 接続完了', delay: 1000 },
+                { step: '3️⃣ 新しい接続開始', delay: 1000 },
+                { step: '4️⃣ 接続キャンセル', delay: 1000 }
+            ]
+            
+            for (const { step, delay } of steps) {
+                log(`📍 ${step}`)
+                await new Promise(resolve => setTimeout(resolve, delay))
+            }
+            
+            log('🎬 シミュレーション完了！')
+        }
+        
+        // VoidFlowページ読み込み
+        function loadVoidFlowPage() {
+            log('🔗 VoidFlowページに移動中...')
+            window.location.href = '/voidflow/index-voidcore.html'
+        }
+        
+        // Intent監視設定
+        function setupConnectionIntentMonitoring() {
+            const originalSendIntent = testVoidFlowCore.sendIntent.bind(testVoidFlowCore)
+            testVoidFlowCore.sendIntent = async function(type, payload) {
+                if (type.startsWith('voidflow.ui.connection.')) {
+                    logConnection(`📤 接続Intent送信: ${type}`, payload)
+                }
+                return originalSendIntent(type, payload)
+            }
+        }
+        
+        // ヘルパー関数
+        async function startConnectionTest(sourceId) {
+            return await testVoidFlowCore.sendIntent('voidflow.ui.connection.start', {
+                sourceId,
+                cursor: { x: 100, y: 100 }
+            })
+        }
+        
+        async function completeConnectionTest(sourceId, targetId) {
+            return await testVoidFlowCore.sendIntent('voidflow.ui.connection.complete', {
+                sourceId,
+                targetId,
+                connectionType: 'data-flow'
+            })
+        }
+        
+        async function cancelConnectionTest(reason) {
+            return await testVoidFlowCore.sendIntent('voidflow.ui.connection.cancel', {
+                reason,
+                timestamp: Date.now()
+            })
+        }
+        
+        function getConnectionStats() {
+            return {
+                connectionStart: connectionStartCount,
+                connectionComplete: connectionCompleteCount,
+                connectionCancel: connectionCancelCount,
+                total: totalIntentCount,
+                systemStatus: testVoidFlowCore.getSystemStatus()
+            }
+        }
+        
+        function getSystemStatus() {
+            return testVoidFlowCore.getSystemStatus()
+        }
+        
+        // ユーティリティ関数
+        function log(message) {
+            console.log(message)
+            const output = document.getElementById('console-output')
+            const timestamp = new Date().toLocaleTimeString()
+            output.innerHTML += `<div>[${timestamp}] ${message}</div>`
+            output.scrollTop = output.scrollHeight
+        }
+        
+        function logConnection(message, data) {
+            const output = document.getElementById('console-output')
+            const timestamp = new Date().toLocaleTimeString()
+            output.innerHTML += `<div class="connection-log">[${timestamp}] ${message}<br><pre>${JSON.stringify(data, null, 2)}</pre></div>`
+            output.scrollTop = output.scrollHeight
+        }
+        
+        function updateTestResult(elementId, message, status) {
+            const element = document.getElementById(elementId)
+            element.innerHTML = `<div class="test-result ${status}">${message}</div>`
+        }
+        
+        function updateStats() {
+            document.getElementById('connection-start-count').textContent = connectionStartCount
+            document.getElementById('connection-complete-count').textContent = connectionCompleteCount
+            document.getElementById('connection-cancel-count').textContent = connectionCancelCount
+            document.getElementById('total-intent-count').textContent = totalIntentCount
+        }
+        
+        function clearConsole() {
+            document.getElementById('console-output').innerHTML = ''
+            log('🧹 コンソールクリア完了')
+        }
+    </script>
+</body>
+</html>

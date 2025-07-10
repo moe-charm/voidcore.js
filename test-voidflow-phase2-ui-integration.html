@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 VoidFlow Phase 2 - UI操作Intent化テスト</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+        }
+        .test-panel {
+            background: #2a2a2a;
+            border: 1px solid #4a90e2;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .test-result {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .success { background: rgba(0, 255, 136, 0.2); }
+        .error { background: rgba(255, 107, 107, 0.2); }
+        .pending { background: rgba(255, 193, 7, 0.2); }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #357abd; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        #console-output {
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .intent-log {
+            background: rgba(74, 144, 226, 0.1);
+            border-left: 3px solid #4a90e2;
+            padding: 5px;
+            margin: 2px 0;
+        }
+        .error-log {
+            background: rgba(255, 107, 107, 0.1);
+            border-left: 3px solid #ff6b6b;
+            padding: 5px;
+            margin: 2px 0;
+        }
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        .stat-item {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .canvas-preview {
+            width: 300px;
+            height: 200px;
+            background: #333;
+            border: 1px solid #555;
+            position: relative;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 VoidFlow Phase 2 - UI操作Intent化テスト</h1>
+    
+    <div class="test-panel">
+        <h2>📊 Phase 2 統合テスト</h2>
+        <div id="phase2-results">
+            <div class="test-result pending">🔄 テスト準備中...</div>
+        </div>
+        <button onclick="runPhase2Tests()">Phase 2テスト実行</button>
+        <button onclick="testUIElementCreation()">UI要素作成テスト</button>
+        <button onclick="testDragDropIntents()">ドラッグ&ドロップテスト</button>
+        <button onclick="testIntentBridge()">Intent Bridgeテスト</button>
+        <button onclick="loadVoidFlowPage()">VoidFlowページ読み込み</button>
+        <button onclick="clearConsole()">コンソールクリア</button>
+    </div>
+    
+    <div class="test-panel">
+        <h2>📈 統計情報</h2>
+        <div class="stats-panel" id="stats-panel">
+            <div class="stat-item">
+                <div>Intent送信数</div>
+                <div id="intent-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div>UI要素作成数</div>
+                <div id="ui-element-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div>ドラッグ操作数</div>
+                <div id="drag-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div>エラー数</div>
+                <div id="error-count">0</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-panel">
+        <h2>🖥️ コンソール出力</h2>
+        <div id="console-output"></div>
+    </div>
+    
+    <div class="test-panel">
+        <h2>🎯 Intent監視</h2>
+        <button onclick="startIntentTracing()">Intent追跡開始</button>
+        <button onclick="stopIntentTracing()">Intent追跡停止</button>
+        <div id="intent-monitor"></div>
+    </div>
+    
+    <div class="test-panel">
+        <h2>🔧 デバッグコンソール</h2>
+        <p>ブラウザ開発者ツールで以下のコマンドを実行できます：</p>
+        <ul>
+            <li><code>testPhase2.createTestElement()</code> - テスト要素作成</li>
+            <li><code>testPhase2.sendTestIntent()</code> - テストIntent送信</li>
+            <li><code>testPhase2.getSystemStatus()</code> - システム状態確認</li>
+            <li><code>testPhase2.enableIntentBridge()</code> - Intent Bridge有効化</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        // VoidFlowCore統合のインポート
+        import { VoidFlowCore } from './voidflow/js/voidflow-core.js'
+        import { VoidFlowIntentBridge } from './voidflow/js/intent-bridge.js'
+        import { INTENT_TYPES, IntentShortcuts } from './voidflow/js/intent-definitions.js'
+        
+        let testVoidFlowCore = null
+        let testIntentBridge = null
+        let intentCount = 0
+        let uiElementCount = 0
+        let dragCount = 0
+        let errorCount = 0
+        let intentTracing = false
+        
+        // グローバル関数定義
+        window.runPhase2Tests = runPhase2Tests
+        window.testUIElementCreation = testUIElementCreation
+        window.testDragDropIntents = testDragDropIntents
+        window.testIntentBridge = testIntentBridge
+        window.loadVoidFlowPage = loadVoidFlowPage
+        window.clearConsole = clearConsole
+        window.startIntentTracing = startIntentTracing
+        window.stopIntentTracing = stopIntentTracing
+        
+        // デバッグオブジェクト
+        window.testPhase2 = {
+            createTestElement: createTestElement,
+            sendTestIntent: sendTestIntent,
+            getSystemStatus: getSystemStatus,
+            enableIntentBridge: enableIntentBridge,
+            disableIntentBridge: disableIntentBridge
+        }
+        
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', async function() {
+            log('🌟 VoidFlow Phase 2テストページ初期化開始...')
+            
+            try {
+                // VoidFlowCore初期化
+                testVoidFlowCore = new VoidFlowCore({
+                    enableDebug: true,
+                    enableStats: true
+                })
+                
+                // Intent監視設定
+                setupIntentMonitoring()
+                
+                // Intent Bridge初期化（無効状態）
+                testIntentBridge = new VoidFlowIntentBridge(testVoidFlowCore)
+                
+                // グローバル参照設定
+                window.testVoidFlowCore = testVoidFlowCore
+                window.testIntentBridge = testIntentBridge
+                
+                log('✅ Phase 2テスト環境初期化完了！')
+                updateTestResult('phase2-results', '✅ 初期化完了', 'success')
+                
+                // 統計情報更新
+                updateStats()
+                
+            } catch (error) {
+                log(`❌ 初期化エラー: ${error.message}`)
+                updateTestResult('phase2-results', `❌ 初期化失敗: ${error.message}`, 'error')
+                errorCount++
+                updateStats()
+            }
+        })
+        
+        // Phase 2統合テスト実行
+        async function runPhase2Tests() {
+            log('🧪 Phase 2統合テスト開始...')
+            updateTestResult('phase2-results', '🔄 Phase 2テスト実行中...', 'pending')
+            
+            const tests = [
+                { name: 'VoidFlowCore基本機能', test: testVoidFlowCoreBasic },
+                { name: 'UI Intent送受信', test: testUIIntentFlow },
+                { name: 'Intent定義確認', test: testIntentDefinitions },
+                { name: 'Intent Bridge初期化', test: testIntentBridgeInit },
+                { name: 'エラーハンドリング', test: testErrorHandling }
+            ]
+            
+            let passed = 0
+            let failed = 0
+            
+            for (const test of tests) {
+                try {
+                    log(`🔍 ${test.name}テスト開始...`)
+                    await test.test()
+                    log(`✅ ${test.name}テスト成功`)
+                    passed++
+                } catch (error) {
+                    log(`❌ ${test.name}テスト失敗: ${error.message}`)
+                    failed++
+                    errorCount++
+                }
+            }
+            
+            const result = `Phase 2テスト完了: ${passed}成功, ${failed}失敗`
+            const status = failed === 0 ? 'success' : 'error'
+            log(`🎉 ${result}`)
+            updateTestResult('phase2-results', result, status)
+            updateStats()
+        }
+        
+        // 個別テスト関数
+        async function testVoidFlowCoreBasic() {
+            if (!testVoidFlowCore || !testVoidFlowCore.isInitialized) {
+                throw new Error('VoidFlowCore not initialized')
+            }
+            const status = testVoidFlowCore.getSystemStatus()
+            if (!status.initialized) {
+                throw new Error('VoidFlowCore not ready')
+            }
+        }
+        
+        async function testUIIntentFlow() {
+            const result = await testVoidFlowCore.sendIntent('voidflow.ui.element.create', {
+                nodeType: 'test-button',
+                position: { x: 100, y: 100 },
+                pluginId: 'test-ui-element'
+            })
+            intentCount++
+            if (!result || result.status === 'error') {
+                throw new Error('UI Intent flow failed')
+            }
+        }
+        
+        async function testIntentDefinitions() {
+            if (!window.VoidFlowIntents || !INTENT_TYPES.UI.ELEMENT.CREATE) {
+                throw new Error('Intent definitions not available')
+            }
+        }
+        
+        async function testIntentBridgeInit() {
+            if (!testIntentBridge) {
+                throw new Error('Intent Bridge not initialized')
+            }
+            const stats = testIntentBridge.getStatistics()
+            if (!stats.hasOwnProperty('enabled')) {
+                throw new Error('Intent Bridge statistics not available')
+            }
+        }
+        
+        async function testErrorHandling() {
+            try {
+                await testVoidFlowCore.sendIntent('invalid.intent.type', {})
+                throw new Error('Error handling test failed - should have thrown')
+            } catch (error) {
+                if (error.message.includes('Unknown')) {
+                    // 期待通りのエラー
+                    return
+                }
+                throw error
+            }
+        }
+        
+        // UI要素作成テスト
+        async function testUIElementCreation() {
+            log('🎨 UI要素作成テスト開始...')
+            
+            try {
+                const testElements = [
+                    { nodeType: 'button', position: { x: 50, y: 50 } },
+                    { nodeType: 'input', position: { x: 200, y: 50 } },
+                    { nodeType: 'display', position: { x: 350, y: 50 } }
+                ]
+                
+                for (const element of testElements) {
+                    const result = await testVoidFlowCore.sendIntent('voidflow.ui.element.create', {
+                        ...element,
+                        pluginId: `test-${element.nodeType}-${Date.now()}`
+                    })
+                    
+                    log(`✅ ${element.nodeType}要素作成: ${JSON.stringify(result)}`)
+                    intentCount++
+                    uiElementCount++
+                }
+                
+                log('🎉 UI要素作成テスト完了！')
+                updateStats()
+                
+            } catch (error) {
+                log(`❌ UI要素作成テスト失敗: ${error.message}`)
+                errorCount++
+                updateStats()
+            }
+        }
+        
+        // ドラッグ&ドロップテスト
+        async function testDragDropIntents() {
+            log('🖱️ ドラッグ&ドロップIntentテスト開始...')
+            
+            try {
+                const testElementId = 'drag-test-element'
+                
+                // ドラッグ開始Intent
+                await testVoidFlowCore.sendIntent('voidflow.ui.element.move', {
+                    elementId: testElementId,
+                    action: 'drag-start',
+                    startPosition: { x: 100, y: 100 },
+                    isDragging: true
+                })
+                log('✅ ドラッグ開始Intent送信成功')
+                intentCount++
+                
+                // ドラッグ移動Intent
+                await testVoidFlowCore.sendIntent('voidflow.ui.element.move', {
+                    elementId: testElementId,
+                    action: 'drag-move',
+                    newPosition: { x: 150, y: 120 },
+                    isDragging: true
+                })
+                log('✅ ドラッグ移動Intent送信成功')
+                intentCount++
+                
+                // ドラッグ終了Intent
+                await testVoidFlowCore.sendIntent('voidflow.ui.element.move', {
+                    elementId: testElementId,
+                    action: 'drag-end',
+                    finalPosition: { x: 200, y: 150 },
+                    isDragging: false
+                })
+                log('✅ ドラッグ終了Intent送信成功')
+                intentCount++
+                dragCount++
+                
+                log('🎉 ドラッグ&ドロップIntentテスト完了！')
+                updateStats()
+                
+            } catch (error) {
+                log(`❌ ドラッグ&ドロップIntentテスト失敗: ${error.message}`)
+                errorCount++
+                updateStats()
+            }
+        }
+        
+        // Intent Bridgeテスト
+        async function testIntentBridge() {
+            log('🌉 Intent Bridgeテスト開始...')
+            
+            try {
+                if (!testIntentBridge) {
+                    throw new Error('Intent Bridge not available')
+                }
+                
+                const stats = testIntentBridge.getStatistics()
+                log(`📊 Intent Bridge統計: ${JSON.stringify(stats, null, 2)}`)
+                
+                // 一時的に有効化してテスト
+                testIntentBridge.enable()
+                log('✅ Intent Bridge有効化成功')
+                
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                
+                testIntentBridge.disable()
+                log('✅ Intent Bridge無効化成功')
+                
+                log('🎉 Intent Bridgeテスト完了！')
+                
+            } catch (error) {
+                log(`❌ Intent Bridgeテスト失敗: ${error.message}`)
+                errorCount++
+                updateStats()
+            }
+        }
+        
+        // VoidFlowページ読み込み
+        function loadVoidFlowPage() {
+            log('🔗 VoidFlowページに移動中...')
+            window.location.href = '/voidflow/index-voidcore.html'
+        }
+        
+        // Intent監視設定
+        function setupIntentMonitoring() {
+            // VoidFlowCoreのIntent送信をフック
+            const originalSendIntent = testVoidFlowCore.sendIntent.bind(testVoidFlowCore)
+            testVoidFlowCore.sendIntent = async function(type, payload) {
+                if (intentTracing) {
+                    logIntent(`📤 Intent送信: ${type}`, payload)
+                }
+                return originalSendIntent(type, payload)
+            }
+        }
+        
+        // Intent追跡開始/停止
+        function startIntentTracing() {
+            intentTracing = true
+            log('🔍 Intent追跡開始')
+            updateIntentMonitor('🟢 Intent追跡中...')
+        }
+        
+        function stopIntentTracing() {
+            intentTracing = false
+            log('🔍 Intent追跡停止')
+            updateIntentMonitor('⭕ Intent追跡停止')
+        }
+        
+        // ヘルパー関数
+        async function createTestElement() {
+            return await testVoidFlowCore.sendIntent('voidflow.ui.element.create', {
+                nodeType: 'test',
+                position: { x: Math.random() * 300, y: Math.random() * 200 },
+                pluginId: `debug-element-${Date.now()}`
+            })
+        }
+        
+        async function sendTestIntent() {
+            return await testVoidFlowCore.sendIntent('voidflow.system.status')
+        }
+        
+        function getSystemStatus() {
+            return testVoidFlowCore.getSystemStatus()
+        }
+        
+        function enableIntentBridge() {
+            testIntentBridge.enable()
+            log('📡 Intent Bridge有効化')
+        }
+        
+        function disableIntentBridge() {
+            testIntentBridge.disable()
+            log('📡 Intent Bridge無効化')
+        }
+        
+        // ユーティリティ関数
+        function log(message) {
+            console.log(message)
+            const output = document.getElementById('console-output')
+            const timestamp = new Date().toLocaleTimeString()
+            output.innerHTML += `<div>[${timestamp}] ${message}</div>`
+            output.scrollTop = output.scrollHeight
+        }
+        
+        function logIntent(message, payload) {
+            const output = document.getElementById('console-output')
+            const timestamp = new Date().toLocaleTimeString()
+            output.innerHTML += `<div class="intent-log">[${timestamp}] ${message}<br><pre>${JSON.stringify(payload, null, 2)}</pre></div>`
+            output.scrollTop = output.scrollHeight
+        }
+        
+        function updateTestResult(elementId, message, status) {
+            const element = document.getElementById(elementId)
+            element.innerHTML = `<div class="test-result ${status}">${message}</div>`
+        }
+        
+        function updateIntentMonitor(message) {
+            const element = document.getElementById('intent-monitor')
+            element.innerHTML = `<div class="test-result pending">${message}</div>`
+        }
+        
+        function updateStats() {
+            document.getElementById('intent-count').textContent = intentCount
+            document.getElementById('ui-element-count').textContent = uiElementCount
+            document.getElementById('drag-count').textContent = dragCount
+            document.getElementById('error-count').textContent = errorCount
+        }
+        
+        function clearConsole() {
+            document.getElementById('console-output').innerHTML = ''
+            log('🧹 コンソールクリア完了')
+        }
+    </script>
+</body>
+</html>

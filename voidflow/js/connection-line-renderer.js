@@ -26,6 +26,20 @@ export class ConnectionLineRenderer {
       bundleThreshold: 2          // 束ね線になる本数（2本から扇形）
     }
     
+    // Phase 2: 線束ね設定
+    this.bundleConfig = {
+      bundleThreshold: 3,         // 3本以上で束ね表示（テスト用）
+      bundleRadius: 8,            // 束ね線の太さ
+      bundleColor: '#ff6b35',     // 束ね線の色
+      separationDistance: 30,     // 束ね→分離距離
+      bundleOpacity: 0.7,         // 束ね線の透明度
+      labelOffset: 15             // ラベル表示オフセット
+    }
+    
+    // 表示モード管理
+    this.displayMode = 'auto'     // 'auto', 'fanout', 'bundle', 'individual'
+    this.bundledConnections = new Map() // bundleId → [connectionIds]
+    
     this.log('🌀 ConnectionLineRenderer initialized')
   }
   
@@ -353,14 +367,10 @@ export class ConnectionLineRenderer {
   removeConnection(connectionId) {
     const path = this.connectionPaths.get(connectionId)
     if (path) {
-      // フェードアウトアニメーション
-      path.style.transition = `opacity ${this.animationDuration}ms`
-      path.style.opacity = '0'
-      
-      setTimeout(() => {
-        path.remove()
-        this.connectionPaths.delete(connectionId)
-      }, this.animationDuration)
+      // 即座に削除（アニメーション無効化で重複回避）
+      path.remove()
+      this.connectionPaths.delete(connectionId)
+      this.log(`🗑️ 接続線削除: ${connectionId}`)
     }
   }
   
@@ -379,5 +389,238 @@ export class ConnectionLineRenderer {
    */
   _colorToId(color) {
     return color.replace('#', '').replace(/[^a-zA-Z0-9]/g, '')
+  }
+  
+  // ===== Phase 2: 線束ね機能 =====
+  
+  /**
+   * 🔗 複数接続の表示モードを自動決定
+   */
+  determineDisplayMode(connectionCount) {
+    if (this.displayMode !== 'auto') return this.displayMode
+    
+    if (connectionCount < 2) return 'individual'
+    if (connectionCount < this.bundleConfig.bundleThreshold) return 'fanout'
+    return 'bundle'
+  }
+  
+  /**
+   * 🧹 指定ソースの全接続線を削除
+   */
+  clearSourceConnections(sourceId) {
+    const pathsToRemove = []
+    
+    // 指定ソースの接続線をすべて検索
+    this.connectionPaths.forEach((path, connectionId) => {
+      if (connectionId.includes(sourceId)) {
+        pathsToRemove.push(connectionId)
+      }
+    })
+    
+    // 削除実行
+    pathsToRemove.forEach(connectionId => {
+      this.removeConnection(connectionId)
+    })
+    
+    this.log(`🧹 ${sourceId}の接続線を削除: ${pathsToRemove.length}本`)
+  }
+  
+  /**
+   * 🔗 束ね線描画（5本以上の接続を束ねて表示）
+   */
+  renderBundledConnections(sourceId, sourcePos, targetConnections) {
+    const bundleId = `bundle-${sourceId}-${Date.now()}`
+    this.bundledConnections.set(bundleId, targetConnections.map(conn => conn.id))
+    
+    this.log(`🔗 束ね線描画開始: ${targetConnections.length}本`)
+    
+    // 束ね線のパスを計算
+    const bundlePath = this.calculateBundlePath(sourcePos, targetConnections)
+    
+    // 束ね線の描画
+    const bundleElement = this.createBundleElement(bundleId, bundlePath, {
+      radius: this.bundleConfig.bundleRadius,
+      color: this.bundleConfig.bundleColor,
+      opacity: this.bundleConfig.bundleOpacity,
+      connectionCount: targetConnections.length
+    })
+    
+    this.svgElement.appendChild(bundleElement)
+    
+    // 各接続線を束ねから分離して描画
+    const separatedPaths = this.calculateSeparatedPaths(bundlePath, targetConnections)
+    
+    return separatedPaths.map((pathInfo, index) => {
+      const conn = targetConnections[index]
+      const path = this.createPathElement(conn.id, pathInfo.path, {
+        color: pathInfo.color,
+        width: 1.5, // 束ね後は細く
+        arrow: true,
+        animated: false
+      })
+      
+      this.svgElement.appendChild(path)
+      this.connectionPaths.set(conn.id, path)
+      
+      return path
+    })
+  }
+  
+  /**
+   * 🧮 束ね線のパスを計算
+   */
+  calculateBundlePath(sourcePos, targetConnections) {
+    // すべてのターゲット位置の重心を計算
+    const centroid = this.calculateCentroid(targetConnections.map(conn => conn.targetPos))
+    
+    // 束ね線の中間ポイント（分離開始点）
+    const separationPoint = {
+      x: sourcePos.x + (centroid.x - sourcePos.x) * 0.6,
+      y: sourcePos.y + (centroid.y - sourcePos.y) * 0.6
+    }
+    
+    // 束ね線パス（ソース→分離点）
+    return {
+      sourcePath: this.calculateBezierPath(sourcePos, separationPoint),
+      separationPoint: separationPoint,
+      centroid: centroid
+    }
+  }
+  
+  /**
+   * 📊 重心を計算
+   */
+  calculateCentroid(positions) {
+    const sum = positions.reduce((acc, pos) => ({
+      x: acc.x + pos.x,
+      y: acc.y + pos.y
+    }), { x: 0, y: 0 })
+    
+    return {
+      x: sum.x / positions.length,
+      y: sum.y / positions.length
+    }
+  }
+  
+  /**
+   * 🌸 分離パスを計算（束ね→各ターゲット）
+   */
+  calculateSeparatedPaths(bundlePath, targetConnections) {
+    return targetConnections.map((conn, index) => {
+      // 分離点から各ターゲットへのパス
+      const separatedPath = this.calculateBezierPath(
+        bundlePath.separationPoint, 
+        conn.targetPos
+      )
+      
+      // 色を動的に生成（束ね線用カラーパレット）
+      const color = this.getBundleColor(index, targetConnections.length)
+      
+      return {
+        path: separatedPath,
+        color: color,
+        connectionId: conn.id
+      }
+    })
+  }
+  
+  /**
+   * 🎨 束ね線用カラーパレット
+   */
+  getBundleColor(index, total) {
+    const colors = [
+      '#4a90e2', '#7b68ee', '#ff6b35', '#2ecc71', 
+      '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'
+    ]
+    return colors[index % colors.length]
+  }
+  
+  /**
+   * 🎨 束ね線要素を作成
+   */
+  createBundleElement(bundleId, bundlePath, options) {
+    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+    group.setAttribute('id', `bundle-${bundleId}`)
+    group.setAttribute('class', 'connection-bundle')
+    
+    // 束ね線本体
+    const bundleLine = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    bundleLine.setAttribute('d', bundlePath.sourcePath)
+    bundleLine.setAttribute('stroke', options.color)
+    bundleLine.setAttribute('stroke-width', options.radius)
+    bundleLine.setAttribute('stroke-linecap', 'round')
+    bundleLine.setAttribute('fill', 'none')
+    bundleLine.setAttribute('opacity', options.opacity)
+    bundleLine.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+    
+    // 束ね線ラベル（接続数表示）
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    const labelPos = {
+      x: bundlePath.separationPoint.x,
+      y: bundlePath.separationPoint.y - this.bundleConfig.labelOffset
+    }
+    label.setAttribute('x', labelPos.x)
+    label.setAttribute('y', labelPos.y)
+    label.setAttribute('text-anchor', 'middle')
+    label.setAttribute('font-size', '10')
+    label.setAttribute('font-weight', 'bold')
+    label.setAttribute('fill', options.color)
+    label.textContent = `${options.connectionCount}`
+    
+    group.appendChild(bundleLine)
+    group.appendChild(label)
+    
+    // クリックイベント（束ね解除）
+    group.addEventListener('click', (e) => {
+      e.stopPropagation()
+      this.unbundleConnections(bundleId)
+    })
+    
+    // ホバーエフェクト
+    group.addEventListener('mouseenter', () => {
+      bundleLine.setAttribute('opacity', '1.0')
+      label.setAttribute('fill', '#ffffff')
+    })
+    
+    group.addEventListener('mouseleave', () => {
+      bundleLine.setAttribute('opacity', options.opacity)
+      label.setAttribute('fill', options.color)
+    })
+    
+    return group
+  }
+  
+  /**
+   * 🔓 束ね解除（束ね線→扇形分散に変更）
+   */
+  unbundleConnections(bundleId) {
+    this.log(`🔓 束ね解除: ${bundleId}`)
+    
+    const bundleElement = document.getElementById(`bundle-${bundleId}`)
+    if (bundleElement) {
+      bundleElement.remove()
+    }
+    
+    // 束ね解除後は扇形分散モードに変更
+    this.displayMode = 'fanout'
+    
+    // 関連する接続線を再描画
+    const connectionIds = this.bundledConnections.get(bundleId)
+    if (connectionIds) {
+      this.bundledConnections.delete(bundleId)
+      // ここで関連するConnectionManagerに再描画要求
+      // 実装は接続管理側で行う
+    }
+  }
+  
+  /**
+   * 🔧 表示モードを切り替え
+   */
+  setDisplayMode(mode) {
+    const validModes = ['auto', 'fanout', 'bundle', 'individual']
+    if (validModes.includes(mode)) {
+      this.displayMode = mode
+      this.log(`🔧 表示モード変更: ${mode}`)
+    }
   }
 }

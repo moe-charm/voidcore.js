@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 VoidFlow-VoidCore統合テスト</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+        }
+        .test-panel {
+            background: #2a2a2a;
+            border: 1px solid #4a90e2;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .test-result {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .success { background: rgba(0, 255, 136, 0.2); }
+        .error { background: rgba(255, 107, 107, 0.2); }
+        .pending { background: rgba(255, 193, 7, 0.2); }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #357abd; }
+        #console-output {
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 VoidFlow-VoidCore統合テスト</h1>
+    
+    <div class="test-panel">
+        <h2>📊 Phase 1 統合テスト</h2>
+        <div id="phase1-results">
+            <div class="test-result pending">🔄 テスト準備中...</div>
+        </div>
+        <button onclick="runPhase1Tests()">Phase 1テスト実行</button>
+        <button onclick="testBasicIntents()">基本Intent送信テスト</button>
+        <button onclick="testSystemStatus()">システム状態テスト</button>
+        <button onclick="clearConsole()">コンソールクリア</button>
+    </div>
+    
+    <div class="test-panel">
+        <h2>🖥️ コンソール出力</h2>
+        <div id="console-output"></div>
+    </div>
+    
+    <div class="test-panel">
+        <h2>🔧 デバッグコンソール</h2>
+        <p>ブラウザ開発者ツールで以下のコマンドを実行できます：</p>
+        <ul>
+            <li><code>window.voidFlowCore.getSystemStatus()</code> - システム状態確認</li>
+            <li><code>window.voidFlowCore.sendIntent('voidflow.system.status')</code> - Intent送信テスト</li>
+            <li><code>window.VoidFlowIntents.Shortcuts.systemStatus()</code> - ショートカット使用</li>
+            <li><code>window.voidFlowIntentBridge.getStatistics()</code> - ブリッジ統計</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        // VoidFlowCore統合のインポート
+        import { VoidFlowCore } from './voidflow/js/voidflow-core.js'
+        import { VoidFlowIntentBridge } from './voidflow/js/intent-bridge.js'
+        import { INTENT_TYPES, IntentShortcuts } from './voidflow/js/intent-definitions.js'
+        
+        let testVoidFlowCore = null
+        let testIntentBridge = null
+        
+        // グローバル関数定義
+        window.runPhase1Tests = runPhase1Tests
+        window.testBasicIntents = testBasicIntents
+        window.testSystemStatus = testSystemStatus
+        window.clearConsole = clearConsole
+        
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', async function() {
+            log('🌟 VoidFlow-VoidCore統合テストページ初期化開始...')
+            
+            try {
+                // VoidFlowCore初期化
+                testVoidFlowCore = new VoidFlowCore({
+                    enableDebug: true,
+                    enableStats: true
+                })
+                
+                // Intent Bridge初期化
+                testIntentBridge = new VoidFlowIntentBridge(testVoidFlowCore)
+                
+                // グローバル参照設定
+                window.testVoidFlowCore = testVoidFlowCore
+                window.testIntentBridge = testIntentBridge
+                
+                log('✅ テスト環境初期化完了！')
+                updateTestResult('phase1-results', '✅ 初期化完了', 'success')
+                
+            } catch (error) {
+                log(`❌ 初期化エラー: ${error.message}`)
+                updateTestResult('phase1-results', `❌ 初期化失敗: ${error.message}`, 'error')
+            }
+        })
+        
+        // Phase 1統合テスト実行
+        async function runPhase1Tests() {
+            log('🧪 Phase 1統合テスト開始...')
+            updateTestResult('phase1-results', '🔄 Phase 1テスト実行中...', 'pending')
+            
+            const tests = [
+                { name: 'VoidFlowCore初期化確認', test: testVoidFlowCoreInit },
+                { name: 'Intent Bridge初期化確認', test: testIntentBridgeInit },
+                { name: 'システム状態取得', test: testSystemStatusRetrieval },
+                { name: '基本Intent送受信', test: testBasicIntentFlow },
+                { name: 'Intent定義確認', test: testIntentDefinitions }
+            ]
+            
+            let passed = 0
+            let failed = 0
+            
+            for (const test of tests) {
+                try {
+                    log(`🔍 ${test.name}テスト開始...`)
+                    await test.test()
+                    log(`✅ ${test.name}テスト成功`)
+                    passed++
+                } catch (error) {
+                    log(`❌ ${test.name}テスト失敗: ${error.message}`)
+                    failed++
+                }
+            }
+            
+            const result = `Phase 1テスト完了: ${passed}成功, ${failed}失敗`
+            const status = failed === 0 ? 'success' : 'error'
+            log(`🎉 ${result}`)
+            updateTestResult('phase1-results', result, status)
+        }
+        
+        // 個別テスト関数
+        async function testVoidFlowCoreInit() {
+            if (!testVoidFlowCore || !testVoidFlowCore.isInitialized) {
+                throw new Error('VoidFlowCore not initialized')
+            }
+        }
+        
+        async function testIntentBridgeInit() {
+            if (!testIntentBridge) {
+                throw new Error('Intent Bridge not initialized')
+            }
+            const stats = testIntentBridge.getStatistics()
+            if (!stats || !stats.hasOwnProperty('enabled')) {
+                throw new Error('Intent Bridge statistics not available')
+            }
+        }
+        
+        async function testSystemStatusRetrieval() {
+            const status = testVoidFlowCore.getSystemStatus()
+            if (!status || !status.initialized) {
+                throw new Error('System status retrieval failed')
+            }
+        }
+        
+        async function testBasicIntentFlow() {
+            const result = await testVoidFlowCore.sendIntent('voidflow.system.status')
+            if (!result) {
+                throw new Error('Intent sending failed')
+            }
+        }
+        
+        async function testIntentDefinitions() {
+            if (!window.VoidFlowIntents || !window.VoidFlowIntents.TYPES) {
+                throw new Error('Intent definitions not available')
+            }
+        }
+        
+        // 基本Intent送信テスト
+        async function testBasicIntents() {
+            log('📤 基本Intent送信テスト開始...')
+            
+            try {
+                // システム状態Intent
+                const statusResult = await testVoidFlowCore.sendIntent('voidflow.system.status')
+                log(`✅ システム状態Intent: ${JSON.stringify(statusResult)}`)
+                
+                // ショートカット使用テスト
+                const shortcutIntent = IntentShortcuts.systemStatus()
+                log(`✅ ショートカット作成: ${JSON.stringify(shortcutIntent)}`)
+                
+                log('🎉 基本Intent送信テスト完了！')
+                
+            } catch (error) {
+                log(`❌ 基本Intent送信テスト失敗: ${error.message}`)
+            }
+        }
+        
+        // システム状態テスト
+        async function testSystemStatus() {
+            log('📊 システム状態テスト開始...')
+            
+            try {
+                const status = testVoidFlowCore.getSystemStatus()
+                log(`📊 システム状態: ${JSON.stringify(status, null, 2)}`)
+                
+                const features = testVoidFlowCore.getAvailableFeatures()
+                log(`🔧 利用可能機能: ${JSON.stringify(features)}`)
+                
+                const bridgeStats = testIntentBridge.getStatistics()
+                log(`🌉 ブリッジ統計: ${JSON.stringify(bridgeStats, null, 2)}`)
+                
+                log('✅ システム状態テスト完了！')
+                
+            } catch (error) {
+                log(`❌ システム状態テスト失敗: ${error.message}`)
+            }
+        }
+        
+        // ユーティリティ関数
+        function log(message) {
+            console.log(message)
+            const output = document.getElementById('console-output')
+            const timestamp = new Date().toLocaleTimeString()
+            output.innerHTML += `<div>[${timestamp}] ${message}</div>`
+            output.scrollTop = output.scrollHeight
+        }
+        
+        function updateTestResult(elementId, message, status) {
+            const element = document.getElementById(elementId)
+            element.innerHTML = `<div class="test-result ${status}">${message}</div>`
+        }
+        
+        function clearConsole() {
+            document.getElementById('console-output').innerHTML = ''
+            log('🧹 コンソールクリア完了')
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌀 VoidFlow Phase 1 - 高度接続GUI テスト</title>
+    
+    <!-- VoidFlow CSS -->
+    <link rel="stylesheet" href="voidflow/css/base.css">
+    <link rel="stylesheet" href="voidflow/css/layout.css">
+    <link rel="stylesheet" href="voidflow/css/nodes.css">
+    <link rel="stylesheet" href="voidflow/css/canvas.css">
+    
+    <style>
+        /* テスト用スタイル */
+        .test-controls {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 46, 0.95);
+            border: 2px solid #4a90e2;
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .test-button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .test-button:hover {
+            background: #357abd;
+            transform: translateY(-1px);
+        }
+        
+        .test-button.fan-out { background: #00ff88; color: #000; }
+        .test-button.fan-out:hover { background: #00cc6a; }
+        
+        .test-button.bundle { background: #ff6b35; }
+        .test-button.bundle:hover { background: #e55a2b; }
+        
+        .test-button.delete { background: #e91e63; }
+        .test-button.delete:hover { background: #c2185b; }
+        
+        .stats-panel {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #4a90e2;
+            border-radius: 4px;
+            padding: 10px;
+            color: #fff;
+            font-size: 12px;
+            min-width: 200px;
+        }
+        
+        .stat-item {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="voidflow-container">
+        <header class="header">
+            <h1>🌀 VoidFlow Phase 1 - 高度接続GUI テスト</h1>
+        </header>
+        
+        <!-- テストコントロール -->
+        <div class="test-controls">
+            <button class="test-button" onclick="createTestNodes()">🎨 テストノード作成</button>
+            <button class="test-button fan-out" onclick="testFanOutConnections()">🌀 扇形分散テスト</button>
+            <button class="test-button bundle" onclick="testBundleConnections()">📦 束ね線テスト（予定）</button>
+            <button class="test-button delete" onclick="testDeleteUI()">🗑️ 削除UIテスト（予定）</button>
+            <button class="test-button" onclick="testAnimations()">✨ アニメーションテスト</button>
+            <button class="test-button" onclick="clearAll()">🧹 全クリア</button>
+        </div>
+        
+        <!-- キャンバスエリア -->
+        <div class="canvas-area" style="position: relative; width: 100%; height: 600px;">
+            <div class="canvas-grid"></div>
+            <div class="zen-message" id="zenMessage">
+                <div class="zen-title">🌀 高度接続GUI テスト環境</div>
+                <div class="zen-subtitle">扇形分散・束ね線・削除選択機能をテスト</div>
+            </div>
+            <svg id="connectionSvg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
+            </svg>
+        </div>
+        
+        <!-- 統計パネル -->
+        <div class="stats-panel">
+            <h3 style="margin: 0 0 10px 0; color: #4a90e2;">📊 接続統計</h3>
+            <div class="stat-item">
+                <span>ノード数:</span>
+                <span class="stat-value" id="nodeCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span>接続数:</span>
+                <span class="stat-value" id="connectionCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span>扇形表示:</span>
+                <span class="stat-value" id="fanOutCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span>FPS:</span>
+                <span class="stat-value" id="fps">60</span>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { VoidCoreConnectionManager } from './voidflow/js/voidcore-connection-manager.js'
+        import { VoidCoreUI } from './voidflow/js/voidcore-ui.js'
+        
+        let connectionManager = null
+        let voidCoreUI = null
+        let nodeIdCounter = 0
+        let nodes = new Map()
+        
+        // グローバル関数定義
+        window.createTestNodes = createTestNodes
+        window.testFanOutConnections = testFanOutConnections
+        window.testBundleConnections = testBundleConnections
+        window.testDeleteUI = testDeleteUI
+        window.testAnimations = testAnimations
+        window.clearAll = clearAll
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🌀 Phase 1 高度接続GUI テスト開始...')
+            
+            try {
+                // VoidCoreUI初期化（簡易版）
+                voidCoreUI = {
+                    log: (msg) => console.log(`[VoidCoreUI] ${msg}`)
+                }
+                
+                // ConnectionManager初期化
+                connectionManager = new VoidCoreConnectionManager()
+                await connectionManager.onActivated()
+                
+                console.log('✅ システム初期化完了')
+                
+                // Zenメッセージを非表示
+                setTimeout(() => {
+                    document.getElementById('zenMessage').style.display = 'none'
+                }, 2000)
+                
+                // FPS計測開始
+                startFPSMonitor()
+                
+            } catch (error) {
+                console.error('❌ 初期化エラー:', error)
+            }
+        })
+        
+        // テストノード作成
+        function createTestNodes() {
+            const canvas = document.querySelector('.canvas-area')
+            const nodeTypes = [
+                'button.send',
+                'input.text',
+                'string.uppercase',
+                'output.console',
+                'web.fetch'
+            ]
+            
+            // 5つのノードを円形に配置
+            const centerX = 400
+            const centerY = 300
+            const radius = 150
+            
+            nodeTypes.forEach((type, index) => {
+                const angle = (index / nodeTypes.length) * Math.PI * 2
+                const x = centerX + Math.cos(angle) * radius
+                const y = centerY + Math.sin(angle) * radius
+                
+                createNode(type, x, y)
+            })
+            
+            updateStats()
+        }
+        
+        // ノード作成
+        function createNode(nodeType, x, y) {
+            const nodeId = `test-node-${nodeIdCounter++}`
+            const element = document.createElement('div')
+            element.className = 'voidcore-ui-element'
+            element.id = `ui-element-${nodeId}`
+            element.dataset.pluginId = nodeId
+            element.dataset.nodeType = nodeType
+            element.style.position = 'absolute'
+            element.style.left = x + 'px'
+            element.style.top = y + 'px'
+            element.innerHTML = `
+                <div class="node-header">${getNodeDisplayName(nodeType)}</div>
+                <div class="node-content">Test Node ${nodeIdCounter}</div>
+            `
+            
+            // ドラッグ機能追加（簡易版）
+            makeDraggable(element)
+            
+            document.querySelector('.canvas-area').appendChild(element)
+            nodes.set(nodeId, { element, type: nodeType, x, y })
+            
+            return nodeId
+        }
+        
+        // 扇形分散テスト
+        function testFanOutConnections() {
+            if (nodes.size < 2) {
+                alert('先にテストノードを作成してください')
+                return
+            }
+            
+            const nodeArray = Array.from(nodes.keys())
+            const sourceId = nodeArray[0]
+            
+            // 1つのソースから他の全ノードへ接続
+            for (let i = 1; i < nodeArray.length; i++) {
+                try {
+                    const connectionId = connectionManager.createConnection(
+                        sourceId,
+                        nodeArray[i],
+                        'data-flow'
+                    )
+                    console.log(`✅ 接続作成: ${sourceId} → ${nodeArray[i]}`)
+                } catch (error) {
+                    console.error(`❌ 接続失敗:`, error)
+                }
+            }
+            
+            updateStats()
+        }
+        
+        // 束ね線テスト（未実装）
+        function testBundleConnections() {
+            alert('📦 束ね線機能は次の実装予定です')
+        }
+        
+        // 削除UIテスト（未実装）
+        function testDeleteUI() {
+            alert('🗑️ 削除選択UI機能は次の実装予定です')
+        }
+        
+        // アニメーションテスト
+        function testAnimations() {
+            // 全接続線をアニメーション
+            connectionManager.connections.forEach((conn, id) => {
+                connectionManager.animateConnection(id)
+            })
+        }
+        
+        // 全クリア
+        function clearAll() {
+            // 全接続削除
+            const connectionIds = Array.from(connectionManager.connections.keys())
+            connectionIds.forEach(id => {
+                connectionManager.removeConnection(id)
+            })
+            
+            // 全ノード削除
+            nodes.forEach((node, id) => {
+                node.element.remove()
+            })
+            nodes.clear()
+            nodeIdCounter = 0
+            
+            updateStats()
+        }
+        
+        // 統計更新
+        function updateStats() {
+            document.getElementById('nodeCount').textContent = nodes.size
+            document.getElementById('connectionCount').textContent = connectionManager.connections.size
+            
+            // 扇形表示カウント
+            let fanOutCount = 0
+            const sourceCounts = new Map()
+            connectionManager.connections.forEach(conn => {
+                const count = (sourceCounts.get(conn.sourcePluginId) || 0) + 1
+                sourceCounts.set(conn.sourcePluginId, count)
+            })
+            sourceCounts.forEach(count => {
+                if (count > 2) fanOutCount++
+            })
+            document.getElementById('fanOutCount').textContent = fanOutCount
+        }
+        
+        // FPS監視
+        function startFPSMonitor() {
+            let lastTime = performance.now()
+            let frames = 0
+            
+            function updateFPS() {
+                frames++
+                const currentTime = performance.now()
+                if (currentTime >= lastTime + 1000) {
+                    const fps = Math.round((frames * 1000) / (currentTime - lastTime))
+                    document.getElementById('fps').textContent = fps
+                    frames = 0
+                    lastTime = currentTime
+                }
+                requestAnimationFrame(updateFPS)
+            }
+            
+            requestAnimationFrame(updateFPS)
+        }
+        
+        // ノード表示名取得
+        function getNodeDisplayName(nodeType) {
+            const names = {
+                'button.send': '📤 Send',
+                'input.text': '📝 Text',
+                'string.uppercase': '🔤 Upper',
+                'output.console': '🖥️ Console',
+                'web.fetch': '🌐 Fetch'
+            }
+            return names[nodeType] || nodeType
+        }
+        
+        // ドラッグ機能
+        function makeDraggable(element) {
+            let isDragging = false
+            let startX, startY, initialX, initialY
+            
+            element.addEventListener('mousedown', (e) => {
+                isDragging = true
+                startX = e.clientX
+                startY = e.clientY
+                initialX = element.offsetLeft
+                initialY = element.offsetTop
+                element.style.zIndex = '1000'
+                e.preventDefault()
+            })
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return
+                
+                const dx = e.clientX - startX
+                const dy = e.clientY - startY
+                
+                element.style.left = (initialX + dx) + 'px'
+                element.style.top = (initialY + dy) + 'px'
+                
+                // 接続線を再描画
+                connectionManager.updateAllConnectionLines()
+            })
+            
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false
+                    element.style.zIndex = ''
+                }
+            })
+        }
+        
+        // デバッグ用グローバル参照
+        window.connectionManager = connectionManager
+        window.nodes = nodes
+    </script>
+</body>
+</html>
