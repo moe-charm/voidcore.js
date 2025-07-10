@@ -28,7 +28,7 @@ export class ConnectionLineRenderer {
     
     // Phase 2: 線束ね設定
     this.bundleConfig = {
-      bundleThreshold: 3,         // 3本以上で束ね表示（テスト用）
+      bundleThreshold: 5,         // 5本以上で束ね表示（適切な値）
       bundleRadius: 8,            // 束ね線の太さ
       bundleColor: '#ff6b35',     // 束ね線の色
       separationDistance: 30,     // 束ね→分離距離
@@ -485,9 +485,9 @@ export class ConnectionLineRenderer {
       y: sourcePos.y + (centroid.y - sourcePos.y) * 0.6
     }
     
-    // 束ね線パス（ソース→分離点）
+    // 束ね線パス（ソース→分離点）直線化
     return {
-      sourcePath: this.calculateBezierPath(sourcePos, separationPoint),
+      sourcePath: `M ${sourcePos.x},${sourcePos.y} L ${separationPoint.x},${separationPoint.y}`,
       separationPoint: separationPoint,
       centroid: centroid
     }
@@ -513,11 +513,8 @@ export class ConnectionLineRenderer {
    */
   calculateSeparatedPaths(bundlePath, targetConnections) {
     return targetConnections.map((conn, index) => {
-      // 分離点から各ターゲットへのパス
-      const separatedPath = this.calculateBezierPath(
-        bundlePath.separationPoint, 
-        conn.targetPos
-      )
+      // 分離点から各ターゲットへのパス（直線化）
+      const separatedPath = `M ${bundlePath.separationPoint.x},${bundlePath.separationPoint.y} L ${conn.targetPos.x},${conn.targetPos.y}`
       
       // 色を動的に生成（束ね線用カラーパレット）
       const color = this.getBundleColor(index, targetConnections.length)
