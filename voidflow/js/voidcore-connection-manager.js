@@ -1,6 +1,8 @@
 // voidcore-connection-manager.js - VoidCoreプラグイン間接続管理
 
 import { Message } from '/src/messaging/message.js'
+import { ConnectionLineRenderer } from './connection-line-renderer.js'
+import { debugLogger } from './debug-file-logger.js'
 
 /**
  * 🔗 VoidCoreConnectionManager - VoidCoreプラグイン間の接続・データフロー管理
@@ -37,11 +39,27 @@ export class VoidCoreConnectionManager {
     this.intentMode = false   // Phase 3で有効化
     
     this.log('🔗 VoidCoreConnectionManager initialized')
+    
+    // Phase 1: デバッグファイルロガー初期化
+    if (debugLogger && !debugLogger.isInitialized) {
+      debugLogger.initialize().then(() => {
+        this.log('🐛 DebugFileLogger initialized for ConnectionManager')
+      })
+    }
   }
   
-  // 🔧 Phase3対応: logメソッド追加
-  log(message) {
+  // 🔧 Phase3対応: logメソッド追加（ファイル出力対応）
+  log(message, data = null) {
     console.log(`[${this.id}] ${message}`)
+    
+    // Phase 1: ファイル出力デバッグログ
+    if (debugLogger) {
+      debugLogger.log('connection', 'debug', message, {
+        source: this.id,
+        data: data,
+        timestamp: Date.now()
+      })
+    }
   }
   
   /**
@@ -85,6 +103,9 @@ export class VoidCoreConnectionManager {
     // SmartConnectionManager初期化
     this.smartConnectionManager = new VoidCoreSmartConnectionManager(this)
     
+    // Phase 1: ConnectionLineRenderer初期化
+    this.lineRenderer = new ConnectionLineRenderer(this.svgElement)
+    
     // 接続ポート作成（左クリック）
     document.addEventListener('click', (e) => {
       this.log(`🔍 Document click detected: target=${e.target.tagName}, id=${e.target.id}, class=${e.target.className}`)
@@ -124,20 +145,32 @@ export class VoidCoreConnectionManager {
         return; // voidcore-ui-element のクリックはここで処理を終えるにゃ
       }
       
-      // それ以外のクリックは無視（SmartConnectionManagerの対象外）
-      this.log('🔍 Click: Not a plugin palette item or voidcore-ui-element. Ignoring.');
+      // それ以外のクリック（空白部分など）は接続モードをリセット
+      this.log('🔍 Click: Not a plugin palette item or voidcore-ui-element. Checking for connection reset...');
+      
+      // 接続モード中なら接続をリセット
+      if (this.smartConnectionManager && this.smartConnectionManager.isConnecting) {
+        this.log('🔄 空白クリック検出: 接続モードをリセットします');
+        this.smartConnectionManager.resetSelection();
+      } else {
+        this.log('🔍 Click: No active connection mode, ignoring.');
+      }
     }) 
     
     // 右クリックキャンセル機能（どこでも右クリックでキャンセル＆色リセット）
+    // キャプチャフェーズで最優先処理
     document.addEventListener('contextmenu', (e) => {
       if (this.smartConnectionManager.isConnecting) {
         e.preventDefault() // 右クリックメニューを無効化
+        e.stopPropagation() // イベント伝播を停止
+        e.stopImmediatePropagation() // 同じ要素の他のリスナーも停止
         this.log('🚫 右クリックで接続モードキャンセル')
         this.smartConnectionManager.resetSelection()
         this.showConnectionStatus('🚫 接続モードキャンセル')
+        return false // 確実にイベントを停止
       }
       // 👈 一旦、通常時の右クリック処理を無効化
-    })
+    }, true) // キャプチャフェーズで処理
     
     // マウス移動で一時的な線を更新
     document.addEventListener('mousemove', (e) => {
@@ -158,11 +191,15 @@ export class VoidCoreConnectionManager {
    * 🔗 接続作成
    */
   createConnection(sourcePluginId, targetPluginId, connectionType = 'data-flow') {
-    // 既存接続チェック
-    const existingConnectionId = this.findConnection(sourcePluginId, targetPluginId)
-    if (existingConnectionId) {
-      throw new Error('Connection already exists')
-    }
+    // Phase 1: 複数接続許可（Fan-out対応）
+    // 既存接続チェックを無効化 - 同一プラグイン間の複数接続を許可
+    this.log(`🔗 複数接続許可: ${sourcePluginId} → ${targetPluginId} (${connectionType})`)
+    
+    // 注意: 既存接続チェックをコメントアウト
+    // const existingConnectionId = this.findConnection(sourcePluginId, targetPluginId)
+    // if (existingConnectionId) {
+    //   throw new Error('Connection already exists')
+    // }
     
     // 循環参照チェック
     if (this.wouldCreateCycle(sourcePluginId, targetPluginId)) {
@@ -332,10 +369,10 @@ export class VoidCoreConnectionManager {
   }
 
   /**
-   * 🎨 接続線描画
+   * 🎨 接続線描画（Phase 1: 高度な線表示対応）
    */
   drawConnectionLine(connection) {
-    if (!this.svgElement) return
+    if (!this.svgElement || !this.lineRenderer) return
     
     const sourceElement = this.getPluginElement(connection.sourcePluginId)
     const targetElement = this.getPluginElement(connection.targetPluginId)
@@ -346,34 +383,111 @@ export class VoidCoreConnectionManager {
     const targetRect = targetElement.getBoundingClientRect()
     const canvasRect = this.canvasElement.getBoundingClientRect()
     
-    // 相対座標計算
-    const sourceX = sourceRect.right - canvasRect.left
-    const sourceY = sourceRect.top + sourceRect.height/2 - canvasRect.top
-    const targetX = targetRect.left - canvasRect.left
-    const targetY = targetRect.top + targetRect.height/2 - canvasRect.top
+    // 相対座標計算（より精密なポート位置）
+    const sourcePos = {
+      x: sourceRect.right - canvasRect.left,
+      y: sourceRect.top + sourceRect.height/2 - canvasRect.top
+    }
+    const targetPos = {
+      x: targetRect.left - canvasRect.left,
+      y: targetRect.top + targetRect.height/2 - canvasRect.top
+    }
     
-    // 矢印マーカーが存在しない場合は作成
-    this._ensureArrowMarker()
+    // Phase 1: 同じソースからの接続を検出（扇形分散用）
+    const sourceConnections = this.getConnectionsFromSource(connection.sourcePluginId)
     
-    // SVG線要素作成（矢印付き）
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-    line.setAttribute('x1', sourceX)
-    line.setAttribute('y1', sourceY)
-    line.setAttribute('x2', targetX)
-    line.setAttribute('y2', targetY)
-    line.setAttribute('stroke', '#4a90e2')
-    line.setAttribute('stroke-width', '2')
-    line.setAttribute('stroke-opacity', '0.8')
-    line.setAttribute('marker-end', 'url(#arrow-marker)')
-    line.setAttribute('id', `connection-line-${connection.id}`)
-    line.style.filter = 'drop-shadow(0 0 3px rgba(74, 144, 226, 0.5))'
+    this.log(`🌀 接続描画: ${connection.sourcePluginId} から ${sourceConnections.length}本の接続`)
     
-    // ダブルクリックで削除
-    line.addEventListener('dblclick', () => {
-      this.removeConnection(connection.id)
+    if (sourceConnections.length >= 2) {
+      // 扇形分散表示を使用（2本以上で扇形）
+      this.log(`🌀 扇形分散モード: ${sourceConnections.length}本`)
+      this.renderFanOutConnections(connection.sourcePluginId)
+    } else {
+      // 通常の線表示（ConnectionLineRenderer使用）
+      this.log(`🎨 通常線描画: ${connection.id}`)
+      const path = this.lineRenderer.renderConnection(connection.id, sourcePos, targetPos, {
+        color: '#4a90e2',
+        width: 2,
+        animated: true,
+        arrow: true
+      })
+      
+      // ダブルクリックで削除
+      path.addEventListener('dblclick', () => {
+        this.removeConnection(connection.id)
+      })
+    }
+  }
+  
+  /**
+   * 🌀 扇形分散接続を描画
+   */
+  renderFanOutConnections(sourcePluginId) {
+    const connections = this.getConnectionsFromSource(sourcePluginId)
+    const sourceElement = this.getPluginElement(sourcePluginId)
+    
+    if (!sourceElement) return
+    
+    const sourceRect = sourceElement.getBoundingClientRect()
+    const canvasRect = this.canvasElement.getBoundingClientRect()
+    const sourcePos = {
+      x: sourceRect.right - canvasRect.left,
+      y: sourceRect.top + sourceRect.height/2 - canvasRect.top
+    }
+    
+    // 既存の接続線を削除（再描画のため）
+    connections.forEach(conn => {
+      const existingPath = document.getElementById(`connection-path-${conn.id}`)
+      if (existingPath) existingPath.remove()
     })
     
-    this.svgElement.appendChild(line)
+    // 各接続のターゲット位置を計算
+    const targetConnections = connections.map(conn => {
+      const targetElement = this.getPluginElement(conn.targetPluginId)
+      if (!targetElement) return null
+      
+      const targetRect = targetElement.getBoundingClientRect()
+      return {
+        id: conn.id,
+        targetPos: {
+          x: targetRect.left - canvasRect.left,
+          y: targetRect.top + targetRect.height/2 - canvasRect.top
+        },
+        options: {
+          color: '#4a90e2',
+          width: 2,
+          animated: false  // 扇形は初回のみアニメーション
+        }
+      }
+    }).filter(conn => conn !== null)
+    
+    // 扇形分散レンダリング
+    const paths = this.lineRenderer.renderFanOutConnections(sourcePluginId, sourcePos, targetConnections)
+    
+    // 各パスにイベントリスナー追加
+    paths.forEach((path, index) => {
+      const connectionId = connections[index].id
+      path.addEventListener('dblclick', () => {
+        this.removeConnection(connectionId)
+      })
+    })
+  }
+  
+  /**
+   * 🔍 特定ソースからの全接続を取得
+   */
+  getConnectionsFromSource(sourcePluginId) {
+    const connections = []
+    this.connections.forEach((conn, id) => {
+      if (conn.sourcePluginId === sourcePluginId) {
+        connections.push({ ...conn, id })
+      }
+    })
+    this.log(`🔍 ${sourcePluginId} からの接続: ${connections.length}本`)
+    connections.forEach(conn => {
+      this.log(`   - ${conn.id}: ${conn.sourcePluginId} → ${conn.targetPluginId}`)
+    })
+    return connections
   }
 
   /**
@@ -415,12 +529,30 @@ export class VoidCoreConnectionManager {
   }
 
   /**
-   * 🗑️ 接続線削除
+   * 🗑️ 接続線削除（Phase 1: ConnectionLineRenderer対応）
    */
   removeConnectionLine(connectionId) {
+    // 旧形式の線要素
     const lineElement = document.getElementById(`connection-line-${connectionId}`)
     if (lineElement) {
       lineElement.remove()
+    }
+    
+    // Phase 1: ConnectionLineRenderer管理のパス
+    if (this.lineRenderer) {
+      this.lineRenderer.removeConnection(connectionId)
+      
+      // 削除後、同じソースの接続を再描画（扇形更新）
+      const connection = this.connections.get(connectionId)
+      if (connection) {
+        const sourceConnections = this.getConnectionsFromSource(connection.sourcePluginId)
+        if (sourceConnections.length >= 2) {
+          // 扇形を再計算して再描画
+          setTimeout(() => {
+            this.renderFanOutConnections(connection.sourcePluginId)
+          }, 100)
+        }
+      }
     }
   }
 
@@ -956,12 +1088,38 @@ class VoidCoreSmartConnectionManager {
       this.connectionManager.createConnection(candidate.sourceId, candidate.targetId, candidate.type)
       this.log(`✅ 接続作成: ${candidate.description}`)
       this.connectionManager.showConnectionStatus(`✅ 接続完了: ${candidate.description}`)
+      
+      // Phase 1: 複数接続を継続するため、ソースを維持
+      // resetSelection()を呼ばずに、セカンドセレクションのみリセット
+      this.continueMultipleConnections()
+      
     } catch (error) {
       this.log(`❌ 接続失敗: ${error.message}`)
       this.connectionManager.showConnectionStatus(`❌ 接続失敗: ${error.message}`)
+      this.resetSelection()
+    }
+  }
+  
+  /**
+   * Phase 1: 複数接続継続
+   */
+  continueMultipleConnections() {
+    // セカンドセレクションをクリア（ファーストはキープ）
+    if (this.secondSelected) {
+      const secondElement = document.querySelector(`[data-plugin-id="${this.secondSelected}"]`)
+      if (secondElement) {
+        secondElement.classList.remove('connecting-target')
+      }
     }
     
-    this.resetSelection()
+    this.secondSelected = null
+    this.connectionCandidates = []
+    
+    // 接続モードを継続
+    this.isConnecting = true
+    
+    this.log(`🔄 接続継続モード: ${this.getPluginDisplayName(this.firstSelected)} から次の接続先を選択可能`)
+    this.connectionManager.showConnectionStatus(`🔗 接続元: ${this.getPluginDisplayName(this.firstSelected)} | 次の接続先をクリックしてください`)
   }
   
   async resetSelection() {

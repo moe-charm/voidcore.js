@@ -281,6 +281,24 @@
                 🐛 デバッグコンソール
             </button>
             
+            <!-- Phase 1: ファイル出力デバッグ -->
+            <button class="execute-button" onclick="exportDebugLogs()" 
+                    style="background: linear-gradient(145deg, #9c27b0, #7b1fa2); margin-top: 5px;">
+                📤 ログエクスポート
+            </button>
+            
+            <!-- ChatGPT案: ワンクリック一括DL -->
+            <button class="execute-button" onclick="autoSaveAllLogs()" 
+                    style="background: linear-gradient(145deg, #ff9800, #f57c00); margin-top: 5px;">
+                🚀 全ログ一括DL
+            </button>
+            
+            <!-- ログセンター開く -->
+            <button class="execute-button" onclick="openLogCenter()" 
+                    style="background: linear-gradient(145deg, #00bcd4, #0097a7); margin-top: 5px;">
+                🐞 ログセンター
+            </button>
+            
             <div class="panel-title">📊 実行ログ</div>
             <div id="executionLog" style="background: rgba(0,0,0,0.5); border-radius: 6px; padding: 10px; font-size: 11px; color: #80c0ff; max-height: 150px; overflow-y: auto; font-family: 'Monaco', monospace;">
                 VoidFlow VoidCore統合版 起動中...<br>
@@ -309,6 +327,28 @@
                     エラー数: <span id="errorCount">0</span>
                 </div>
             </div>
+            
+            <!-- Phase 1: ファイルログ情報パネル -->
+            <div class="integration-panel">
+                <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px;">📁 ファイルログ</div>
+                <div style="font-size: 10px; color: #aaa;">
+                    セッション: <span id="sessionId">Loading...</span><br>
+                    接続ログ: <span id="connectionLogCount">0</span><br>
+                    UIログ: <span id="uiLogCount">0</span><br>
+                    合計サイズ: <span id="totalLogSize">0KB</span>
+                </div>
+            </div>
+            
+            <!-- Phase 4.5: VoidCoreデバッグプラグイン情報パネル -->
+            <div class="integration-panel">
+                <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px;">🔧 VoidCoreデバッグ</div>
+                <div style="font-size: 10px; color: #aaa;" id="voidcore-debug-stats">
+                    プラグイン: <span id="voidcoreDebugStatus">Loading...</span><br>
+                    Intent監視: <span id="intentMonitoringStatus">Loading...</span><br>
+                    統計: <span id="voidcoreDebugStats">Loading...</span><br>
+                    エクスポート: <span id="lastExportTime">N/A</span>
+                </div>
+            </div>
         </div>
 
         <footer class="footer">
@@ -329,6 +369,46 @@
             </div>
             <div class="monaco-editor-content" id="monacoEditorContent">
                 <!-- Monaco Editor will be mounted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ChatGPT案: ログセンターModal -->
+    <div id="logCenterModal" class="monaco-editor-modal" style="display: none;">
+        <div class="monaco-editor-container" style="width: 90%; height: 80%;">
+            <div class="monaco-editor-header">
+                <div class="monaco-editor-title">🐞 VoidFlowログセンター</div>
+                <div class="monaco-editor-controls">
+                    <button class="monaco-editor-btn" onclick="refreshLogCenter()">🔄 更新</button>
+                    <button class="monaco-editor-btn" onclick="clearAllLogs()">🗑️ 全クリア</button>
+                    <button class="monaco-editor-btn" onclick="autoSaveAllLogs()">📤 全エクスポート</button>
+                    <button class="monaco-editor-btn close" onclick="closeLogCenter()">✕ 閉じる</button>
+                </div>
+            </div>
+            <div class="monaco-editor-content" style="padding: 15px; background: #1e1e1e; color: #d4d4d4; overflow-y: auto;">
+                <div id="logCenterContent">
+                    <div style="font-size: 14px; margin-bottom: 15px;">
+                        <strong>📊 セッション情報</strong><br>
+                        セッションID: <span id="logCenterSessionId">Loading...</span><br>
+                        稼働時間: <span id="logCenterUptime">Loading...</span><br>
+                        最終更新: <span id="logCenterLastUpdate">Loading...</span>
+                    </div>
+                    
+                    <div style="font-size: 14px; margin-bottom: 15px;">
+                        <strong>📁 カテゴリ別ログ統計</strong>
+                    </div>
+                    
+                    <div id="logCategoryList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px;">
+                        <!-- カテゴリ別ログ情報がここに動的生成される -->
+                    </div>
+                    
+                    <div style="margin-top: 20px;">
+                        <strong>🎯 リアルタイム統計</strong><br>
+                        <div id="logRealTimeStats" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; margin-top: 5px; font-family: monospace;">
+                            Loading...
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -383,6 +463,40 @@
                     document.getElementById('debugPluginStatus').textContent = 'Not Ready'
                 }
             }
+            
+            // Phase 1: ファイルログ状態更新
+            updateFileLogStatus()
+            
+            // Phase 4.5: VoidCoreデバッグプラグイン状態更新
+            updateVoidCoreDebugStatus()
+        }
+        
+        // Phase 1: ファイルログ状態更新
+        function updateFileLogStatus() {
+            if (window.getDebugStats) {
+                try {
+                    const stats = window.getDebugStats()
+                    document.getElementById('sessionId').textContent = stats.sessionId?.substring(0, 8) || 'N/A'
+                    
+                    const connectionCount = stats.categories?.connection?.totalCount || 0
+                    document.getElementById('connectionLogCount').textContent = connectionCount
+                    
+                    const uiCount = stats.categories?.ui?.totalCount || 0
+                    document.getElementById('uiLogCount').textContent = uiCount
+                    
+                    // 合計サイズ計算
+                    let totalSize = 0
+                    Object.values(stats.categories || {}).forEach(cat => {
+                        if (cat.storageSize) {
+                            totalSize += parseFloat(cat.storageSize.replace('KB', ''))
+                        }
+                    })
+                    document.getElementById('totalLogSize').textContent = `${totalSize.toFixed(1)}KB`
+                    
+                } catch (error) {
+                    console.error('ファイルログ統計更新エラー:', error)
+                }
+            }
         }
         
         // Phase 4: デバッグコンソール表示
@@ -399,6 +513,13 @@
                 console.log('debugVoidFlow.dumpState("json")   // 状態ダンプ')
                 console.log('debugVoidFlow.export()            // データエクスポート')
                 console.log('')
+                console.log('🔧 VoidCoreデバッグプラグイン:')
+                console.log('debugVoidFlow.voidCorePlugin()    // VoidCoreデバッグプラグイン取得')
+                console.log('debugVoidFlow.pluginStats()      // プラグイン統計')
+                console.log('debugVoidFlow.exportPluginData() // プラグインデータエクスポート')
+                console.log('window.debugPlugin.getStats()    // プラグイン詳細統計')
+                console.log('window.toggleVoidCoreDebug(true) // デバッグON/OFF')
+                console.log('')
                 console.log('🧪 グローバル関数:')
                 console.log('voidflowDebug.trace("voidflow.*") // トレース開始')
                 console.log('voidflowDebug.stats()             // 統計表示')
@@ -409,6 +530,18 @@
                 try {
                     const stats = window.debugVoidFlow.getStats()
                     console.log('📊 現在のシステム統計:', stats)
+                    
+                    // ファイルログ統計も表示
+                    if (window.getDebugStats) {
+                        const logStats = window.getDebugStats()
+                        console.log('📁 ファイルログ統計:', logStats)
+                    }
+                    
+                    // VoidCoreデバッグプラグイン統計も表示
+                    if (window.debugPlugin) {
+                        const pluginStats = window.debugPlugin.getStats()
+                        console.log('🔧 VoidCoreデバッグプラグイン統計:', pluginStats)
+                    }
                 } catch (error) {
                     console.log('⚠️ 統計取得エラー:', error.message)
                 }
@@ -420,8 +553,192 @@
         // 1秒ごとにステータス更新
         setInterval(updateIntegrationStatus, 1000)
         
+        // Phase 1: ログエクスポート機能
+        function exportDebugLogs(category) {
+            if (window.exportDebugLogs) {
+                window.exportDebugLogs(category)
+                console.log(`📤 ${category || '全カテゴリ'}のログをエクスポートしました`)
+            } else {
+                alert('📁 ファイルログシステムがまだ初期化されていません。')
+            }
+        }
+        
+        // Phase 4.5: VoidCoreデバッグプラグイン状態更新
+        function updateVoidCoreDebugStatus() {
+            try {
+                // DOM要素の存在確認
+                const statusElement = document.getElementById('voidcoreDebugStatus')
+                const monitoringElement = document.getElementById('intentMonitoringStatus')
+                const statsElement = document.getElementById('voidcoreDebugStats')
+                
+                if (!statusElement || !monitoringElement || !statsElement) {
+                    // DOM要素がまだ準備できていない
+                    return
+                }
+                
+                if (window.debugPlugin) {
+                    const isEnabled = window.debugPlugin.options?.enabled || false
+                    statusElement.textContent = isEnabled ? 'Active' : 'Disabled'
+                    
+                    const isMonitoring = window.debugPlugin.options?.monitorIntents || false
+                    monitoringElement.textContent = isMonitoring ? '有効' : '無効'
+                    
+                    const stats = window.debugPlugin.getStats()
+                    const statsText = `Intent:${stats.intentCount || 0} 接続:${stats.connectionCount || 0} エラー:${stats.errorCount || 0}`
+                    statsElement.textContent = statsText
+                    
+                } else {
+                    statusElement.textContent = 'Not Ready'
+                    monitoringElement.textContent = 'Loading...'
+                    statsElement.textContent = 'Loading...'
+                }
+                
+            } catch (error) {
+                console.error('VoidCoreデバッグプラグイン状態更新エラー:', error)
+            }
+        }
+        
+        // ChatGPT案: Step 1実装
+        function autoSaveAllLogs() {
+            console.log('🚀 全ログ一括ダウンロード開始...')
+            const categories = ['system', 'connection', 'ui', 'intent', 'performance', 'error']
+            
+            categories.forEach((cat, i) => {
+                setTimeout(() => {
+                    console.log(`📤 Exporting ${cat} logs...`)
+                    window.exportDebugLogs(cat)
+                }, i * 150) // 150ms間隔で実行
+            })
+            
+            console.log(`✅ ${categories.length}カテゴリのログを順次ダウンロード中...`)
+        }
+        
+        // ログセンター開く（Step 2の実装）
+        function openLogCenter() {
+            const logCenter = document.getElementById('logCenterModal')
+            if (logCenter) {
+                logCenter.style.display = 'block'
+                refreshLogCenter() // 開く時に最新情報を更新
+            }
+        }
+        
+        // ログセンター閉じる
+        function closeLogCenter() {
+            const logCenter = document.getElementById('logCenterModal')
+            if (logCenter) {
+                logCenter.style.display = 'none'
+            }
+        }
+        
+        // ログセンター更新
+        function refreshLogCenter() {
+            try {
+                // セッション情報更新
+                const stats = window.getDebugStats()
+                if (stats) {
+                    document.getElementById('logCenterSessionId').textContent = stats.sessionId?.substring(0, 8) || 'N/A'
+                    
+                    const uptime = Math.floor(stats.sessionDuration / 1000)
+                    document.getElementById('logCenterUptime').textContent = `${uptime}秒`
+                    
+                    document.getElementById('logCenterLastUpdate').textContent = new Date().toLocaleTimeString()
+                    
+                    // カテゴリ別統計
+                    updateLogCategoryList(stats)
+                }
+                
+                // リアルタイム統計
+                updateRealTimeStats()
+                
+            } catch (error) {
+                console.error('ログセンター更新エラー:', error)
+            }
+        }
+        
+        // カテゴリ別ログリスト更新
+        function updateLogCategoryList(stats) {
+            const container = document.getElementById('logCategoryList')
+            if (!container) return
+            
+            const categories = ['system', 'connection', 'ui', 'intent', 'performance', 'error']
+            
+            container.innerHTML = categories.map(cat => {
+                const catStats = stats.categories?.[cat] || { totalCount: 0, storageSize: '0KB' }
+                return `
+                    <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; border-left: 3px solid #4a90e2;">
+                        <div style="font-weight: bold; margin-bottom: 5px;">📁 ${cat}</div>
+                        <div style="font-size: 12px; color: #aaa;">
+                            ログ数: ${catStats.totalCount}<br>
+                            サイズ: ${catStats.storageSize}<br>
+                            バッファ: ${catStats.bufferSize || 0}
+                        </div>
+                        <div style="margin-top: 8px;">
+                            <button onclick="window.exportDebugLogs('${cat}')" 
+                                    style="background: #4a90e2; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">
+                                📤 DL
+                            </button>
+                            <button onclick="window.clearDebugLogs('${cat}')" 
+                                    style="background: #ff4757; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; margin-left: 5px;">
+                                🗑️ クリア
+                            </button>
+                        </div>
+                    </div>
+                `
+            }).join('')
+        }
+        
+        // リアルタイム統計更新
+        function updateRealTimeStats() {
+            try {
+                const stats = []
+                
+                // DebugFileLogger統計
+                if (window.getDebugStats) {
+                    const logStats = window.getDebugStats()
+                    stats.push(`📁 DebugFileLogger: セッション${logStats.sessionId?.substring(0, 6) || 'N/A'}`)
+                }
+                
+                // VoidCoreデバッグプラグイン統計
+                if (window.debugPlugin) {
+                    const pluginStats = window.debugPlugin.getStats()
+                    stats.push(`🔧 VoidCoreDebug: Intent${pluginStats.intentCount || 0} 接続${pluginStats.connectionCount || 0}`)
+                }
+                
+                // ConnectionManager統計
+                if (window.connectionManager) {
+                    const connStats = `🔗 ConnectionManager: 接続数${window.connectionManager.connections?.size || 0}`
+                    stats.push(connStats)
+                }
+                
+                document.getElementById('logRealTimeStats').innerHTML = stats.join('<br>')
+                
+            } catch (error) {
+                document.getElementById('logRealTimeStats').innerHTML = 'エラー: ' + error.message
+            }
+        }
+        
+        // 全ログクリア
+        function clearAllLogs() {
+            if (confirm('🗑️ 全ログをクリアしますか？この操作は元に戻せません。')) {
+                try {
+                    window.clearDebugLogs() // 全カテゴリクリア
+                    console.log('✅ 全ログをクリアしました')
+                    refreshLogCenter() // 画面更新
+                } catch (error) {
+                    console.error('❌ ログクリア失敗:', error)
+                    alert('ログクリアに失敗しました: ' + error.message)
+                }
+            }
+        }
+        
         // グローバル関数として公開
         window.openDebugConsole = openDebugConsole
+        window.exportDebugLogs = exportDebugLogs
+        window.autoSaveAllLogs = autoSaveAllLogs
+        window.openLogCenter = openLogCenter
+        window.closeLogCenter = closeLogCenter
+        window.refreshLogCenter = refreshLogCenter
+        window.clearAllLogs = clearAllLogs
         
         // デバッグ用
         window.debugVoidCore = function() {

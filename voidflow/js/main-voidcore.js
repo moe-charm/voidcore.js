@@ -13,6 +13,12 @@ import { PluginPalettePlugin } from './plugin-palette-plugin.js'
 // Phase 1: VoidFlow-VoidCore統合アーキテクチャ
 import { VoidFlowCore } from './voidflow-core.js'
 import { VoidFlowIntentBridge } from './intent-bridge.js'
+// Phase 1: 高度接続GUI
+import { ConnectionLineRenderer } from './connection-line-renderer.js'
+// Phase 1: デバッグファイルロガー
+import { debugLogger } from './debug-file-logger.js'
+// Phase 1.5: VoidCoreデバッグプラグイン
+import { voidCoreDebugPlugin } from './voidcore-debug-plugin.js'
 // import { ConnectionManager } from './main.js' // 重複初期化を防ぐため無効化
 
 // グローバル変数
@@ -29,6 +35,9 @@ let pluginPalette = null
 let voidFlowCore = null
 let intentBridge = null
 
+// Phase 1.5: VoidCoreデバッグプラグイン変数
+let debugPlugin = null
+
 // VoidCore v14.0 純粋アーキテクチャ - ハイブリッドモード削除完了
 
 // 初期化
@@ -40,6 +49,13 @@ document.addEventListener('DOMContentLoaded', function() {
 async function initializeVoidFlowVoidCore() {
     try {
         console.log('🌟 VoidFlow VoidCore統合版 初期化開始...')
+        
+        // Phase 1: デバッグファイルロガー初期化（最優先）
+        await debugLogger.initialize()
+        debugLogger.log('system', 'info', '🎬 VoidFlow session start', {
+            userAgent: navigator.userAgent,
+            url: window.location.href
+        })
         
         // Phase 0: VoidFlow-VoidCore統合アーキテクチャ初期化
         await initializeVoidFlowCoreArchitecture()
@@ -61,6 +77,9 @@ async function initializeVoidFlowVoidCore() {
         
         // Phase 4: デバッグ機能初期化
         await initializePhase4DebugSystem()
+        
+        // Phase 4.5: VoidCoreデバッグプラグイン初期化
+        await initializeVoidCoreDebugPlugin()
         
         // Phase 5: UI初期化
         await initializeUI()
@@ -260,6 +279,55 @@ async function initializePhase4DebugSystem() {
     } catch (error) {
         console.error('❌ Phase 4: デバッグシステム初期化失敗:', error)
         voidCoreUI.log('❌ Phase 4: デバッグシステム初期化失敗')
+        throw error
+    }
+}
+
+/**
+ * 🔧 Phase 4.5: VoidCoreデバッグプラグイン初期化
+ */
+async function initializeVoidCoreDebugPlugin() {
+    try {
+        console.log('🔧 Phase 4.5: VoidCoreデバッグプラグイン初期化開始...')
+        
+        // debugPluginを参照設定
+        debugPlugin = voidCoreDebugPlugin
+        
+        // VoidFlowCoreにデバッグプラグインを登録
+        if (voidFlowCore) {
+            debugPlugin.voidFlowCore = voidFlowCore
+            
+            // プラグインとして登録（registerPluginメソッドの存在確認）
+            if (typeof voidFlowCore.registerPlugin === 'function') {
+                await voidFlowCore.registerPlugin(debugPlugin)
+                console.log('✅ VoidCoreDebugPlugin registered via VoidFlowCore')
+            } else {
+                // 代替方法: 直接参照設定
+                console.log('⚠️ VoidFlowCore.registerPlugin not found, using direct reference')
+            }
+            
+            // プラグインを有効化
+            await debugPlugin.onActivated()
+            
+            console.log('✅ VoidCoreDebugPlugin activated')
+            voidCoreUI.log('🔧 VoidCoreデバッグプラグイン初期化完了')
+        }
+        
+        // グローバル関数に追加
+        window.debugPlugin = debugPlugin
+        
+        // 既存のdebugVoidFlowに統合
+        if (window.debugVoidFlow) {
+            window.debugVoidFlow.voidCorePlugin = () => debugPlugin
+            window.debugVoidFlow.pluginStats = () => debugPlugin.getStats()
+            window.debugVoidFlow.exportPluginData = () => debugPlugin.exportDebugData()
+        }
+        
+        console.log('✅ Phase 4.5: VoidCoreデバッグプラグイン初期化完了！')
+        
+    } catch (error) {
+        console.error('❌ Phase 4.5: VoidCoreデバッグプラグイン初期化失敗:', error)
+        voidCoreUI.log('❌ VoidCoreデバッグプラグイン初期化失敗')
         throw error
     }
 }

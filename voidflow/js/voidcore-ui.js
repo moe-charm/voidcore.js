@@ -497,6 +497,13 @@ export class VoidCoreUI {
       e.stopPropagation() // バブリング防止
       this.log(`🖱️ Right-click detected for: ${pluginId}`)
       
+      // 接続モード中かチェック
+      const connectionManager = this.voidFlowCore?.connectionManager || window.voidFlowCore?.connectionManager
+      if (connectionManager && connectionManager.smartConnectionManager && connectionManager.smartConnectionManager.isConnecting) {
+        this.log('🚫 右クリック：接続モード中のためメニューを無効化')
+        return false
+      }
+      
       // 接続ポートでなければプラグインメニューを表示
       const isConnectionPort = e.target.closest('.connection-port')
       if (!isConnectionPort) {

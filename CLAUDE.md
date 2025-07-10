@@ -122,6 +122,140 @@ python3 -m http.server 8001 --bind localhost > /dev/null 2>&1 &
 
 ---
 
+## 🐛 VoidFlowデバッグシステム完全ガイド
+
+### **🎯 システム概要**
+VoidFlowには高度なファイル出力デバッグシステムが実装されています。
+Claude AIが効率的にデバッグできるよう設計された統合システムです。
+
+### **📁 デバッグファイル構造**
+```
+debug/
+├── voidflow-connection-YYYY-MM-DD-xxxxx-yyyyy.log  # 接続管理ログ
+├── voidflow-system-YYYY-MM-DD-xxxxx-yyyyy.log      # システムログ
+├── voidflow-ui-YYYY-MM-DD-xxxxx-yyyyy.log          # UIイベントログ
+├── voidflow-intent-YYYY-MM-DD-xxxxx-yyyyy.log      # Intentログ
+├── voidflow-performance-YYYY-MM-DD-xxxxx-yyyyy.log # パフォーマンスログ
+└── voidflow-error-YYYY-MM-DD-xxxxx-yyyyy.log       # エラーログ
+```
+
+### **🔧 コアコンポーネント**
+
+#### **1. DebugFileLogger (`debug-file-logger.js`)**
+```javascript
+// カテゴリ別ログファイル出力
+const categories = ['system', 'connection', 'ui', 'intent', 'performance', 'error']
+
+// 使用例
+debugLogger.log('connection', 'debug', '🔗 接続作成', { sourceId, targetId })
+```
+
+#### **2. VoidCoreDebugPlugin (`voidcore-debug-plugin.js`)**
+```javascript
+// VoidCore統合デバッグプラグイン（パフォーマンス最適化済み）
+// デバッグモード無効時は全メソッドno-op化
+setupNoOpMethods() // パフォーマンス影響ゼロ
+```
+
+#### **3. ログセンターGUI**
+- **場所**: メインページ右上「ログセンター」ボタン
+- **機能**: カテゴリ別ログ表示・一括ダウンロード
+- **ショートカット**: 全ログ自動保存ボタンあり
+
+### **🚀 Claude開発ワークフロー**
+
+#### **Phase 1: 問題発生時**
+1. ユーザーが「ログ保存したにゃ」と報告
+2. Claude: `LS /debug` で最新ログファイル確認
+3. Claude: `Read` で関連ログファイル分析
+4. 問題の根本原因特定
+
+#### **Phase 2: ChatGPT連携**
+1. 複雑な問題はChatGPTに相談可能
+2. ログファイルを共有して詳細分析
+3. ChatGPTの提案をVoidFlowに実装
+
+#### **Phase 3: 修正→検証**
+1. 問題修正後、再テスト実行
+2. 新しいログで修正確認
+3. 必要に応じて追加デバッグログ追加
+
+### **📊 ログカテゴリ詳細**
+
+| カテゴリ | 用途 | 重要度 | 例 |
+|---------|------|--------|-----|
+| `system` | 起動・初期化・プラグイン管理 | 🔥高 | VoidCore初期化、プラグイン登録 |
+| `connection` | 接続作成・描画・削除 | 🔥高 | 接続線表示、扇形分散 |
+| `ui` | UI操作・イベント・レスポンス | 🔶中 | クリック、ドラッグ、メニュー |
+| `intent` | Intent処理・変換・配信 | 🔶中 | Intent解析、プラグイン通信 |
+| `performance` | 処理時間・メモリ・最適化 | 🔸低 | 描画時間、メモリ使用量 |
+| `error` | エラー・例外・警告 | 🚨最高 | 接続失敗、プラグインエラー |
+
+### **🛠️ 開発者向け使用方法**
+
+#### **ログ出力**
+```javascript
+// 基本形
+this.log('🔗 接続作成開始')
+
+// データ付きログ（推奨）
+this.log('🔗 接続作成', { sourceId, targetId, type })
+
+// カテゴリ指定
+debugLogger.log('connection', 'debug', 'メッセージ', data)
+```
+
+#### **パフォーマンス測定**
+```javascript
+const startTime = performance.now()
+// 処理実行
+const duration = performance.now() - startTime
+debugLogger.log('performance', 'info', `処理時間: ${duration}ms`)
+```
+
+### **🎯 よくある問題とログ解析**
+
+#### **接続線が表示されない**
+```bash
+# チェック項目
+grep "🌀 接続描画" debug/voidflow-connection-*.log
+grep "扇形分散" debug/voidflow-connection-*.log
+grep "SVG element" debug/voidflow-connection-*.log
+```
+
+#### **右クリックメニューが出る**
+```bash
+# チェック項目  
+grep "右クリック" debug/voidflow-connection-*.log
+grep "contextmenu" debug/voidflow-ui-*.log
+grep "接続モード" debug/voidflow-connection-*.log
+```
+
+#### **プラグイン読み込み失敗**
+```bash
+# チェック項目
+grep "プラグイン" debug/voidflow-system-*.log
+grep "エラー" debug/voidflow-error-*.log
+grep "404" debug/voidflow-system-*.log
+```
+
+### **⚠️ 重要な注意点**
+
+1. **ログファイルはセッション毎に生成** - F5で新しいログファイル
+2. **重いログ出力は自動でno-op化** - パフォーマンス影響なし
+3. **Claudeは必ず最新ログを確認** - タイムスタンプ確認必須
+4. **問題再現時は必ずログ保存** - エビデンス重要
+
+### **🎉 成功事例**
+
+最近解決した主要問題：
+- ✅ 2本接続重複表示 → 扇形分散閾値修正
+- ✅ 接続モード継続問題 → 空白クリック検出追加  
+- ✅ 右クリックメニュー表示 → キャプチャフェーズ実装
+- ✅ F5自動保存問題 → enableAutoExport無効化
+
+---
+
 ## 📝 開発・コミットルール
 
 ### **🎯 重要ルール: 次にやることの管理**
