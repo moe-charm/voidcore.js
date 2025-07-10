@@ -402,13 +402,9 @@ export class VoidCoreConnectionManager {
     const displayMode = this.lineRenderer.determineDisplayMode(sourceConnections.length)
     this.log(`🔧 表示モード決定: ${displayMode} (${sourceConnections.length}本)`)
     
-    // 🐛 修正: 表示モード変更時のみ全削除
-    const previousDisplayMode = this.getStoredDisplayMode(connection.sourcePluginId)
-    if (previousDisplayMode !== displayMode) {
-      this.log(`🔄 表示モード変更: ${previousDisplayMode} → ${displayMode}`)
-      this.clearSourceConnections(connection.sourcePluginId)
-      this.setStoredDisplayMode(connection.sourcePluginId, displayMode)
-    }
+    // 🚨 緊急修正: 無限ループ防止 - 表示モード変更検出を無効化
+    this.log(`🔧 表示モード: ${displayMode} (${sourceConnections.length}本) - 全削除実行`)
+    this.clearSourceConnections(connection.sourcePluginId)
     
     switch (displayMode) {
       case 'bundle':
@@ -501,9 +497,8 @@ export class VoidCoreConnectionManager {
   renderBundledConnections(sourcePluginId) {
     const connections = this.getConnectionsFromSource(sourcePluginId)
     if (connections.length < this.lineRenderer.bundleConfig.bundleThreshold) {
-      // 束ね閾値未満の場合は扇形分散にフォールバック
-      this.renderFanOutConnections(sourcePluginId)
-      return
+      this.log(`⚠️ 束ね閾値未満: ${connections.length}本 < ${this.lineRenderer.bundleConfig.bundleThreshold}本`)
+      return  // 🚨 緊急修正: フォールバック呼び出しを停止
     }
     
     const sourceElement = this.getPluginElement(sourcePluginId)
@@ -540,28 +535,32 @@ export class VoidCoreConnectionManager {
     // 束ね線レンダリング
     const paths = this.lineRenderer.renderBundledConnections(sourcePluginId, sourcePos, targetConnections)
     
-    // 各分離パスにイベントリスナー追加
-    paths.forEach((path, index) => {
-      const connectionId = connections[index].id
-      
-      // ダブルクリックで削除
-      path.addEventListener('dblclick', () => {
-        this.removeConnection(connectionId)
-      })
-      
-      // ホバーエフェクト（束ね線用）
-      path.addEventListener('mouseenter', () => {
-        path.setAttribute('stroke-width', '2.5')
-        path.setAttribute('opacity', '1.0')
-      })
-      
-      path.addEventListener('mouseleave', () => {
-        path.setAttribute('stroke-width', '1.5')
-        path.setAttribute('opacity', '0.8')
-      })
-    })
+    this.log(`🔗 束ね線描画完了: ${sourcePluginId} → ${connections.length}本`)
     
-    this.log(`🔗 束ね線描画完了: ${sourcePluginId} → ${targetConnections.length}本`)
+    // 各分離パスにイベントリスナー追加
+    if (paths && paths.length > 0) {
+      paths.forEach((path, index) => {
+        if (connections[index]) {
+          const connectionId = connections[index].id
+          
+          // ダブルクリックで削除
+          path.addEventListener('dblclick', () => {
+            this.removeConnection(connectionId)
+          })
+          
+          // ホバーエフェクト（束ね線用）
+          path.addEventListener('mouseenter', () => {
+            path.setAttribute('stroke-width', '2.5')
+            path.setAttribute('opacity', '1.0')
+          })
+          
+          path.addEventListener('mouseleave', () => {
+            path.setAttribute('stroke-width', '1.5')
+            path.setAttribute('opacity', '0.8')
+          })
+        }
+      })
+    }
   }
   
   /**
