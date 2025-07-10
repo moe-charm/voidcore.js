@@ -12,8 +12,9 @@
  * - 接続線のリアルタイム更新
  */
 export class DragDropManager {
-  constructor(voidCoreUI) {
+  constructor(voidCoreUI, options = {}) {
     this.voidCoreUI = voidCoreUI
+    this.voidFlowCore = options.voidFlowCore || null  // Phase Alpha: Intent統合
     this.dragState = null
     this.activeDrags = new Map() // pluginId → drag state
     
@@ -52,7 +53,15 @@ export class DragDropManager {
     const dragId = `drag-${pluginId}-${Date.now()}`
     element.setAttribute('data-drag-id', dragId)
     
-    element.addEventListener('mousedown', (e) => {
+    element.addEventListener('mousedown', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.drag.start', {
+          pluginId,
+          position: { x: e.clientX, y: e.clientY },
+          timestamp: Date.now()
+        })
+      }
+      // フォールバック処理
       if (e.target.tagName === 'INPUT') return // 入力フィールドは除外
       
       // ドラッグ開始ログを無効化（パフォーマンス最適化）
@@ -110,8 +119,26 @@ export class DragDropManager {
         animationFrameId = null
       }
       
-      document.addEventListener('mousemove', onMouseMove)
-      document.addEventListener('mouseup', onMouseUp)
+      document.addEventListener('mousemove', async (e) => {
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.drag.move', {
+            pluginId,
+            position: { x: e.clientX, y: e.clientY },
+            timestamp: Date.now()
+          })
+        }
+        onMouseMove(e)
+      })
+      document.addEventListener('mouseup', async (e) => {
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.drag.end', {
+            pluginId,
+            position: { x: e.clientX, y: e.clientY },
+            timestamp: Date.now()
+          })
+        }
+        onMouseUp(e)
+      })
       
       e.preventDefault()
     })

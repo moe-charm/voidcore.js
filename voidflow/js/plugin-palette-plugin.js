@@ -26,6 +26,9 @@ export class PluginPalettePlugin {
       ...options
     }
     
+    // Phase Alpha: Intent統合
+    this.voidFlowCore = options.voidFlowCore || null
+    
     // 状態管理
     this.state = {
       searchText: '',
@@ -275,37 +278,72 @@ export class PluginPalettePlugin {
    */
   setupEventListeners() {
     // 検索入力
-    this.searchInput.addEventListener('input', (e) => {
-      this.state.searchText = e.target.value
-      this.updateDisplay()
+    this.searchInput.addEventListener('input', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.palette.search', {
+          query: e.target.value,
+          timestamp: Date.now()
+        })
+      } else {
+        this.state.searchText = e.target.value
+        this.updateDisplay()
+      }
     })
     
     // 検索クリアボタン
-    this.container.querySelector('#searchClearBtn').addEventListener('click', () => {
-      this.searchInput.value = ''
-      this.state.searchText = ''
-      this.updateDisplay()
+    this.container.querySelector('#searchClearBtn').addEventListener('click', async () => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.palette.search.clear', {
+          timestamp: Date.now()
+        })
+      } else {
+        this.searchInput.value = ''
+        this.state.searchText = ''
+        this.updateDisplay()
+      }
     })
     
     // クイックフィルタボタン
     this.container.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         const filter = e.target.dataset.filter
-        this.toggleQuickFilter(filter)
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.palette.filter', {
+            filter,
+            timestamp: Date.now()
+          })
+        } else {
+          this.toggleQuickFilter(filter)
+        }
       })
     })
     
     // カテゴリタブ
     this.container.querySelectorAll('.category-tab').forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        this.selectCategory(e.target.dataset.category)
+      tab.addEventListener('click', async (e) => {
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.palette.category', {
+            category: e.target.dataset.category,
+            timestamp: Date.now()
+          })
+        } else {
+          this.selectCategory(e.target.dataset.category)
+        }
       })
     })
     
     // ソート選択
-    this.container.querySelector('#sortSelect').addEventListener('change', (e) => {
-      this.state.sortBy = e.target.value
-      this.updateDisplay()
+    this.container.querySelector('#sortSelect').addEventListener('change', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.palette.sort', {
+          sortBy: e.target.value,
+          timestamp: Date.now()
+        })
+      } else {
+        this.state.sortBy = e.target.value
+        this.updateDisplay()
+      }
+    })
     })
   }
   
@@ -513,9 +551,17 @@ export class PluginPalettePlugin {
   setupPluginItemEvents(item, plugin) {
     // お気に入りボタン
     const favoriteBtn = item.querySelector('.favorite-btn')
-    favoriteBtn.addEventListener('click', (e) => {
+    favoriteBtn.addEventListener('click', async (e) => {
       e.stopPropagation()
-      this.toggleFavorite(plugin.id)
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.plugin.favorite', {
+          pluginId: plugin.id,
+          action: 'toggle',
+          timestamp: Date.now()
+        })
+      } else {
+        this.toggleFavorite(plugin.id)
+      }
     })
     
     // シングルクリックでプラグイン追加
@@ -524,15 +570,31 @@ export class PluginPalettePlugin {
       // これにより、プラグインアイテム内のボタンなどがクリックされたときに、
       // プラグイン追加とボタンクリックの両方が発生するのを防ぎますにゃ。
       if (!e.target.closest('.favorite-btn')) { // お気に入りボタンなど、内部要素のクリックを除外
-        await this.addPluginToCanvas(plugin)
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.plugin.add', {
+            plugin,
+            source: 'palette_click',
+            timestamp: Date.now()
+          })
+        } else {
+          await this.addPluginToCanvas(plugin)
+        }
       }
     })
     
     // ドラッグ&ドロップ
     item.draggable = true
-    item.addEventListener('dragstart', (e) => {
+    item.addEventListener('dragstart', async (e) => {
       e.dataTransfer.setData('application/json', JSON.stringify(plugin))
       e.dataTransfer.setData('text/plain', plugin.id)
+      
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.plugin.drag.start', {
+          plugin,
+          source: 'palette_drag',
+          timestamp: Date.now()
+        })
+      }
     })
     
     // ホバー効果

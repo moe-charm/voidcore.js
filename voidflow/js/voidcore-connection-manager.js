@@ -108,8 +108,16 @@ export class VoidCoreConnectionManager {
       voidFlowCore: this.voidFlowCore  // Phase Alpha: Intent統合
     })
     
-    // 接続ポート作成（左クリック）
-    document.addEventListener('click', (e) => {
+    // 接続ポート作成（左クリック）- Phase Alpha Intent統合
+    document.addEventListener('click', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.connection.click', {
+          targetElement: e.target.id || e.target.className,
+          position: { x: e.clientX, y: e.clientY },
+          timestamp: Date.now()
+        })
+      }
+      // フォールバック処理
       this.log(`🔍 Document click detected: target=${e.target.tagName}, id=${e.target.id}, class=${e.target.className}`)
       
       // 🚨 デバッグ: クリックされた要素の詳細情報
@@ -159,9 +167,17 @@ export class VoidCoreConnectionManager {
       }
     }) 
     
-    // 右クリックキャンセル機能（どこでも右クリックでキャンセル＆色リセット）
+    // 右クリックキャンセル機能（どこでも右クリックでキャンセル＆色リセット）- Phase Alpha Intent統合
     // キャプチャフェーズで最優先処理
-    document.addEventListener('contextmenu', (e) => {
+    document.addEventListener('contextmenu', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.connection.contextmenu', {
+          position: { x: e.clientX, y: e.clientY },
+          connectionMode: this.smartConnectionManager?.isConnectionMode,
+          timestamp: Date.now()
+        })
+      }
+      // フォールバック処理
       if (this.smartConnectionManager.isConnecting) {
         e.preventDefault() // 右クリックメニューを無効化
         e.stopPropagation() // イベント伝播を停止
@@ -174,15 +190,32 @@ export class VoidCoreConnectionManager {
       // 👈 一旦、通常時の右クリック処理を無効化
     }, true) // キャプチャフェーズで処理
     
-    // マウス移動で一時的な線を更新
-    document.addEventListener('mousemove', (e) => {
+    // マウス移動で一時的な線を更新 - Phase Alpha Intent統合
+    document.addEventListener('mousemove', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.connection.mousemove', {
+          position: { x: e.clientX, y: e.clientY },
+          connectionMode: this.smartConnectionManager?.isConnectionMode,
+          timestamp: Date.now()
+        })
+      }
+      // フォールバック処理
       if (this.smartConnectionManager && this.smartConnectionManager.isConnecting) {
         this.updateTempConnectionLine(e.clientX, e.clientY)
       }
     })
     
-    // ESCキーで接続キャンセル
-    document.addEventListener('keydown', (e) => {
+    // ESCキーで接続キャンセル - Phase Alpha Intent統合
+    document.addEventListener('keydown', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.connection.keydown', {
+          key: e.key,
+          code: e.code,
+          connectionMode: this.smartConnectionManager?.isConnectionMode,
+          timestamp: Date.now()
+        })
+      }
+      // フォールバック処理
       if (e.key === 'Escape' && this.smartConnectionManager) {
         this.smartConnectionManager.resetSelection()
       }
@@ -432,9 +465,17 @@ export class VoidCoreConnectionManager {
           arrow: true
         })
       
-      // ダブルクリックで削除
-      path.addEventListener('dblclick', () => {
-        this.removeConnection(connection.id)
+      // ダブルクリックで削除 - Phase Alpha Intent統合
+      path.addEventListener('dblclick', async () => {
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.connection.remove', {
+            connectionId: connection.id,
+            source: 'individual_dblclick',
+            timestamp: Date.now()
+          })
+        } else {
+          this.removeConnection(connection.id)
+        }
       })
     }
   }
@@ -487,8 +528,16 @@ export class VoidCoreConnectionManager {
     // 各パスにイベントリスナー追加
     paths.forEach((path, index) => {
       const connectionId = connections[index].id
-      path.addEventListener('dblclick', () => {
-        this.removeConnection(connectionId)
+      path.addEventListener('dblclick', async () => {
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.connection.remove', {
+            connectionId: connectionId,
+            source: 'fanout_dblclick',
+            timestamp: Date.now()
+          })
+        } else {
+          this.removeConnection(connectionId)
+        }
       })
     })
   }
@@ -1199,23 +1248,49 @@ class VoidCoreSmartConnectionManager {
     
     // イベントリスナー追加
     modal.querySelectorAll('.candidate-item').forEach((item, index) => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', async () => {
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.connection.candidate.select', {
+            candidateIndex: index,
+            candidate: candidates[index],
+            timestamp: Date.now()
+          })
+        }
         this.executeConnection(candidates[index])
         modal.remove()
       })
       
-      item.addEventListener('mouseenter', () => {
+      item.addEventListener('mouseenter', async () => {
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.connection.candidate.hover', {
+            candidateIndex: index,
+            action: 'enter',
+            timestamp: Date.now()
+          })
+        }
         item.style.borderColor = '#4a90e2'
         item.style.background = 'rgba(74, 144, 226, 0.1)'
       })
       
-      item.addEventListener('mouseleave', () => {
+      item.addEventListener('mouseleave', async () => {
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.connection.candidate.hover', {
+            candidateIndex: index,
+            action: 'leave',
+            timestamp: Date.now()
+          })
+        }
         item.style.borderColor = '#555'
         item.style.background = 'transparent'
       })
     })
     
-    modal.querySelector('.cancel-btn').addEventListener('click', () => {
+    modal.querySelector('.cancel-btn').addEventListener('click', async () => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.connection.candidate.cancel', {
+          timestamp: Date.now()
+        })
+      }
       this.resetSelection()
       modal.remove()
     })
@@ -1353,6 +1428,37 @@ class VoidCoreSmartConnectionManager {
       this.log(`📤 Connection cancel intent sent: ${reason}`)
     } catch (error) {
       this.log(`⚠️ Connection cancel intent failed: ${error.message}`)
+    }
+  }
+  
+  /**
+   * 🔄 Phase Alpha: Intent処理フォールバックメソッド群
+   */
+  handleClickFallback(e) {
+    // 従来のクリック処理ロジック
+    this.log(`🔧 Fallback: Document click - ${e.target.tagName}`)
+  }
+  
+  handleContextMenuFallback(e) {
+    // 従来の右クリック処理ロジック
+    if (this.smartConnectionManager?.isConnecting) {
+      e.preventDefault()
+      this.smartConnectionManager.resetSelection()
+      this.showConnectionStatus('🚫 接続モードキャンセル')
+    }
+  }
+  
+  handleMouseMoveFallback(e) {
+    // 従来のマウス移動処理ロジック
+    if (this.smartConnectionManager?.isConnecting) {
+      this.updateTempConnectionLine(e.clientX, e.clientY)
+    }
+  }
+  
+  handleKeyDownFallback(e) {
+    // 従来のキーボード処理ロジック
+    if (e.key === 'Escape' && this.smartConnectionManager) {
+      this.smartConnectionManager.resetSelection()
     }
   }
 }

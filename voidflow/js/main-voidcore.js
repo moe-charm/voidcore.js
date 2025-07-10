@@ -676,14 +676,23 @@ function initializeNodePalette() {
     
     nodeItems.forEach(item => {
         // ドラッグ機能
-        item.addEventListener('dragstart', (e) => {
+        item.addEventListener('dragstart', async (e) => {
             const nodeType = item.getAttribute('data-node-type')
             e.dataTransfer.setData('text/plain', nodeType)
             
-            if (voidCoreUI) {
-                voidCoreUI.log(`📦 ドラッグ開始: ${nodeType}`)
-            } else if (voidFlowEngine) {
-                voidFlowEngine.log(`📦 ドラッグ開始: ${nodeType}`)
+            if (voidFlowCore) {
+                await voidFlowCore.sendIntent('voidflow.ui.element.drag.start', {
+                    nodeType,
+                    elementId: item.id,
+                    timestamp: Date.now()
+                })
+            } else {
+                // フォールバック
+                if (voidCoreUI) {
+                    voidCoreUI.log(`📦 ドラッグ開始: ${nodeType}`)
+                } else if (voidFlowEngine) {
+                    voidFlowEngine.log(`📦 ドラッグ開始: ${nodeType}`)
+                }
             }
         })
         
@@ -695,12 +704,21 @@ function initializeNodePalette() {
                 y: Math.random() * 300 + 100
             }
             
-            // VoidCoreプラグイン作成
-            try {
-                const result = await createVoidCoreNode(nodeType, position)
-                voidCoreUI.log(`🎯 ノード作成完了: ${nodeType}`)
-            } catch (error) {
-                voidCoreUI.log(`❌ ノード作成エラー: ${error.message}`)
+            if (voidFlowCore) {
+                await voidFlowCore.sendIntent('voidflow.ui.element.create', {
+                    nodeType,
+                    position,
+                    source: 'palette_click',
+                    timestamp: Date.now()
+                })
+            } else {
+                // フォールバック - VoidCoreプラグイン作成
+                try {
+                    const result = await createVoidCoreNode(nodeType, position)
+                    voidCoreUI.log(`🎯 ノード作成完了: ${nodeType}`)
+                } catch (error) {
+                    voidCoreUI.log(`❌ ノード作成エラー: ${error.message}`)
+                }
             }
         })
         
@@ -712,11 +730,18 @@ function initializeNodePalette() {
 function initializeCanvas() {
     const canvasArea = document.querySelector('.canvas-area')
     
-    canvasArea.addEventListener('dragover', (e) => {
+    canvasArea.addEventListener('dragover', async (e) => {
         e.preventDefault()
+        
+        if (voidFlowCore) {
+            await voidFlowCore.sendIntent('voidflow.ui.canvas.dragover', {
+                position: { x: e.clientX, y: e.clientY },
+                timestamp: Date.now()
+            })
+        }
     })
     
-    canvasArea.addEventListener('drop', (e) => {
+    canvasArea.addEventListener('drop', async (e) => {
         e.preventDefault()
         
         const nodeType = e.dataTransfer.getData('text/plain')
@@ -726,11 +751,20 @@ function initializeCanvas() {
             y: e.clientY - rect.top
         }
         
-        // VoidCoreプラグインのみ作成（接続テスト用）
-        console.log(`🎯 ドラッグ&ドロップ: ${nodeType}`)
-        createVoidCoreNode(nodeType, position).catch(error => {
-            console.error(`❌ ドラッグ&ドロップ createVoidCoreNode失敗:`, error)
-        })
+        if (voidFlowCore) {
+            await voidFlowCore.sendIntent('voidflow.ui.element.create', {
+                nodeType,
+                position,
+                source: 'canvas_drop',
+                timestamp: Date.now()
+            })
+        } else {
+            // フォールバック - VoidCoreプラグインのみ作成（接続テスト用）
+            console.log(`🎯 ドラッグ&ドロップ: ${nodeType}`)
+            createVoidCoreNode(nodeType, position).catch(error => {
+                console.error(`❌ ドラッグ&ドロップ createVoidCoreNode失敗:`, error)
+            })
+        }
     })
 }
 
@@ -1003,7 +1037,7 @@ function makeVoidCorePluginDraggable(element) {
     let isDragging = false
     let dragStartX, dragStartY
     
-    element.addEventListener('mousedown', (e) => {
+    element.addEventListener('mousedown', async (e) => {
         if (e.target.classList.contains('node-input') || 
             e.target.classList.contains('execute-button') ||
             e.target.classList.contains('connection-port')) return
@@ -1011,6 +1045,14 @@ function makeVoidCorePluginDraggable(element) {
         isDragging = true
         dragStartX = e.clientX - element.offsetLeft
         dragStartY = e.clientY - element.offsetTop
+        
+        if (voidFlowCore) {
+            await voidFlowCore.sendIntent('voidflow.ui.element.drag.start', {
+                elementId: element.id,
+                startPosition: { x: e.clientX, y: e.clientY },
+                timestamp: Date.now()
+            })
+        }
         
         document.addEventListener('mousemove', onMouseMove)
         document.addEventListener('mouseup', onMouseUp)
@@ -1034,7 +1076,15 @@ function makeVoidCorePluginDraggable(element) {
         // }
     }
     
-    function onMouseUp() {
+    async function onMouseUp() {
+        if (voidFlowCore && isDragging) {
+            await voidFlowCore.sendIntent('voidflow.ui.element.drag.end', {
+                elementId: element.id,
+                endPosition: { x: element.offsetLeft, y: element.offsetTop },
+                timestamp: Date.now()
+            })
+        }
+        
         isDragging = false
         document.removeEventListener('mousemove', onMouseMove)
         document.removeEventListener('mouseup', onMouseUp)
@@ -1120,13 +1170,23 @@ function createNodeElement(node) {
     makeNodeDraggable(nodeDiv)
     
     // クリック選択機能
-    nodeDiv.addEventListener('click', (e) => {
+    nodeDiv.addEventListener('click', async (e) => {
         if (!e.target.classList.contains('connection-port')) {
-            selectNode(node.id)
-            
-            // ハイブリッドモード: VoidCore統合処理も実行
-            if (voidCoreUI) {
-                voidCoreUI.log(`🎯 ノード選択: ${node.type} (${node.id})`)
+            if (voidFlowCore) {
+                await voidFlowCore.sendIntent('voidflow.ui.element.select', {
+                    elementId: node.id,
+                    nodeType: node.type,
+                    position: { x: e.clientX, y: e.clientY },
+                    timestamp: Date.now()
+                })
+            } else {
+                // フォールバック
+                selectNode(node.id)
+                
+                // ハイブリッドモード: VoidCore統合処理も実行
+                if (voidCoreUI) {
+                    voidCoreUI.log(`🎯 ノード選択: ${node.type} (${node.id})`)
+                }
             }
         }
     })
@@ -1169,12 +1229,21 @@ function makeNodeDraggable(nodeElement) {
     let isDragging = false
     let dragStartX, dragStartY
     
-    nodeElement.addEventListener('mousedown', (e) => {
+    nodeElement.addEventListener('mousedown', async (e) => {
         if (e.target.classList.contains('node-input')) return
         
         isDragging = true
         dragStartX = e.clientX - nodeElement.offsetLeft
         dragStartY = e.clientY - nodeElement.offsetTop
+        
+        if (voidFlowCore) {
+            await voidFlowCore.sendIntent('voidflow.ui.element.drag.start', {
+                elementId: nodeElement.id,
+                nodeType: 'legacy_node',
+                startPosition: { x: e.clientX, y: e.clientY },
+                timestamp: Date.now()
+            })
+        }
         
         document.addEventListener('mousemove', onMouseMove)
         document.addEventListener('mouseup', onMouseUp)
@@ -1211,7 +1280,16 @@ function makeNodeDraggable(nodeElement) {
         }
     }
     
-    function onMouseUp() {
+    async function onMouseUp() {
+        if (voidFlowCore && isDragging) {
+            await voidFlowCore.sendIntent('voidflow.ui.element.drag.end', {
+                elementId: nodeElement.id,
+                nodeType: 'legacy_node',
+                endPosition: { x: nodeElement.offsetLeft, y: nodeElement.offsetTop },
+                timestamp: Date.now()
+            })
+        }
+        
         isDragging = false
         document.removeEventListener('mousemove', onMouseMove)
         document.removeEventListener('mouseup', onMouseUp)

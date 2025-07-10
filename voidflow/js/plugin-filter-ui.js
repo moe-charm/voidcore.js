@@ -13,8 +13,9 @@ import { PluginAttributeTypes } from '/src/core/plugin-attributes.js'
  * - インクリメンタルサーチ
  */
 export class PluginFilterUI {
-  constructor(voidCoreUI) {
+  constructor(voidCoreUI, options = {}) {
     this.voidCoreUI = voidCoreUI
+    this.voidFlowCore = options.voidFlowCore || null  // Phase Alpha: Intent統合
     this.container = null
     this.searchInput = null
     this.filterButtons = new Map()
@@ -300,8 +301,16 @@ export class PluginFilterUI {
       `
       
       // クリックでタグフィルター
-      tagElement.addEventListener('click', () => {
-        this.toggleTagFilter(tag)
+      tagElement.addEventListener('click', async () => {
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.filter.tag', {
+            tag,
+            action: 'toggle',
+            timestamp: Date.now()
+          })
+        } else {
+          this.toggleTagFilter(tag)
+        }
       })
       
       // ホバーエフェクト
@@ -324,37 +333,89 @@ export class PluginFilterUI {
    */
   bindEvents() {
     // 検索入力
-    this.searchInput.addEventListener('input', (e) => {
-      this.handleSearch(e.target.value)
+    this.searchInput.addEventListener('input', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.filter.search', {
+          query: e.target.value,
+          timestamp: Date.now()
+        })
+      } else {
+        this.handleSearch(e.target.value)
+      }
     })
     
     // カテゴリフィルター
-    this.categoryFilters.addEventListener('click', (e) => {
+    this.categoryFilters.addEventListener('click', async (e) => {
       if (e.target.classList.contains('filter-btn')) {
-        this.handleCategoryFilter(e.target.dataset.value)
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.filter.category', {
+            category: e.target.dataset.value,
+            timestamp: Date.now()
+          })
+        } else {
+          this.handleCategoryFilter(e.target.dataset.value)
+        }
       }
     })
     
     // 属性フィルター
-    this.container.querySelector('#priorityFilter').addEventListener('change', (e) => {
-      this.handleAttributeFilter('priority', e.target.value)
+    this.container.querySelector('#priorityFilter').addEventListener('change', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.filter.attribute', {
+          attribute: 'priority',
+          value: e.target.value,
+          timestamp: Date.now()
+        })
+      } else {
+        this.handleAttributeFilter('priority', e.target.value)
+      }
     })
     
-    this.container.querySelector('#performanceFilter').addEventListener('change', (e) => {
-      this.handleAttributeFilter('performance', e.target.value)
+    this.container.querySelector('#performanceFilter').addEventListener('change', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.filter.attribute', {
+          attribute: 'performance',
+          value: e.target.value,
+          timestamp: Date.now()
+        })
+      } else {
+        this.handleAttributeFilter('performance', e.target.value)
+      }
     })
     
-    this.container.querySelector('#showHidden').addEventListener('change', (e) => {
-      this.handleAttributeFilter('showHidden', e.target.checked)
+    this.container.querySelector('#showHidden').addEventListener('change', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.filter.attribute', {
+          attribute: 'showHidden',
+          value: e.target.checked,
+          timestamp: Date.now()
+        })
+      } else {
+        this.handleAttributeFilter('showHidden', e.target.checked)
+      }
     })
     
-    this.container.querySelector('#showExperimental').addEventListener('change', (e) => {
-      this.handleAttributeFilter('showExperimental', e.target.checked)
+    this.container.querySelector('#showExperimental').addEventListener('change', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.filter.attribute', {
+          attribute: 'showExperimental',
+          value: e.target.checked,
+          timestamp: Date.now()
+        })
+      } else {
+        this.handleAttributeFilter('showExperimental', e.target.checked)
+      }
     })
     
     // リセットボタン
-    this.container.querySelector('#resetFilters').addEventListener('click', () => {
-      this.resetFilters()
+    this.container.querySelector('#resetFilters').addEventListener('click', async () => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.filter.reset', {
+          timestamp: Date.now()
+        })
+      } else {
+        this.resetFilters()
+      }
     })
   }
   
@@ -493,9 +554,17 @@ export class PluginFilterUI {
           item.style.background = 'transparent'
         })
         
-        item.addEventListener('click', () => {
-          this.selectPlugin(pluginId)
-          this.hideSearchResults()
+        item.addEventListener('click', async () => {
+          if (this.voidFlowCore) {
+            await this.voidFlowCore.sendIntent('voidflow.ui.plugin.select', {
+              pluginId,
+              source: 'filter_search',
+              timestamp: Date.now()
+            })
+          } else {
+            this.selectPlugin(pluginId)
+            this.hideSearchResults()
+          }
         })
         
         this.searchResults.appendChild(item)

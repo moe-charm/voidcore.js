@@ -11,8 +11,9 @@
  * - Canvas境界チェック
  */
 export class CanvasManager {
-  constructor(voidCoreUI) {
+  constructor(voidCoreUI, options = {}) {
     this.voidCoreUI = voidCoreUI
+    this.voidFlowCore = options.voidFlowCore || null  // Phase Alpha: Intent統合
     this.canvasElement = null
   }
 
@@ -31,12 +32,18 @@ export class CanvasManager {
   setupCanvasEvents() {
     if (!this.canvasElement) return
     
-    // ドラッグ&ドロップ
-    this.canvasElement.addEventListener('dragover', (e) => {
+    // ドラッグ&ドロップ - Phase Alpha Intent統合
+    this.canvasElement.addEventListener('dragover', async (e) => {
       e.preventDefault()
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.canvas.dragover', {
+          position: { x: e.clientX, y: e.clientY },
+          timestamp: Date.now()
+        })
+      }
     })
     
-    this.canvasElement.addEventListener('drop', (e) => {
+    this.canvasElement.addEventListener('drop', async (e) => {
       e.preventDefault()
       const nodeType = e.dataTransfer.getData('text/plain')
       const rect = this.canvasElement.getBoundingClientRect()
@@ -45,12 +52,28 @@ export class CanvasManager {
         y: e.clientY - rect.top
       }
       
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.canvas.drop', {
+          nodeType,
+          position,
+          timestamp: Date.now()
+        })
+      }
+      
       this.voidCoreUI.createUIPlugin(nodeType, position)
     })
     
-    // 右クリックでの接続キャンセル & メニュー表示
-    this.canvasElement.addEventListener('contextmenu', (e) => {
+    // 右クリックでの接続キャンセル & メニュー表示 - Phase Alpha Intent統合
+    this.canvasElement.addEventListener('contextmenu', async (e) => {
       e.preventDefault()
+      
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.canvas.contextmenu', {
+          position: { x: e.clientX, y: e.clientY },
+          connectionMode: this.voidCoreUI.connectionManager?.isInConnectionMode(),
+          timestamp: Date.now()
+        })
+      }
       
       // 接続モードの場合はキャンセル
       if (this.voidCoreUI.connectionManager.isInConnectionMode()) {

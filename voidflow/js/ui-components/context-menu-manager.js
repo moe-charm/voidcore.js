@@ -12,8 +12,9 @@
  * - メニュー位置の調整
  */
 export class ContextMenuManager {
-  constructor(voidCoreUI) {
+  constructor(voidCoreUI, options = {}) {
     this.voidCoreUI = voidCoreUI
+    this.voidFlowCore = options.voidFlowCore || null  // Phase Alpha: Intent統合
     this.menuElement = null
     this.currentTarget = null
     this.currentTargetType = null // 'plugin' | 'connection' | 'canvas'
@@ -52,15 +53,27 @@ export class ContextMenuManager {
    * 🖱️ イベントリスナー設定
    */
   setupEventListeners() {
-    // 右クリックメニューを閉じる
-    document.addEventListener('click', (e) => {
+    // 右クリックメニューを閉じる - Phase Alpha Intent統合
+    document.addEventListener('click', async (e) => {
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.contextmenu.close', {
+          clickTarget: e.target.tagName || 'unknown',
+          timestamp: Date.now()
+        })
+      }
       if (!this.menuElement.contains(e.target)) {
         this.hideMenu()
       }
     })
     
-    // ESCキーでメニューを閉じる
-    document.addEventListener('keydown', (e) => {
+    // ESCキーでメニューを閉じる - Phase Alpha Intent統合
+    document.addEventListener('keydown', async (e) => {
+      if (this.voidFlowCore && e.key === 'Escape') {
+        await this.voidFlowCore.sendIntent('voidflow.ui.contextmenu.escape', {
+          key: e.key,
+          timestamp: Date.now()
+        })
+      }
       if (e.key === 'Escape') {
         this.hideMenu()
       }
@@ -86,16 +99,38 @@ export class ContextMenuManager {
     `
     
     if (!options.disabled) {
-      item.addEventListener('mouseenter', () => {
+      item.addEventListener('mouseenter', async () => {
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.contextmenu.item.hover', {
+            itemText: text,
+            action: 'enter',
+            timestamp: Date.now()
+          })
+        }
         item.style.background = 'rgba(74, 144, 226, 0.2)'
       })
       
-      item.addEventListener('mouseleave', () => {
+      item.addEventListener('mouseleave', async () => {
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.contextmenu.item.hover', {
+            itemText: text,
+            action: 'leave',
+            timestamp: Date.now()
+          })
+        }
         item.style.background = 'transparent'
       })
       
-      item.addEventListener('click', (e) => {
+      item.addEventListener('click', async (e) => {
         e.stopPropagation()
+        if (this.voidFlowCore) {
+          await this.voidFlowCore.sendIntent('voidflow.ui.contextmenu.item.click', {
+            itemText: text,
+            targetType: this.currentTargetType,
+            targetId: this.currentTarget,
+            timestamp: Date.now()
+          })
+        }
         action()
         this.hideMenu()
       })

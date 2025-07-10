@@ -21,8 +21,17 @@ export class ButtonSendUI {
   static initializeNodeFeatures(element, pluginId, voidCoreUI) {
     const sendButton = element.querySelector('.send-button');
     if (sendButton) {
-      sendButton.addEventListener('click', (e) => {
+      sendButton.addEventListener('click', async (e) => {
         console.log(`🖱️ Button clicked for: ${pluginId}`);
+        
+        // Phase Alpha: Intent統合
+        if (voidCoreUI.voidFlowCore) {
+          await voidCoreUI.voidFlowCore.sendIntent('voidflow.ui.button.send.click', {
+            pluginId,
+            buttonType: 'send',
+            timestamp: Date.now()
+          });
+        }
         
         // 🔗 接続管理のためにConnectionManagerに処理を委譲
         if (window.connectionManager && window.connectionManager.handlePluginClick) {
