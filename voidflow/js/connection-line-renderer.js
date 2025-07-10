@@ -432,48 +432,50 @@ export class ConnectionLineRenderer {
   }
   
   /**
-   * 🔗 束ね線描画（5本以上の接続を束ねて表示）
+   * 🔗 純粋束ね線描画（軽量化・1本のみ表示）
    */
   renderBundledConnections(sourceId, sourcePos, targetConnections) {
     const bundleId = `bundle-${sourceId}-${Date.now()}`
     this.bundledConnections.set(bundleId, targetConnections.map(conn => conn.id))
     
-    this.log(`🔗 束ね線描画開始: ${targetConnections.length}本`)
+    this.log(`🔗 純粋束ね線描画: ${targetConnections.length}本 → 1本`)
     
-    // 束ね線のパスを計算
-    const bundlePath = this.calculateBundlePath(sourcePos, targetConnections)
+    // 🎯 案1: 純粋束ね線 - 1本の太い線のみ
+    const bundlePath = this.calculatePureBundlePath(sourcePos, targetConnections)
     
-    // 束ね線の描画
-    const bundleElement = this.createBundleElement(bundleId, bundlePath, {
+    // 束ね線の描画（分離線なし）
+    const bundleElement = this.createPureBundleElement(bundleId, bundlePath, {
       radius: this.bundleConfig.bundleRadius,
       color: this.bundleConfig.bundleColor,
       opacity: this.bundleConfig.bundleOpacity,
-      connectionCount: targetConnections.length
+      connectionCount: targetConnections.length,
+      connectionIds: targetConnections.map(conn => conn.id)
     })
     
     this.svgElement.appendChild(bundleElement)
     
-    // 各接続線を束ねから分離して描画
-    const separatedPaths = this.calculateSeparatedPaths(bundlePath, targetConnections)
+    // 🚀 パフォーマンス向上: 分離線は作成しない
+    // 個別接続情報は束ね線要素のdata属性に保存
     
-    return separatedPaths.map((pathInfo, index) => {
-      const conn = targetConnections[index]
-      const path = this.createPathElement(conn.id, pathInfo.path, {
-        color: pathInfo.color,
-        width: 1.5, // 束ね後は細く
-        arrow: true,
-        animated: false
-      })
-      
-      this.svgElement.appendChild(path)
-      this.connectionPaths.set(conn.id, path)
-      
-      return path
-    })
+    // 束ね線をconnectionPathsに登録（束ね全体として）
+    this.connectionPaths.set(bundleId, bundleElement)
+    
+    return [bundleElement] // 1つの要素のみ返す
   }
   
   /**
-   * 🧮 束ね線のパスを計算
+   * 🎯 純粋束ね線パス計算（直接ソース→重心）
+   */
+  calculatePureBundlePath(sourcePos, targetConnections) {
+    // すべてのターゲット位置の重心を計算
+    const centroid = this.calculateCentroid(targetConnections.map(conn => conn.targetPos))
+    
+    // 🚀 純粋束ね線: ソース → 重心への直線
+    return `M ${sourcePos.x},${sourcePos.y} L ${centroid.x},${centroid.y}`
+  }
+  
+  /**
+   * 🧮 旧束ね線のパスを計算（削除予定）
    */
   calculateBundlePath(sourcePos, targetConnections) {
     // すべてのターゲット位置の重心を計算
@@ -539,7 +541,108 @@ export class ConnectionLineRenderer {
   }
   
   /**
-   * 🎨 束ね線要素を作成
+   * 🎯 純粋束ね線要素を作成（軽量版）
+   */
+  createPureBundleElement(bundleId, bundlePath, options) {
+    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+    group.setAttribute('id', `bundle-${bundleId}`)
+    group.setAttribute('class', 'pure-connection-bundle')
+    
+    // 🗂️ 接続情報をdata属性に保存
+    group.setAttribute('data-connection-count', options.connectionCount)
+    group.setAttribute('data-connection-ids', JSON.stringify(options.connectionIds))
+    
+    // 束ね線本体（太い直線）
+    const bundleLine = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    bundleLine.setAttribute('d', bundlePath)
+    bundleLine.setAttribute('stroke', options.color)
+    bundleLine.setAttribute('stroke-width', options.radius)
+    bundleLine.setAttribute('stroke-linecap', 'round')
+    bundleLine.setAttribute('fill', 'none')
+    bundleLine.setAttribute('opacity', options.opacity)
+    bundleLine.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+    bundleLine.setAttribute('marker-end', 'url(#arrow-ff6b35)')
+    
+    // 束ね線ラベル（接続数表示・中央配置）
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    const pathLength = bundleLine.getTotalLength()
+    const midPoint = bundleLine.getPointAtLength(pathLength / 2)
+    
+    label.setAttribute('x', midPoint.x)
+    label.setAttribute('y', midPoint.y - 8)
+    label.setAttribute('text-anchor', 'middle')
+    label.setAttribute('font-size', '12')
+    label.setAttribute('font-weight', 'bold')
+    label.setAttribute('fill', '#ffffff')
+    label.setAttribute('stroke', options.color)
+    label.setAttribute('stroke-width', '0.5')
+    label.textContent = `${options.connectionCount}`
+    
+    group.appendChild(bundleLine)
+    group.appendChild(label)
+    
+    // 🖱️ インタラクション
+    this.addPureBundleInteractions(group, bundleId, options)
+    
+    return group
+  }
+  
+  /**
+   * 🖱️ 純粋束ね線のインタラクション追加
+   */
+  addPureBundleInteractions(group, bundleId, options) {
+    const bundleLine = group.querySelector('path')
+    const label = group.querySelector('text')
+    
+    // クリックイベント（詳細モーダル表示）
+    group.addEventListener('click', (e) => {
+      e.stopPropagation()
+      this.showBundleDetailsModal(bundleId, options)
+    })
+    
+    // 右クリックイベント（束ね操作メニュー）
+    group.addEventListener('contextmenu', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      this.showBundleContextMenu(e, bundleId, options)
+    })
+    
+    // ホバーエフェクト
+    group.addEventListener('mouseenter', () => {
+      bundleLine.setAttribute('opacity', '1.0')
+      bundleLine.setAttribute('stroke-width', options.radius * 1.3)
+      label.setAttribute('fill', '#ffff00')
+    })
+    
+    group.addEventListener('mouseleave', () => {
+      bundleLine.setAttribute('opacity', options.opacity)
+      bundleLine.setAttribute('stroke-width', options.radius)
+      label.setAttribute('fill', '#ffffff')
+    })
+  }
+  
+  /**
+   * 📋 束ね詳細モーダル表示
+   */
+  showBundleDetailsModal(bundleId, options) {
+    console.log(`📋 束ね詳細: ${options.connectionCount}本の接続`, options.connectionIds)
+    // TODO: 詳細モーダルUI実装
+  }
+  
+  /**
+   * 📝 束ね右クリックメニュー表示
+   */
+  showBundleContextMenu(event, bundleId, options) {
+    console.log(`📝 束ね操作メニュー: ${bundleId}`, {
+      x: event.clientX,
+      y: event.clientY,
+      connections: options.connectionIds
+    })
+    // TODO: 右クリックメニューUI実装
+  }
+  
+  /**
+   * 🎨 旧束ね線要素を作成（削除予定）
    */
   createBundleElement(bundleId, bundlePath, options) {
     const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
