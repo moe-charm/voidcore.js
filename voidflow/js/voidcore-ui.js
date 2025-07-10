@@ -478,41 +478,69 @@ export class VoidCoreUI {
     this.dragDropManager.makeElementDraggable(element, pluginId)
     
     // クリック選択（キャプチャフェーズで確実に捕捉）
-    element.addEventListener('click', (e) => {
+    element.addEventListener('click', async (e) => {
       this.log(`🖱️ Click detected for: ${pluginId}, target: ${e.target.tagName}, class: ${e.target.className}`)
       
       // 接続ポートのクリックでない場合のみ選択処理
       const isConnectionPort = e.target.closest('.connection-port')
       if (!isConnectionPort) {
-        // 🔗 接続管理のためにConnectionManagerに処理を委譲
-        this.log(`🔍 Checking connectionManager: ${!!window.connectionManager}`)
-        if (window.connectionManager) {
-          this.log(`🔍 handlePluginClick method exists: ${!!window.connectionManager.handlePluginClick}`)
-          if (window.connectionManager.handlePluginClick) {
-            this.log(`🔗 Delegating click to ConnectionManager for: ${pluginId}`)
-            window.connectionManager.handlePluginClick(pluginId, e)
+        // 🎯 Phase Alpha: Intent経由で既存ハンドラー活用
+        if (this.voidFlowCore) {
+          this.log(`📤 Phase Alpha: Sending Intent for element select: ${pluginId}`)
+          try {
+            await this.voidFlowCore.sendIntent('voidflow.ui.element.select', {
+              elementId: pluginId,
+              position: { x: e.clientX, y: e.clientY },
+              targetTag: e.target.tagName,
+              targetClass: e.target.className,
+              timestamp: Date.now()
+            })
+          } catch (error) {
+            this.log(`⚠️ Intent failed, fallback to direct method: ${error.message}`)
+            // フォールバック: 従来の処理
+            this.handleClickFallback(pluginId, e)
           }
         } else {
-          this.log(`❌ window.connectionManager is not available`)
+          // VoidFlowCore未初期化時のフォールバック
+          this.log(`⚠️ VoidFlowCore not available, using fallback`)
+          this.handleClickFallback(pluginId, e)
         }
-        
-        // 通常の選択処理
-        this.selectUIElement(pluginId)
-        // e.stopPropagation() // バブリング防止 - 一時的に無効化してConnectionManagerに到達させる
       }
     }, true) // キャプチャフェーズで処理
     
     // 内部要素からのクリックもキャッチ
-    element.addEventListener('click', (e) => {
+    element.addEventListener('click', async (e) => {
       this.log(`🖱️ Bubble click detected for: ${pluginId}, target: ${e.target.tagName}, class: ${e.target.className}`)
       
       // ボタンなどの内部要素がクリックされた場合も処理
       const isConnectionPort = e.target.closest('.connection-port')
       if (!isConnectionPort) {
-        // 🔗 接続管理のためにConnectionManagerに処理を委譲
-        if (window.connectionManager && window.connectionManager.handlePluginClick) {
-          this.log(`🔗 Delegating bubble click to ConnectionManager for: ${pluginId}`)
-          window.connectionManager.handlePluginClick(pluginId, e)
+        // 🎯 Phase Alpha: Intent経由でバブルクリック処理
+        if (this.voidFlowCore) {
+          this.log(`📤 Phase Alpha: Sending Intent for bubble click: ${pluginId}`)
+          try {
+            await this.voidFlowCore.sendIntent('voidflow.ui.element.select', {
+              elementId: pluginId,
+              position: { x: e.clientX, y: e.clientY },
+              targetTag: e.target.tagName,
+              targetClass: e.target.className,
+              clickType: 'bubble',
+              timestamp: Date.now()
+            })
+          } catch (error) {
+            this.log(`⚠️ Bubble Intent failed, fallback: ${error.message}`)
+            // フォールバック: 直接ConnectionManager呼び出し
+            if (window.connectionManager && window.connectionManager.handlePluginClick) {
+              this.log(`🔗 Fallback: Delegating bubble click to ConnectionManager for: ${pluginId}`)
+              window.connectionManager.handlePluginClick(pluginId, e)
+            }
+          }
+        } else {
+          // 従来のフォールバック処理
+          if (window.connectionManager && window.connectionManager.handlePluginClick) {
+            this.log(`🔗 Delegating bubble click to ConnectionManager for: ${pluginId}`)
+            window.connectionManager.handlePluginClick(pluginId, e)
+          }
         }
       }
     })
@@ -708,6 +736,30 @@ export class VoidCoreUI {
       
     } catch (error) {
       this.log(`❌ Text input submission failed: ${error.message}`)
+    }
+  }
+
+  /**
+   * 🔄 Phase Alpha: クリック処理フォールバック（従来の処理）
+   */
+  handleClickFallback(pluginId, e) {
+    try {
+      // 🔗 接続管理のためにConnectionManagerに処理を委譲
+      this.log(`🔍 Fallback: Checking connectionManager: ${!!window.connectionManager}`)
+      if (window.connectionManager) {
+        this.log(`🔍 handlePluginClick method exists: ${!!window.connectionManager.handlePluginClick}`)
+        if (window.connectionManager.handlePluginClick) {
+          this.log(`🔗 Fallback: Delegating click to ConnectionManager for: ${pluginId}`)
+          window.connectionManager.handlePluginClick(pluginId, e)
+        }
+      } else {
+        this.log(`❌ window.connectionManager is not available`)
+      }
+      
+      // 通常の選択処理
+      this.selectUIElement(pluginId)
+    } catch (error) {
+      this.log(`❌ Fallback click handling failed: ${error.message}`)
     }
   }
 
