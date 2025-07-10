@@ -49,6 +49,9 @@ export class VoidCoreUI {
     this.unifiedIntentHandler = this.voidCore.unifiedIntentHandler
     this.unifiedStatsManager = this.voidCore.unifiedStatsManager
     
+    // Phase 2: VoidFlowCore統合
+    this.voidFlowCore = null  // main-voidcore.jsで設定される
+    
     // UI専用設定
     this.canvasManager = new CanvasManager(this)
     this.dragDropManager = new DragDropManager(this)
@@ -315,23 +318,39 @@ export class VoidCoreUI {
       const tempPluginId = `voidcore-plugin-${timestamp}-${random}`
       this.log(`🔧 Generated temp plugin ID: ${tempPluginId}`)
       
-      // 🔧 Phase3対応: VoidCoreのプラグイン作成Intent発行
+      // Phase 2: VoidFlowCore統合 - UI要素作成Intent発行
       let pluginId
       try {
-        this.log(`📤 Sending system.plugin.create Intent for: ${nodeType}`)
-        const intentResponse = await this.voidCore.unifiedIntentHandler.processIntent({
-          action: 'system.plugin.create',
-          payload: {
-            type: `voidflow.node.${nodeType}`,
+        if (this.voidFlowCore) {
+          this.log(`📤 Sending VoidFlowCore UI.ELEMENT.CREATE Intent for: ${nodeType}`)
+          const intentResult = await this.voidFlowCore.sendIntent('voidflow.ui.element.create', {
+            nodeType: nodeType,
+            position: position,
+            pluginId: tempPluginId,
             config: {
-              nodeType: nodeType,
-              position: position,
-              uiMode: true
+              uiMode: true,
+              source: 'voidcore-ui'
             }
-          }
-        })
-        pluginId = intentResponse.pluginId || intentResponse.id || tempPluginId
-        this.log(`📨 system.plugin.create Intent returned: ${pluginId}`)
+          })
+          pluginId = intentResult.pluginId || intentResult.id || tempPluginId
+          this.log(`📨 VoidFlowCore Intent returned: ${pluginId}`)
+        } else {
+          // フォールバック: 従来のVoidCore Intent
+          this.log(`📤 Fallback: Sending legacy system.plugin.create Intent for: ${nodeType}`)
+          const intentResponse = await this.voidCore.unifiedIntentHandler.processIntent({
+            action: 'system.plugin.create',
+            payload: {
+              type: `voidflow.node.${nodeType}`,
+              config: {
+                nodeType: nodeType,
+                position: position,
+                uiMode: true
+              }
+            }
+          })
+          pluginId = intentResponse.pluginId || intentResponse.id || tempPluginId
+          this.log(`📨 Legacy Intent returned: ${pluginId}`)
+        }
       } catch (intentError) {
         this.log(`⚠️ Intent failed, using fallback ID: ${intentError.message}`)
         pluginId = tempPluginId
@@ -364,6 +383,44 @@ export class VoidCoreUI {
     } catch (error) {
       this.log(`❌ UI Plugin creation failed: ${error.message}`)
       this.log(`❌ Error stack: ${error.stack}`)
+      throw error
+    }
+  }
+  
+  /**
+   * 🎨 UI要素直接作成（VoidFlowCore専用）
+   * Phase 2: Intent化対応のための直接作成メソッド
+   */
+  async createUIElementDirect(nodeType, position, pluginId) {
+    try {
+      this.log(`🎨 Direct UI element creation: ${nodeType} at (${position.x}, ${position.y}) with ID: ${pluginId}`)
+      
+      // Canvas要素チェック
+      if (!this.canvasManager.hasCanvas()) {
+        throw new Error('Canvas element not set')
+      }
+      
+      // UI要素作成（Intent処理をスキップ）
+      const uiElement = this.createUIElement(nodeType, position, pluginId)
+      
+      // UI要素をMapに保存
+      this.elementManager.registerElement(pluginId, uiElement, nodeType)
+      
+      // Canvas要素に追加
+      this.canvasManager.appendChild(uiElement)
+      
+      this.log(`✅ Direct UI element created: ${nodeType} with ID: ${pluginId}`)
+      
+      return {
+        pluginId: pluginId,
+        elementId: `ui-element-${pluginId}`,
+        nodeType: nodeType,
+        position: position,
+        uiElement: uiElement
+      }
+      
+    } catch (error) {
+      this.log(`❌ Direct UI element creation failed: ${error.message}`)
       throw error
     }
   }

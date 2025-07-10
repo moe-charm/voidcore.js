@@ -10,6 +10,9 @@ import { VoidCoreConnectionManager } from './voidcore-connection-manager.js'
 import { PluginFlowExecutor } from './plugin-flow-executor.js'
 import MonacoPluginEditor from './monaco-plugin-editor.js'
 import { PluginPalettePlugin } from './plugin-palette-plugin.js'
+// Phase 1: VoidFlow-VoidCore統合アーキテクチャ
+import { VoidFlowCore } from './voidflow-core.js'
+import { VoidFlowIntentBridge } from './intent-bridge.js'
 // import { ConnectionManager } from './main.js' // 重複初期化を防ぐため無効化
 
 // グローバル変数
@@ -21,6 +24,10 @@ let voidFlowBootManager = null
 let connectionManager = null
 let flowExecutor = null
 let pluginPalette = null
+
+// Phase 1: VoidFlow-VoidCore統合変数
+let voidFlowCore = null
+let intentBridge = null
 
 // VoidCore v14.0 純粋アーキテクチャ - ハイブリッドモード削除完了
 
@@ -34,8 +41,14 @@ async function initializeVoidFlowVoidCore() {
     try {
         console.log('🌟 VoidFlow VoidCore統合版 初期化開始...')
         
+        // Phase 0: VoidFlow-VoidCore統合アーキテクチャ初期化
+        await initializeVoidFlowCoreArchitecture()
+        
         // Phase 1: VoidCoreUI初期化
         await initializeVoidCoreUI()
+        
+        // Phase 1.5: VoidCoreUIとVoidFlowCoreの統合
+        await connectVoidCoreUIWithVoidFlowCore()
         
         // Phase 2: メッセージアダプター初期化  
         await initializeMessageAdapter()
@@ -46,7 +59,8 @@ async function initializeVoidFlowVoidCore() {
         // Phase 3.5: Stage 3コンポーネント初期化
         await initializeStage3Components()
         
-        // Phase 4: 純粋VoidCore v14.0アーキテクチャ - レガシーシステム完全除去済み
+        // Phase 4: デバッグ機能初期化
+        await initializePhase4DebugSystem()
         
         // Phase 5: UI初期化
         await initializeUI()
@@ -203,8 +217,91 @@ async function initializeStage3Components() {
 }
 
 /**
- * 🔄 Phase 4: VoidCore v14.0 純粋アーキテクチャ - レガシーシステム完全除去済み
+ * 🐛 Phase 4: デバッグシステム初期化
  */
+async function initializePhase4DebugSystem() {
+    try {
+        console.log('🐛 Phase 4: デバッグシステム初期化開始...')
+        
+        // VoidFlowCoreに各種コンポーネントを登録
+        if (voidCoreUI) {
+            voidFlowCore.registerUIManager(voidCoreUI)
+            console.log('📝 UIManager registered with VoidFlowCore')
+        }
+        
+        if (connectionManager) {
+            voidFlowCore.registerConnectionManager(connectionManager)
+            // ConnectionManagerにVoidFlowCoreを設定
+            connectionManager.voidFlowCore = voidFlowCore
+            // Phase 3: Intent化モード有効化
+            connectionManager.enableIntentMode()
+            console.log('🔗 ConnectionManager registered with VoidFlowCore')
+        }
+        
+        // デバッグコンソール用グローバル関数追加
+        window.debugVoidFlow = {
+            core: () => voidFlowCore,
+            debugManager: () => voidFlowCore.debugManager,
+            debugPlugin: () => voidFlowCore.debugPlugin,
+            startTrace: (patterns, level) => voidFlowCore.sendIntent('voidflow.debug.trace.start', { patterns, level }),
+            stopTrace: () => voidFlowCore.sendIntent('voidflow.debug.trace.stop'),
+            dumpState: (format) => voidFlowCore.sendIntent('voidflow.debug.state.dump', { format }),
+            getStats: () => voidFlowCore.sendIntent('voidflow.debug.stats.get'),
+            reset: () => voidFlowCore.sendIntent('voidflow.debug.reset'),
+            export: () => voidFlowCore.sendIntent('voidflow.debug.export')
+        }
+        
+        // システム状態テスト
+        await testPhase4DebugSystem()
+        
+        console.log('✅ Phase 4: デバッグシステム初期化完了！')
+        voidCoreUI.log('🐛 Phase 4: 統合デバッグシステム初期化完了')
+        
+    } catch (error) {
+        console.error('❌ Phase 4: デバッグシステム初期化失敗:', error)
+        voidCoreUI.log('❌ Phase 4: デバッグシステム初期化失敗')
+        throw error
+    }
+}
+
+/**
+ * 🧪 Phase 4デバッグシステムテスト
+ */
+async function testPhase4DebugSystem() {
+    try {
+        console.log('🧪 Phase 4デバッグシステムテスト開始...')
+        
+        // デバッグ機能利用可能性確認
+        const features = voidFlowCore.getAvailableFeatures()
+        const debugFeatures = features.filter(f => f.startsWith('debug'))
+        console.log('🐛 利用可能デバッグ機能:', debugFeatures)
+        
+        // デバッグシステム確認
+        if (voidFlowCore.debugPlugin) {
+            console.log('✅ VoidFlowDebugPlugin (VoidCore準拠) 利用可能')
+            console.log('🔧 プラグインID:', voidFlowCore.debugPlugin.id)
+            console.log('🔧 プラグインステータス:', voidFlowCore.debugPlugin.status)
+        }
+        
+        if (voidFlowCore.debugManager) {
+            console.log('✅ VoidFlowDebugManager (レガシー互換) 利用可能')
+        }
+        
+        if (window.voidflowDebug) {
+            console.log('✅ グローバルデバッグ関数 利用可能')
+        }
+        
+        // 基本デバッグIntent送信テスト
+        const statsResult = await voidFlowCore.sendIntent('voidflow.debug.stats.get')
+        console.log('📊 デバッグ統計取得テスト:', statsResult)
+        
+        console.log('🎉 Phase 4デバッグシステムテスト完了！')
+        
+    } catch (error) {
+        console.error('❌ Phase 4デバッグシステムテスト失敗:', error)
+        throw error
+    }
+}
 
 /**
  * 🎨 Phase 5: UI初期化
@@ -1347,6 +1444,162 @@ async function initializePluginPalette() {
         if (voidCoreUI) {
             voidCoreUI.log(`❌ PluginPalette初期化失敗: ${error.message}`)
         }
+        throw error
+    }
+}
+
+/**
+ * 🌟 Phase 0: VoidFlow-VoidCore統合アーキテクチャ初期化
+ */
+async function initializeVoidFlowCoreArchitecture() {
+    try {
+        console.log('🌟 VoidFlow-VoidCore統合アーキテクチャ初期化開始...')
+        
+        // VoidFlowCore初期化
+        voidFlowCore = new VoidFlowCore({
+            enableDebug: true,
+            enableStats: true,
+            messagePoolSize: 1000,
+            intentTraceLevel: 'basic'
+        })
+        
+        // グローバル参照設定（デバッグ用）
+        window.voidFlowCore = voidFlowCore
+        
+        console.log('✅ VoidFlowCore初期化完了！')
+        
+        // Intent Bridge初期化（Phase 2で有効化予定）
+        intentBridge = new VoidFlowIntentBridge(voidFlowCore)
+        window.voidFlowIntentBridge = intentBridge
+        
+        console.log('✅ Intent Bridge初期化完了（Phase 2で有効化予定）')
+        
+        // Phase 1基本動作テスト
+        await testVoidFlowCoreBasicOperation()
+        
+        console.log('🎉 VoidFlow-VoidCore統合アーキテクチャ初期化完了！')
+        
+    } catch (error) {
+        console.error('❌ VoidFlow-VoidCore統合アーキテクチャ初期化失敗:', error)
+        throw error
+    }
+}
+
+/**
+ * 🧪 VoidFlowCore基本動作テスト
+ */
+async function testVoidFlowCoreBasicOperation() {
+    try {
+        console.log('🧪 VoidFlowCore基本動作テスト開始...')
+        
+        // システム状態確認
+        const systemStatus = voidFlowCore.getSystemStatus()
+        console.log('📊 System Status:', systemStatus)
+        
+        // 基本Intent送信テスト
+        const testResult = await voidFlowCore.sendIntent('voidflow.system.status')
+        console.log('📤 Intent Test Result:', testResult)
+        
+        // 利用可能機能確認
+        const features = voidFlowCore.getAvailableFeatures()
+        console.log('🔧 Available Features:', features)
+        
+        console.log('✅ VoidFlowCore基本動作テスト完了！')
+        
+    } catch (error) {
+        console.error('❌ VoidFlowCore基本動作テスト失敗:', error)
+        throw error
+    }
+}
+
+/**
+ * 🔗 Phase 1.5: VoidCoreUIとVoidFlowCoreの統合
+ */
+async function connectVoidCoreUIWithVoidFlowCore() {
+    try {
+        console.log('🔗 VoidCoreUIとVoidFlowCore統合開始...')
+        
+        if (!voidCoreUI) {
+            throw new Error('VoidCoreUI not initialized')
+        }
+        
+        if (!voidFlowCore) {
+            throw new Error('VoidFlowCore not initialized')
+        }
+        
+        // VoidCoreUIにVoidFlowCoreの参照を設定
+        voidCoreUI.voidFlowCore = voidFlowCore
+        console.log('✅ VoidCoreUI.voidFlowCore reference set')
+        
+        // VoidFlowCoreにVoidCoreUIをUIManagerとして登録
+        voidFlowCore.registerUIManager(voidCoreUI)
+        console.log('✅ VoidCoreUI registered as UIManager in VoidFlowCore')
+        
+        // Phase 3: VoidFlowCoreにConnectionManagerを登録
+        if (connectionManager) {
+            voidFlowCore.registerConnectionManager(connectionManager)
+            connectionManager.voidFlowCore = voidFlowCore
+            connectionManager.enableIntentMode()
+            console.log('✅ ConnectionManager registered and Intent mode enabled')
+        }
+        
+        // Phase 2: ドラッグ&ドロップのIntent化有効化
+        if (voidCoreUI.dragDropManager) {
+            voidCoreUI.dragDropManager.enableIntentMode()
+            console.log('✅ DragDropManager Intent mode enabled')
+        }
+        
+        // Phase 2: Intent Bridge有効化（オプション）
+        if (intentBridge) {
+            // intentBridge.enable() // 必要に応じて有効化
+            console.log('📡 Intent Bridge ready (disabled by default)')
+        }
+        
+        // 統合テスト
+        await testVoidCoreUIIntegration()
+        
+        console.log('🎉 VoidCoreUIとVoidFlowCore統合完了！')
+        
+    } catch (error) {
+        console.error('❌ VoidCoreUIとVoidFlowCore統合失敗:', error)
+        throw error
+    }
+}
+
+/**
+ * 🧪 VoidCoreUI統合テスト
+ */
+async function testVoidCoreUIIntegration() {
+    try {
+        console.log('🧪 VoidCoreUI統合テスト開始...')
+        
+        // Intent経由でのUI要素作成テスト
+        const testResult = await voidFlowCore.sendIntent('voidflow.ui.element.create', {
+            nodeType: 'test-button',
+            position: { x: 50, y: 50 },
+            pluginId: 'integration-test-element'
+        })
+        
+        console.log('📊 Integration Test Result:', testResult)
+        
+        // VoidCoreUIのVoidFlowCore参照確認
+        if (voidCoreUI.voidFlowCore === voidFlowCore) {
+            console.log('✅ VoidCoreUI → VoidFlowCore reference: OK')
+        } else {
+            console.log('⚠️ VoidCoreUI → VoidFlowCore reference: NG')
+        }
+        
+        // VoidFlowCoreのUIManager登録確認
+        if (voidFlowCore.uiManager === voidCoreUI) {
+            console.log('✅ VoidFlowCore → VoidCoreUI registration: OK')
+        } else {
+            console.log('⚠️ VoidFlowCore → VoidCoreUI registration: NG')
+        }
+        
+        console.log('✅ VoidCoreUI統合テスト完了！')
+        
+    } catch (error) {
+        console.error('❌ VoidCoreUI統合テスト失敗:', error)
         throw error
     }
 }

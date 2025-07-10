@@ -32,12 +32,29 @@ export class VoidCoreConnectionManager {
     this.canvasElement = null
     this.svgElement = null
     
+    // Phase 3: VoidFlowCore統合
+    this.voidFlowCore = null  // main-voidcore.jsで設定される
+    this.intentMode = false   // Phase 3で有効化
+    
     this.log('🔗 VoidCoreConnectionManager initialized')
   }
   
   // 🔧 Phase3対応: logメソッド追加
   log(message) {
     console.log(`[${this.id}] ${message}`)
+  }
+  
+  /**
+   * Phase 3: Intent化モード制御
+   */
+  enableIntentMode() {
+    this.intentMode = true
+    this.log('🎯 ConnectionManager: Intent mode enabled')
+  }
+  
+  disableIntentMode() {
+    this.intentMode = false
+    this.log('🎯 ConnectionManager: Intent mode disabled')
   }
 
   /**
@@ -715,12 +732,17 @@ class VoidCoreSmartConnectionManager {
     this.log(`🎯 Current state: firstSelected=${this.firstSelected}, isConnecting=${this.isConnecting}`)
     
     if (!this.firstSelected) {
-      // 最初のプラグイン選択
+      // 最初のプラグイン選択 - 接続開始
       this.firstSelected = pluginId
       this.highlightPlugin(pluginId, 'first')
       this.log(`🎯 接続ソース選択: ${this.getPluginDisplayName(pluginId)}`)
       this.log('💡 次に接続先プラグインをクリックしてください')
       this.isConnecting = true
+      
+      // Phase 3: 接続開始Intent送信
+      if (this.intentMode && this.voidFlowCore) {
+        await this._sendConnectionStartIntent(pluginId, event)
+      }
       
       // 一時的な線を作成
       this.connectionManager.createTempConnectionLine(event.clientX, event.clientY)
@@ -731,6 +753,12 @@ class VoidCoreSmartConnectionManager {
     } else if (this.firstSelected === pluginId) {
       // 同じプラグインクリック = キャンセル
       this.log('❌ 接続モードキャンセル - 同じプラグインクリック')
+      
+      // Phase 3: 接続キャンセルIntent送信
+      if (this.intentMode && this.voidFlowCore) {
+        await this._sendConnectionCancelIntent('user', this.firstSelected)
+      }
+      
       this.resetSelection()
       
     } else {
@@ -742,6 +770,12 @@ class VoidCoreSmartConnectionManager {
       // 接続候補を分析・表示
       this.connectionCandidates = this.analyzeConnectionCandidates(this.firstSelected, this.secondSelected)
       this.log(`🎯 接続候補数: ${this.connectionCandidates.length}`)
+      
+      // Phase 3: 接続完了Intent送信（候補がある場合）
+      if (this.intentMode && this.voidFlowCore && this.connectionCandidates.length > 0) {
+        await this._sendConnectionCompleteIntent(this.firstSelected, this.secondSelected, this.connectionCandidates)
+      }
+      
       this.showConnectionCandidates(this.connectionCandidates)
     }
   }
@@ -930,7 +964,12 @@ class VoidCoreSmartConnectionManager {
     this.resetSelection()
   }
   
-  resetSelection() {
+  async resetSelection() {
+    // Phase 3: 接続キャンセルIntent送信（接続中の場合）
+    if (this.intentMode && this.voidFlowCore && this.isConnecting) {
+      await this._sendConnectionCancelIntent('reset', this.firstSelected)
+    }
+    
     // ハイライト解除と元の色復元
     document.querySelectorAll('.connecting-source, .connecting-target').forEach(el => {
       console.log('🔍 Resetting element:', el, 'Classes before:', el.className)
@@ -959,6 +998,64 @@ class VoidCoreSmartConnectionManager {
         console.log('🔍 1秒後の状態:', el, 'Classes:', el.className, 'Border:', getComputedStyle(el).borderColor)
       })
     }, 1000)
+  }
+  
+  /**
+   * Phase 3: 接続開始Intent送信
+   */
+  async _sendConnectionStartIntent(sourceId, event) {
+    try {
+      await this.connectionManager.voidFlowCore.sendIntent('voidflow.ui.connection.start', {
+        sourceId: sourceId,
+        sourceType: 'plugin',
+        cursor: { x: event.clientX, y: event.clientY },
+        connectionMode: 'data',
+        timestamp: Date.now()
+      })
+      this.log(`📤 Connection start intent sent: ${sourceId}`)
+    } catch (error) {
+      this.log(`⚠️ Connection start intent failed: ${error.message}`)
+    }
+  }
+  
+  /**
+   * Phase 3: 接続完了Intent送信
+   */
+  async _sendConnectionCompleteIntent(sourceId, targetId, candidates) {
+    try {
+      const bestCandidate = candidates[0] // 最適な候補を選択
+      
+      await this.connectionManager.voidFlowCore.sendIntent('voidflow.ui.connection.complete', {
+        sourceId: sourceId,
+        targetId: targetId,
+        connectionType: bestCandidate?.type || 'data-flow',
+        metadata: {
+          candidateCount: candidates.length,
+          selectedCandidate: bestCandidate,
+          allCandidates: candidates
+        },
+        timestamp: Date.now()
+      })
+      this.log(`📤 Connection complete intent sent: ${sourceId} → ${targetId}`)
+    } catch (error) {
+      this.log(`⚠️ Connection complete intent failed: ${error.message}`)
+    }
+  }
+  
+  /**
+   * Phase 3: 接続キャンセルIntent送信
+   */
+  async _sendConnectionCancelIntent(reason, sourceId) {
+    try {
+      await this.connectionManager.voidFlowCore.sendIntent('voidflow.ui.connection.cancel', {
+        reason: reason,
+        sourceId: sourceId,
+        timestamp: Date.now()
+      })
+      this.log(`📤 Connection cancel intent sent: ${reason}`)
+    } catch (error) {
+      this.log(`⚠️ Connection cancel intent failed: ${error.message}`)
+    }
   }
 }
 

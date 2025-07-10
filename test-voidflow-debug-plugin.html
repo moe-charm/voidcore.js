@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐛 VoidFlowDebugPlugin - VoidCoreルール準拠テスト</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+        }
+        .test-panel {
+            background: #2a2a2a;
+            border: 1px solid #4a90e2;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        .test-result {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .success { background: rgba(0, 255, 136, 0.2); }
+        .error { background: rgba(255, 107, 107, 0.2); }
+        .pending { background: rgba(255, 193, 7, 0.2); }
+        .plugin { background: rgba(138, 43, 226, 0.2); }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #357abd; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        button.plugin-btn { background: #8a2be2; }
+        button.plugin-btn:hover { background: #7a1dd2; }
+        #console-output {
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .plugin-log {
+            background: rgba(138, 43, 226, 0.1);
+            border-left: 3px solid #8a2be2;
+            padding: 5px;
+            margin: 2px 0;
+        }
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        .stat-item {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .plugin-feature {
+            background: #2a2a2a;
+            border: 1px solid #8a2be2;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .feature-test {
+            background: #333;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 3px solid #8a2be2;
+        }
+        .code-example {
+            background: #000;
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐛 VoidFlowDebugPlugin - VoidCoreルール準拠テスト</h1>
+    
+    <div class="test-panel">
+        <h2>🧩 VoidCoreプラグイン統合テスト</h2>
+        <div id="plugin-results">
+            <div class="test-result pending">🔄 プラグイン準備中...</div>
+        </div>
+        <button onclick="runPluginTests()" class="plugin-btn">プラグイン統合テスト実行</button>
+        <button onclick="testPluginLifecycle()" class="plugin-btn">ライフサイクルテスト</button>
+        <button onclick="testMessageProcessing()">メッセージ処理テスト</button>
+        <button onclick="testIntentHandling()">Intent処理テスト</button>
+        <button onclick="loadVoidFlowPage()" class="plugin-btn">VoidFlowページ読み込み</button>
+        <button onclick="clearConsole()">コンソールクリア</button>
+    </div>
+    
+    <div class="test-panel">
+        <h2>🔍 プラグイン機能テスト</h2>
+        <div class="plugin-feature">
+            <h3>トレース機能</h3>
+            <div class="feature-test">
+                <button onclick="testTraceFeature()" class="plugin-btn">トレース機能テスト</button>
+                <button onclick="enableTrace()">トレース有効化</button>
+                <button onclick="disableTrace()">トレース無効化</button>
+                <button onclick="getTraceHistory()">履歴確認</button>
+            </div>
+        </div>
+        
+        <div class="plugin-feature">
+            <h3>状態管理機能</h3>
+            <div class="feature-test">
+                <button onclick="testStateFeature()" class="plugin-btn">状態管理テスト</button>
+                <button onclick="captureState()">状態キャプチャ</button>
+                <button onclick="dumpState()">状態ダンプ</button>
+                <button onclick="getStateHistory()">状態履歴確認</button>
+            </div>
+        </div>
+        
+        <div class="plugin-feature">
+            <h3>パフォーマンス機能</h3>
+            <div class="feature-test">
+                <button onclick="testPerformanceFeature()" class="plugin-btn">パフォーマンステスト</button>
+                <button onclick="runBenchmark()">ベンチマーク実行</button>
+                <button onclick="measureCustomFunction()">カスタム計測</button>
+                <button onclick="getPerformanceStats()">統計確認</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-panel">
+        <h2>📊 プラグイン統計情報</h2>
+        <div class="stats-panel" id="stats-panel">
+            <div class="stat-item">
+                <div>プラグインID</div>
+                <div id="plugin-id">未初期化</div>
+            </div>
+            <div class="stat-item">
+                <div>プラグインステータス</div>
+                <div id="plugin-status">未初期化</div>
+            </div>
+            <div class="stat-item">
+                <div>処理メッセージ数</div>
+                <div id="message-count">0</div>
+            </div>
+            <div class="stat-item">
+                <div>処理Intent数</div>
+                <div id="intent-count">0</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-panel">
+        <h2>🖥️ コンソール出力</h2>
+        <div id="console-output"></div>
+    </div>
+    
+    <div class="test-panel">
+        <h2>🔧 VoidCoreプラグインデバッグコンソール</h2>
+        <p>ブラウザ開発者ツールで以下のコマンドを実行できます：</p>
+        
+        <div class="code-example">
+<strong>🧩 プラグイン制御:</strong>
+testDebugPlugin.sendMessage({ type: 'debug.trace.enable', payload: { patterns: ['*'] } })
+testDebugPlugin.handleIntent({ intent: 'voidflow.debug.stats.get', payload: {} })
+testDebugPlugin.onActivated()
+testDebugPlugin.onDeactivated()
+
+<strong>🔍 グローバルデバッグ関数:</strong>
+voidflowDebug.trace('voidflow.*')
+voidflowDebug.stats()
+voidflowDebug.benchmark('test', 100)
+debugVoidFlow.getStats()
+
+<strong>📊 プラグイン情報:</strong>
+testDebugPlugin.getSystemStats()
+testDebugPlugin.getPluginInfo()
+testDebugPlugin.getPerformanceStats()
+
+<strong>🎯 テストヘルパー:</strong>
+testPlugin.runAllTests()
+testPlugin.getTestResults()
+        </div>
+    </div>
+
+    <script type="module">
+        // VoidFlowDebugPlugin統合のインポート
+        import { VoidFlowDebugPlugin } from './voidflow/js/voidflow-debug-plugin.js'
+        
+        let testDebugPlugin = null
+        let messageCount = 0
+        let intentCount = 0
+        
+        // グローバル関数定義
+        window.runPluginTests = runPluginTests
+        window.testPluginLifecycle = testPluginLifecycle
+        window.testMessageProcessing = testMessageProcessing
+        window.testIntentHandling = testIntentHandling
+        window.testTraceFeature = testTraceFeature
+        window.testStateFeature = testStateFeature
+        window.testPerformanceFeature = testPerformanceFeature
+        window.enableTrace = enableTrace
+        window.disableTrace = disableTrace
+        window.getTraceHistory = getTraceHistory
+        window.captureState = captureState
+        window.dumpState = dumpState
+        window.getStateHistory = getStateHistory
+        window.runBenchmark = runBenchmark
+        window.measureCustomFunction = measureCustomFunction
+        window.getPerformanceStats = getPerformanceStats
+        window.loadVoidFlowPage = loadVoidFlowPage
+        window.clearConsole = clearConsole
+        
+        // テストヘルパーオブジェクト
+        window.testPlugin = {
+            runAllTests: runAllPluginTests,
+            getTestResults: getTestResults,
+            getPluginInfo: getPluginInfo
+        }
+        
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', async function() {
+            log('🌟 VoidFlowDebugPlugin テストページ初期化開始...')
+            
+            try {
+                // VoidFlowDebugPlugin初期化
+                testDebugPlugin = new VoidFlowDebugPlugin({
+                    options: {
+                        enableDebug: true,
+                        enableStats: true,
+                        enableTrace: false
+                    }
+                })
+                
+                // グローバル参照設定
+                window.testDebugPlugin = testDebugPlugin
+                
+                // プラグイン有効化
+                await testDebugPlugin.onActivated()
+                
+                log('✅ VoidFlowDebugPlugin 初期化完了！')
+                updateTestResult('plugin-results', '✅ プラグイン初期化完了', 'success')
+                
+                // 統計情報更新
+                updateStats()
+                
+            } catch (error) {
+                log(`❌ 初期化エラー: ${error.message}`)
+                updateTestResult('plugin-results', `❌ 初期化失敗: ${error.message}`, 'error')
+                updateStats()
+            }
+        })
+        
+        // プラグイン統合テスト実行
+        async function runPluginTests() {
+            log('🧩 VoidCoreプラグイン統合テスト開始...')
+            updateTestResult('plugin-results', '🔄 プラグイン統合テスト実行中...', 'pending')
+            
+            const tests = [
+                { name: 'IPlugin継承確認', test: testIPluginInheritance },
+                { name: 'プラグインライフサイクル', test: testPluginLifecycleInternal },
+                { name: 'メッセージ処理', test: testMessageProcessingInternal },
+                { name: 'Intent処理', test: testIntentHandlingInternal },
+                { name: 'グローバル関数作成', test: testGlobalFunctionCreation },
+                { name: 'デバッグ機能統合', test: testDebugFeatureIntegration }
+            ]
+            
+            let passed = 0
+            let failed = 0
+            
+            for (const test of tests) {
+                try {
+                    log(`🔍 ${test.name}テスト開始...`)
+                    await test.test()
+                    log(`✅ ${test.name}テスト成功`)
+                    passed++
+                } catch (error) {
+                    log(`❌ ${test.name}テスト失敗: ${error.message}`)
+                    failed++
+                }
+            }
+            
+            const result = `プラグイン統合テスト完了: ${passed}成功, ${failed}失敗`
+            const status = failed === 0 ? 'success' : 'error'
+            log(`🎉 ${result}`)
+            updateTestResult('plugin-results', result, status)
+            updateStats()
+        }
+        
+        // 個別テスト関数
+        async function testIPluginInheritance() {
+            if (!(testDebugPlugin instanceof VoidFlowDebugPlugin)) {
+                throw new Error('VoidFlowDebugPlugin instance creation failed')
+            }
+            
+            // IPluginの必須メソッド確認
+            const requiredMethods = ['onActivated', 'onDeactivated', 'processMessage', 'handleIntent']
+            for (const method of requiredMethods) {
+                if (typeof testDebugPlugin[method] !== 'function') {
+                    throw new Error(`Required method ${method} not found`)
+                }
+            }
+            
+            // プラグインプロパティ確認
+            if (!testDebugPlugin.id || !testDebugPlugin.type) {
+                throw new Error('Required plugin properties not found')
+            }
+        }
+        
+        async function testPluginLifecycleInternal() {
+            // 有効化テスト
+            const activateResult = await testDebugPlugin.onActivated()
+            if (!activateResult || activateResult.status !== 'activated') {
+                throw new Error('Plugin activation failed')
+            }
+            
+            // 無効化テスト
+            const deactivateResult = await testDebugPlugin.onDeactivated()
+            if (!deactivateResult || deactivateResult.status !== 'deactivated') {
+                throw new Error('Plugin deactivation failed')
+            }
+            
+            // 再有効化
+            await testDebugPlugin.onActivated()
+        }
+        
+        async function testMessageProcessingInternal() {
+            const testMessage = {
+                type: 'debug.stats.get',
+                payload: { test: true }
+            }
+            
+            const result = await testDebugPlugin.processMessage(testMessage)
+            messageCount++
+            
+            if (!result) {
+                throw new Error('Message processing failed')
+            }
+        }
+        
+        async function testIntentHandlingInternal() {
+            const testIntent = {
+                intent: 'voidflow.debug.stats.get',
+                payload: { test: true }
+            }
+            
+            const result = await testDebugPlugin.handleIntent(testIntent)
+            intentCount++
+            
+            if (!result || result.status !== 'success') {
+                throw new Error('Intent handling failed')
+            }
+        }
+        
+        async function testGlobalFunctionCreation() {
+            if (!window.voidflowDebug) {
+                throw new Error('voidflowDebug global function not created')
+            }
+            
+            if (!window.debugVoidFlow) {
+                throw new Error('debugVoidFlow global function not created')
+            }
+            
+            // 基本機能テスト
+            const stats = window.voidflowDebug.stats()
+            if (!stats) {
+                throw new Error('Global debug function test failed')
+            }
+        }
+        
+        async function testDebugFeatureIntegration() {
+            // トレース機能テスト
+            const traceResult = testDebugPlugin.enableTrace(['test.*'], 'basic')
+            if (!traceResult.includes('Tracing enabled')) {
+                throw new Error('Trace feature test failed')
+            }
+            
+            // 状態キャプチャテスト
+            const stateResult = testDebugPlugin.captureState()
+            if (!stateResult || !stateResult.timestamp) {
+                throw new Error('State capture test failed')
+            }
+            
+            // パフォーマンステスト
+            const perfResult = testDebugPlugin.measurePerformance('test-function', () => { return 42 })
+            if (!perfResult || typeof perfResult.duration !== 'number') {
+                throw new Error('Performance measurement test failed')
+            }
+        }
+        
+        // ライフサイクルテスト
+        async function testPluginLifecycle() {
+            log('🔄 プラグインライフサイクルテスト開始...')
+            
+            try {
+                // 無効化
+                await testDebugPlugin.onDeactivated()
+                log('✅ プラグイン無効化成功')
+                
+                // 有効化
+                await testDebugPlugin.onActivated()
+                log('✅ プラグイン有効化成功')
+                
+                updateStats()
+                
+            } catch (error) {
+                log(`❌ ライフサイクルテスト失敗: ${error.message}`)
+            }
+        }
+        
+        // メッセージ処理テスト
+        async function testMessageProcessing() {
+            log('📨 メッセージ処理テスト開始...')
+            
+            const messages = [
+                { type: 'debug.trace.enable', payload: { patterns: ['*'] } },
+                { type: 'debug.state.capture', payload: {} },
+                { type: 'debug.stats.get', payload: {} }
+            ]
+            
+            for (const message of messages) {
+                try {
+                    const result = await testDebugPlugin.processMessage(message)
+                    logPlugin(`✅ ${message.type} 処理成功`, result)
+                    messageCount++
+                } catch (error) {
+                    log(`❌ ${message.type} 処理失敗: ${error.message}`)
+                }
+            }
+            
+            updateStats()
+        }
+        
+        // Intent処理テスト
+        async function testIntentHandling() {
+            log('🎯 Intent処理テスト開始...')
+            
+            const intents = [
+                { intent: 'voidflow.debug.stats.get', payload: {} },
+                { intent: 'voidflow.debug.state.capture', payload: {} },
+                { intent: 'voidflow.debug.trace.start', payload: { patterns: ['test.*'] } }
+            ]
+            
+            for (const intentMessage of intents) {
+                try {
+                    const result = await testDebugPlugin.handleIntent(intentMessage)
+                    logPlugin(`✅ ${intentMessage.intent} 処理成功`, result)
+                    intentCount++
+                } catch (error) {
+                    log(`❌ ${intentMessage.intent} 処理失敗: ${error.message}`)
+                }
+            }
+            
+            updateStats()
+        }
+        
+        // 機能別テスト
+        async function testTraceFeature() {
+            log('🔍 トレース機能テスト開始...')
+            
+            try {
+                // トレース有効化
+                const enableResult = testDebugPlugin.enableTrace(['voidflow.*'], 'detailed')
+                log(`📍 トレース有効化: ${enableResult}`)
+                
+                // トレース無効化
+                const disableResult = testDebugPlugin.disableTrace()
+                log(`📍 トレース無効化: ${disableResult}`)
+                
+            } catch (error) {
+                log(`❌ トレース機能テスト失敗: ${error.message}`)
+            }
+        }
+        
+        async function testStateFeature() {
+            log('📊 状態管理機能テスト開始...')
+            
+            try {
+                // 状態キャプチャ
+                const state = testDebugPlugin.captureState()
+                logPlugin('📸 状態キャプチャ完了', state)
+                
+                // 状態ダンプ
+                testDebugPlugin.dumpState('json')
+                
+            } catch (error) {
+                log(`❌ 状態管理機能テスト失敗: ${error.message}`)
+            }
+        }
+        
+        async function testPerformanceFeature() {
+            log('⚡ パフォーマンス機能テスト開始...')
+            
+            try {
+                // カスタム関数計測
+                const perfResult = testDebugPlugin.measurePerformance('test-calc', () => {
+                    let sum = 0
+                    for (let i = 0; i < 1000; i++) sum += i
+                    return sum
+                })
+                logPlugin('⚡ パフォーマンス計測完了', perfResult)
+                
+                // ベンチマーク実行
+                const benchResult = await testDebugPlugin.runBenchmark('system-state', 10)
+                logPlugin('🏃 ベンチマーク完了', benchResult)
+                
+            } catch (error) {
+                log(`❌ パフォーマンス機能テスト失敗: ${error.message}`)
+            }
+        }
+        
+        // 個別機能制御
+        function enableTrace() {
+            const result = testDebugPlugin.enableTrace(['*'], 'detailed')
+            log(`🔍 ${result}`)
+        }
+        
+        function disableTrace() {
+            const result = testDebugPlugin.disableTrace()
+            log(`🔍 ${result}`)
+        }
+        
+        function getTraceHistory() {
+            const history = testDebugPlugin.getTraceHistory()
+            logPlugin('📊 トレース履歴', history)
+        }
+        
+        function captureState() {
+            const state = testDebugPlugin.captureState()
+            logPlugin('📸 状態キャプチャ', state)
+        }
+        
+        function dumpState() {
+            testDebugPlugin.dumpState('table')
+        }
+        
+        function getStateHistory() {
+            const history = testDebugPlugin.getStateHistory()
+            logPlugin('📊 状態履歴', history)
+        }
+        
+        function runBenchmark() {
+            testDebugPlugin.runBenchmark('ui-update', 50)
+        }
+        
+        function measureCustomFunction() {
+            const result = testDebugPlugin.measurePerformance('custom-test', () => {
+                return Math.random() * 1000
+            })
+            logPlugin('⚡ カスタム計測', result)
+        }
+        
+        function getPerformanceStats() {
+            const stats = testDebugPlugin.getPerformanceStats()
+            logPlugin('📊 パフォーマンス統計', stats)
+        }
+        
+        function loadVoidFlowPage() {
+            log('🔗 VoidFlowページに移動中...')
+            window.location.href = '/voidflow/index-voidcore.html'
+        }
+        
+        // テストヘルパー関数
+        async function runAllPluginTests() {
+            await runPluginTests()
+            await testTraceFeature()
+            await testStateFeature()
+            await testPerformanceFeature()
+        }
+        
+        function getTestResults() {
+            return {
+                messageCount,
+                intentCount,
+                pluginInfo: getPluginInfo(),
+                stats: testDebugPlugin.getSystemStats()
+            }
+        }
+        
+        function getPluginInfo() {
+            return {
+                id: testDebugPlugin.id,
+                type: testDebugPlugin.type,
+                displayName: testDebugPlugin.displayName,
+                status: testDebugPlugin.status,
+                uptime: Date.now() - testDebugPlugin.createdAt
+            }
+        }
+        
+        // ユーティリティ関数
+        function log(message) {
+            console.log(message)
+            const output = document.getElementById('console-output')
+            const timestamp = new Date().toLocaleTimeString()
+            output.innerHTML += `<div>[${timestamp}] ${message}</div>`
+            output.scrollTop = output.scrollHeight
+        }
+        
+        function logPlugin(message, data) {
+            const output = document.getElementById('console-output')
+            const timestamp = new Date().toLocaleTimeString()
+            output.innerHTML += `<div class="plugin-log">[${timestamp}] ${message}<br><pre>${JSON.stringify(data, null, 2)}</pre></div>`
+            output.scrollTop = output.scrollHeight
+        }
+        
+        function updateTestResult(elementId, message, status) {
+            const element = document.getElementById(elementId)
+            element.innerHTML = `<div class="test-result ${status}">${message}</div>`
+        }
+        
+        function updateStats() {
+            if (testDebugPlugin) {
+                document.getElementById('plugin-id').textContent = testDebugPlugin.id
+                document.getElementById('plugin-status').textContent = testDebugPlugin.status
+            }
+            document.getElementById('message-count').textContent = messageCount
+            document.getElementById('intent-count').textContent = intentCount
+        }
+        
+        function clearConsole() {
+            document.getElementById('console-output').innerHTML = ''
+            log('🧹 コンソールクリア完了')
+        }
+    </script>
+</body>
+</html>

@@ -16,6 +16,22 @@ export class DragDropManager {
     this.voidCoreUI = voidCoreUI
     this.dragState = null
     this.activeDrags = new Map() // pluginId → drag state
+    
+    // Phase 2: Intent化フラグ
+    this.intentMode = false  // Phase 2で有効化
+  }
+  
+  /**
+   * Phase 2: Intent化モード有効化
+   */
+  enableIntentMode() {
+    this.intentMode = true
+    this.voidCoreUI.log('🎯 DragDropManager: Intent mode enabled')
+  }
+  
+  disableIntentMode() {
+    this.intentMode = false
+    this.voidCoreUI.log('🎯 DragDropManager: Intent mode disabled')
   }
 
   /**
@@ -45,6 +61,11 @@ export class DragDropManager {
         e.stopPropagation() // VoidCoreConnectionManagerとの競合を防ぐ
       }
       
+      // Phase 2: ドラッグ開始Intent送信
+      if (this.intentMode && this.voidCoreUI.voidFlowCore) {
+        this._sendDragStartIntent(pluginId, e)
+      }
+      
       isDragging = true
       
       // Canvas基準での相対座標計算
@@ -64,11 +85,22 @@ export class DragDropManager {
         
         animationFrameId = requestAnimationFrame(() => {
           this._updateElementPosition(element, pluginId, e.clientX, e.clientY, startX, startY)
+          
+          // Phase 2: ドラッグ移動Intent送信
+          if (this.intentMode && this.voidCoreUI.voidFlowCore) {
+            this._sendDragMoveIntent(pluginId, e.clientX, e.clientY)
+          }
+          
           animationFrameId = null
         })
       }
       
-      const onMouseUp = () => {
+      const onMouseUp = (e) => {
+        // Phase 2: ドラッグ終了Intent送信
+        if (this.intentMode && this.voidCoreUI.voidFlowCore) {
+          this._sendDragEndIntent(pluginId, e)
+        }
+        
         this._endDrag(pluginId, dragId, onMouseMove, onMouseUp, animationFrameId)
         isDragging = false
         animationFrameId = null
@@ -147,5 +179,74 @@ export class DragDropManager {
    */
   isElementDragging(pluginId) {
     return this.activeDrags.has(pluginId)
+  }
+  
+  /**
+   * Phase 2: ドラッグ開始Intent送信
+   */
+  async _sendDragStartIntent(pluginId, event) {
+    try {
+      const elementRect = document.getElementById(`ui-element-${pluginId}`)?.getBoundingClientRect()
+      const relativePos = this.voidCoreUI.canvasManager.getRelativePosition(event.clientX, event.clientY)
+      
+      await this.voidCoreUI.voidFlowCore.sendIntent('voidflow.ui.element.move', {
+        elementId: pluginId,
+        action: 'drag-start',
+        startPosition: relativePos,
+        mousePosition: { x: event.clientX, y: event.clientY },
+        isDragging: true,
+        timestamp: Date.now()
+      })
+      
+    } catch (error) {
+      this.voidCoreUI.log(`⚠️ Drag start intent failed: ${error.message}`)
+    }
+  }
+  
+  /**
+   * Phase 2: ドラッグ移動Intent送信
+   */
+  async _sendDragMoveIntent(pluginId, clientX, clientY) {
+    try {
+      const relativePos = this.voidCoreUI.canvasManager.getRelativePosition(clientX, clientY)
+      
+      await this.voidCoreUI.voidFlowCore.sendIntent('voidflow.ui.element.move', {
+        elementId: pluginId,
+        action: 'drag-move',
+        newPosition: relativePos,
+        mousePosition: { x: clientX, y: clientY },
+        isDragging: true,
+        timestamp: Date.now()
+      })
+      
+    } catch (error) {
+      // ドラッグ中のエラーは無視（パフォーマンス優先）
+      // this.voidCoreUI.log(`⚠️ Drag move intent failed: ${error.message}`)
+    }
+  }
+  
+  /**
+   * Phase 2: ドラッグ終了Intent送信
+   */
+  async _sendDragEndIntent(pluginId, event) {
+    try {
+      const element = document.getElementById(`ui-element-${pluginId}`)
+      const finalPosition = element ? {
+        x: parseInt(element.style.left) || 0,
+        y: parseInt(element.style.top) || 0
+      } : { x: 0, y: 0 }
+      
+      await this.voidCoreUI.voidFlowCore.sendIntent('voidflow.ui.element.move', {
+        elementId: pluginId,
+        action: 'drag-end',
+        finalPosition: finalPosition,
+        mousePosition: { x: event.clientX, y: event.clientY },
+        isDragging: false,
+        timestamp: Date.now()
+      })
+      
+    } catch (error) {
+      this.voidCoreUI.log(`⚠️ Drag end intent failed: ${error.message}`)
+    }
   }
 }

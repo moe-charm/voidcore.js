@@ -252,9 +252,10 @@
         <div class="canvas-area">
             <div class="canvas-grid"></div>
             <div class="zen-message" id="zenMessage">
-                <div class="zen-title">🔄 ハイブリッド宇宙で星座を描く</div>
-                <div class="zen-subtitle">従来VoidFlow + VoidCore統合モード<br>ノードをドラッグして配置し、創造性の永久機関を始動させよ<br><br>
-                🔗 <strong>Stage 3 接続機能:</strong> VoidCoreモードでプラグインをクリックして線で繋ぐ</div>
+                <div class="zen-title">🐛 Phase 4統合完成 - デバッグ宇宙</div>
+                <div class="zen-subtitle">VoidCore v14.0準拠 統合デバッグシステム<br>ノードをドラッグして配置し、創造性の永久機関を始動させよ<br><br>
+                🔗 <strong>Stage 3 接続機能:</strong> VoidCoreモードでプラグインをクリックして線で繋ぐ<br>
+                🐛 <strong>Phase 4 デバッグ:</strong> Intent監視・トレース・パフォーマンス分析</div>
             </div>
             <svg id="connectionSvg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
             </svg>
@@ -274,6 +275,12 @@
                 🎨 VoidCore実行
             </button>
             
+            <!-- Phase 4: デバッグ機能ボタン -->
+            <button class="execute-button" onclick="openDebugConsole()" 
+                    style="background: linear-gradient(145deg, #ff6b35, #e55a2b); margin-top: 5px;">
+                🐛 デバッグコンソール
+            </button>
+            
             <div class="panel-title">📊 実行ログ</div>
             <div id="executionLog" style="background: rgba(0,0,0,0.5); border-radius: 6px; padding: 10px; font-size: 11px; color: #80c0ff; max-height: 150px; overflow-y: auto; font-family: 'Monaco', monospace;">
                 VoidFlow VoidCore統合版 起動中...<br>
@@ -289,6 +296,17 @@
                     VoidCore: <span id="voidcoreElements">0</span>要素<br>
                     従来: <span id="legacyNodes">0</span>ノード<br>
                     アダプター: <span id="adapterMessages">0</span>メッセージ
+                </div>
+            </div>
+            
+            <!-- Phase 4: デバッグ情報パネル -->
+            <div class="integration-panel">
+                <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px;">🐛 Phase 4 デバッグ</div>
+                <div style="font-size: 10px; color: #aaa;">
+                    プラグイン: <span id="debugPluginStatus">Loading...</span><br>
+                    トレース: <span id="traceStatus">無効</span><br>
+                    Intent数: <span id="intentCount">0</span><br>
+                    エラー数: <span id="errorCount">0</span>
                 </div>
             </div>
         </div>
@@ -338,10 +356,72 @@
                 const nodeCount = window.voidFlowEngine.nodes ? window.voidFlowEngine.nodes.size : 0
                 document.getElementById('legacyNodes').textContent = nodeCount
             }
+            
+            // Phase 4: デバッグ情報更新
+            updateDebugStatus()
+        }
+        
+        // Phase 4: デバッグ状態更新
+        function updateDebugStatus() {
+            if (window.debugVoidFlow) {
+                const debugPlugin = window.debugVoidFlow.debugPlugin()
+                if (debugPlugin) {
+                    document.getElementById('debugPluginStatus').textContent = debugPlugin.status
+                    
+                    // トレース状態
+                    const isTracing = debugPlugin.intentTracking?.enabled || false
+                    document.getElementById('traceStatus').textContent = isTracing ? '有効' : '無効'
+                    
+                    // Intent数
+                    const intentCount = debugPlugin.intentTracking?.history?.length || 0
+                    document.getElementById('intentCount').textContent = intentCount
+                    
+                    // エラー数
+                    const errorCount = debugPlugin.errorTracking?.log?.length || 0
+                    document.getElementById('errorCount').textContent = errorCount
+                } else {
+                    document.getElementById('debugPluginStatus').textContent = 'Not Ready'
+                }
+            }
+        }
+        
+        // Phase 4: デバッグコンソール表示
+        function openDebugConsole() {
+            if (window.debugVoidFlow) {
+                console.log('🐛 VoidFlow Phase 4 デバッグコンソール')
+                console.log('=================================')
+                console.log('🌟 利用可能コマンド:')
+                console.log('debugVoidFlow.core()              // VoidFlowCore取得')
+                console.log('debugVoidFlow.debugPlugin()       // DebugPlugin取得')
+                console.log('debugVoidFlow.getStats()          // システム統計')
+                console.log('debugVoidFlow.startTrace(["*"])   // トレース開始')
+                console.log('debugVoidFlow.stopTrace()         // トレース停止')
+                console.log('debugVoidFlow.dumpState("json")   // 状態ダンプ')
+                console.log('debugVoidFlow.export()            // データエクスポート')
+                console.log('')
+                console.log('🧪 グローバル関数:')
+                console.log('voidflowDebug.trace("voidflow.*") // トレース開始')
+                console.log('voidflowDebug.stats()             // 統計表示')
+                console.log('voidflowDebug.benchmark("test")   // ベンチマーク')
+                console.log('=================================')
+                
+                // 基本統計表示
+                try {
+                    const stats = window.debugVoidFlow.getStats()
+                    console.log('📊 現在のシステム統計:', stats)
+                } catch (error) {
+                    console.log('⚠️ 統計取得エラー:', error.message)
+                }
+            } else {
+                alert('🐛 デバッグシステムがまだ初期化されていません。\n少し待ってから再試行してください。')
+            }
         }
         
         // 1秒ごとにステータス更新
         setInterval(updateIntegrationStatus, 1000)
+        
+        // グローバル関数として公開
+        window.openDebugConsole = openDebugConsole
         
         // デバッグ用
         window.debugVoidCore = function() {
