@@ -26,7 +26,7 @@
 
 **New to VoidCore?** Start with our interactive demo:
 
-🎯 **[📮 Simple VoidCore Demo!](https://moe-charm.github.io/voidcore.js/examples/voidcore-demo-visual.html)**
+🎯 **[📮 Simple VoidCore Demo!](https://moe-charm.github.io/voidcore.js/examples/index.html)**
 
 Watch plugins talk to each other in real-time! See exactly which functions are called and how messages flow through the system.
 
