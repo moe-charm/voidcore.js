@@ -19,6 +19,10 @@ export class DragDropManager {
     
     // Phase 2: Intent化フラグ
     this.intentMode = false  // Phase 2で有効化
+    
+    // 🐛 ドラッグ時接続線更新スロットリング（パフォーマンス改善）
+    this.lastRedrawTime = 0
+    this.redrawThrottleMs = 16 // 60fps相当
   }
   
   /**
@@ -131,8 +135,8 @@ export class DragDropManager {
     element.style.left = `${constrained.x}px`
     element.style.top = `${constrained.y}px`
     
-    // ドラッグ中にリアルタイムで接続線を更新
-    this.voidCoreUI.redrawConnectionsForElement(pluginId)
+    // ドラッグ中にリアルタイムで接続線を更新（スロットリング）
+    this.throttledRedraw(pluginId)
   }
 
   /**
@@ -153,6 +157,17 @@ export class DragDropManager {
     
     // アクティブなドラッグ状態から削除
     this.activeDrags.delete(pluginId)
+  }
+
+  /**
+   * 🐛 スロットリング付き接続線再描画
+   */
+  throttledRedraw(pluginId) {
+    const now = Date.now()
+    if (now - this.lastRedrawTime >= this.redrawThrottleMs) {
+      this.voidCoreUI.redrawConnectionsForElement(pluginId)
+      this.lastRedrawTime = now
+    }
   }
 
   /**

@@ -896,25 +896,31 @@ export class VoidCoreConnectionManager {
     // 🔧 修正: 発信・受信両方の接続を再描画
     const outgoingConnections = this.getOutgoingConnections(nodeId)
     const incomingConnections = this.getIncomingConnections(nodeId)
-    const allConnections = [...outgoingConnections, ...incomingConnections]
     
-    // 重複除去
-    const uniqueConnections = [...new Set(allConnections)]
-    
-    // this.log(`🔄 redrawConnectionsFromNode: ${nodeId} - ${uniqueConnections.length}本 (out:${outgoingConnections.length} + in:${incomingConnections.length})`)
-    
-    // 既存の接続線を削除
-    uniqueConnections.forEach(connectionId => {
+    // 🐛 ドラッグ時のパフォーマンス改善: 発信元の束ね線を優先処理
+    const outgoingSourceIds = new Set()
+    outgoingConnections.forEach(connectionId => {
       const connection = this.connections.get(connectionId)
       if (connection) {
-        this.removeConnectionLine(connectionId)
+        outgoingSourceIds.add(connection.sourcePluginId)
       }
     })
     
-    // 接続線を再描画
-    uniqueConnections.forEach(connectionId => {
+    // 各ソースの接続を一括処理（束ね線対応）
+    outgoingSourceIds.forEach(sourceId => {
+      this.clearSourceConnections(sourceId)
+      const sourceConnections = this.getConnectionsFromSource(sourceId)
+      if (sourceConnections.length > 0) {
+        // 最初の接続を使って全体を再描画（束ね線判定含む）
+        this.drawConnectionLine(sourceConnections[0])
+      }
+    })
+    
+    // 受信側接続も個別処理
+    incomingConnections.forEach(connectionId => {
       const connection = this.connections.get(connectionId)
-      if (connection) {
+      if (connection && !outgoingSourceIds.has(connection.sourcePluginId)) {
+        this.removeConnectionLine(connectionId)
         this.drawConnectionLine(connection)
       }
     })
@@ -927,24 +933,23 @@ export class VoidCoreConnectionManager {
     const sourceConnections = this.getConnectionsFromSource(sourcePluginId)
     this.log(`🧹 ${sourcePluginId}からの接続線を全削除: ${sourceConnections.length}本`)
     
-    sourceConnections.forEach(connection => {
-      const connectionId = connection.id
+    // 🐛 ドラッグ時の完全SVG削除対応
+    if (this.svgElement) {
+      // 全ての関連SVG要素を削除
+      const allRelatedElements = this.svgElement.querySelectorAll(`[id*="${sourcePluginId}"]`)
+      allRelatedElements.forEach(element => element.remove())
       
-      // ConnectionLineRenderer管理のパスを削除
+      // 束ね線要素も削除
+      const bundleElements = this.svgElement.querySelectorAll(`[id^="bundle-${sourcePluginId}"]`)
+      bundleElements.forEach(element => element.remove())
+      
+      // ConnectionLineRenderer内部マップもクリア
       if (this.lineRenderer) {
-        this.lineRenderer.removeConnection(connectionId)
+        sourceConnections.forEach(connection => {
+          this.lineRenderer.removeConnection(connection.id)
+        })
       }
-      
-      // 旧形式の線要素も削除
-      const lineElement = document.getElementById(`connection-line-${connectionId}`)
-      if (lineElement) {
-        lineElement.remove()
-      }
-    })
-    
-    // 束ね線要素も削除
-    const bundleElements = this.svgElement.querySelectorAll(`[id^="bundle-${sourcePluginId}"]`)
-    bundleElements.forEach(element => element.remove())
+    }
   }
   
   /**
