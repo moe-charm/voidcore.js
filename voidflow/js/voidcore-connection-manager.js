@@ -573,10 +573,11 @@ export class VoidCoreConnectionManager {
         connections.push({ ...conn, id })
       }
     })
-    this.log(`🔍 ${sourcePluginId} からの接続: ${connections.length}本`)
-    connections.forEach(conn => {
-      this.log(`   - ${conn.id}: ${conn.sourcePluginId} → ${conn.targetPluginId}`)
-    })
+    // 🔕 ログ出力簡略化（デバッグ時のみ詳細出力）
+    // this.log(`🔍 ${sourcePluginId} からの接続: ${connections.length}本`)
+    // connections.forEach(conn => {
+    //   this.log(`   - ${conn.id}: ${conn.sourcePluginId} → ${conn.targetPluginId}`)
+    // })
     return connections
   }
 
@@ -930,7 +931,8 @@ export class VoidCoreConnectionManager {
    */
   clearSourceConnections(sourcePluginId) {
     const sourceConnections = this.getConnectionsFromSource(sourcePluginId)
-    this.log(`🧹 ${sourcePluginId}からの接続線を全削除: ${sourceConnections.length}本`)
+    // 🔕 ログ簡略化
+    // this.log(`🧹 ${sourcePluginId}からの接続線を全削除: ${sourceConnections.length}本`)
     
     // 🐛 ドラッグ時の完全SVG削除対応
     if (this.svgElement) {
@@ -938,7 +940,7 @@ export class VoidCoreConnectionManager {
       const allRelatedElements = this.svgElement.querySelectorAll(`[id*="${sourcePluginId}"]`)
       allRelatedElements.forEach(element => element.remove())
       
-      // 束ね線要素も削除
+      // 束ね線要素も削除  
       const bundleElements = this.svgElement.querySelectorAll(`[id^="bundle-${sourcePluginId}"]`)
       bundleElements.forEach(element => element.remove())
       

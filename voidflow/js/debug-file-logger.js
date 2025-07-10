@@ -23,6 +23,9 @@ export class DebugFileLogger {
       enableConsoleOutput: true,
       enableAutoExport: false, // F5時自動エクスポート無効化
       logLevel: 'debug', // debug, info, warn, error
+      // 🎚️ カテゴリ別有効/無効設定
+      enabledCategories: ['system', 'connection', 'ui', 'intent', 'performance', 'error'],
+      verboseConnection: false, // 🔕 接続ログの詳細出力制御
       ...options
     }
     
@@ -109,6 +112,15 @@ export class DebugFileLogger {
    * 📝 ログ記録
    */
   log(category, level, message, data = null) {
+    // 🎚️ カテゴリ有効性チェック
+    if (!this.options.enabledCategories.includes(category)) return
+    
+    // 🔕 接続ログの詳細制御
+    if (category === 'connection' && !this.options.verboseConnection) {
+      // 詳細な接続ログを抑制
+      if (message.includes('からの接続:') || message.includes('→')) return
+    }
+    
     // ログレベルチェック
     const messageLevel = this.logLevels[level] || 0
     if (messageLevel < this.currentLogLevel) return
