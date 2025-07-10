@@ -28,6 +28,72 @@
 
 ---
 
+## 🤖 【自動ドキュメント更新システム】VoidFlow修正時の必須フロー
+
+**⚠️ 重要: VoidFlow関連ファイル修正時は自動でドキュメント更新チェック実行！**
+
+### **🔍 VoidFlow修正自動検出**
+```
+対象ファイル（修正時に自動チェック実行）:
+✅ voidflow/js/**/*.js          - 実装ファイル
+✅ voidflow/**/*.html           - テストファイル  
+✅ docs/voidflow-architecture/  - アーキテクチャ文書
+✅ docs/progress/               - 進捗管理文書
+```
+
+### **🤖 修正完了時の自動実行フロー**
+```
+1. 🔍 VoidFlow修正検出 → 自動影響分析実行
+2. 📝 影響ドキュメント特定 → 自動TodoWrite実行
+3. 🔧 修正作業完了 → 自動整合性チェック実行
+4. 📋 ドキュメント更新 → modification-log.md自動記録
+5. ✅ 整合性確認完了 → 次の作業へ
+```
+
+### **📝 自動TodoWrite機能**
+```javascript
+// VoidFlow修正検出時の自動タスク追加例
+修正ファイル: voidcore-ui.js
+↓ 自動検出・タスク追加
+"📝 VoidCoreUI修正に伴うclass-index.md更新"
+"📝 architecture-overview.md整合性確認" 
+"📝 modification-log.md記録追加"
+"🔍 addEventListener()削減率の再計算"
+```
+
+### **🔍 自動整合性チェックリスト**
+```
+VoidFlow修正完了時に必ず確認:
+□ modification-log.md記録済み？
+□ class-index.md該当クラス説明更新済み？
+□ current-status.md状況指標更新済み？
+□ architecture-overview.md構造図矛盾なし？
+□ 変更による影響ドキュメント全て確認済み？
+```
+
+### **🎯 ファイル別影響マップ（自動参照）**
+| 修正ファイル | 影響ドキュメント | 更新内容 | 優先度 |
+|------------|----------------|----------|--------|
+| voidcore-ui.js | class-index.md | VoidCoreUI説明・メソッド | 🔴 高 |
+| voidcore-ui.js | current-status.md | addEventListener()削減率 | 🔴 高 |
+| connection-manager.js | class-index.md | ConnectionManager説明 | 🔴 高 |
+| voidflow-core.js | architecture-overview.md | システム構造図 | 🟡 中 |
+| 新ファイル作成 | class-index.md | 新コンポーネント追加 | 🟡 中 |
+| Intent Handler追加 | architecture-overview.md | Intent一覧更新 | 🟢 低 |
+
+### **⚡ 自動実行コマンド**
+```bash
+# VoidFlow修正完了時に即座実行
+echo "🤖 VoidFlow自動ドキュメント更新チェック実行中..."
+echo "📝 影響分析: [修正ファイル] → [影響ドキュメント]"
+echo "✅ 自動TodoWrite: ドキュメント更新タスク追加済み"
+echo "🔍 整合性チェック: [結果] 確認完了"
+```
+
+**🎉 これで更新忘れゼロ！Claude Codeが自動でドキュメント整合性を維持するにゃー！**
+
+---
+
 ## 🔥 重要: サーバー設定（必読）
 **テスト用サーバー: ポート10000番を使用**
 - URL: `http://192.168.0.150:10000`

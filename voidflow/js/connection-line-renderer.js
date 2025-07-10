@@ -13,8 +13,9 @@
  */
 
 export class ConnectionLineRenderer {
-  constructor(svgElement) {
+  constructor(svgElement, options = {}) {
     this.svgElement = svgElement
+    this.voidFlowCore = options.voidFlowCore || null  // Phase Alpha: Intent統合
     this.connectionPaths = new Map() // connectionId -> pathElement
     this.animationDuration = 300
     
@@ -595,16 +596,32 @@ export class ConnectionLineRenderer {
     const label = group.querySelector('text')
     
     // クリックイベント（詳細モーダル表示）
-    group.addEventListener('click', (e) => {
+    group.addEventListener('click', async (e) => {
       e.stopPropagation()
-      this.showBundleDetailsModal(bundleId, options)
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.connection.bundle.details', {
+          bundleId,
+          position: { x: e.clientX, y: e.clientY },
+          options
+        })
+      } else {
+        this.handleBundleDetailsFallback(bundleId, options, e)
+      }
     })
     
     // 右クリックイベント（束ね操作メニュー）
-    group.addEventListener('contextmenu', (e) => {
+    group.addEventListener('contextmenu', async (e) => {
       e.preventDefault()
       e.stopPropagation()
-      this.showBundleContextMenu(e, bundleId, options)
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.connection.bundle.menu', {
+          bundleId,
+          position: { x: e.clientX, y: e.clientY },
+          options
+        })
+      } else {
+        this.handleBundleMenuFallback(e, bundleId, options)
+      }
     })
     
     // ホバーエフェクト
@@ -677,9 +694,16 @@ export class ConnectionLineRenderer {
     group.appendChild(label)
     
     // クリックイベント（束ね解除）
-    group.addEventListener('click', (e) => {
+    group.addEventListener('click', async (e) => {
       e.stopPropagation()
-      this.unbundleConnections(bundleId)
+      if (this.voidFlowCore) {
+        await this.voidFlowCore.sendIntent('voidflow.ui.connection.bundle.unbundle', {
+          bundleId,
+          position: { x: e.clientX, y: e.clientY }
+        })
+      } else {
+        this.handleBundleUnbundleFallback(bundleId, e)
+      }
     })
     
     // ホバーエフェクト
@@ -728,5 +752,31 @@ export class ConnectionLineRenderer {
       this.displayMode = mode
       this.log(`🔧 表示モード変更: ${mode}`)
     }
+  }
+  
+  // Phase Alpha: Intentフォールバックメソッド
+  
+  /**
+   * 🛡️ Bundle詳細フォールバック
+   */
+  handleBundleDetailsFallback(bundleId, options, event) {
+    this.log(`🛡️ Bundle details fallback: ${bundleId}`)
+    this.showBundleDetailsModal(bundleId, options)
+  }
+  
+  /**
+   * 🛡️ Bundleメニューフォールバック
+   */
+  handleBundleMenuFallback(event, bundleId, options) {
+    this.log(`🛡️ Bundle menu fallback: ${bundleId}`)
+    this.showBundleContextMenu(event, bundleId, options)
+  }
+  
+  /**
+   * 🛡️ Bundle解除フォールバック
+   */
+  handleBundleUnbundleFallback(bundleId, event) {
+    this.log(`🛡️ Bundle unbundle fallback: ${bundleId}`)
+    this.unbundleConnections(bundleId)
   }
 }

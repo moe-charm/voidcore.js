@@ -24,11 +24,19 @@
 🔗 継承: なし（VoidCore instance を内包）
 🎯 責任: UI操作統合、Manager集約、VoidCore委譲
 📊 重要度: ⭐⭐⭐⭐⭐ (中核クラス)
+🚀 Phase Alpha: Intent統合によるVoidCore理念準拠強化
 
 主要メソッド:
 - createUIPlugin() : UI付きプラグイン作成
 - createUIElement() : DOM要素生成  
 - registerPlugin() : UnifiedPluginManager委譲
+- handleClickFallback() : フォールバック処理（Phase Alpha追加）
+
+Phase Alpha修正内容:
+- Line 481: click addEventListener() → voidFlowCore.sendIntent('voidflow.ui.element.select')
+- Line 512: bubble click → Intent送信 + フォールバック対応
+- Line 723: handleClickFallback()メソッド追加
+- async/await対応でエラーハンドリング強化
 ```
 
 ### **VoidFlowCore** `main-voidcore.js`
@@ -218,15 +226,19 @@
 
 ### **ConnectionLineRenderer** `connection-line-renderer.js`
 ```
-📍 役割: 接続線の描画・計算
+📍 役割: 接続線の描画・計算（Phase Alpha: Intent統合完了）
 🔗 継承: なし（描画ユーティリティ）
-🎯 責任: ベジェ曲線、扇形分散、束ね線表示
+🎯 責任: ベジェ曲線、扇形分散、束ね線表示、Bundle操作
 📊 重要度: ⭐⭐⭐ (ビジュアル品質)
+🚀 Phase Alpha修正: Intent統合にBundle操作のaddEventListener()置き換え
 
 主要メソッド:
 - createBezierPath() : ベジェ曲線作成
 - calculateFanOut() : 扇形分散計算
 - renderBundleLines() : 束ね線描画
+- handleBundleDetailsFallback() : Bundle詳細フォールバック
+- handleBundleMenuFallback() : Bundleメニューフォールバック
+- handleBundleUnbundleFallback() : Bundle解除フォールバック
 ```
 
 ### **PluginPalettePlugin** `plugin-palette-plugin.js`

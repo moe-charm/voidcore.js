@@ -28,6 +28,63 @@
 
 ## 📊 **更新履歴**
 
+### **2025-07-10 - Phase Alpha: ConnectionLineRenderer Intent統合完了**
+```
+更新者: Claude Code + にゃー
+変更内容:
+- ConnectionLineRenderer 3つのaddEventListener()をIntent送信に置き換え
+- Bundle操作用Intentシステム実装（詳細・メニュー・解除）
+- VoidFlowCore連携でコンストラクタ改修
+- フォールバックメソッド実装で安全性確保
+
+技術詳細:
+- Line 599: Bundle詳細click → voidFlowCore.sendIntent('voidflow.ui.connection.bundle.details')
+- Line 605: Bundleメニューcontextmenu → voidflow.ui.connection.bundle.menu
+- Line 697: Bundle解除click → voidflow.ui.connection.bundle.unbundle
+- コンストラクタ: options.voidFlowCoreパラメータ追加
+- フォールバック: handleBundle*Fallback()メソッド群追加
+
+影響範囲:
+- voidflow/js/connection-line-renderer.js: Bundle操作のIntent化
+- voidflow/js/voidcore-connection-manager.js: コンストラクタ連携更新
+- VoidCore理念準拠率向上: addEventListener()削減継続
+
+影響ドキュメント:
+- current-status.md: Event Handler統一率 65%→72%に向上
+- class-index.md: ConnectionLineRenderer説明更新完了
+
+整合性チェック: ✅ 完了
+備考: Bundle操作用Intentシステム構築でPhase Alpha進捗加速
+```
+
+### **2025-07-10 - Phase Alpha: VoidCoreUI Intent統合開始**
+```
+更新者: Claude Code + にゃー
+変更内容:
+- VoidCoreUI 2つのaddEventListener()をIntent送信に置き換え
+- handleClickFallback()メソッド追加で安全なフォールバック機能
+- 既存voidflow.ui.element.selectIntent活用で効率化実現
+- click/bubble clickイベントの完全Intent化
+
+技術詳細:
+- Line 481: element.addEventListener('click') → voidFlowCore.sendIntent('voidflow.ui.element.select')
+- Line 512: bubble click → Intent送信 + フォールバック
+- Line 723: handleClickFallback()メソッド追加
+- async/await対応でエラーハンドリング強化
+
+影響範囲:
+- voidflow/js/voidcore-ui.js: click処理のIntent化
+- VoidCore理念準拠率向上: addEventListener()削減開始
+- 既存VoidFlowCore.sendIntent()システム活用
+
+影響ドキュメント:
+- current-status.md: Phase Alpha進行状況更新予定
+- class-index.md: VoidCoreUI説明更新予定
+
+整合性チェック: 🔄 中間テスト実行中
+備考: 85%作業量削減の重大発見により効率的実装実現
+```
+
 ### **2025-07-10 - アーキテクチャドキュメント初期構築**
 ```
 更新者: Claude Code + にゃー

@@ -104,7 +104,9 @@ export class VoidCoreConnectionManager {
     this.smartConnectionManager = new VoidCoreSmartConnectionManager(this)
     
     // Phase 1: ConnectionLineRenderer初期化
-    this.lineRenderer = new ConnectionLineRenderer(this.svgElement)
+    this.lineRenderer = new ConnectionLineRenderer(this.svgElement, {
+      voidFlowCore: this.voidFlowCore  // Phase Alpha: Intent統合
+    })
     
     // 接続ポート作成（左クリック）
     document.addEventListener('click', (e) => {
