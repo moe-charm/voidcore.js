@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌟 VoidFlow VoidCore統合版 - Constellation Zero | 創造性の永久機関</title>
+    <title>🌟 CharmFlow nyacore統合版 - Constellation Zero | 創造性の永久機関</title>
     
     <!-- Monaco Editor CDN -->
     <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
@@ -230,13 +230,13 @@
 <body>
     <div class="voidflow-container">
         <header class="header">
-            <h1>🌟 VoidFlow VoidCore統合版 - Constellation Zero | 創造性の永久機関</h1>
+            <h1>🌟 VoidFlow nyacore統合版 - Constellation Zero | 創造性の永久機関</h1>
         </header>
 
-        <!-- VoidCore統合ステータス表示 -->
+        <!-- nyacore統合ステータス表示 -->
         <div class="voidcore-status" id="voidcoreStatus">
-            <div class="hybrid-indicator">🔄 HYBRID MODE</div>
-            <div>VoidCore統合版 v1.0</div>
+            <div class="hybrid-indicator">🐱 nyacore v14.0</div>
+            <div>Phase Alpha Intent統合完了</div>
             <div>SystemBootManager: <span id="bootStatus">Loading...</span></div>
             <div>Message Adapter: <span id="adapterStatus">Loading...</span></div>
         </div>
@@ -267,12 +267,10 @@
                 <p style="color: #888; font-size: 12px;">ノードを選択してプロパティを表示</p>
             </div>
             
-            <button class="execute-button" onclick="executeFlow()">🚀 フロー実行</button>
-            
-            <!-- VoidCore統合専用実行ボタン -->
+            <!-- nyacore統合実行ボタン -->
             <button class="execute-button" onclick="executeFlowVoidCore()" 
-                    style="background: linear-gradient(145deg, #4a90e2, #357abd); margin-top: 5px;">
-                🎨 VoidCore実行
+                    style="background: linear-gradient(145deg, #4a90e2, #357abd);">
+                🚀 フロー実行
             </button>
             
             <!-- Phase 4: デバッグ機能ボタン -->
@@ -337,6 +335,36 @@
                     UIログ: <span id="uiLogCount">0</span><br>
                     合計サイズ: <span id="totalLogSize">0KB</span>
                 </div>
+                
+                <!-- ログカテゴリ選択チェックボックス -->
+                <div style="font-size: 10px; font-weight: bold; margin-top: 8px; margin-bottom: 4px; color: #4a90e2;">🎚️ ログカテゴリ選択</div>
+                <div style="font-size: 9px; line-height: 1.3;" id="logCategoryCheckboxes">
+                    <label style="display: inline-block; margin-right: 8px; cursor: pointer;">
+                        <input type="checkbox" id="log-system" checked style="margin-right: 2px; transform: scale(0.8);">
+                        <span style="color: #aaa;">system</span>
+                    </label>
+                    <label style="display: inline-block; margin-right: 8px; cursor: pointer;">
+                        <input type="checkbox" id="log-connection" checked style="margin-right: 2px; transform: scale(0.8);">
+                        <span style="color: #aaa;">connection</span>
+                    </label>
+                    <label style="display: inline-block; margin-right: 8px; cursor: pointer;">
+                        <input type="checkbox" id="log-ui" checked style="margin-right: 2px; transform: scale(0.8);">
+                        <span style="color: #aaa;">ui</span>
+                    </label>
+                    <br>
+                    <label style="display: inline-block; margin-right: 8px; cursor: pointer;">
+                        <input type="checkbox" id="log-intent" checked style="margin-right: 2px; transform: scale(0.8);">
+                        <span style="color: #aaa;">intent</span>
+                    </label>
+                    <label style="display: inline-block; margin-right: 8px; cursor: pointer;">
+                        <input type="checkbox" id="log-performance" checked style="margin-right: 2px; transform: scale(0.8);">
+                        <span style="color: #aaa;">performance</span>
+                    </label>
+                    <label style="display: inline-block; margin-right: 8px; cursor: pointer;">
+                        <input type="checkbox" id="log-error" checked style="margin-right: 2px; transform: scale(0.8);">
+                        <span style="color: #aaa;">error</span>
+                    </label>
+                </div>
             </div>
             
             <!-- Phase 4.5: VoidCoreデバッグプラグイン情報パネル -->
@@ -352,7 +380,7 @@
         </div>
 
         <footer class="footer">
-            <span>🌟 VoidCore v14.0 + VoidFlow統合版 - Hybrid Message System | 創造性の永久機関 × 自己構造操作宇宙</span>
+            <span>🌟 nyacore v14.0 + VoidFlow統合版 - Intent Message System | 創造性の永久機関 × 自己構造操作宇宙</span>
         </footer>
     </div>
 
@@ -731,6 +759,54 @@
             }
         }
         
+        // ログカテゴリチェックボックス制御
+        function initializeLogCategoryControls() {
+            const categories = ['system', 'connection', 'ui', 'intent', 'performance', 'error']
+            
+            // 保存された設定でチェックボックス初期化
+            categories.forEach(category => {
+                const checkbox = document.getElementById(`log-${category}`)
+                if (checkbox) {
+                    // 現在の有効カテゴリを取得
+                    if (window.getEnabledCategories) {
+                        const enabledCategories = window.getEnabledCategories()
+                        checkbox.checked = enabledCategories.includes(category)
+                    }
+                    
+                    // チェックボックス変更イベント
+                    checkbox.addEventListener('change', function() {
+                        const enabled = this.checked
+                        console.log(`🎚️ Log category ${category}: ${enabled ? 'ON' : 'OFF'}`)
+                        
+                        if (window.setCategoryEnabled) {
+                            window.setCategoryEnabled(category, enabled)
+                        }
+                        
+                        // 設定変更を視覚的にフィードバック
+                        const label = this.nextElementSibling
+                        if (label) {
+                            label.style.color = enabled ? '#4a90e2' : '#666'
+                            label.style.fontWeight = enabled ? 'bold' : 'normal'
+                        }
+                    })
+                }
+            })
+            
+            console.log('🎚️ Log category controls initialized')
+        }
+        
+        // 全カテゴリON/OFF ユーティリティ関数
+        function toggleAllLogCategories(enabled) {
+            const categories = ['system', 'connection', 'ui', 'intent', 'performance', 'error']
+            categories.forEach(category => {
+                const checkbox = document.getElementById(`log-${category}`)
+                if (checkbox) {
+                    checkbox.checked = enabled
+                    checkbox.dispatchEvent(new Event('change'))
+                }
+            })
+        }
+        
         // グローバル関数として公開
         window.openDebugConsole = openDebugConsole
         window.exportDebugLogs = exportDebugLogs
@@ -739,6 +815,8 @@
         window.closeLogCenter = closeLogCenter
         window.refreshLogCenter = refreshLogCenter
         window.clearAllLogs = clearAllLogs
+        window.initializeLogCategoryControls = initializeLogCategoryControls
+        window.toggleAllLogCategories = toggleAllLogCategories
         
         // デバッグ用
         window.debugVoidCore = function() {
@@ -760,6 +838,11 @@
                     logElement.innerHTML += '🎉 VoidCore統合版初期化完了！<br>'
                     logElement.innerHTML += '💡 ハイブリッドモード: 従来機能 + VoidCore機能併用<br>'
                 }
+                
+                // ログカテゴリ制御の初期化
+                setTimeout(() => {
+                    initializeLogCategoryControls()
+                }, 1000)
                 
                 clearInterval(initCheckInterval)
             }

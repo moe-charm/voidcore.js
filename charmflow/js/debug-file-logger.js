@@ -44,9 +44,13 @@ export class DebugFileLogger {
     
     this.currentLogLevel = this.logLevels[this.options.logLevel] || 0
     
+    // 保存された設定を読み込み
+    this.loadLogSettings()
+    
     this.log('system', 'info', '🐛 DebugFileLogger initialized', {
       sessionId: this.options.sessionId,
-      logDirectory: this.options.logDirectory
+      logDirectory: this.options.logDirectory,
+      enabledCategories: this.options.enabledCategories
     })
   }
   
@@ -446,6 +450,83 @@ export class DebugFileLogger {
   }
   
   /**
+   * 🎚️ カテゴリの有効/無効を設定
+   */
+  setCategoryEnabled(category, enabled) {
+    if (!this.options.categories.includes(category)) {
+      console.warn(`⚠️ Unknown log category: ${category}`)
+      return false
+    }
+    
+    if (enabled) {
+      // カテゴリを有効化
+      if (!this.options.enabledCategories.includes(category)) {
+        this.options.enabledCategories.push(category)
+        this.log('system', 'info', `🎚️ Log category enabled: ${category}`)
+      }
+    } else {
+      // カテゴリを無効化
+      const index = this.options.enabledCategories.indexOf(category)
+      if (index > -1) {
+        this.options.enabledCategories.splice(index, 1)
+        this.log('system', 'info', `🎚️ Log category disabled: ${category}`)
+      }
+    }
+    
+    // localStorageに設定を保存
+    this.saveLogSettings()
+    return true
+  }
+  
+  /**
+   * 📝 ログ設定をlocalStorageに保存
+   */
+  saveLogSettings() {
+    try {
+      const settings = {
+        enabledCategories: this.options.enabledCategories,
+        logLevel: this.options.logLevel,
+        verboseConnection: this.options.verboseConnection
+      }
+      localStorage.setItem('charmflow-log-settings', JSON.stringify(settings))
+    } catch (error) {
+      console.warn('⚠️ Failed to save log settings:', error)
+    }
+  }
+  
+  /**
+   * 📖 ログ設定をlocalStorageから読み込み
+   */
+  loadLogSettings() {
+    try {
+      const stored = localStorage.getItem('charmflow-log-settings')
+      if (stored) {
+        const settings = JSON.parse(stored)
+        if (settings.enabledCategories && Array.isArray(settings.enabledCategories)) {
+          this.options.enabledCategories = settings.enabledCategories
+        }
+        if (settings.logLevel) {
+          this.options.logLevel = settings.logLevel
+          this.currentLogLevel = this.logLevels[settings.logLevel] || 0
+        }
+        if (typeof settings.verboseConnection === 'boolean') {
+          this.options.verboseConnection = settings.verboseConnection
+        }
+        this.log('system', 'info', '📖 Log settings loaded from localStorage', settings)
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to load log settings:', error)
+    }
+  }
+  
+  /**
+   * 📊 有効カテゴリ一覧を取得
+   */
+  getEnabledCategories() {
+    return [...this.options.enabledCategories]
+  }
+  
+  /**
    * 📋 LocalStorageの全ログ情報を取得
    */
   getAllStoredLogs() {
@@ -516,3 +597,7 @@ window.getDebugStats = () => debugLogger.getLogStats()
 // F5時自動エクスポート用グローバル関数
 window.exportPreviousLogs = () => debugLogger.exportPreviousSessionLogs()
 window.clearCurrentLogs = () => debugLogger.clearCurrentSessionLogs()
+
+// ログカテゴリ制御用グローバル関数
+window.setCategoryEnabled = (category, enabled) => debugLogger.setCategoryEnabled(category, enabled)
+window.getEnabledCategories = () => debugLogger.getEnabledCategories()

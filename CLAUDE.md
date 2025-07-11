@@ -8,10 +8,11 @@
 ```
 ✅ src/core/voidcore.js → src/core/nyacore.js
 ✅ src/core/voidcore_base.js → src/core/nyacore_base.js
-✅ voidflow/js/voidcore-ui.js → voidflow/js/nyacore-ui.js
-✅ voidflow/js/voidcore-debug-plugin.js → voidflow/js/nyacore-debug-plugin.js
-✅ voidflow/js/voidcore-connection-manager.js → voidflow/js/nyacore-connection-manager.js
-✅ voidflow/js/main-voidcore.js → voidflow/js/main-nyacore.js
+✅ voidflow/js/voidcore-ui.js → charmflow/js/nyacore-ui.js
+✅ voidflow/js/voidcore-debug-plugin.js → charmflow/js/nyacore-debug-plugin.js
+✅ voidflow/js/voidcore-connection-manager.js → charmflow/js/nyacore-connection-manager.js
+✅ voidflow/js/main-voidcore.js → charmflow/js/main-nyacore.js
+✅ voidflow/index-voidcore.html → charmflow/index.html
 ```
 
 ### **⚠️ import文の更新例**
@@ -188,6 +189,7 @@ pkill -f "python3.*http.server.*8000" 2>/dev/null; python3 -m http.server 8000 -
 pkill -f "python3.*http.server" 2>/dev/null || true; python3 -m http.server 10000 --bind 0.0.0.0 > /dev/null 2>&1 & sleep 2; echo "✅ Server ready: http://192.168.0.150:10000"
 
 # 🧪 テストページ直接アクセス（IPアドレス: 192.168.0.150）
+# 🚀 メインアプリ: http://192.168.0.150:10000/charmflow/
 # Phase S3テスト: http://192.168.0.150:10000/test-voidflow-phase-s3-integration.html
 # Phase Rテスト: http://192.168.0.150:10000/test-voidflow-phase-r-integration-fixed.html
 # 簡易テスト: http://192.168.0.150:10000/test-voidflow-simple.html

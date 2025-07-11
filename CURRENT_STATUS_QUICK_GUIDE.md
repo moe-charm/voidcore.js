@@ -31,7 +31,7 @@ python3 -m http.server 10000 --bind 0.0.0.0
 
 ### **テストURL**
 ```
-http://192.168.0.150:10000/voidflow/index-voidcore.html
+http://192.168.0.150:10000/charmflow/
 ```
 
 ---

@@ -22,18 +22,20 @@
 
 ### **2. VoidFlow UI系ファイル移行完了**
 ```
-✅ voidflow/js/voidcore-ui.js → voidflow/js/nyacore-ui.js
-✅ voidflow/js/voidcore-debug-plugin.js → voidflow/js/nyacore-debug-plugin.js
-✅ voidflow/js/voidcore-connection-manager.js → voidflow/js/nyacore-connection-manager.js
-✅ voidflow/js/main-voidcore.js → voidflow/js/main-nyacore.js
+✅ voidflow/js/voidcore-ui.js → charmflow/js/nyacore-ui.js
+✅ voidflow/js/voidcore-debug-plugin.js → charmflow/js/nyacore-debug-plugin.js
+✅ voidflow/js/voidcore-connection-manager.js → charmflow/js/nyacore-connection-manager.js
+✅ voidflow/js/main-voidcore.js → charmflow/js/main-nyacore.js
+✅ voidflow/index-voidcore.html → charmflow/index.html
 ```
 
 ### **3. 関連ファイル更新完了**
 ```
-✅ voidflow/index-voidcore.html (importパス修正)
+✅ charmflow/index.html (importパス修正)
 ✅ test-voidflow-phase1-advanced-connections.html (importパス修正)
 ✅ test-staged-loading.html (importパス修正)
 ✅ 各ファイル内コメント修正
+✅ CLAUDE.md メインURL更新 (charmflow/)
 ```
 
 ### **4. ドキュメント更新完了**
@@ -78,8 +80,8 @@
 ```javascript
 // ✅ 正解 (2025-07-11以降)
 import { VoidCore } from './src/core/nyacore.js'
-import { VoidCoreUI } from './voidflow/js/nyacore-ui.js'
-import { VoidCoreConnectionManager } from './voidflow/js/nyacore-connection-manager.js'
+import { VoidCoreUI } from './charmflow/js/nyacore-ui.js'
+import { VoidCoreConnectionManager } from './charmflow/js/nyacore-connection-manager.js'
 
 // ❌ 古い (使用不可)
 import { VoidCore } from './src/voidcore.js'
@@ -89,9 +91,9 @@ import { VoidCoreUI } from './voidflow/js/voidcore-ui.js'
 ### **📍 重要ファイルの場所**
 ```
 🔧 コア: src/core/nyacore.js
-🎨 UI: voidflow/js/nyacore-ui.js
-🚀 メイン: voidflow/js/main-nyacore.js
-🌐 HTMLエントリー: voidflow/index-voidcore.html
+🎨 UI: charmflow/js/nyacore-ui.js
+🚀 メイン: charmflow/js/main-nyacore.js
+🌐 HTMLエントリー: charmflow/index.html
 ```
 
 ### **🧪 テスト方法**
@@ -100,7 +102,7 @@ import { VoidCoreUI } from './voidflow/js/voidcore-ui.js'
 python3 -m http.server 10000 --bind 0.0.0.0
 
 # テストURL
-http://192.168.0.150:10000/voidflow/index-voidcore.html
+http://192.168.0.150:10000/charmflow/
 ```
 
 ---
