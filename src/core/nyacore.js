@@ -40,7 +40,7 @@
  * - SystemBootManagerは外部プラグインではなく内蔵機能
  */
 
-import { VoidCoreBase } from './voidcore_base.js'
+import { VoidCoreBase } from './nyacore_base.js'
 import { Message } from '../messaging/message.js'
 import { SimpleMessagePool } from '../messaging/simple-message-pool.js'
 import { CoreFusion } from './core-fusion.js'

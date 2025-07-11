@@ -1,8 +1,8 @@
 // universal-flow-integration.js - 汎用フロー統合システム
 // Phase S3後続: VoidFlowNodeIntegration汎用化による412行削減
 
-import { voidCore } from './voidcore.js';
-import { IPlugin } from './plugin-interface.js';
+import { voidCore } from '../core/nyacore.js';
+import { IPlugin } from '../interfaces/plugin-interface.js';
 
 /**
  * 🌐 UniversalFlowIntegration - 汎用フロー統合システム

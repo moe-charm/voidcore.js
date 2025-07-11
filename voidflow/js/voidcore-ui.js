@@ -1,7 +1,7 @@
 // voidcore-ui.js - UI専用VoidCore拡張クラス
 // VoidFlow VoidCore化のための汎用UI基盤
 
-import { VoidCore } from '/src/core/voidcore.js'
+import { VoidCore } from '/src/core/nyacore.js'
 import { Message } from '/src/messaging/message.js'
 import { initializeVoidFlowHybridCommunication } from './voidflow-hybrid-communication.js'
 import { debugLogger } from './debug-file-logger.js'

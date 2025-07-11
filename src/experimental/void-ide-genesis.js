@@ -2,7 +2,7 @@
 // VoidCoreプラグインとしてのIDE実装
 // 「VoidCoreでVoidCoreを育てる」究極のメタシステム
 
-import { VoidCore } from '../core/voidcore.js';
+import { VoidCore } from '../core/nyacore.js';
 import { Message } from '../messaging/message.js';
 import { IPlugin } from '../interfaces/plugin-interface.js';
 

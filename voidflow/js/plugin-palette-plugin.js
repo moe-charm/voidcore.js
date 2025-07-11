@@ -344,7 +344,6 @@ export class PluginPalettePlugin {
         this.updateDisplay()
       }
     })
-    })
   }
   
   /**

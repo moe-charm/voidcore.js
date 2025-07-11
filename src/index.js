@@ -1,7 +1,7 @@
 // VoidCore v14.0 - 純粋メッセージベースシステム
 // セリンの大改革完了版
 
-export { VoidCore } from './core/voidcore.js';
+export { VoidCore } from './core/nyacore.js';
 export { Message } from './messaging/message.js';
 // レガシーpure_plugin_system.js削除 - IPluginパターンに完全移行
 // export { createPlugin, createComfortablePlugin, registerHealthCheck, declareProcess } from './legacy/pure_plugin_system.js';

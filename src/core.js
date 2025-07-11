@@ -1,5 +1,5 @@
 // VoidCoreとの統合
-import { voidCore } from './voidcore.js';
+import { voidCore } from './nyacore.js';
 
 class CoreBulletinBoard {
   constructor() {

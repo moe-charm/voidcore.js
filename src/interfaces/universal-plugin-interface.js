@@ -2,7 +2,7 @@
 // Phase S3後続: 全システム対応の究極プラグインインターフェース
 
 import { IPlugin } from './plugin-interface.js';
-import { VoidCore } from '../core/voidcore.js';
+import { VoidCore } from '../core/nyacore.js';
 // 🔧 大工事Phase1: ICorePlugin継承エラー修正完了
 
 /**

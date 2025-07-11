@@ -16,7 +16,7 @@
  * Phase 1: 基盤構築
  */
 
-import { VoidCore } from '../../src/core/voidcore.js'
+import { VoidCore } from '../../src/core/nyacore.js'
 import { Message } from '../../src/messaging/message.js'
 import { DefaultTransport } from '../../src/messaging/transport.js'
 import { VoidFlowDebugManager } from './debug-manager.js'
