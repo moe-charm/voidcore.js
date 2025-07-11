@@ -35,7 +35,7 @@ export class VoidCoreConnectionManager {
     this.svgElement = null
     
     // Phase 3: VoidFlowCore統合
-    this.voidFlowCore = null  // main-voidcore.jsで設定される
+    this.voidFlowCore = null  // main-nyacore.jsで設定される
     this.intentMode = false   // Phase 3で有効化
     
     this.log('🔗 VoidCoreConnectionManager initialized')

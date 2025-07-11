@@ -51,7 +51,7 @@ export class VoidCoreUI {
     this.unifiedStatsManager = this.voidCore.unifiedStatsManager
     
     // Phase 2: VoidFlowCore統合
-    this.voidFlowCore = null  // main-voidcore.jsで設定される
+    this.voidFlowCore = null  // main-nyacore.jsで設定される
     
     // UI専用設定
     this.canvasManager = new CanvasManager(this)
