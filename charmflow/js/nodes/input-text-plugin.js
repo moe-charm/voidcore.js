@@ -54,7 +54,7 @@ export class InputTextPlugin extends CharmFlowNodePlugin {
     }
     
     // UI更新通知
-    await this.sendIntent('voidflow.ui.updateOutput', {
+    await this.sendIntent('charmflow.ui.updateOutput', {
       nodeId: this.id,
       output: `📝 テキスト: "${text}"`
     })

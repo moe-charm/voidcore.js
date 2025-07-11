@@ -303,7 +303,7 @@ export class PluginFilterUI {
       // クリックでタグフィルター
       tagElement.addEventListener('click', async () => {
         if (this.voidFlowCore) {
-          await this.voidFlowCore.sendIntent('voidflow.ui.filter.tag', {
+          await this.voidFlowCore.sendIntent('charmflow.ui.filter.tag', {
             tag,
             action: 'toggle',
             timestamp: Date.now()
@@ -335,7 +335,7 @@ export class PluginFilterUI {
     // 検索入力
     this.searchInput.addEventListener('input', async (e) => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.filter.search', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.filter.search', {
           query: e.target.value,
           timestamp: Date.now()
         })
@@ -348,7 +348,7 @@ export class PluginFilterUI {
     this.categoryFilters.addEventListener('click', async (e) => {
       if (e.target.classList.contains('filter-btn')) {
         if (this.voidFlowCore) {
-          await this.voidFlowCore.sendIntent('voidflow.ui.filter.category', {
+          await this.voidFlowCore.sendIntent('charmflow.ui.filter.category', {
             category: e.target.dataset.value,
             timestamp: Date.now()
           })
@@ -361,7 +361,7 @@ export class PluginFilterUI {
     // 属性フィルター
     this.container.querySelector('#priorityFilter').addEventListener('change', async (e) => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.filter.attribute', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.filter.attribute', {
           attribute: 'priority',
           value: e.target.value,
           timestamp: Date.now()
@@ -373,7 +373,7 @@ export class PluginFilterUI {
     
     this.container.querySelector('#performanceFilter').addEventListener('change', async (e) => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.filter.attribute', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.filter.attribute', {
           attribute: 'performance',
           value: e.target.value,
           timestamp: Date.now()
@@ -385,7 +385,7 @@ export class PluginFilterUI {
     
     this.container.querySelector('#showHidden').addEventListener('change', async (e) => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.filter.attribute', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.filter.attribute', {
           attribute: 'showHidden',
           value: e.target.checked,
           timestamp: Date.now()
@@ -397,7 +397,7 @@ export class PluginFilterUI {
     
     this.container.querySelector('#showExperimental').addEventListener('change', async (e) => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.filter.attribute', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.filter.attribute', {
           attribute: 'showExperimental',
           value: e.target.checked,
           timestamp: Date.now()
@@ -410,7 +410,7 @@ export class PluginFilterUI {
     // リセットボタン
     this.container.querySelector('#resetFilters').addEventListener('click', async () => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.filter.reset', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.filter.reset', {
           timestamp: Date.now()
         })
       } else {
@@ -556,7 +556,7 @@ export class PluginFilterUI {
         
         item.addEventListener('click', async () => {
           if (this.voidFlowCore) {
-            await this.voidFlowCore.sendIntent('voidflow.ui.plugin.select', {
+            await this.voidFlowCore.sendIntent('charmflow.ui.plugin.select', {
               pluginId,
               source: 'filter_search',
               timestamp: Date.now()

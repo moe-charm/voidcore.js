@@ -1,7 +1,7 @@
 /**
- * 🎯 VoidFlow Intent定義
+ * 🎯 CharmFlow Intent定義
  * 
- * 全てのVoidFlow操作をIntent化するための
+ * 全てのCharmFlow操作をIntent化するための
  * 統一定義ファイル
  * 
  * Created: 2025-07-09
@@ -14,59 +14,59 @@
 export const INTENT_TYPES = {
   // システム管理Intent
   SYSTEM: {
-    INITIALIZED: 'voidflow.system.initialized',
-    SHUTDOWN: 'voidflow.system.shutdown',
-    STATUS: 'voidflow.system.status',
-    ERROR: 'voidflow.system.error'
+    INITIALIZED: 'charmflow.system.initialized',
+    SHUTDOWN: 'charmflow.system.shutdown',
+    STATUS: 'charmflow.system.status',
+    ERROR: 'charmflow.system.error'
   },
   
   // UI操作Intent（Phase 2で実装）
   UI: {
     ELEMENT: {
-      CREATE: 'voidflow.ui.element.create',
-      MOVE: 'voidflow.ui.element.move', 
-      SELECT: 'voidflow.ui.element.select',
-      DELETE: 'voidflow.ui.element.delete',
-      UPDATE: 'voidflow.ui.element.update',
-      FOCUS: 'voidflow.ui.element.focus',
-      BLUR: 'voidflow.ui.element.blur'
+      CREATE: 'charmflow.ui.element.create',
+      MOVE: 'charmflow.ui.element.move', 
+      SELECT: 'charmflow.ui.element.select',
+      DELETE: 'charmflow.ui.element.delete',
+      UPDATE: 'charmflow.ui.element.update',
+      FOCUS: 'charmflow.ui.element.focus',
+      BLUR: 'charmflow.ui.element.blur'
     },
     
     CONNECTION: {
-      START: 'voidflow.ui.connection.start',
-      COMPLETE: 'voidflow.ui.connection.complete',
-      CANCEL: 'voidflow.ui.connection.cancel',
-      DELETE: 'voidflow.ui.connection.delete',
-      UPDATE: 'voidflow.ui.connection.update'
+      START: 'charmflow.ui.connection.start',
+      COMPLETE: 'charmflow.ui.connection.complete',
+      CANCEL: 'charmflow.ui.connection.cancel',
+      DELETE: 'charmflow.ui.connection.delete',
+      UPDATE: 'charmflow.ui.connection.update'
     },
     
     PLUGIN: {
-      ADD: 'voidflow.ui.plugin.add',
-      REMOVE: 'voidflow.ui.plugin.remove',
-      CONFIGURE: 'voidflow.ui.plugin.configure',
-      ENABLE: 'voidflow.ui.plugin.enable',
-      DISABLE: 'voidflow.ui.plugin.disable'
+      ADD: 'charmflow.ui.plugin.add',
+      REMOVE: 'charmflow.ui.plugin.remove',
+      CONFIGURE: 'charmflow.ui.plugin.configure',
+      ENABLE: 'charmflow.ui.plugin.enable',
+      DISABLE: 'charmflow.ui.plugin.disable'
     }
   },
   
   // デバッグIntent（Phase 4で実装）
   DEBUG: {
     TRACE: {
-      START: 'voidflow.debug.trace.start',
-      STOP: 'voidflow.debug.trace.stop',
-      FILTER: 'voidflow.debug.trace.filter'
+      START: 'charmflow.debug.trace.start',
+      STOP: 'charmflow.debug.trace.stop',
+      FILTER: 'charmflow.debug.trace.filter'
     },
     
     STATE: {
-      DUMP: 'voidflow.debug.state.dump',
-      HISTORY: 'voidflow.debug.state.history',
-      RESET: 'voidflow.debug.state.reset'
+      DUMP: 'charmflow.debug.state.dump',
+      HISTORY: 'charmflow.debug.state.history',
+      RESET: 'charmflow.debug.state.reset'
     },
     
     PERFORMANCE: {
-      MEASURE: 'voidflow.debug.performance.measure',
-      REPORT: 'voidflow.debug.performance.report',
-      BENCHMARK: 'voidflow.debug.performance.benchmark'
+      MEASURE: 'charmflow.debug.performance.measure',
+      REPORT: 'charmflow.debug.performance.report',
+      BENCHMARK: 'charmflow.debug.performance.benchmark'
     }
   }
 }
@@ -386,7 +386,7 @@ export const IntentShortcuts = {
 }
 
 // グローバル公開（デバッグ用）
-window.VoidFlowIntents = {
+window.CharmFlowIntents = {
   TYPES: INTENT_TYPES,
   SCHEMAS: INTENT_SCHEMAS,
   PRIORITIES: INTENT_PRIORITIES,

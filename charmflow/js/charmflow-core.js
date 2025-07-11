@@ -102,7 +102,7 @@ export class CharmFlowCore {
       this.log('✅ VoidFlowCore initialized successfully')
       
       // 初期化完了Intent
-      await this.sendIntent('voidflow.system.initialized', {
+      await this.sendIntent('charmflow.system.initialized', {
         timestamp: Date.now(),
         version: '1.0.0',
         features: this.getAvailableFeatures()
@@ -119,36 +119,36 @@ export class CharmFlowCore {
    */
   setupIntentHandlers() {
     // システムIntent
-    this.registerIntentHandler('voidflow.system.initialized', this.handleSystemIntent.bind(this))
-    this.registerIntentHandler('voidflow.system.shutdown', this.handleSystemIntent.bind(this))
-    this.registerIntentHandler('voidflow.system.status', this.handleSystemIntent.bind(this))
+    this.registerIntentHandler('charmflow.system.initialized', this.handleSystemIntent.bind(this))
+    this.registerIntentHandler('charmflow.system.shutdown', this.handleSystemIntent.bind(this))
+    this.registerIntentHandler('charmflow.system.status', this.handleSystemIntent.bind(this))
     
     // UI操作Intent（Phase 2で実装）
-    this.registerIntentHandler('voidflow.ui.element.create', this.handleUIIntent.bind(this))
-    this.registerIntentHandler('voidflow.ui.element.move', this.handleUIIntent.bind(this))
-    this.registerIntentHandler('voidflow.ui.element.select', this.handleUIIntent.bind(this))
-    this.registerIntentHandler('voidflow.ui.element.delete', this.handleUIIntent.bind(this))
-    this.registerIntentHandler('voidflow.ui.element.update', this.handleUIIntent.bind(this))
+    this.registerIntentHandler('charmflow.ui.element.create', this.handleUIIntent.bind(this))
+    this.registerIntentHandler('charmflow.ui.element.move', this.handleUIIntent.bind(this))
+    this.registerIntentHandler('charmflow.ui.element.select', this.handleUIIntent.bind(this))
+    this.registerIntentHandler('charmflow.ui.element.delete', this.handleUIIntent.bind(this))
+    this.registerIntentHandler('charmflow.ui.element.update', this.handleUIIntent.bind(this))
     
     // 接続管理Intent（Phase 3で実装）
-    this.registerIntentHandler('voidflow.ui.connection.start', this.handleConnectionIntent.bind(this))
-    this.registerIntentHandler('voidflow.ui.connection.complete', this.handleConnectionIntent.bind(this))
-    this.registerIntentHandler('voidflow.ui.connection.cancel', this.handleConnectionIntent.bind(this))
-    this.registerIntentHandler('voidflow.ui.connection.delete', this.handleConnectionIntent.bind(this))
+    this.registerIntentHandler('charmflow.ui.connection.start', this.handleConnectionIntent.bind(this))
+    this.registerIntentHandler('charmflow.ui.connection.complete', this.handleConnectionIntent.bind(this))
+    this.registerIntentHandler('charmflow.ui.connection.cancel', this.handleConnectionIntent.bind(this))
+    this.registerIntentHandler('charmflow.ui.connection.delete', this.handleConnectionIntent.bind(this))
     
     // プラグイン管理Intent
-    this.registerIntentHandler('voidflow.ui.plugin.add', this.handlePluginIntent.bind(this))
-    this.registerIntentHandler('voidflow.ui.plugin.configure', this.handlePluginIntent.bind(this))
+    this.registerIntentHandler('charmflow.ui.plugin.add', this.handlePluginIntent.bind(this))
+    this.registerIntentHandler('charmflow.ui.plugin.configure', this.handlePluginIntent.bind(this))
     
     // デバッグIntent（Phase 4で実装）
-    this.registerIntentHandler('voidflow.debug.trace.start', this.handleDebugIntent.bind(this))
-    this.registerIntentHandler('voidflow.debug.trace.stop', this.handleDebugIntent.bind(this))
-    this.registerIntentHandler('voidflow.debug.state.dump', this.handleDebugIntent.bind(this))
-    this.registerIntentHandler('voidflow.debug.state.capture', this.handleDebugIntent.bind(this))
-    this.registerIntentHandler('voidflow.debug.performance.measure', this.handleDebugIntent.bind(this))
-    this.registerIntentHandler('voidflow.debug.stats.get', this.handleDebugIntent.bind(this))
-    this.registerIntentHandler('voidflow.debug.export', this.handleDebugIntent.bind(this))
-    this.registerIntentHandler('voidflow.debug.reset', this.handleDebugIntent.bind(this))
+    this.registerIntentHandler('charmflow.debug.trace.start', this.handleDebugIntent.bind(this))
+    this.registerIntentHandler('charmflow.debug.trace.stop', this.handleDebugIntent.bind(this))
+    this.registerIntentHandler('charmflow.debug.state.dump', this.handleDebugIntent.bind(this))
+    this.registerIntentHandler('charmflow.debug.state.capture', this.handleDebugIntent.bind(this))
+    this.registerIntentHandler('charmflow.debug.performance.measure', this.handleDebugIntent.bind(this))
+    this.registerIntentHandler('charmflow.debug.stats.get', this.handleDebugIntent.bind(this))
+    this.registerIntentHandler('charmflow.debug.export', this.handleDebugIntent.bind(this))
+    this.registerIntentHandler('charmflow.debug.reset', this.handleDebugIntent.bind(this))
     
     this.log('📋 Intent handlers registered')
   }
@@ -166,7 +166,7 @@ export class CharmFlowCore {
    */
   async sendIntent(type, payload = {}) {
     try {
-      if (!this.isInitialized && !type.startsWith('voidflow.system.')) {
+      if (!this.isInitialized && !type.startsWith('charmflow.system.')) {
         throw new Error('VoidFlowCore not initialized')
       }
       
@@ -203,14 +203,14 @@ export class CharmFlowCore {
     const type = payload.intentType || 'unknown'
     
     switch (type) {
-      case 'voidflow.system.initialized':
+      case 'charmflow.system.initialized':
         this.log('🎉 VoidFlow system initialized')
         return { status: 'initialized', features: payload.features }
       
-      case 'voidflow.system.shutdown':
+      case 'charmflow.system.shutdown':
         return await this.shutdown()
       
-      case 'voidflow.system.status':
+      case 'charmflow.system.status':
         return this.getSystemStatus()
       
       default:
@@ -229,19 +229,19 @@ export class CharmFlowCore {
     this.log(`🎨 UI Intent received: ${type}`)
     
     switch (type) {
-      case 'voidflow.ui.element.create':
+      case 'charmflow.ui.element.create':
         return await this.handleElementCreate(payload)
       
-      case 'voidflow.ui.element.move':
+      case 'charmflow.ui.element.move':
         return await this.handleElementMove(payload)
       
-      case 'voidflow.ui.element.select':
+      case 'charmflow.ui.element.select':
         return await this.handleElementSelect(payload)
       
-      case 'voidflow.ui.element.delete':
+      case 'charmflow.ui.element.delete':
         return await this.handleElementDelete(payload)
       
-      case 'voidflow.ui.element.update':
+      case 'charmflow.ui.element.update':
         return await this.handleElementUpdate(payload)
       
       default:
@@ -361,16 +361,16 @@ export class CharmFlowCore {
     this.log(`🔗 Connection Intent received: ${type}`)
     
     switch (type) {
-      case 'voidflow.ui.connection.start':
+      case 'charmflow.ui.connection.start':
         return await this.handleConnectionStart(payload)
       
-      case 'voidflow.ui.connection.complete':
+      case 'charmflow.ui.connection.complete':
         return await this.handleConnectionComplete(payload)
       
-      case 'voidflow.ui.connection.cancel':
+      case 'charmflow.ui.connection.cancel':
         return await this.handleConnectionCancel(payload)
       
-      case 'voidflow.ui.connection.delete':
+      case 'charmflow.ui.connection.delete':
         return await this.handleConnectionDelete(payload)
       
       default:
@@ -511,11 +511,11 @@ export class CharmFlowCore {
     this.log(`🧩 Plugin Intent received: ${type}`)
     
     switch (type) {
-      case 'voidflow.ui.plugin.add':
+      case 'charmflow.ui.plugin.add':
         // プラグイン追加処理
         return { status: 'pending', message: 'Plugin add implementation pending' }
       
-      case 'voidflow.ui.plugin.configure':
+      case 'charmflow.ui.plugin.configure':
         // プラグイン設定変更
         return { status: 'pending', message: 'Plugin configure implementation pending' }
       
@@ -543,25 +543,25 @@ export class CharmFlowCore {
     }
     
     switch (type) {
-      case 'voidflow.debug.trace.start':
+      case 'charmflow.debug.trace.start':
         const traceResult = this.debugManager.enableTrace(payload.patterns || ['*'], payload.level || 'basic')
         const response = { status: 'success', result: traceResult }
         this.log(`🔍 Debug trace.start response:`, response)
         return response
       
-      case 'voidflow.debug.trace.stop':
+      case 'charmflow.debug.trace.stop':
         const stopResult = this.debugManager.disableTrace()
         return { status: 'success', result: stopResult }
       
-      case 'voidflow.debug.state.dump':
+      case 'charmflow.debug.state.dump':
         const stateResult = this.debugManager.dumpState(payload.format || 'table')
         return { status: 'success', result: stateResult }
       
-      case 'voidflow.debug.state.capture':
+      case 'charmflow.debug.state.capture':
         const captureResult = this.debugManager.captureState()
         return { status: 'success', result: captureResult }
       
-      case 'voidflow.debug.performance.measure':
+      case 'charmflow.debug.performance.measure':
         if (payload.name && payload.fn) {
           const perfResult = this.debugManager.measurePerformance(payload.name, payload.fn)
           return { status: 'success', result: perfResult }
@@ -569,15 +569,15 @@ export class CharmFlowCore {
           throw new Error('Performance measurement requires name and function')
         }
       
-      case 'voidflow.debug.stats.get':
+      case 'charmflow.debug.stats.get':
         const statsResult = this.debugManager.getSystemStats()
         return { status: 'success', result: statsResult }
       
-      case 'voidflow.debug.export':
+      case 'charmflow.debug.export':
         const exportResult = this.debugManager.exportDebugData()
         return { status: 'success', result: exportResult }
       
-      case 'voidflow.debug.reset':
+      case 'charmflow.debug.reset':
         const resetResult = this.debugManager.resetAllData()
         return { status: 'success', result: resetResult }
       
@@ -597,12 +597,12 @@ export class CharmFlowCore {
       core: () => this,
       debugManager: () => this.debugManager,
       debugPlugin: () => this.debugPlugin,
-      startTrace: (patterns, level) => this.sendIntent('voidflow.debug.trace.start', { patterns, level }),
-      stopTrace: () => this.sendIntent('voidflow.debug.trace.stop'),
-      dumpState: (format) => this.sendIntent('voidflow.debug.state.dump', { format }),
-      getStats: () => this.sendIntent('voidflow.debug.stats.get'),
-      reset: () => this.sendIntent('voidflow.debug.reset'),
-      export: () => this.sendIntent('voidflow.debug.export')
+      startTrace: (patterns, level) => this.sendIntent('charmflow.debug.trace.start', { patterns, level }),
+      stopTrace: () => this.sendIntent('charmflow.debug.trace.stop'),
+      dumpState: (format) => this.sendIntent('charmflow.debug.state.dump', { format }),
+      getStats: () => this.sendIntent('charmflow.debug.stats.get'),
+      reset: () => this.sendIntent('charmflow.debug.reset'),
+      export: () => this.sendIntent('charmflow.debug.export')
     }
     
     this.log('🔧 Global debug functions registered')

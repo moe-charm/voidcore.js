@@ -280,7 +280,7 @@ export class PluginPalettePlugin {
     // 検索入力
     this.searchInput.addEventListener('input', async (e) => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.palette.search', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.palette.search', {
           query: e.target.value,
           timestamp: Date.now()
         })
@@ -293,7 +293,7 @@ export class PluginPalettePlugin {
     // 検索クリアボタン
     this.container.querySelector('#searchClearBtn').addEventListener('click', async () => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.palette.search.clear', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.palette.search.clear', {
           timestamp: Date.now()
         })
       } else {
@@ -308,7 +308,7 @@ export class PluginPalettePlugin {
       btn.addEventListener('click', async (e) => {
         const filter = e.target.dataset.filter
         if (this.voidFlowCore) {
-          await this.voidFlowCore.sendIntent('voidflow.ui.palette.filter', {
+          await this.voidFlowCore.sendIntent('charmflow.ui.palette.filter', {
             filter,
             timestamp: Date.now()
           })
@@ -322,7 +322,7 @@ export class PluginPalettePlugin {
     this.container.querySelectorAll('.category-tab').forEach(tab => {
       tab.addEventListener('click', async (e) => {
         if (this.voidFlowCore) {
-          await this.voidFlowCore.sendIntent('voidflow.ui.palette.category', {
+          await this.voidFlowCore.sendIntent('charmflow.ui.palette.category', {
             category: e.target.dataset.category,
             timestamp: Date.now()
           })
@@ -335,7 +335,7 @@ export class PluginPalettePlugin {
     // ソート選択
     this.container.querySelector('#sortSelect').addEventListener('change', async (e) => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.palette.sort', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.palette.sort', {
           sortBy: e.target.value,
           timestamp: Date.now()
         })
@@ -553,7 +553,7 @@ export class PluginPalettePlugin {
     favoriteBtn.addEventListener('click', async (e) => {
       e.stopPropagation()
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.plugin.favorite', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.plugin.favorite', {
           pluginId: plugin.id,
           action: 'toggle',
           timestamp: Date.now()
@@ -570,7 +570,7 @@ export class PluginPalettePlugin {
       // プラグイン追加とボタンクリックの両方が発生するのを防ぎますにゃ。
       if (!e.target.closest('.favorite-btn')) { // お気に入りボタンなど、内部要素のクリックを除外
         if (this.voidFlowCore) {
-          await this.voidFlowCore.sendIntent('voidflow.ui.plugin.add', {
+          await this.voidFlowCore.sendIntent('charmflow.ui.plugin.add', {
             plugin,
             source: 'palette_click',
             timestamp: Date.now()
@@ -588,7 +588,7 @@ export class PluginPalettePlugin {
       e.dataTransfer.setData('text/plain', plugin.id)
       
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.plugin.drag.start', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.plugin.drag.start', {
           plugin,
           source: 'palette_drag',
           timestamp: Date.now()
@@ -955,7 +955,7 @@ export class PluginPalettePlugin {
    */
   loadUsageData() {
     try {
-      const data = localStorage.getItem('voidflow-plugin-usage')
+      const data = localStorage.getItem('charmflow-plugin-usage')
       return data ? JSON.parse(data) : {}
     } catch (error) {
       return {}
@@ -964,7 +964,7 @@ export class PluginPalettePlugin {
   
   saveUsageData() {
     try {
-      localStorage.setItem('voidflow-plugin-usage', JSON.stringify(this.usageData))
+      localStorage.setItem('charmflow-plugin-usage', JSON.stringify(this.usageData))
     } catch (error) {
       this.log('❌ Failed to save usage data')
     }
@@ -972,7 +972,7 @@ export class PluginPalettePlugin {
   
   loadFavorites() {
     try {
-      const data = localStorage.getItem('voidflow-plugin-favorites')
+      const data = localStorage.getItem('charmflow-plugin-favorites')
       return data ? JSON.parse(data) : []
     } catch (error) {
       return []
@@ -981,7 +981,7 @@ export class PluginPalettePlugin {
   
   saveFavorites() {
     try {
-      localStorage.setItem('voidflow-plugin-favorites', JSON.stringify(this.favorites))
+      localStorage.setItem('charmflow-plugin-favorites', JSON.stringify(this.favorites))
     } catch (error) {
       this.log('❌ Failed to save favorites')
     }
@@ -989,7 +989,7 @@ export class PluginPalettePlugin {
   
   loadRecentPlugins() {
     try {
-      const data = localStorage.getItem('voidflow-plugin-recent')
+      const data = localStorage.getItem('charmflow-plugin-recent')
       return data ? JSON.parse(data) : []
     } catch (error) {
       return []
@@ -998,7 +998,7 @@ export class PluginPalettePlugin {
   
   saveRecentPlugins() {
     try {
-      localStorage.setItem('voidflow-plugin-recent', JSON.stringify(this.recentPlugins))
+      localStorage.setItem('charmflow-plugin-recent', JSON.stringify(this.recentPlugins))
     } catch (error) {
       this.log('❌ Failed to save recent plugins')
     }

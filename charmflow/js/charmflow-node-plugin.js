@@ -116,14 +116,14 @@ export class CharmFlowNodePlugin extends IPlugin {
     this.log(`🧩 VoidFlow Node loaded: ${this.nodeType}`)
     
     // ノード準備完了通知
-    await this.sendIntent('voidflow.node.ready', {
+    await this.sendIntent('charmflow.node.ready', {
       nodeId: this.id,
       nodeType: this.nodeType,
       position: this.position
     })
     
     // VoidFlowコア実行エンジンに登録
-    await this.sendIntent('voidflow.engine.registerNode', {
+    await this.sendIntent('charmflow.engine.registerNode', {
       nodeId: this.id,
       nodeType: this.nodeType,
       inputs: this.inputs,
@@ -138,15 +138,15 @@ export class CharmFlowNodePlugin extends IPlugin {
     const { type, payload } = message
     
     switch (type) {
-      case 'voidflow.execute':
+      case 'charmflow.execute':
         return await this.handleExecuteRequest(payload)
-      case 'voidflow.connect':
+      case 'charmflow.connect':
         return await this.handleConnectionRequest(payload)
-      case 'voidflow.disconnect':
+      case 'charmflow.disconnect':
         return await this.handleDisconnectionRequest(payload)
-      case 'voidflow.property.update':
+      case 'charmflow.property.update':
         return await this.handlePropertyUpdate(payload)
-      case 'voidflow.data':
+      case 'charmflow.data':
         return await this.handleDataInput(payload)
       default:
         return await super.handleMessage(message)
@@ -233,7 +233,7 @@ export class CharmFlowNodePlugin extends IPlugin {
     // 並列送信
     const sendPromises = connections.map(async (connection) => {
       try {
-        await this.voidCore.publish(Message.notice('voidflow.data', {
+        await this.voidCore.publish(Message.notice('charmflow.data', {
           sourceNodeId: this.id,
           targetNodeId: connection.targetNodeId,
           data: result,
@@ -343,7 +343,7 @@ export class CharmFlowNodePlugin extends IPlugin {
     this.log(`⚙️ Property updated: ${propertyName} = ${value}`)
     
     // プロパティ変更通知
-    await this.sendIntent('voidflow.property.changed', {
+    await this.sendIntent('charmflow.property.changed', {
       nodeId: this.id,
       propertyName: propertyName,
       value: value
@@ -376,7 +376,7 @@ export class CharmFlowNodePlugin extends IPlugin {
     this.position = { x, y }
     
     // 位置変更通知（UI更新用）
-    this.sendIntent('voidflow.node.moved', {
+    this.sendIntent('charmflow.node.moved', {
       nodeId: this.id,
       position: this.position
     })

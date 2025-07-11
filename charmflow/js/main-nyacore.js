@@ -262,12 +262,12 @@ async function initializePhase4DebugSystem() {
             core: () => charmFlowCore,
             debugManager: () => charmFlowCore.debugManager,
             debugPlugin: () => charmFlowCore.debugPlugin,
-            startTrace: (patterns, level) => charmFlowCore.sendIntent('voidflow.debug.trace.start', { patterns, level }),
-            stopTrace: () => charmFlowCore.sendIntent('voidflow.debug.trace.stop'),
-            dumpState: (format) => charmFlowCore.sendIntent('voidflow.debug.state.dump', { format }),
-            getStats: () => charmFlowCore.sendIntent('voidflow.debug.stats.get'),
-            reset: () => charmFlowCore.sendIntent('voidflow.debug.reset'),
-            export: () => charmFlowCore.sendIntent('voidflow.debug.export')
+            startTrace: (patterns, level) => charmFlowCore.sendIntent('charmflow.debug.trace.start', { patterns, level }),
+            stopTrace: () => charmFlowCore.sendIntent('charmflow.debug.trace.stop'),
+            dumpState: (format) => charmFlowCore.sendIntent('charmflow.debug.state.dump', { format }),
+            getStats: () => charmFlowCore.sendIntent('charmflow.debug.stats.get'),
+            reset: () => charmFlowCore.sendIntent('charmflow.debug.reset'),
+            export: () => charmFlowCore.sendIntent('charmflow.debug.export')
         }
         
         // システム状態テスト
@@ -352,7 +352,7 @@ async function testPhase4DebugSystem() {
         }
         
         if (charmFlowCore.debugManager) {
-            console.log('✅ VoidFlowDebugManager (レガシー互換) 利用可能')
+            console.log('✅ CharmFlowDebugManager (レガシー互換) 利用可能')
         }
         
         if (window.charmflowDebug) {
@@ -360,7 +360,7 @@ async function testPhase4DebugSystem() {
         }
         
         // 基本デバッグIntent送信テスト
-        const statsResult = await charmFlowCore.sendIntent('voidflow.debug.stats.get')
+        const statsResult = await charmFlowCore.sendIntent('charmflow.debug.stats.get')
         console.log('📊 デバッグ統計取得テスト:', statsResult)
         
         console.log('🎉 Phase 4デバッグシステムテスト完了！')
@@ -681,7 +681,7 @@ function initializeNodePalette() {
             e.dataTransfer.setData('text/plain', nodeType)
             
             if (charmFlowCore) {
-                await charmFlowCore.sendIntent('voidflow.ui.element.drag.start', {
+                await charmFlowCore.sendIntent('charmflow.ui.element.drag.start', {
                     nodeType,
                     elementId: item.id,
                     timestamp: Date.now()
@@ -705,7 +705,7 @@ function initializeNodePalette() {
             }
             
             if (charmFlowCore) {
-                await charmFlowCore.sendIntent('voidflow.ui.element.create', {
+                await charmFlowCore.sendIntent('charmflow.ui.element.create', {
                     nodeType,
                     position,
                     source: 'palette_click',
@@ -734,7 +734,7 @@ function initializeCanvas() {
         e.preventDefault()
         
         if (charmFlowCore) {
-            await charmFlowCore.sendIntent('voidflow.ui.canvas.dragover', {
+            await charmFlowCore.sendIntent('charmflow.ui.canvas.dragover', {
                 position: { x: e.clientX, y: e.clientY },
                 timestamp: Date.now()
             })
@@ -752,7 +752,7 @@ function initializeCanvas() {
         }
         
         if (charmFlowCore) {
-            await charmFlowCore.sendIntent('voidflow.ui.element.create', {
+            await charmFlowCore.sendIntent('charmflow.ui.element.create', {
                 nodeType,
                 position,
                 source: 'canvas_drop',
@@ -1047,7 +1047,7 @@ function makeVoidCorePluginDraggable(element) {
         dragStartY = e.clientY - element.offsetTop
         
         if (charmFlowCore) {
-            await charmFlowCore.sendIntent('voidflow.ui.element.drag.start', {
+            await charmFlowCore.sendIntent('charmflow.ui.element.drag.start', {
                 elementId: element.id,
                 startPosition: { x: e.clientX, y: e.clientY },
                 timestamp: Date.now()
@@ -1078,7 +1078,7 @@ function makeVoidCorePluginDraggable(element) {
     
     async function onMouseUp() {
         if (charmFlowCore && isDragging) {
-            await charmFlowCore.sendIntent('voidflow.ui.element.drag.end', {
+            await charmFlowCore.sendIntent('charmflow.ui.element.drag.end', {
                 elementId: element.id,
                 endPosition: { x: element.offsetLeft, y: element.offsetTop },
                 timestamp: Date.now()
@@ -1173,7 +1173,7 @@ function createNodeElement(node) {
     nodeDiv.addEventListener('click', async (e) => {
         if (!e.target.classList.contains('connection-port')) {
             if (charmFlowCore) {
-                await charmFlowCore.sendIntent('voidflow.ui.element.select', {
+                await charmFlowCore.sendIntent('charmflow.ui.element.select', {
                     elementId: node.id,
                     nodeType: node.type,
                     position: { x: e.clientX, y: e.clientY },
@@ -1237,7 +1237,7 @@ function makeNodeDraggable(nodeElement) {
         dragStartY = e.clientY - nodeElement.offsetTop
         
         if (charmFlowCore) {
-            await charmFlowCore.sendIntent('voidflow.ui.element.drag.start', {
+            await charmFlowCore.sendIntent('charmflow.ui.element.drag.start', {
                 elementId: nodeElement.id,
                 nodeType: 'legacy_node',
                 startPosition: { x: e.clientX, y: e.clientY },
@@ -1282,7 +1282,7 @@ function makeNodeDraggable(nodeElement) {
     
     async function onMouseUp() {
         if (charmFlowCore && isDragging) {
-            await charmFlowCore.sendIntent('voidflow.ui.element.drag.end', {
+            await charmFlowCore.sendIntent('charmflow.ui.element.drag.end', {
                 elementId: nodeElement.id,
                 nodeType: 'legacy_node',
                 endPosition: { x: nodeElement.offsetLeft, y: nodeElement.offsetTop },
@@ -1612,7 +1612,7 @@ async function initializeCharmFlowCoreArchitecture() {
         // グローバル参照設定（デバッグ用）
         window.charmFlowCore = charmFlowCore
         
-        console.log('✅ VoidFlowCore初期化完了！')
+        console.log('✅ CharmFlowCore初期化完了！')
         
         // Intent Bridge初期化（Phase 2で有効化予定）
         intentBridge = new CharmFlowIntentBridge(charmFlowCore)
@@ -1623,27 +1623,27 @@ async function initializeCharmFlowCoreArchitecture() {
         // Phase 1基本動作テスト
         await testCharmFlowCoreBasicOperation()
         
-        console.log('🎉 VoidFlow-VoidCore統合アーキテクチャ初期化完了！')
+        console.log('🎉 CharmFlow-nyacore統合アーキテクチャ初期化完了！')
         
     } catch (error) {
-        console.error('❌ VoidFlow-VoidCore統合アーキテクチャ初期化失敗:', error)
+        console.error('❌ CharmFlow-nyacore統合アーキテクチャ初期化失敗:', error)
         throw error
     }
 }
 
 /**
- * 🧪 VoidFlowCore基本動作テスト
+ * 🧪 CharmFlowCore基本動作テスト
  */
 async function testCharmFlowCoreBasicOperation() {
     try {
-        console.log('🧪 VoidFlowCore基本動作テスト開始...')
+        console.log('🧪 CharmFlowCore基本動作テスト開始...')
         
         // システム状態確認
         const systemStatus = charmFlowCore.getSystemStatus()
         console.log('📊 System Status:', systemStatus)
         
         // 基本Intent送信テスト
-        const testResult = await charmFlowCore.sendIntent('voidflow.system.status')
+        const testResult = await charmFlowCore.sendIntent('charmflow.system.status')
         console.log('📤 Intent Test Result:', testResult)
         
         // 利用可能機能確認
@@ -1720,7 +1720,7 @@ async function testVoidCoreUIIntegration() {
         console.log('🧪 VoidCoreUI統合テスト開始...')
         
         // Intent経由でのUI要素作成テスト
-        const testResult = await charmFlowCore.sendIntent('voidflow.ui.element.create', {
+        const testResult = await charmFlowCore.sendIntent('charmflow.ui.element.create', {
             nodeType: 'test-button',
             position: { x: 50, y: 50 },
             pluginId: 'integration-test-element'

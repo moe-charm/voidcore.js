@@ -328,7 +328,7 @@ export class PluginFlowExecutor extends IPlugin {
    * 🎨 UI更新通知
    */
   async notifyUIUpdate(pluginId, result, status, errorMessage = null) {
-    const updateMessage = Message.notice('voidflow.ui.update', {
+    const updateMessage = Message.notice('charmflow.ui.update', {
       pluginId: pluginId,
       status: status,
       result: result,

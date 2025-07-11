@@ -34,7 +34,7 @@ export class CharmFlowBootManager extends IPlugin {
     this.log('🚀 VoidFlowBootManager loaded')
     
     // VoidFlow起動フェーズ開始を通知
-    await this.sendIntent('voidflow.boot.phaseStart', { 
+    await this.sendIntent('charmflow.boot.phaseStart', { 
       phase: 'init',
       timestamp: Date.now()
     })
@@ -44,7 +44,7 @@ export class CharmFlowBootManager extends IPlugin {
     
     // VoidFlowコンポーネントの準備完了を確認
     this.checkVoidFlowComponentsReady().then(() => {
-      this.sendIntent('voidflow.boot.ready', { 
+      this.sendIntent('charmflow.boot.ready', { 
         ok: true,
         timestamp: Date.now()
       })
@@ -58,9 +58,9 @@ export class CharmFlowBootManager extends IPlugin {
     const { type, payload } = message
     
     switch (type) {
-      case 'voidflow.component.status':
+      case 'charmflow.component.status':
         return await this.handleComponentStatusChange(payload)
-      case 'voidflow.boot.checkReady':
+      case 'charmflow.boot.checkReady':
         return await this.checkVoidFlowComponentsReady()
       default:
         return await super.handleMessage(message)
@@ -75,17 +75,17 @@ export class CharmFlowBootManager extends IPlugin {
     const { intent, payload } = message
     
     switch (intent) {
-      case 'voidflow.boot.start':
+      case 'charmflow.boot.start':
         return await this.handleVoidFlowBootStart(payload)
-      case 'voidflow.boot.status':
+      case 'charmflow.boot.status':
         return await this.getVoidFlowBootStatus()
-      case 'voidflow.component.initialize':
+      case 'charmflow.component.initialize':
         return await this.initializeVoidFlowComponent(payload)
-      case 'voidflow.visual.initialize':
+      case 'charmflow.visual.initialize':
         return await this.initializeVisualCore(payload)
-      case 'voidflow.editor.initialize':
+      case 'charmflow.editor.initialize':
         return await this.initializeNodeEditor(payload)
-      case 'voidflow.engine.initialize':
+      case 'charmflow.engine.initialize':
         return await this.initializeExecuteEngine(payload)
       default:
         return await super.handleCustomIntent(message)
@@ -135,11 +135,11 @@ export class CharmFlowBootManager extends IPlugin {
     const { intent, payload } = message
     
     switch (intent) {
-      case 'voidflow.component.waitReady':
+      case 'charmflow.component.waitReady':
         return await this.waitForComponentReady(payload.componentId, payload.timeout)
-      case 'voidflow.boot.status':
+      case 'charmflow.boot.status':
         return await this.getBootStatus()
-      case 'voidflow.boot.initialize':
+      case 'charmflow.boot.initialize':
         return await this.initializeVoidFlow(payload)
       default:
         return await super.handleCustomIntent(message)
@@ -177,7 +177,7 @@ export class CharmFlowBootManager extends IPlugin {
         const failedComponents = failures.map(f => f.component).join(', ')
         this.log(`❌ VoidFlow components failed: ${failedComponents}`)
         
-        await this.sendIntent('voidflow.boot.failed', {
+        await this.sendIntent('charmflow.boot.failed', {
           failedComponents: failures.map(f => ({
             component: f.component,
             error: f.result.reason?.message || 'Unknown error'
@@ -212,25 +212,25 @@ export class CharmFlowBootManager extends IPlugin {
     
     try {
       // FlowVisualCore初期化
-      await this.sendIntent('voidflow.visual.initialize', {
+      await this.sendIntent('charmflow.visual.initialize', {
         canvasId: config.canvasId || 'voidflow-canvas',
         theme: config.theme || 'dark'
       })
       
       // FlowNodeEditor初期化
-      await this.sendIntent('voidflow.editor.initialize', {
+      await this.sendIntent('charmflow.editor.initialize', {
         editorId: config.editorId || 'node-editor',
         language: 'javascript'
       })
       
       // FlowExecuteEngine初期化
-      await this.sendIntent('voidflow.engine.initialize', {
+      await this.sendIntent('charmflow.engine.initialize', {
         mode: config.mode || 'development',
         debugEnabled: config.debug !== false
       })
       
       // 初期化完了を通知
-      await this.sendIntent('voidflow.initialized', {
+      await this.sendIntent('charmflow.initialized', {
         timestamp: Date.now(),
         config
       })
@@ -241,7 +241,7 @@ export class CharmFlowBootManager extends IPlugin {
     } catch (error) {
       this.log(`❌ VoidFlow initialization failed: ${error.message}`)
       
-      await this.sendIntent('voidflow.initialization.failed', {
+      await this.sendIntent('charmflow.initialization.failed', {
         error: error.message,
         timestamp: Date.now()
       })
@@ -306,7 +306,7 @@ export class CharmFlowBootManager extends IPlugin {
     
     // 重要なステータス変更を通知
     if (status === 'ready' || status === 'failed') {
-      await this.sendIntent('voidflow.component.statusChanged', {
+      await this.sendIntent('charmflow.component.statusChanged', {
         componentId,
         status,
         timestamp
@@ -319,22 +319,22 @@ export class CharmFlowBootManager extends IPlugin {
    */
   startStatusMonitoring() {
     // コンポーネントステータス変更を購読
-    this.subscribe('voidflow.component.status', (message) => {
+    this.subscribe('charmflow.component.status', (message) => {
       this.handleComponentStatusChange(message.payload)
     })
     
     // FlowVisualCoreからの描画準備完了通知
-    this.subscribe('voidflow.visual.ready', () => {
+    this.subscribe('charmflow.visual.ready', () => {
       this.componentStatuses.set('FlowVisualCore', 'ready')
     })
     
     // FlowNodeEditorからの準備完了通知
-    this.subscribe('voidflow.editor.ready', () => {
+    this.subscribe('charmflow.editor.ready', () => {
       this.componentStatuses.set('FlowNodeEditor', 'ready')
     })
     
     // FlowExecuteEngineからの準備完了通知
-    this.subscribe('voidflow.engine.ready', () => {
+    this.subscribe('charmflow.engine.ready', () => {
       this.componentStatuses.set('FlowExecuteEngine', 'ready')
     })
   }

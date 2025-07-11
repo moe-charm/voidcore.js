@@ -140,10 +140,10 @@ export class VoidCoreDebugPlugin {
     try {
       this.log('system', 'info', '🚀 VoidCoreDebugPlugin activation start')
       
-      // VoidFlowCore参照取得
-      if (window.voidFlowCore) {
-        this.voidFlowCore = window.voidFlowCore
-        this.log('system', 'info', '✅ VoidFlowCore reference acquired')
+      // CharmFlowCore参照取得
+      if (window.charmFlowCore) {
+        this.charmFlowCore = window.charmFlowCore
+        this.log('system', 'info', '✅ CharmFlowCore reference acquired')
       }
       
       // Intent監視開始

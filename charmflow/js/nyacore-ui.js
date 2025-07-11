@@ -51,7 +51,7 @@ export class VoidCoreUI {
     this.unifiedStatsManager = this.voidCore.unifiedStatsManager
     
     // Phase 2: VoidFlowCore統合
-    this.voidFlowCore = null  // main-nyacore.jsで設定される
+    this.charmFlowCore = null  // main-nyacore.jsで設定される
     
     // UI専用設定
     this.canvasManager = new CanvasManager(this)
@@ -159,7 +159,7 @@ export class VoidCoreUI {
    */
   async _registerUIIntentHandlers() {
     // UI専用のIntent処理を登録
-    // voidflow.ui.* Intent群
+    // charmflow.ui.* Intent群
     this.log('🎯 UI Intent handlers registered')
   }
 
@@ -332,9 +332,9 @@ export class VoidCoreUI {
       // Phase 2: VoidFlowCore統合 - UI要素作成Intent発行
       let pluginId
       try {
-        if (this.voidFlowCore) {
+        if (this.charmFlowCore) {
           this.log(`📤 Sending VoidFlowCore UI.ELEMENT.CREATE Intent for: ${nodeType}`)
-          const intentResult = await this.voidFlowCore.sendIntent('voidflow.ui.element.create', {
+          const intentResult = await this.charmFlowCore.sendIntent('charmflow.ui.element.create', {
             nodeType: nodeType,
             position: position,
             pluginId: tempPluginId,
@@ -351,7 +351,7 @@ export class VoidCoreUI {
           const intentResponse = await this.voidCore.unifiedIntentHandler.processIntent({
             action: 'system.plugin.create',
             payload: {
-              type: `voidflow.node.${nodeType}`,
+              type: `charmflow.node.${nodeType}`,
               config: {
                 nodeType: nodeType,
                 position: position,
@@ -485,10 +485,10 @@ export class VoidCoreUI {
       const isConnectionPort = e.target.closest('.connection-port')
       if (!isConnectionPort) {
         // 🎯 Phase Alpha: Intent経由で既存ハンドラー活用
-        if (this.voidFlowCore) {
+        if (this.charmFlowCore) {
           this.log(`📤 Phase Alpha: Sending Intent for element select: ${pluginId}`)
           try {
-            await this.voidFlowCore.sendIntent('voidflow.ui.element.select', {
+            await this.charmFlowCore.sendIntent('charmflow.ui.element.select', {
               elementId: pluginId,
               position: { x: e.clientX, y: e.clientY },
               targetTag: e.target.tagName,
@@ -516,10 +516,10 @@ export class VoidCoreUI {
       const isConnectionPort = e.target.closest('.connection-port')
       if (!isConnectionPort) {
         // 🎯 Phase Alpha: Intent経由でバブルクリック処理
-        if (this.voidFlowCore) {
+        if (this.charmFlowCore) {
           this.log(`📤 Phase Alpha: Sending Intent for bubble click: ${pluginId}`)
           try {
-            await this.voidFlowCore.sendIntent('voidflow.ui.element.select', {
+            await this.charmFlowCore.sendIntent('charmflow.ui.element.select', {
               elementId: pluginId,
               position: { x: e.clientX, y: e.clientY },
               targetTag: e.target.tagName,
@@ -552,7 +552,7 @@ export class VoidCoreUI {
       this.log(`🖱️ Right-click detected for: ${pluginId}`)
       
       // 接続モード中かチェック
-      const connectionManager = this.voidFlowCore?.connectionManager || window.voidFlowCore?.connectionManager
+      const connectionManager = this.charmFlowCore?.connectionManager || window.charmFlowCore?.connectionManager
       if (connectionManager && connectionManager.smartConnectionManager && connectionManager.smartConnectionManager.isConnecting) {
         this.log('🚫 右クリック：接続モード中のためメニューを無効化')
         return false

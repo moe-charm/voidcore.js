@@ -549,14 +549,14 @@
                 console.log('window.toggleVoidCoreDebug(true) // デバッグON/OFF')
                 console.log('')
                 console.log('🧪 グローバル関数:')
-                console.log('voidflowDebug.trace("voidflow.*") // トレース開始')
-                console.log('voidflowDebug.stats()             // 統計表示')
-                console.log('voidflowDebug.benchmark("test")   // ベンチマーク')
+                console.log('charmflowDebug.trace("charmflow.*") // トレース開始')
+                console.log('charmflowDebug.stats()             // 統計表示')
+                console.log('charmflowDebug.benchmark("test")   // ベンチマーク')
                 console.log('=================================')
                 
                 // 基本統計表示
                 try {
-                    const stats = window.debugVoidFlow.getStats()
+                    const stats = window.debugCharmFlow.getStats()
                     console.log('📊 現在のシステム統計:', stats)
                     
                     // ファイルログ統計も表示

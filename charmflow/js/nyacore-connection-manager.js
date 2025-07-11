@@ -111,7 +111,7 @@ export class VoidCoreConnectionManager {
     // 接続ポート作成（左クリック）- Phase Alpha Intent統合
     document.addEventListener('click', async (e) => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.connection.click', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.connection.click', {
           targetElement: e.target.id || e.target.className,
           position: { x: e.clientX, y: e.clientY },
           timestamp: Date.now()
@@ -171,7 +171,7 @@ export class VoidCoreConnectionManager {
     // キャプチャフェーズで最優先処理
     document.addEventListener('contextmenu', async (e) => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.connection.contextmenu', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.connection.contextmenu', {
           position: { x: e.clientX, y: e.clientY },
           connectionMode: this.smartConnectionManager?.isConnectionMode,
           timestamp: Date.now()
@@ -193,7 +193,7 @@ export class VoidCoreConnectionManager {
     // マウス移動で一時的な線を更新 - Phase Alpha Intent統合
     document.addEventListener('mousemove', async (e) => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.connection.mousemove', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.connection.mousemove', {
           position: { x: e.clientX, y: e.clientY },
           connectionMode: this.smartConnectionManager?.isConnectionMode,
           timestamp: Date.now()
@@ -208,7 +208,7 @@ export class VoidCoreConnectionManager {
     // ESCキーで接続キャンセル - Phase Alpha Intent統合
     document.addEventListener('keydown', async (e) => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.connection.keydown', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.connection.keydown', {
           key: e.key,
           code: e.code,
           connectionMode: this.smartConnectionManager?.isConnectionMode,
@@ -468,7 +468,7 @@ export class VoidCoreConnectionManager {
       // ダブルクリックで削除 - Phase Alpha Intent統合
       path.addEventListener('dblclick', async () => {
         if (this.voidFlowCore) {
-          await this.voidFlowCore.sendIntent('voidflow.ui.connection.remove', {
+          await this.voidFlowCore.sendIntent('charmflow.ui.connection.remove', {
             connectionId: connection.id,
             source: 'individual_dblclick',
             timestamp: Date.now()
@@ -530,7 +530,7 @@ export class VoidCoreConnectionManager {
       const connectionId = connections[index].id
       path.addEventListener('dblclick', async () => {
         if (this.voidFlowCore) {
-          await this.voidFlowCore.sendIntent('voidflow.ui.connection.remove', {
+          await this.voidFlowCore.sendIntent('charmflow.ui.connection.remove', {
             connectionId: connectionId,
             source: 'fanout_dblclick',
             timestamp: Date.now()
@@ -1250,7 +1250,7 @@ class VoidCoreSmartConnectionManager {
     modal.querySelectorAll('.candidate-item').forEach((item, index) => {
       item.addEventListener('click', async () => {
         if (this.voidFlowCore) {
-          await this.voidFlowCore.sendIntent('voidflow.ui.connection.candidate.select', {
+          await this.voidFlowCore.sendIntent('charmflow.ui.connection.candidate.select', {
             candidateIndex: index,
             candidate: candidates[index],
             timestamp: Date.now()
@@ -1262,7 +1262,7 @@ class VoidCoreSmartConnectionManager {
       
       item.addEventListener('mouseenter', async () => {
         if (this.voidFlowCore) {
-          await this.voidFlowCore.sendIntent('voidflow.ui.connection.candidate.hover', {
+          await this.voidFlowCore.sendIntent('charmflow.ui.connection.candidate.hover', {
             candidateIndex: index,
             action: 'enter',
             timestamp: Date.now()
@@ -1274,7 +1274,7 @@ class VoidCoreSmartConnectionManager {
       
       item.addEventListener('mouseleave', async () => {
         if (this.voidFlowCore) {
-          await this.voidFlowCore.sendIntent('voidflow.ui.connection.candidate.hover', {
+          await this.voidFlowCore.sendIntent('charmflow.ui.connection.candidate.hover', {
             candidateIndex: index,
             action: 'leave',
             timestamp: Date.now()
@@ -1287,7 +1287,7 @@ class VoidCoreSmartConnectionManager {
     
     modal.querySelector('.cancel-btn').addEventListener('click', async () => {
       if (this.voidFlowCore) {
-        await this.voidFlowCore.sendIntent('voidflow.ui.connection.candidate.cancel', {
+        await this.voidFlowCore.sendIntent('charmflow.ui.connection.candidate.cancel', {
           timestamp: Date.now()
         })
       }
@@ -1378,7 +1378,7 @@ class VoidCoreSmartConnectionManager {
    */
   async _sendConnectionStartIntent(sourceId, event) {
     try {
-      await this.connectionManager.voidFlowCore.sendIntent('voidflow.ui.connection.start', {
+      await this.connectionManager.voidFlowCore.sendIntent('charmflow.ui.connection.start', {
         sourceId: sourceId,
         sourceType: 'plugin',
         cursor: { x: event.clientX, y: event.clientY },
@@ -1398,7 +1398,7 @@ class VoidCoreSmartConnectionManager {
     try {
       const bestCandidate = candidates[0] // 最適な候補を選択
       
-      await this.connectionManager.voidFlowCore.sendIntent('voidflow.ui.connection.complete', {
+      await this.connectionManager.voidFlowCore.sendIntent('charmflow.ui.connection.complete', {
         sourceId: sourceId,
         targetId: targetId,
         connectionType: bestCandidate?.type || 'data-flow',
@@ -1420,7 +1420,7 @@ class VoidCoreSmartConnectionManager {
    */
   async _sendConnectionCancelIntent(reason, sourceId) {
     try {
-      await this.connectionManager.voidFlowCore.sendIntent('voidflow.ui.connection.cancel', {
+      await this.connectionManager.voidFlowCore.sendIntent('charmflow.ui.connection.cancel', {
         reason: reason,
         sourceId: sourceId,
         timestamp: Date.now()

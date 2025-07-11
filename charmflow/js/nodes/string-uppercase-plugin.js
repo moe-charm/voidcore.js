@@ -78,7 +78,7 @@ export class StringUppercasePlugin extends CharmFlowNodePlugin {
     // UI更新通知（VoidCore互換版）
     try {
       if (this.core && this.core.sendIntent) {
-        await this.core.sendIntent('voidflow.ui.updateOutput', {
+        await this.core.sendIntent('charmflow.ui.updateOutput', {
           nodeId: this.id,
           output: `🔤 大文字変換: "${uppercaseText}"`
         })
