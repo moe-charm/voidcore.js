@@ -1,4 +1,36 @@
-# 🐱 VoidCore開発ルール・設定ファイル
+# 🐱 nyacore (旧VoidCore) 開発ルール・設定ファイル
+
+## 🚨 **重要更新 (2025-07-11): VoidCore → nyacore 移行完了**
+
+**VoidCore は nyacore に名前変更されました！**
+
+### **🔄 主要な変更点**
+```
+✅ src/core/voidcore.js → src/core/nyacore.js
+✅ src/core/voidcore_base.js → src/core/nyacore_base.js
+✅ voidflow/js/voidcore-ui.js → voidflow/js/nyacore-ui.js
+✅ voidflow/js/voidcore-debug-plugin.js → voidflow/js/nyacore-debug-plugin.js
+✅ voidflow/js/voidcore-connection-manager.js → voidflow/js/nyacore-connection-manager.js
+✅ voidflow/js/main-voidcore.js → voidflow/js/main-nyacore.js
+```
+
+### **⚠️ import文の更新例**
+```javascript
+// 旧
+import { VoidCore } from './src/voidcore.js'
+import { VoidCoreUI } from './voidcore-ui.js'
+
+// 新
+import { VoidCore } from './src/core/nyacore.js'
+import { VoidCoreUI } from './nyacore-ui.js'
+```
+
+### **📊 現在の状況**
+- **Phase Alpha Intent統合完了**: 74箇所のaddEventListener → Intent変換
+- **プラグインパレット正常動作**: パレット → Canvas → フロー実行まで確認済み
+- **次期作業**: CSSクラス名・Intent名のvoid → nya統一
+
+---
 
 ## 🧠 【最重要】VoidCore理念チェック - 作業前必読！
 

@@ -1,8 +1,25 @@
-# 📚 VoidCore Documentation
+# 📚 nyacore (旧VoidCore) Documentation
 
-> **VoidCore v14.0** - Pure Message-Based System Documentation  
-> **最終更新**: 2025-07-08  
-> **ステータス**: Phase S4最適化完了、VoidFlow開発環境整備完了  
+> **nyacore v14.0** - Pure Message-Based System Documentation  
+> **最終更新**: 2025-07-11  
+> **ステータス**: VoidCore → nyacore 移行完了、Phase Alpha Intent統合完了  
+
+## ⚠️ **重要な変更 (2025-07-11)**
+
+**VoidCore は nyacore に名前変更されました！**
+
+- **コアファイル**: `src/core/voidcore.js` → `src/core/nyacore.js`
+- **UIファイル**: `voidcore-ui.js` → `nyacore-ui.js`
+- **メインファイル**: `main-voidcore.js` → `main-nyacore.js`
+- **import文の更新が必要です**
+
+```javascript
+// 旧
+import { VoidCore } from './src/voidcore.js'
+
+// 新
+import { VoidCore } from './src/core/nyacore.js'
+```
 
 ---
 
@@ -69,14 +86,19 @@
 - Phase S4: ChatGPT提案コアスリム化
 - VoidFlow開発環境分割 (3,155行→8ファイル)
 - VoidCore純化プロジェクト
+- **VoidCore → nyacore 名前移行** (2025-07-11)
+  - `src/core/voidcore.js` → `src/core/nyacore.js`
+  - `voidcore-ui.js` → `nyacore-ui.js`
+  - `main-voidcore.js` → `main-nyacore.js`
+- **Phase Alpha Intent統合** (74箇所のaddEventListener → Intent変換)
 
 ### **🔄 進行中**
 - VoidFlow分割版動作確認
-- Web便利ツール第一弾作成
-- プラグイン編集機能追加
+- nyacore移行の完全化（CSSクラス名、Intent名統一）
+- プラグインパレット動作確認完了
 
 ### **📋 次期計画**
-- Phase 5.3: VoidFlow-VoidCore統合
+- Phase 5.3: VoidFlow-nyacore統合
 - VoidIDE Genesis実装
 - JavaScript→C++橋渡しシステム
 
@@ -86,8 +108,8 @@
 
 ### **基本使用例**
 ```javascript
-import { VoidCore } from './src/voidcore.js'
-import { Message } from './src/message.js'
+import { VoidCore } from './src/core/nyacore.js'
+import { Message } from './src/messaging/message.js'
 
 const voidCore = new VoidCore()
 

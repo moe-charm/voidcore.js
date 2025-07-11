@@ -1,4 +1,16 @@
-# 📚 VoidCore v14.0 API リファレンス
+# 📚 nyacore (旧VoidCore) v14.0 API リファレンス
+
+## ⚠️ **重要: VoidCore → nyacore 移行完了 (2025-07-11)**
+
+**ファイルパスが変更されました！**
+
+```javascript
+// 旧
+import { VoidCore } from './src/voidcore.js'
+
+// 新
+import { VoidCore } from './src/core/nyacore.js'
+```
 
 ## 🎯 Phase R 統一Intentシステム
 
