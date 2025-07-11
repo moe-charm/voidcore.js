@@ -1,11 +1,11 @@
-# 🏗️ CharmFlow (旧VoidFlow) アーキテクチャドキュメンテーションシステム
+# 🏗️ CharmFlow nyacore統合版 アーキテクチャドキュメンテーション
 
 **目的**: Claude Codeの効率的CharmFlow理解・修正支援  
 **原則**: 概要→詳細→実装の3段階情報提供  
 **更新**: 修正時の説明同期更新必須
 
-> **📍 重要**: VoidFlow → CharmFlow 名前移行完了 (2025-07-11)  
-> アーキテクチャ構造は変わらず、nyacore統合システムとして継続
+> **🎉 2025年大改革完了**: VoidFlow → CharmFlow、VoidCore → nyacore、VoidCoreUI → NyaCoreUI  
+> nyacore v14.0完全統合システムとして進化継続中
 
 ## 🎯 **Claude Code調査プロトコル**
 
@@ -37,21 +37,21 @@
 ## 📁 **ドキュメント構造**
 
 ```
-docs/voidflow-architecture/
+docs/charmflow/architecture/
 ├── README.md                    # このファイル（調査プロトコル）
 ├── architecture-overview.md     # 🏗️ 全体アーキテクチャ図
 ├── class-index.md              # 📚 主要クラス一覧・概要
 ├── component-interfaces.md     # 🔗 コンポーネント間接続仕様
 ├── current-status.md           # 📊 現在の実装状態
 ├── modification-log.md         # 📝 変更履歴（説明更新ログ）
-├── known-issues.md             # 🚨 既知の問題・制約事項
+├── nyacore-integration.md      # 🌟 nyacore統合仕様
 ├── design-decisions.md         # 💡 重要な設計判断記録
 └── component-details/          # 📁 詳細説明フォルダ
-    ├── voidcore-ui.md         # VoidCoreUI詳細
+    ├── nyacore-ui.md          # NyaCoreUI詳細
+    ├── charmflow-core.md      # CharmFlowCore詳細  
     ├── connection-manager.md   # ConnectionManager詳細
-    ├── element-manager.md     # ElementManager詳細
-    ├── hybrid-communication.md # HybridCommunication詳細
-    └── debug-system.md        # デバッグシステム詳細
+    ├── debug-file-logger.md   # DebugFileLogger詳細
+    └── plugin-flow-executor.md # PluginFlowExecutor詳細
 ```
 
 ---
