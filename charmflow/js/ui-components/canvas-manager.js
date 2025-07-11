@@ -11,8 +11,8 @@
  * - Canvas境界チェック
  */
 export class CanvasManager {
-  constructor(voidCoreUI, options = {}) {
-    this.voidCoreUI = voidCoreUI
+  constructor(nyaCoreUI, options = {}) {
+    this.nyaCoreUI = nyaCoreUI
     this.voidFlowCore = options.voidFlowCore || null  // Phase Alpha: Intent統合
     this.canvasElement = null
   }
@@ -23,7 +23,7 @@ export class CanvasManager {
   setCanvas(canvasElement) {
     this.canvasElement = canvasElement
     this.setupCanvasEvents()
-    this.voidCoreUI.log('🖥️ Canvas element registered')
+    this.nyaCoreUI.log('🖥️ Canvas element registered')
   }
 
   /**
@@ -60,7 +60,7 @@ export class CanvasManager {
         })
       }
       
-      this.voidCoreUI.createUIPlugin(nodeType, position)
+      this.nyaCoreUI.createUIPlugin(nodeType, position)
     })
     
     // 右クリックでの接続キャンセル & メニュー表示 - Phase Alpha Intent統合
@@ -70,17 +70,17 @@ export class CanvasManager {
       if (this.voidFlowCore) {
         await this.voidFlowCore.sendIntent('voidflow.ui.canvas.contextmenu', {
           position: { x: e.clientX, y: e.clientY },
-          connectionMode: this.voidCoreUI.connectionManager?.isInConnectionMode(),
+          connectionMode: this.nyaCoreUI.connectionManager?.isInConnectionMode(),
           timestamp: Date.now()
         })
       }
       
       // 接続モードの場合はキャンセル
-      if (this.voidCoreUI.connectionManager.isInConnectionMode()) {
-        this.voidCoreUI.cancelConnectionMode()
+      if (this.nyaCoreUI.connectionManager.isInConnectionMode()) {
+        this.nyaCoreUI.cancelConnectionMode()
       } else {
         // 通常時はキャンバスメニューを表示
-        this.voidCoreUI.contextMenuManager.showCanvasMenu(e.clientX, e.clientY)
+        this.nyaCoreUI.contextMenuManager.showCanvasMenu(e.clientX, e.clientY)
       }
     })
   }
@@ -90,13 +90,13 @@ export class CanvasManager {
    */
   appendChild(element) {
     if (!this.canvasElement) {
-      this.voidCoreUI.log('❌ Canvas element is null or undefined. Cannot append UI element.')
+      this.nyaCoreUI.log('❌ Canvas element is null or undefined. Cannot append UI element.')
       return false
     }
     
-    this.voidCoreUI.log(`🎨 Attempting to append element to canvas: ${this.canvasElement.id}`)
+    this.nyaCoreUI.log(`🎨 Attempting to append element to canvas: ${this.canvasElement.id}`)
     this.canvasElement.appendChild(element)
-    this.voidCoreUI.log(`🎨 Element appended to canvas. Current child count: ${this.canvasElement.children.length}`)
+    this.nyaCoreUI.log(`🎨 Element appended to canvas. Current child count: ${this.canvasElement.children.length}`)
     return true
   }
 

@@ -14,8 +14,8 @@ import { Message } from '/src/messaging/message.js'
  * - 選択状態のクリア
  */
 export class SelectionManager {
-  constructor(voidCoreUI) {
-    this.voidCoreUI = voidCoreUI
+  constructor(nyaCoreUI) {
+    this.nyaCoreUI = nyaCoreUI
     this.selectedElements = new Set()
   }
 
@@ -24,7 +24,7 @@ export class SelectionManager {
    */
   updateElementSelection(data) {
     const { elementId, selected } = data
-    const element = this.voidCoreUI.uiElements.get(String(elementId))
+    const element = this.nyaCoreUI.uiElements.get(String(elementId))
     
     if (element) {
       if (selected) {
@@ -35,7 +35,7 @@ export class SelectionManager {
         this.selectedElements.delete(elementId)
       }
       
-      this.voidCoreUI.voidCore.base.publish(Message.notice('ui.element.selected', {
+      this.nyaCoreUI.voidCore.base.publish(Message.notice('ui.element.selected', {
         elementId: elementId,
         selected: selected,
         selectedCount: this.selectedElements.size
@@ -114,7 +114,7 @@ export class SelectionManager {
     const minY = Math.min(y1, y2)
     const maxY = Math.max(y1, y2)
 
-    this.voidCoreUI.uiElements.forEach((element, elementId) => {
+    this.nyaCoreUI.uiElements.forEach((element, elementId) => {
       const rect = element.getBoundingClientRect()
       const centerX = rect.left + rect.width / 2
       const centerY = rect.top + rect.height / 2
@@ -132,9 +132,9 @@ export class SelectionManager {
     return {
       selectedCount: this.selectedElements.size,
       selectedIds: this.getSelectedElementIds(),
-      totalElements: this.voidCoreUI.uiElements.size,
-      selectionRatio: this.voidCoreUI.uiElements.size > 0 
-        ? this.selectedElements.size / this.voidCoreUI.uiElements.size 
+      totalElements: this.nyaCoreUI.uiElements.size,
+      selectionRatio: this.nyaCoreUI.uiElements.size > 0 
+        ? this.selectedElements.size / this.nyaCoreUI.uiElements.size 
         : 0
     }
   }

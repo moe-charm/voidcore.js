@@ -13,8 +13,8 @@ import { PluginAttributeTypes } from '/src/core/plugin-attributes.js'
  * - インクリメンタルサーチ
  */
 export class PluginFilterUI {
-  constructor(voidCoreUI, options = {}) {
-    this.voidCoreUI = voidCoreUI
+  constructor(nyaCoreUI, options = {}) {
+    this.nyaCoreUI = nyaCoreUI
     this.voidFlowCore = options.voidFlowCore || null  // Phase Alpha: Intent統合
     this.container = null
     this.searchInput = null
@@ -280,7 +280,7 @@ export class PluginFilterUI {
    * タグクラウドの作成
    */
   createTagCloud() {
-    const tagCloudData = this.voidCoreUI.generateTagCloud()
+    const tagCloudData = this.nyaCoreUI.generateTagCloud()
     
     this.tagCloud.innerHTML = ''
     
@@ -485,14 +485,14 @@ export class PluginFilterUI {
     // VoidCoreUIにフィルターを適用
     Object.entries(this.currentFilters).forEach(([key, value]) => {
       if (key !== 'search' && value !== null && value !== '') {
-        this.voidCoreUI.setAttributeFilter(key, value)
+        this.nyaCoreUI.setAttributeFilter(key, value)
       }
     })
     
     // 検索クエリの処理
     if (this.currentFilters.search) {
       // 検索結果を取得してフィルタリング
-      const searchResults = this.voidCoreUI.searchPluginsByTag(this.currentFilters.search)
+      const searchResults = this.nyaCoreUI.searchPluginsByTag(this.currentFilters.search)
       this.log(`Search results: ${searchResults.length} plugins found`)
     }
     
@@ -503,10 +503,10 @@ export class PluginFilterUI {
    * 統計情報の更新
    */
   updateStats() {
-    const categoryStats = this.voidCoreUI.getCategoryStats()
-    const filteredPlugins = this.voidCoreUI.getFilteredPlugins()
+    const categoryStats = this.nyaCoreUI.getCategoryStats()
+    const filteredPlugins = this.nyaCoreUI.getFilteredPlugins()
     
-    this.stats.totalPlugins = this.voidCoreUI.uiPlugins.size
+    this.stats.totalPlugins = this.nyaCoreUI.uiPlugins.size
     this.stats.filteredPlugins = filteredPlugins.length
     this.stats.categoryStats = categoryStats
     
@@ -521,7 +521,7 @@ export class PluginFilterUI {
    * 検索結果の表示
    */
   showSearchResults(query) {
-    const results = this.voidCoreUI.searchPluginsByTag(query)
+    const results = this.nyaCoreUI.searchPluginsByTag(query)
     
     this.searchResults.innerHTML = ''
     
@@ -529,7 +529,7 @@ export class PluginFilterUI {
       this.searchResults.innerHTML = '<div style="padding: 8px; color: #666; text-align: center;">No plugins found</div>'
     } else {
       results.slice(0, 10).forEach(([pluginId, plugin]) => {
-        const attributes = this.voidCoreUI.getPluginAttributes(pluginId)
+        const attributes = this.nyaCoreUI.getPluginAttributes(pluginId)
         const item = document.createElement('div')
         item.style.cssText = `
           padding: 8px;
@@ -586,11 +586,11 @@ export class PluginFilterUI {
    */
   selectPlugin(pluginId) {
     // プラグインを選択状態にする
-    this.voidCoreUI.selectedElements.clear()
-    this.voidCoreUI.selectedElements.add(pluginId)
+    this.nyaCoreUI.selectedElements.clear()
+    this.nyaCoreUI.selectedElements.add(pluginId)
     
     // UI要素をハイライト
-    const element = this.voidCoreUI.uiElements.get(pluginId)
+    const element = this.nyaCoreUI.uiElements.get(pluginId)
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' })
       element.classList.add('selected')

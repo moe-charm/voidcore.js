@@ -11,8 +11,8 @@ import { Message } from '/src/messaging/message.js'
  * - 互換性レイヤーの提供
  */
 export class CharmFlowMessageAdapter {
-  constructor(voidCoreUI) {
-    this.voidCoreUI = voidCoreUI
+  constructor(nyaCoreUI) {
+    this.nyaCoreUI = nyaCoreUI
     this.flowIdCounter = 0
     this.activeFlows = new Map() // flowId → flow metadata
     this.messageHistory = []
@@ -24,7 +24,7 @@ export class CharmFlowMessageAdapter {
    * 📝 ログ出力
    */
   log(message) {
-    if (this.voidCoreUI && this.voidCoreUI.debugMode) {
+    if (this.nyaCoreUI && this.nyaCoreUI.debugMode) {
       console.log(`[CharmFlowMessageAdapter] ${message}`)
     }
   }

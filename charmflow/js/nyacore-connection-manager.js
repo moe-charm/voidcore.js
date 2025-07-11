@@ -383,10 +383,10 @@ export class VoidCoreConnectionManager {
       }
     }
     
-    // VoidCoreUIプラグインの場合
-    if (window.voidCoreUI && window.voidCoreUI.uiElements.has(pluginId)) {
-      this.log(`📤 VoidCoreUI plugin found, sending to handleDataFlowReceived`)
-      await window.voidCoreUI.handleDataFlowReceived(pluginId, message.payload)
+    // NyaCoreUIプラグインの場合
+    if (window.nyaCoreUI && window.nyaCoreUI.uiElements.has(pluginId)) {
+      this.log(`📤 NyaCoreUI plugin found, sending to handleDataFlowReceived`)
+      await window.nyaCoreUI.handleDataFlowReceived(pluginId, message.payload)
       return
     }
     

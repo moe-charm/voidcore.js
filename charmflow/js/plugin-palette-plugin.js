@@ -633,11 +633,11 @@ export class PluginPalettePlugin {
     // 最近使用リストに追加
     this.addToRecentPlugins(plugin.id)
     
-    // VoidCoreUIに追加
-    if (window.voidCoreUI) {
+    // NyaCoreUIに追加
+    if (window.nyaCoreUI) {
       try {
         // VoidCore v14.0 IPlugin互換のプラグインオブジェクトを作成
-        const canvasElement = window.voidCoreUI.canvasManager?.canvasElement;
+        const canvasElement = window.nyaCoreUI.canvasManager?.canvasElement;
         if (!canvasElement) {
           console.error('❌ Canvas element not found in canvasManager');
           return;
@@ -649,9 +649,9 @@ export class PluginPalettePlugin {
         };
         const voidCorePlugin = await this.createVoidCorePlugin(plugin)
         
-        // VoidCoreUIにプラグインを追加（createUIElementではなくcreateUIPluginを呼び出すにゃ！）
+        // NyaCoreUIにプラグインを追加（createUIElementではなくcreateUIPluginを呼び出すにゃ！）
             // createUIPluginは、UI要素の作成と同時にVoidCoreへのプラグイン登録も行うにゃ
-            await window.voidCoreUI.createUIPlugin(voidCorePlugin.metadata.nodeType, position, voidCorePlugin.id);
+            await window.nyaCoreUI.createUIPlugin(voidCorePlugin.metadata.nodeType, position, voidCorePlugin.id);
         this.log(`✅ Plugin added to canvas: ${plugin.displayName}`)
         
       } catch (error) {
@@ -678,7 +678,7 @@ export class PluginPalettePlugin {
         super({
           id: `${pluginData.id}-${Date.now()}`,
           type: pluginData.type || 'generic',
-          parent: window.voidCoreUI,
+          parent: window.nyaCoreUI,
           displayName: pluginData.displayName || pluginData.name,
           metadata: {
             name: pluginData.name,

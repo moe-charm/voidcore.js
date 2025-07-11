@@ -15,8 +15,8 @@ import { Message } from '/src/messaging/message.js'
  * - ハイブリッド通信での接続更新
  */
 export class ConnectionManager {
-  constructor(voidCoreUI) {
-    this.voidCoreUI = voidCoreUI
+  constructor(nyaCoreUI) {
+    this.nyaCoreUI = nyaCoreUI
     this.connections = new Map() // sourceId-targetId → connection data
     this.connectionMode = false
     this.pendingConnection = null
@@ -38,7 +38,7 @@ export class ConnectionManager {
       timestamp: Date.now()
     })
     
-    this.voidCoreUI.voidCore.base.publish(Message.notice('ui.connection.updated', {
+    this.nyaCoreUI.voidCore.base.publish(Message.notice('ui.connection.updated', {
       sourceId: sourceId,
       targetId: targetId,
       connectionType: connectionType || 'data-flow'
@@ -52,7 +52,7 @@ export class ConnectionManager {
     this.connectionMode = false
     this.pendingConnection = null
     
-    this.voidCoreUI.voidCore.base.publish(Message.notice('ui.connection.cancelled', {
+    this.nyaCoreUI.voidCore.base.publish(Message.notice('ui.connection.cancelled', {
       timestamp: Date.now()
     }))
   }
@@ -65,28 +65,28 @@ export class ConnectionManager {
     const safePluginId = String(pluginId)
     
     // ログ出力を無効化（パフォーマンス最適化）
-    // this.voidCoreUI.log(`🔄 Redrawing connections for: ${safePluginId} (type: ${typeof pluginId})`)
+    // this.nyaCoreUI.log(`🔄 Redrawing connections for: ${safePluginId} (type: ${typeof pluginId})`)
     
     // ConnectionManagerがある場合は使用
     if (window.connectionManager && window.connectionManager.redrawConnectionsFromNode) {
-      // this.voidCoreUI.log(`🔄 Using window.connectionManager.redrawConnectionsFromNode`)
+      // this.nyaCoreUI.log(`🔄 Using window.connectionManager.redrawConnectionsFromNode`)
       window.connectionManager.redrawConnectionsFromNode(safePluginId)
     } else {
       // エラーログは残す
-      this.voidCoreUI.log(`❌ window.connectionManager.redrawConnectionsFromNode not found`)
+      this.nyaCoreUI.log(`❌ window.connectionManager.redrawConnectionsFromNode not found`)
     }
     
     // VoidCoreConnectionManagerがある場合も使用
-    if (this.voidCoreUI.hybridComm && this.voidCoreUI.hybridComm.updateConnection) {
-      // this.voidCoreUI.log(`🔄 Using hybridComm.fastUIUpdate`)
-      this.voidCoreUI.hybridComm.fastUIUpdate('connection', {
+    if (this.nyaCoreUI.hybridComm && this.nyaCoreUI.hybridComm.updateConnection) {
+      // this.nyaCoreUI.log(`🔄 Using hybridComm.fastUIUpdate`)
+      this.nyaCoreUI.hybridComm.fastUIUpdate('connection', {
         elementId: safePluginId,
         action: 'redraw'
       })
     }
     
     // 完了ログを無効化
-    // this.voidCoreUI.log(`🔄 Connections redrawn for element: ${safePluginId}`)
+    // this.nyaCoreUI.log(`🔄 Connections redrawn for element: ${safePluginId}`)
   }
 
   /**
@@ -99,7 +99,7 @@ export class ConnectionManager {
       startTime: Date.now()
     }
     
-    this.voidCoreUI.voidCore.base.publish(Message.notice('ui.connection.mode.started', {
+    this.nyaCoreUI.voidCore.base.publish(Message.notice('ui.connection.mode.started', {
       sourceId: sourcePluginId,
       timestamp: Date.now()
     }))
@@ -152,7 +152,7 @@ export class ConnectionManager {
     const removed = this.connections.delete(connectionKey)
     
     if (removed) {
-      this.voidCoreUI.voidCore.base.publish(Message.notice('ui.connection.removed', {
+      this.nyaCoreUI.voidCore.base.publish(Message.notice('ui.connection.removed', {
         sourceId,
         targetId,
         timestamp: Date.now()

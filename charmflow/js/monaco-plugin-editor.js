@@ -129,9 +129,9 @@ class MonacoPluginEditor {
     // 初回の場合はテンプレート生成
     this.log(`📋 Generating template for: ${pluginId}`)
     
-    // VoidCoreUIからプラグイン情報取得
-    if (window.voidCoreUI && window.voidCoreUI.uiElements.has(pluginId)) {
-      const element = window.voidCoreUI.uiElements.get(pluginId)
+    // NyaCoreUIからプラグイン情報取得
+    if (window.nyaCoreUI && window.nyaCoreUI.uiElements.has(pluginId)) {
+      const element = window.nyaCoreUI.uiElements.get(pluginId)
       const nodeType = element.getAttribute('data-node-type')
       
       // ノードタイプに応じたテンプレートコード生成
@@ -331,7 +331,7 @@ return plugin`
     const title = document.getElementById('editorTitle')
     
     // タイトル更新
-    const element = window.voidCoreUI?.uiElements.get(pluginId)
+    const element = window.nyaCoreUI?.uiElements.get(pluginId)
     const nodeType = element?.getAttribute('data-node-type') || 'unknown'
     title.textContent = `🎨 Editing: ${nodeType} (${pluginId.substring(0, 8)}...)`
     
@@ -439,7 +439,7 @@ return plugin`
       },
       window: {
         connectionManager: window.connectionManager,
-        voidCoreUI: window.voidCoreUI
+        nyaCoreUI: window.nyaCoreUI
       },
       document: {
         querySelector: document.querySelector.bind(document),
@@ -461,9 +461,9 @@ return plugin`
    * 🔄 プラグイン動作更新
    */
   async updatePluginBehavior(pluginId, newPluginObj) {
-    // VoidCoreUIプラグインの動作を更新
-    if (window.voidCoreUI && window.voidCoreUI.uiPlugins.has(pluginId)) {
-      const existingPlugin = window.voidCoreUI.uiPlugins.get(pluginId)
+    // NyaCoreUIプラグインの動作を更新
+    if (window.nyaCoreUI && window.nyaCoreUI.uiPlugins.has(pluginId)) {
+      const existingPlugin = window.nyaCoreUI.uiPlugins.get(pluginId)
       
       // 新しい動作をマージ
       Object.assign(existingPlugin, newPluginObj)

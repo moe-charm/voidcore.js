@@ -1,5 +1,5 @@
-// voidcore-ui.js - UI専用VoidCore拡張クラス
-// VoidFlow VoidCore化のための汎用UI基盤
+// nyacore-ui.js - UI専用nyacore拡張クラス
+// CharmFlow nyacore化のための汎用UI基盤
 
 import { VoidCore } from '/src/core/nyacore.js'
 import { Message } from '/src/messaging/message.js'
@@ -17,17 +17,17 @@ import { ElementManager } from './ui-components/element-manager.js'
 import { ContextMenuManager } from './ui-components/context-menu-manager.js'
 
 /**
- * 🎨 VoidCoreUI - UI操作専用のVoidCore拡張クラス
+ * 🎨 NyaCoreUI - UI操作専用のnyacore拡張クラス
  * 
  * 設計原則:
- * - VoidCoreをコンポジションでUI専用機能を追加
+ * - nyacoreをコンポジションでUI専用機能を追加
  * - 高頻度UI操作のための最適化
- * - DOM操作とVoidCoreメッセージングの橋渡し
+ * - DOM操作とnyacoreメッセージングの橋渡し
  * - UI状態管理の統一
  * 
  * 🔧 Phase3対応: 継承 → コンポジション設計
  */
-export class VoidCoreUI {
+export class NyaCoreUI {
   constructor(options = {}) {
     // 🔧 Phase3対応: コンポジション設計
     this.voidCore = new VoidCore(null, {
@@ -81,17 +81,17 @@ export class VoidCoreUI {
       console.log(`  - Event phase: ${e.eventPhase}`)
     }, true) // キャプチャフェーズで監視
     
-    this.log('🎨 VoidCoreUI initialized - UI-optimized VoidCore ready (Phase3)')
+    this.log('🎨 NyaCoreUI initialized - UI-optimized nyacore ready (Phase3)')
   }
   
   // 🔧 Phase3対応: VoidCoreメソッドの委譲 + UIログカテゴリ対応
   log(message) {
-    console.log(`[VoidCoreUI] ${message}`)
+    console.log(`[NyaCoreUI] ${message}`)
     
     // Phase 1: UIカテゴリのファイル出力デバッグログ
     if (debugLogger) {
       debugLogger.log('ui', 'debug', message, {
-        source: 'VoidCoreUI',
+        source: 'NyaCoreUI',
         timestamp: Date.now()
       })
     }
@@ -129,7 +129,7 @@ export class VoidCoreUI {
    */
   static async create(options = {}) {
     // 1. 基本インスタンス生成
-    const instance = new VoidCoreUI(options)
+    const instance = new NyaCoreUI(options)
     
     // 2. 🔧 Phase3対応: VoidCore初期化
     await instance.voidCore.initPromise
@@ -138,7 +138,7 @@ export class VoidCoreUI {
     await instance._performUIAsyncInitialization()
     
     // 4. 完全に初期化されたインスタンスを返却
-    instance.log('🎨 VoidCoreUI async initialization completed (Phase3)')
+    instance.log('🎨 NyaCoreUI async initialization completed (Phase3)')
     return instance
   }
 
@@ -326,7 +326,7 @@ export class VoidCoreUI {
       // 一意のプラグインID生成（Intent失敗時のフォールバック）
       const timestamp = Date.now()
       const random = Math.random().toString(36).substr(2, 9)
-      const tempPluginId = `voidcore-plugin-${timestamp}-${random}`
+      const tempPluginId = `nyacore-plugin-${timestamp}-${random}`
       this.log(`🔧 Generated temp plugin ID: ${tempPluginId}`)
       
       // Phase 2: VoidFlowCore統合 - UI要素作成Intent発行
@@ -340,7 +340,7 @@ export class VoidCoreUI {
             pluginId: tempPluginId,
             config: {
               uiMode: true,
-              source: 'voidcore-ui'
+              source: 'nyacore-ui'
             }
           })
           pluginId = intentResult.pluginId || intentResult.id || tempPluginId
@@ -1154,4 +1154,4 @@ export class VoidCoreUI {
   }
 }
 
-export default VoidCoreUI
+export default NyaCoreUI

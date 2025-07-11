@@ -12,8 +12,8 @@
  * - メニュー位置の調整
  */
 export class ContextMenuManager {
-  constructor(voidCoreUI, options = {}) {
-    this.voidCoreUI = voidCoreUI
+  constructor(nyaCoreUI, options = {}) {
+    this.nyaCoreUI = nyaCoreUI
     this.voidFlowCore = options.voidFlowCore || null  // Phase Alpha: Intent統合
     this.menuElement = null
     this.currentTarget = null
@@ -157,7 +157,7 @@ export class ContextMenuManager {
    */
   showPluginMenu(pluginId, x, y) {
     console.log(`🎯 showPluginMenu called for: ${pluginId} at (${x}, ${y})`)
-    this.voidCoreUI.log(`🎯 右クリックメニュー表示: ${pluginId}`)
+    this.nyaCoreUI.log(`🎯 右クリックメニュー表示: ${pluginId}`)
     this.currentTarget = pluginId
     this.currentTargetType = 'plugin'
     
@@ -276,18 +276,18 @@ export class ContextMenuManager {
    * 🎨 プラグインコード編集
    */
   async editPluginCode(pluginId) {
-    this.voidCoreUI.log(`🎨 Edit code for plugin: ${pluginId}`)
+    this.nyaCoreUI.log(`🎨 Edit code for plugin: ${pluginId}`)
     
     // Monaco Editor を開く
     if (window.monacoPluginEditor && typeof window.monacoPluginEditor.openPluginEditor === 'function') {
       try {
         await window.monacoPluginEditor.openPluginEditor(pluginId)
       } catch (error) {
-        this.voidCoreUI.log(`❌ Monaco Editor error: ${error.message}`)
+        this.nyaCoreUI.log(`❌ Monaco Editor error: ${error.message}`)
         alert(`Monaco Editor error: ${error.message}`)
       }
     } else {
-      this.voidCoreUI.log('❌ Monaco Editor not available or not initialized')
+      this.nyaCoreUI.log('❌ Monaco Editor not available or not initialized')
       alert('Monaco Editor not available. Please check if it is properly initialized.')
     }
   }
@@ -296,7 +296,7 @@ export class ContextMenuManager {
    * 📝 プラグインプロパティ表示
    */
   showPluginProperties(pluginId) {
-    this.voidCoreUI.log(`📝 Show properties for plugin: ${pluginId}`)
+    this.nyaCoreUI.log(`📝 Show properties for plugin: ${pluginId}`)
     // TODO: プロパティダイアログを実装
     alert(`Plugin Properties: ${pluginId}`)
   }
@@ -305,16 +305,16 @@ export class ContextMenuManager {
    * 🗑️ プラグイン削除
    */
   async deletePlugin(pluginId) {
-    this.voidCoreUI.log(`🗑️ Delete plugin: ${pluginId}`)
+    this.nyaCoreUI.log(`🗑️ Delete plugin: ${pluginId}`)
     
     // 確認ダイアログ
     if (confirm(`Delete plugin "${pluginId}"?`)) {
       try {
         // VoidCoreUI の削除メソッドを呼び出し
-        await this.voidCoreUI.removeUIPlugin(pluginId)
-        this.voidCoreUI.log(`✅ Plugin deleted: ${pluginId}`)
+        await this.nyaCoreUI.removeUIPlugin(pluginId)
+        this.nyaCoreUI.log(`✅ Plugin deleted: ${pluginId}`)
       } catch (error) {
-        this.voidCoreUI.log(`❌ Failed to delete plugin: ${error.message}`)
+        this.nyaCoreUI.log(`❌ Failed to delete plugin: ${error.message}`)
       }
     }
   }
@@ -323,7 +323,7 @@ export class ContextMenuManager {
    * 📋 プラグインコピー
    */
   copyPlugin(pluginId) {
-    this.voidCoreUI.log(`📋 Copy plugin: ${pluginId}`)
+    this.nyaCoreUI.log(`📋 Copy plugin: ${pluginId}`)
     // TODO: クリップボード機能を実装
     alert(`Plugin copied: ${pluginId}`)
   }
@@ -332,48 +332,48 @@ export class ContextMenuManager {
    * 📄 プラグイン複製
    */
   async duplicatePlugin(pluginId) {
-    this.voidCoreUI.log(`📄 Duplicate plugin start: ${pluginId}`)
+    this.nyaCoreUI.log(`📄 Duplicate plugin start: ${pluginId}`)
     console.log(`📄 Duplicate plugin called for: ${pluginId}`)
     
     try {
       // 🔍 デバッグ: 利用可能なプラグインIDをチェック
-      const allPluginIds = this.voidCoreUI.elementManager.getPluginIds()
-      const allElementIds = this.voidCoreUI.elementManager.getElementIds()
-      this.voidCoreUI.log(`📄 Available plugin IDs: ${JSON.stringify(allPluginIds)}`)
-      this.voidCoreUI.log(`📄 Available element IDs: ${JSON.stringify(allElementIds)}`)
-      this.voidCoreUI.log(`📄 Target plugin ID: ${pluginId}`)
+      const allPluginIds = this.nyaCoreUI.elementManager.getPluginIds()
+      const allElementIds = this.nyaCoreUI.elementManager.getElementIds()
+      this.nyaCoreUI.log(`📄 Available plugin IDs: ${JSON.stringify(allPluginIds)}`)
+      this.nyaCoreUI.log(`📄 Available element IDs: ${JSON.stringify(allElementIds)}`)
+      this.nyaCoreUI.log(`📄 Target plugin ID: ${pluginId}`)
       
       // 元のプラグイン情報を取得
-      this.voidCoreUI.log(`📄 Getting original plugin: ${pluginId}`)
-      const originalPlugin = this.voidCoreUI.getUIPlugin(pluginId)
-      const originalElement = this.voidCoreUI.elementManager.getElement(pluginId)
+      this.nyaCoreUI.log(`📄 Getting original plugin: ${pluginId}`)
+      const originalPlugin = this.nyaCoreUI.getUIPlugin(pluginId)
+      const originalElement = this.nyaCoreUI.elementManager.getElement(pluginId)
       
-      this.voidCoreUI.log(`📄 Original plugin: ${originalPlugin ? 'found' : 'not found'}`)
-      this.voidCoreUI.log(`📄 Original element: ${originalElement ? 'found' : 'not found'}`)
+      this.nyaCoreUI.log(`📄 Original plugin: ${originalPlugin ? 'found' : 'not found'}`)
+      this.nyaCoreUI.log(`📄 Original element: ${originalElement ? 'found' : 'not found'}`)
       
       // 🔍 ElementとPluginが別々に管理されている可能性をチェック
       if (!originalPlugin && originalElement) {
         // 要素は見つかったがプラグインインスタンスがない場合
-        this.voidCoreUI.log(`📄 Element found but plugin instance missing, proceeding with element-based duplication`)
+        this.nyaCoreUI.log(`📄 Element found but plugin instance missing, proceeding with element-based duplication`)
         
         // DOM要素が見つかった場合、それを使って複製
         const nodeType = originalElement.getAttribute('data-node-type') || 'input.text'
-        this.voidCoreUI.log(`📄 Found element with nodeType: ${nodeType}`)
+        this.nyaCoreUI.log(`📄 Found element with nodeType: ${nodeType}`)
         
         // 位置計算
         const originalRect = originalElement.getBoundingClientRect()
-        const canvasRect = this.voidCoreUI.canvasManager.canvasElement.getBoundingClientRect()
+        const canvasRect = this.nyaCoreUI.canvasManager.canvasElement.getBoundingClientRect()
         const newPosition = {
           x: (originalRect.left - canvasRect.left) + 30,
           y: (originalRect.top - canvasRect.top) + 30
         }
         
         // 新しいプラグインを作成
-        const newPluginId = await this.voidCoreUI.createUIPlugin(nodeType, newPosition)
+        const newPluginId = await this.nyaCoreUI.createUIPlugin(nodeType, newPosition)
         
         // 元の設定値をコピー
         if (newPluginId) {
-          const newElement = this.voidCoreUI.elementManager.getElement(newPluginId)
+          const newElement = this.nyaCoreUI.elementManager.getElement(newPluginId)
           if (newElement) {
             const originalInput = originalElement.querySelector('input[type="text"]')
             const newInput = newElement.querySelector('input[type="text"]')
@@ -382,7 +382,7 @@ export class ContextMenuManager {
               newElement.setAttribute('data-current-value', originalInput.value)
             }
             
-            this.voidCoreUI.log(`✅ Plugin duplicated via element: ${pluginId} → ${newPluginId}`)
+            this.nyaCoreUI.log(`✅ Plugin duplicated via element: ${pluginId} → ${newPluginId}`)
             return
           }
         }
@@ -393,27 +393,27 @@ export class ContextMenuManager {
       if (!originalPlugin && !originalElement) {
         // DOM要素から直接探す
         const domElement = document.getElementById(`ui-element-${pluginId}`)
-        this.voidCoreUI.log(`📄 DOM element search: ${domElement ? 'found' : 'not found'}`)
+        this.nyaCoreUI.log(`📄 DOM element search: ${domElement ? 'found' : 'not found'}`)
         
         if (domElement) {
           // DOM要素が見つかった場合、それを使って複製
           const nodeType = domElement.getAttribute('data-node-type') || 'input.text'
-          this.voidCoreUI.log(`📄 Found DOM element with nodeType: ${nodeType}`)
+          this.nyaCoreUI.log(`📄 Found DOM element with nodeType: ${nodeType}`)
           
           // 位置計算
           const originalRect = domElement.getBoundingClientRect()
-          const canvasRect = this.voidCoreUI.canvasManager.canvasElement.getBoundingClientRect()
+          const canvasRect = this.nyaCoreUI.canvasManager.canvasElement.getBoundingClientRect()
           const newPosition = {
             x: (originalRect.left - canvasRect.left) + 30,
             y: (originalRect.top - canvasRect.top) + 30
           }
           
           // 新しいプラグインを作成
-          const newPluginId = await this.voidCoreUI.createUIPlugin(nodeType, newPosition)
+          const newPluginId = await this.nyaCoreUI.createUIPlugin(nodeType, newPosition)
           
           // 元の設定値をコピー
           if (newPluginId) {
-            const newElement = this.voidCoreUI.elementManager.getElement(newPluginId)
+            const newElement = this.nyaCoreUI.elementManager.getElement(newPluginId)
             if (newElement) {
               const originalInput = domElement.querySelector('input[type="text"]')
               const newInput = newElement.querySelector('input[type="text"]')
@@ -422,7 +422,7 @@ export class ContextMenuManager {
                 newElement.setAttribute('data-current-value', originalInput.value)
               }
               
-              this.voidCoreUI.log(`✅ Plugin duplicated via DOM: ${pluginId} → ${newPluginId}`)
+              this.nyaCoreUI.log(`✅ Plugin duplicated via DOM: ${pluginId} → ${newPluginId}`)
               return
             }
           }
@@ -436,11 +436,11 @@ export class ContextMenuManager {
       }
       
       // 🎯 通常のプラグイン・要素ベース複製
-      this.voidCoreUI.log(`📄 Using normal plugin-element based duplication`)
+      this.nyaCoreUI.log(`📄 Using normal plugin-element based duplication`)
       
       // 元の位置から少しずらした位置を計算
       const originalRect = originalElement.getBoundingClientRect()
-      const canvasRect = this.voidCoreUI.canvasManager.canvasElement.getBoundingClientRect()
+      const canvasRect = this.nyaCoreUI.canvasManager.canvasElement.getBoundingClientRect()
       const newPosition = {
         x: (originalRect.left - canvasRect.left) + 30,
         y: (originalRect.top - canvasRect.top) + 30
@@ -449,14 +449,14 @@ export class ContextMenuManager {
       // プラグインタイプを取得
       const nodeType = originalPlugin.type || originalElement.getAttribute('data-node-type') || 'input.text'
       
-      this.voidCoreUI.log(`📄 Duplicating ${nodeType} from (${originalRect.left - canvasRect.left}, ${originalRect.top - canvasRect.top}) to (${newPosition.x}, ${newPosition.y})`)
+      this.nyaCoreUI.log(`📄 Duplicating ${nodeType} from (${originalRect.left - canvasRect.left}, ${originalRect.top - canvasRect.top}) to (${newPosition.x}, ${newPosition.y})`)
       
       // 新しいプラグインを作成
-      const newPluginId = await this.voidCoreUI.createUIPlugin(nodeType, newPosition)
+      const newPluginId = await this.nyaCoreUI.createUIPlugin(nodeType, newPosition)
       
       // 元の設定値をコピー（テキスト入力値など）
       if (originalElement && newPluginId) {
-        const newElement = this.voidCoreUI.elementManager.getElement(newPluginId)
+        const newElement = this.nyaCoreUI.elementManager.getElement(newPluginId)
         if (newElement) {
           // テキスト入力値のコピー
           const originalInput = originalElement.querySelector('input[type="text"]')
@@ -466,12 +466,12 @@ export class ContextMenuManager {
             newElement.setAttribute('data-current-value', originalInput.value)
           }
           
-          this.voidCoreUI.log(`✅ Plugin duplicated: ${pluginId} → ${newPluginId}`)
+          this.nyaCoreUI.log(`✅ Plugin duplicated: ${pluginId} → ${newPluginId}`)
         }
       }
       
     } catch (error) {
-      this.voidCoreUI.log(`❌ Plugin duplication failed: ${error.message}`)
+      this.nyaCoreUI.log(`❌ Plugin duplication failed: ${error.message}`)
       alert(`Duplication failed: ${error.message}`)
     }
   }
@@ -480,16 +480,16 @@ export class ContextMenuManager {
    * ✂️ 接続削除
    */
   deleteConnection(connectionId) {
-    this.voidCoreUI.log(`✂️ Delete connection: ${connectionId}`)
+    this.nyaCoreUI.log(`✂️ Delete connection: ${connectionId}`)
     
     // 確認ダイアログ
     if (confirm(`Delete connection "${connectionId}"?`)) {
       try {
         // ConnectionManager の削除メソッドを呼び出し
-        this.voidCoreUI.connectionManager.removeConnection(connectionId)
-        this.voidCoreUI.log(`✅ Connection deleted: ${connectionId}`)
+        this.nyaCoreUI.connectionManager.removeConnection(connectionId)
+        this.nyaCoreUI.log(`✅ Connection deleted: ${connectionId}`)
       } catch (error) {
-        this.voidCoreUI.log(`❌ Failed to delete connection: ${error.message}`)
+        this.nyaCoreUI.log(`❌ Failed to delete connection: ${error.message}`)
       }
     }
   }
@@ -498,7 +498,7 @@ export class ContextMenuManager {
    * 🔗 接続編集
    */
   editConnection(connectionId) {
-    this.voidCoreUI.log(`🔗 Edit connection: ${connectionId}`)
+    this.nyaCoreUI.log(`🔗 Edit connection: ${connectionId}`)
     // TODO: 接続編集ダイアログを実装
     alert(`Edit connection: ${connectionId}`)
   }
@@ -507,7 +507,7 @@ export class ContextMenuManager {
    * 📋 プラグイン貼り付け
    */
   pastePlugin(x, y) {
-    this.voidCoreUI.log(`📋 Paste plugin at: (${x}, ${y})`)
+    this.nyaCoreUI.log(`📋 Paste plugin at: (${x}, ${y})`)
     // TODO: 貼り付け機能を実装
     alert(`Paste plugin at: (${x}, ${y})`)
   }
@@ -516,7 +516,7 @@ export class ContextMenuManager {
    * 🎨 キャンバスプロパティ表示
    */
   showCanvasProperties() {
-    this.voidCoreUI.log(`🎨 Show canvas properties`)
+    this.nyaCoreUI.log(`🎨 Show canvas properties`)
     // TODO: キャンバスプロパティダイアログを実装
     alert(`Canvas Properties`)
   }

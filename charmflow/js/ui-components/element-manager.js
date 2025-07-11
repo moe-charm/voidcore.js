@@ -13,8 +13,8 @@
  * - 要素統計情報の提供
  */
 export class ElementManager {
-  constructor(voidCoreUI) {
-    this.voidCoreUI = voidCoreUI
+  constructor(nyaCoreUI) {
+    this.nyaCoreUI = nyaCoreUI
     this.uiElements = new Map() // elementId → DOM element
     this.uiPlugins = new Map()  // pluginId → UI plugin instance
     this.elementTypes = new Map() // elementId → nodeType
@@ -31,7 +31,7 @@ export class ElementManager {
       this.elementTypes.set(safeElementId, nodeType)
     }
     
-    this.voidCoreUI.log(`📦 Element registered: ${safeElementId}`)
+    this.nyaCoreUI.log(`📦 Element registered: ${safeElementId}`)
     return safeElementId
   }
 
@@ -42,7 +42,7 @@ export class ElementManager {
     const safePluginId = String(pluginId)
     this.uiPlugins.set(safePluginId, pluginInstance)
     
-    this.voidCoreUI.log(`🧩 Plugin registered: ${safePluginId}`)
+    this.nyaCoreUI.log(`🧩 Plugin registered: ${safePluginId}`)
     return safePluginId
   }
 
@@ -94,7 +94,7 @@ export class ElementManager {
       this.uiElements.delete(safeElementId)
       this.elementTypes.delete(safeElementId)
       
-      this.voidCoreUI.log(`🗑️ Element removed: ${safeElementId}`)
+      this.nyaCoreUI.log(`🗑️ Element removed: ${safeElementId}`)
       return true
     }
     
@@ -109,7 +109,7 @@ export class ElementManager {
     const removed = this.uiPlugins.delete(safePluginId)
     
     if (removed) {
-      this.voidCoreUI.log(`🗑️ Plugin removed: ${safePluginId}`)
+      this.nyaCoreUI.log(`🗑️ Plugin removed: ${safePluginId}`)
     }
     
     return removed
@@ -127,7 +127,7 @@ export class ElementManager {
     
     this.uiElements.clear()
     this.elementTypes.clear()
-    this.voidCoreUI.log(`🧹 All elements cleared`)
+    this.nyaCoreUI.log(`🧹 All elements cleared`)
   }
 
   /**
@@ -135,7 +135,7 @@ export class ElementManager {
    */
   clearAllPlugins() {
     this.uiPlugins.clear()
-    this.voidCoreUI.log(`🧹 All plugins cleared`)
+    this.nyaCoreUI.log(`🧹 All plugins cleared`)
   }
 
   /**

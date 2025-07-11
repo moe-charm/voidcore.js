@@ -18,33 +18,33 @@ export class InputTextUI {
     `;
   }
 
-  static initializeNodeFeatures(element, pluginId, voidCoreUI) {
+  static initializeNodeFeatures(element, pluginId, nyaCoreUI) {
     const textInput = element.querySelector('.text-input');
     if (textInput) {
       textInput.addEventListener('input', async (e) => {
         // Phase Alpha: Intent統合
-        if (voidCoreUI.voidFlowCore) {
-          await voidCoreUI.voidFlowCore.sendIntent('voidflow.ui.input.text.change', {
+        if (nyaCoreUI.voidFlowCore) {
+          await nyaCoreUI.voidFlowCore.sendIntent('voidflow.ui.input.text.change', {
             pluginId,
             value: e.target.value,
             timestamp: Date.now()
           });
         }
-        voidCoreUI.handleTextInputChange(pluginId, e.target.value);
+        nyaCoreUI.handleTextInputChange(pluginId, e.target.value);
       });
 
       textInput.addEventListener('keypress', async (e) => {
         if (e.key === 'Enter') {
           // Phase Alpha: Intent統合
-          if (voidCoreUI.voidFlowCore) {
-            await voidCoreUI.voidFlowCore.sendIntent('voidflow.ui.input.text.submit', {
+          if (nyaCoreUI.voidFlowCore) {
+            await nyaCoreUI.voidFlowCore.sendIntent('voidflow.ui.input.text.submit', {
               pluginId,
               value: e.target.value,
               key: e.key,
               timestamp: Date.now()
             });
           }
-          voidCoreUI.handleTextInputSubmit(pluginId, e.target.value);
+          nyaCoreUI.handleTextInputSubmit(pluginId, e.target.value);
         }
       });
     }

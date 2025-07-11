@@ -37,7 +37,7 @@ export class PluginFlowExecutor extends IPlugin {
     
     // プラグイン参照
     this.connectionManager = null
-    this.voidCoreUI = null
+    this.nyaCoreUI = null
     
     this.log('🚀 PluginFlowExecutor initialized')
   }
@@ -49,7 +49,7 @@ export class PluginFlowExecutor extends IPlugin {
     // 他のプラグインへの参照取得
     if (this.voidCore) {
       this.connectionManager = this.voidCore.getPlugin('VoidCore.ConnectionManager')
-      this.voidCoreUI = this.voidCore
+      this.nyaCoreUI = this.voidCore
     }
     
     // グローバル参照もチェック
@@ -336,8 +336,8 @@ export class PluginFlowExecutor extends IPlugin {
       timestamp: Date.now()
     })
     
-    if (this.voidCoreUI) {
-      await this.voidCoreUI.publish(updateMessage)
+    if (this.nyaCoreUI) {
+      await this.nyaCoreUI.publish(updateMessage)
     }
     
     // DOM要素への直接更新

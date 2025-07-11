@@ -18,15 +18,15 @@ export class ButtonSendUI {
     `;
   }
 
-  static initializeNodeFeatures(element, pluginId, voidCoreUI) {
+  static initializeNodeFeatures(element, pluginId, nyaCoreUI) {
     const sendButton = element.querySelector('.send-button');
     if (sendButton) {
       sendButton.addEventListener('click', async (e) => {
         console.log(`🖱️ Button clicked for: ${pluginId}`);
         
         // Phase Alpha: Intent統合
-        if (voidCoreUI.voidFlowCore) {
-          await voidCoreUI.voidFlowCore.sendIntent('voidflow.ui.button.send.click', {
+        if (nyaCoreUI.voidFlowCore) {
+          await nyaCoreUI.voidFlowCore.sendIntent('voidflow.ui.button.send.click', {
             pluginId,
             buttonType: 'send',
             timestamp: Date.now()
@@ -40,7 +40,7 @@ export class ButtonSendUI {
         }
         
         e.stopPropagation();
-        voidCoreUI.handleSendButtonClick(pluginId); // voidCoreUIのメソッドを呼び出す
+        nyaCoreUI.handleSendButtonClick(pluginId); // nyaCoreUIのメソッドを呼び出す
       });
     }
   }

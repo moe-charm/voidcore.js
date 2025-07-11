@@ -12,8 +12,8 @@
  * - 接続線のリアルタイム更新
  */
 export class DragDropManager {
-  constructor(voidCoreUI, options = {}) {
-    this.voidCoreUI = voidCoreUI
+  constructor(nyaCoreUI, options = {}) {
+    this.nyaCoreUI = nyaCoreUI
     this.voidFlowCore = options.voidFlowCore || null  // Phase Alpha: Intent統合
     this.dragState = null
     this.activeDrags = new Map() // pluginId → drag state
@@ -31,12 +31,12 @@ export class DragDropManager {
    */
   enableIntentMode() {
     this.intentMode = true
-    this.voidCoreUI.log('🎯 DragDropManager: Intent mode enabled')
+    this.nyaCoreUI.log('🎯 DragDropManager: Intent mode enabled')
   }
   
   disableIntentMode() {
     this.intentMode = false
-    this.voidCoreUI.log('🎯 DragDropManager: Intent mode disabled')
+    this.nyaCoreUI.log('🎯 DragDropManager: Intent mode disabled')
   }
 
   /**
@@ -44,7 +44,7 @@ export class DragDropManager {
    */
   makeElementDraggable(element, pluginId) {
     // ドラッグ初期化ログを無効化（パフォーマンス最適化）
-    // this.voidCoreUI.log(`🖱️ Making element draggable: ${pluginId}`)
+    // this.nyaCoreUI.log(`🖱️ Making element draggable: ${pluginId}`)
     let isDragging = false
     let startX, startY
     let animationFrameId = null
@@ -65,8 +65,8 @@ export class DragDropManager {
       if (e.target.tagName === 'INPUT') return // 入力フィールドは除外
       
       // ドラッグ開始ログを無効化（パフォーマンス最適化）
-      // this.voidCoreUI.log(`🖱️ Mouse down detected for: ${pluginId} (${dragId})`)
-      // this.voidCoreUI.log(`🖱️ Element ID: ${element.id}, Class: ${element.className}`)
+      // this.nyaCoreUI.log(`🖱️ Mouse down detected for: ${pluginId} (${dragId})`)
+      // this.nyaCoreUI.log(`🖱️ Element ID: ${element.id}, Class: ${element.className}`)
       
       // 接続ポートはドラッグ対象外
       const isConnectionPort = e.target.closest('.connection-port')
@@ -75,7 +75,7 @@ export class DragDropManager {
       }
       
       // Phase 2: ドラッグ開始Intent送信
-      if (this.intentMode && this.voidCoreUI.voidFlowCore) {
+      if (this.intentMode && this.nyaCoreUI.voidFlowCore) {
         this._sendDragStartIntent(pluginId, e)
       }
       
@@ -88,7 +88,7 @@ export class DragDropManager {
       startY = e.clientY - elementRect.top
       
       // 開始位置ログを無効化（パフォーマンス最適化）
-      // this.voidCoreUI.log(`🖱️ Start position: mouse(${e.clientX}, ${e.clientY}), element(${elementRect.left}, ${elementRect.top}), offset(${startX}, ${startY})`)
+      // this.nyaCoreUI.log(`🖱️ Start position: mouse(${e.clientX}, ${e.clientY}), element(${elementRect.left}, ${elementRect.top}), offset(${startX}, ${startY})`)
       
       const onMouseMove = (e) => {
         if (!isDragging) return
@@ -100,7 +100,7 @@ export class DragDropManager {
           this._updateElementPosition(element, pluginId, e.clientX, e.clientY, startX, startY)
           
           // Phase 2: ドラッグ移動Intent送信
-          if (this.intentMode && this.voidCoreUI.voidFlowCore) {
+          if (this.intentMode && this.nyaCoreUI.voidFlowCore) {
             this._sendDragMoveIntent(pluginId, e.clientX, e.clientY)
           }
           
@@ -110,7 +110,7 @@ export class DragDropManager {
       
       const onMouseUp = (e) => {
         // Phase 2: ドラッグ終了Intent送信
-        if (this.intentMode && this.voidCoreUI.voidFlowCore) {
+        if (this.intentMode && this.nyaCoreUI.voidFlowCore) {
           this._sendDragEndIntent(pluginId, e)
         }
         
@@ -149,12 +149,12 @@ export class DragDropManager {
    */
   _updateElementPosition(element, pluginId, clientX, clientY, startX, startY) {
     // Canvas基準での新しい座標計算
-    const relativePos = this.voidCoreUI.canvasManager.getRelativePosition(clientX, clientY)
+    const relativePos = this.nyaCoreUI.canvasManager.getRelativePosition(clientX, clientY)
     const newX = relativePos.x - startX
     const newY = relativePos.y - startY
     
     // 境界チェック（Canvas内に制限）
-    const constrained = this.voidCoreUI.canvasManager.constrainPosition(
+    const constrained = this.nyaCoreUI.canvasManager.constrainPosition(
       newX, newY, element.offsetWidth, element.offsetHeight
     )
     
@@ -179,8 +179,8 @@ export class DragDropManager {
     }
     
     // ドラッグ終了時に接続線を再描画（矢印追従のため）
-    // this.voidCoreUI.log(`🖱️ Mouse up detected for: ${pluginId} (${dragId})`)
-    this.voidCoreUI.redrawConnectionsForElement(pluginId)
+    // this.nyaCoreUI.log(`🖱️ Mouse up detected for: ${pluginId} (${dragId})`)
+    this.nyaCoreUI.redrawConnectionsForElement(pluginId)
     
     // アクティブなドラッグ状態から削除
     this.activeDrags.delete(pluginId)
@@ -192,7 +192,7 @@ export class DragDropManager {
   throttledRedraw(pluginId) {
     const now = Date.now()
     if (now - this.lastRedrawTime >= this.redrawThrottleMs) {
-      this.voidCoreUI.redrawConnectionsForElement(pluginId)
+      this.nyaCoreUI.redrawConnectionsForElement(pluginId)
       this.lastRedrawTime = now
     }
   }
@@ -229,9 +229,9 @@ export class DragDropManager {
   async _sendDragStartIntent(pluginId, event) {
     try {
       const elementRect = document.getElementById(`ui-element-${pluginId}`)?.getBoundingClientRect()
-      const relativePos = this.voidCoreUI.canvasManager.getRelativePosition(event.clientX, event.clientY)
+      const relativePos = this.nyaCoreUI.canvasManager.getRelativePosition(event.clientX, event.clientY)
       
-      await this.voidCoreUI.voidFlowCore.sendIntent('voidflow.ui.element.move', {
+      await this.nyaCoreUI.voidFlowCore.sendIntent('voidflow.ui.element.move', {
         elementId: pluginId,
         action: 'drag-start',
         startPosition: relativePos,
@@ -241,7 +241,7 @@ export class DragDropManager {
       })
       
     } catch (error) {
-      this.voidCoreUI.log(`⚠️ Drag start intent failed: ${error.message}`)
+      this.nyaCoreUI.log(`⚠️ Drag start intent failed: ${error.message}`)
     }
   }
   
@@ -250,9 +250,9 @@ export class DragDropManager {
    */
   async _sendDragMoveIntent(pluginId, clientX, clientY) {
     try {
-      const relativePos = this.voidCoreUI.canvasManager.getRelativePosition(clientX, clientY)
+      const relativePos = this.nyaCoreUI.canvasManager.getRelativePosition(clientX, clientY)
       
-      await this.voidCoreUI.voidFlowCore.sendIntent('voidflow.ui.element.move', {
+      await this.nyaCoreUI.voidFlowCore.sendIntent('voidflow.ui.element.move', {
         elementId: pluginId,
         action: 'drag-move',
         newPosition: relativePos,
@@ -263,7 +263,7 @@ export class DragDropManager {
       
     } catch (error) {
       // ドラッグ中のエラーは無視（パフォーマンス優先）
-      // this.voidCoreUI.log(`⚠️ Drag move intent failed: ${error.message}`)
+      // this.nyaCoreUI.log(`⚠️ Drag move intent failed: ${error.message}`)
     }
   }
   
@@ -278,7 +278,7 @@ export class DragDropManager {
         y: parseInt(element.style.top) || 0
       } : { x: 0, y: 0 }
       
-      await this.voidCoreUI.voidFlowCore.sendIntent('voidflow.ui.element.move', {
+      await this.nyaCoreUI.voidFlowCore.sendIntent('voidflow.ui.element.move', {
         elementId: pluginId,
         action: 'drag-end',
         finalPosition: finalPosition,
@@ -288,7 +288,7 @@ export class DragDropManager {
       })
       
     } catch (error) {
-      this.voidCoreUI.log(`⚠️ Drag end intent failed: ${error.message}`)
+      this.nyaCoreUI.log(`⚠️ Drag end intent failed: ${error.message}`)
     }
   }
 }

@@ -3,7 +3,7 @@
 
 import { CharmFlowEngine } from './charmflow-engine.js'
 import { ExecuteEngine } from './execute-engine.js'
-import { VoidCoreUI } from './nyacore-ui.js'
+import { NyaCoreUI } from './nyacore-ui.js'
 import { CharmFlowMessageAdapter } from './charmflow-message-adapter.js'
 import { CharmFlowBootManager } from './charmflow-boot-manager.js'
 import { VoidCoreConnectionManager } from './nyacore-connection-manager.js'
@@ -24,7 +24,7 @@ import { voidCoreDebugPlugin } from './nyacore-debug-plugin.js'
 // グローバル変数
 let charmFlowEngine = null
 let executeEngine = null
-let voidCoreUI = null
+let nyaCoreUI = null
 let messageAdapter = null
 let charmFlowBootManager = null
 let connectionManager = null
@@ -60,11 +60,11 @@ async function initializeCharmFlowVoidCore() {
         // Phase 0: VoidFlow-VoidCore統合アーキテクチャ初期化
         await initializeCharmFlowCoreArchitecture()
         
-        // Phase 1: VoidCoreUI初期化
-        await initializeVoidCoreUI()
+        // Phase 1: NyaCoreUI初期化
+        await initializeNyaCoreUI()
         
-        // Phase 1.5: VoidCoreUIとVoidFlowCoreの統合
-        await connectVoidCoreUIWithCharmFlowCore()
+        // Phase 1.5: NyaCoreUIとCharmFlowCoreの統合
+        await connectNyaCoreUIWithCharmFlowCore()
         
         // Phase 2: メッセージアダプター初期化  
         await initializeMessageAdapter()
@@ -89,7 +89,7 @@ async function initializeCharmFlowVoidCore() {
             await initializePluginPalette()
         } catch (error) {
             console.error('⚠️ PluginPalette初期化失敗 - 続行します:', error)
-            voidCoreUI.log('⚠️ PluginPalette初期化失敗 - 続行します')
+            nyaCoreUI.log('⚠️ PluginPalette初期化失敗 - 続行します')
         }
         
         // Phase 6: 統合テスト
@@ -98,8 +98,8 @@ async function initializeCharmFlowVoidCore() {
         // Phase 7: Monaco Editor初期化確認
         await initializeMonacoEditor()
         
-        voidCoreUI.log('🎉 CharmFlow VoidCore v14.0 純粋アーキテクチャ 初期化完了！')
-        voidCoreUI.log('💎 完全なる純粋メッセージベースシステム - レガシー依存なし')
+        nyaCoreUI.log('🎉 CharmFlow VoidCore v14.0 純粋アーキテクチャ 初期化完了！')
+        nyaCoreUI.log('💎 完全なる純粋メッセージベースシステム - レガシー依存なし')
         
     } catch (error) {
         console.error('❌ CharmFlow VoidCore統合版初期化失敗:', error)
@@ -113,9 +113,9 @@ async function initializeCharmFlowVoidCore() {
 /**
  * 🎨 Phase 1: VoidCoreUI初期化
  */
-async function initializeVoidCoreUI() {
-    // 新VoidCore対応: VoidCoreUI.create()で非同期初期化
-    voidCoreUI = await VoidCoreUI.create({
+async function initializeNyaCoreUI() {
+    // 新nyacore対応: NyaCoreUI.create()で非同期初期化
+    nyaCoreUI = await NyaCoreUI.create({
         debug: true,
         uiOptimization: true
     })
@@ -123,21 +123,21 @@ async function initializeVoidCoreUI() {
     // Canvas要素設定
     const canvasArea = document.querySelector('.canvas-area')
     if (canvasArea) {
-        voidCoreUI.setCanvas(canvasArea)
+        nyaCoreUI.setCanvas(canvasArea)
     }
     
     // グローバル参照設定
-    window.voidCoreUI = voidCoreUI
+    window.nyaCoreUI = nyaCoreUI
     
     // デバッグ用グローバル関数
-    window.debugVoidCoreUI = function() {
-      if (window.voidCoreUI) {
-        console.log('🔍 VoidCoreUI Debug Info:', window.voidCoreUI.getDebugInfo())
-        console.log('🔍 VoidCoreUI UI State:', window.voidCoreUI.getUIState())
-        console.log('🔍 Canvas Element:', window.voidCoreUI.canvasManager.canvasElement)
-        console.log('🔍 UI Elements Map:', window.voidCoreUI.uiElements)
+    window.debugNyaCoreUI = function() {
+      if (window.nyaCoreUI) {
+        console.log('🔍 NyaCoreUI Debug Info:', window.nyaCoreUI.getDebugInfo())
+        console.log('🔍 NyaCoreUI UI State:', window.nyaCoreUI.getUIState())
+        console.log('🔍 Canvas Element:', window.nyaCoreUI.canvasManager.canvasElement)
+        console.log('🔍 UI Elements Map:', window.nyaCoreUI.uiElements)
       } else {
-        console.log('❌ VoidCoreUI not available')
+        console.log('❌ NyaCoreUI not available')
       }
     }
     
@@ -166,14 +166,14 @@ async function initializeVoidCoreUI() {
       }
     }
     
-    voidCoreUI.log('🎨 VoidCoreUI initialized with SystemBootManager integration')
+    nyaCoreUI.log('🎨 VoidCoreUI initialized with SystemBootManager integration')
 }
 
 /**
  * 🔄 Phase 2: メッセージアダプター初期化
  */
 async function initializeMessageAdapter() {
-    messageAdapter = new CharmFlowMessageAdapter(voidCoreUI)
+    messageAdapter = new CharmFlowMessageAdapter(nyaCoreUI)
     
     // 互換性モード設定
     messageAdapter.setCompatibilityMode('hybrid')
@@ -181,7 +181,7 @@ async function initializeMessageAdapter() {
     // グローバル参照設定
     window.messageAdapter = messageAdapter
     
-    voidCoreUI.log('🔄 CharmFlowMessageAdapter initialized')
+    nyaCoreUI.log('🔄 CharmFlowMessageAdapter initialized')
 }
 
 /**
@@ -191,12 +191,12 @@ async function initializeCharmFlowBootManager() {
     charmFlowBootManager = new CharmFlowBootManager()
     
     // VoidCoreUIにプラグイン登録
-    // await voidCoreUI.registerPlugin(charmFlowBootManager)
+    // await nyaCoreUI.registerPlugin(charmFlowBootManager)
     
     // グローバル参照設定
     window.charmFlowBootManager = charmFlowBootManager
     
-    voidCoreUI.log('🚀 CharmFlowBootManager initialized')
+    nyaCoreUI.log('🚀 CharmFlowBootManager initialized')
 }
 
 /**
@@ -205,7 +205,7 @@ async function initializeCharmFlowBootManager() {
 async function initializeStage3Components() {
     // 🔧 Phase3対応: 接続マネージャー初期化
     connectionManager = new VoidCoreConnectionManager()
-    await voidCoreUI.registerPlugin(connectionManager)
+    await nyaCoreUI.registerPlugin(connectionManager)
     
     // 手動でonActivated呼び出し（デバッグ用）
     if (connectionManager.onActivated) {
@@ -217,22 +217,22 @@ async function initializeStage3Components() {
     
     // 🔧 Phase3対応: フロー実行エンジン初期化
     flowExecutor = new PluginFlowExecutor()
-    await voidCoreUI.registerPlugin(flowExecutor)
+    await nyaCoreUI.registerPlugin(flowExecutor)
     if (flowExecutor.onActivated) {
       await flowExecutor.onActivated()
     }
     
     // FlowExecutorにConnectionManagerを直接設定
     flowExecutor.connectionManager = connectionManager
-    voidCoreUI.log(`🔗 FlowExecutor.connectionManager set: ${!!flowExecutor.connectionManager}`)
+    nyaCoreUI.log(`🔗 FlowExecutor.connectionManager set: ${!!flowExecutor.connectionManager}`)
     
     window.flowExecutor = flowExecutor
     
     // SVG矢印マーカー初期化
     initializeSVGMarkers()
     
-    voidCoreUI.log('🔗 Stage 3 components initialized')
-    voidCoreUI.log('💡 接続機能: プラグインをクリックして線で繋ぐ')
+    nyaCoreUI.log('🔗 Stage 3 components initialized')
+    nyaCoreUI.log('💡 接続機能: プラグインをクリックして線で繋ぐ')
 }
 
 /**
@@ -243,8 +243,8 @@ async function initializePhase4DebugSystem() {
         console.log('🐛 Phase 4: デバッグシステム初期化開始...')
         
         // CharmFlowCoreに各種コンポーネントを登録
-        if (voidCoreUI) {
-            charmFlowCore.registerUIManager(voidCoreUI)
+        if (nyaCoreUI) {
+            charmFlowCore.registerUIManager(nyaCoreUI)
             console.log('📝 UIManager registered with CharmFlowCore')
         }
         
@@ -274,11 +274,11 @@ async function initializePhase4DebugSystem() {
         await testPhase4DebugSystem()
         
         console.log('✅ Phase 4: デバッグシステム初期化完了！')
-        voidCoreUI.log('🐛 Phase 4: 統合デバッグシステム初期化完了')
+        nyaCoreUI.log('🐛 Phase 4: 統合デバッグシステム初期化完了')
         
     } catch (error) {
         console.error('❌ Phase 4: デバッグシステム初期化失敗:', error)
-        voidCoreUI.log('❌ Phase 4: デバッグシステム初期化失敗')
+        nyaCoreUI.log('❌ Phase 4: デバッグシステム初期化失敗')
         throw error
     }
 }
@@ -310,7 +310,7 @@ async function initializeVoidCoreDebugPlugin() {
             await debugPlugin.onActivated()
             
             console.log('✅ VoidCoreDebugPlugin activated')
-            voidCoreUI.log('🔧 VoidCoreデバッグプラグイン初期化完了')
+            nyaCoreUI.log('🔧 VoidCoreデバッグプラグイン初期化完了')
         }
         
         // グローバル関数に追加
@@ -327,7 +327,7 @@ async function initializeVoidCoreDebugPlugin() {
         
     } catch (error) {
         console.error('❌ Phase 4.5: VoidCoreデバッグプラグイン初期化失敗:', error)
-        voidCoreUI.log('❌ VoidCoreデバッグプラグイン初期化失敗')
+        nyaCoreUI.log('❌ VoidCoreデバッグプラグイン初期化失敗')
         throw error
     }
 }
@@ -388,7 +388,7 @@ async function initializeUI() {
     // 純粋アーキテクチャ用のZenメッセージ設定
     setPureArchitectureZenMessage()
     
-    voidCoreUI.log('🎨 UI initialization completed')
+    nyaCoreUI.log('🎨 UI initialization completed')
 }
 
 /**
@@ -424,13 +424,13 @@ function addVoidCoreMessagePanel() {
     // VoidCoreUIのログ要素として設定
     const messageLog = document.getElementById('voidCoreMessages')
     console.log('🔧 messageLog element:', messageLog)
-    console.log('🔧 voidCoreUI available:', !!voidCoreUI)
-    if (messageLog && voidCoreUI) {
+    console.log('🔧 nyaCoreUI available:', !!nyaCoreUI)
+    if (messageLog && nyaCoreUI) {
         console.log('📝 Setting log element for VoidCoreUI')
-        voidCoreUI.setLogElement(messageLog)
+        nyaCoreUI.setLogElement(messageLog)
         console.log('✅ Log element set successfully')
     } else {
-        console.log('❌ Failed to set log element:', { messageLog: !!messageLog, voidCoreUI: !!voidCoreUI })
+        console.log('❌ Failed to set log element:', { messageLog: !!messageLog, nyaCoreUI: !!nyaCoreUI })
     }
 }
 
@@ -469,13 +469,13 @@ function enhanceExecuteButton() {
     // VoidCore統合実行関数
     window.executeFlowVoidCore = async function() {
         try {
-            voidCoreUI.log('🚀 VoidCore統合フロー実行開始...')
+            nyaCoreUI.log('🚀 VoidCore統合フロー実行開始...')
             
             // VoidCore v14.0 純粋アーキテクチャ
             await executeFlowVoidCoreOnly()
             
         } catch (error) {
-            voidCoreUI.log(`❌ VoidCore統合フロー実行失敗: ${error.message}`)
+            nyaCoreUI.log(`❌ VoidCore統合フロー実行失敗: ${error.message}`)
             console.error('VoidCore統合フロー実行エラー:', error)
         }
     }
@@ -495,11 +495,11 @@ function enhanceExecuteButton() {
  * 🔄 ハイブリッドモード実行
  */
 async function executeFlowHybrid() {
-    voidCoreUI.log('🔄 ハイブリッドモード実行')
+    nyaCoreUI.log('🔄 ハイブリッドモード実行')
     
     // 1. 従来VoidFlowの状態を取得
     const legacyNodes = Array.from(charmFlowEngine.nodes.values())
-    voidCoreUI.log(`📋 従来ノード数: ${legacyNodes.length}`)
+    nyaCoreUI.log(`📋 従来ノード数: ${legacyNodes.length}`)
     
     // 2. VoidCoreメッセージとして実行
     for (const node of legacyNodes) {
@@ -511,10 +511,10 @@ async function executeFlowHybrid() {
                 { triggerType: 'hybrid_mode', flowId: messageAdapter.generateFlowId() }
             )
             
-            voidCoreUI.log(`📤 VoidCore実行メッセージ送信: ${node.id}`)
+            nyaCoreUI.log(`📤 VoidCore実行メッセージ送信: ${node.id}`)
             
             // VoidCoreに実行要求を発行
-            await voidCoreUI.publish(executeMessage)
+            await nyaCoreUI.publish(executeMessage)
         }
     }
 }
@@ -523,20 +523,20 @@ async function executeFlowHybrid() {
  * 🎨 VoidCoreオンリーモード実行
  */
 async function executeFlowVoidCoreOnly() {
-    voidCoreUI.log('🎨 VoidCoreオンリーモード実行')
+    nyaCoreUI.log('🎨 VoidCoreオンリーモード実行')
     
     // VoidCoreUIから直接プラグイン実行
-    const uiState = voidCoreUI.getUIState()
-    voidCoreUI.log(`📊 UI要素数: ${uiState.elementCount}`)
+    const uiState = nyaCoreUI.getUIState()
+    nyaCoreUI.log(`📊 UI要素数: ${uiState.elementCount}`)
     
     if (uiState.elementCount === 0) {
-        voidCoreUI.log('⚠️ VoidCore UI要素が見つかりません')
-        voidCoreUI.log('💡 ヒント: VoidCoreモードではVoidCoreUI要素が必要です')
+        nyaCoreUI.log('⚠️ VoidCore UI要素が見つかりません')
+        nyaCoreUI.log('💡 ヒント: VoidCoreモードではVoidCoreUI要素が必要です')
         return
     }
     
     // TODO: VoidCoreプラグイン実行ロジック実装
-    voidCoreUI.log('🔧 VoidCoreプラグイン実行機能は実装中です')
+    nyaCoreUI.log('🔧 VoidCoreプラグイン実行機能は実装中です')
 }
 
 /**
@@ -560,20 +560,20 @@ function setPureArchitectureZenMessage() {
  * 🧪 Phase 6: 統合テスト
  */
 async function performIntegrationTest() {
-    voidCoreUI.log('🧪 統合テスト実行中...')
+    nyaCoreUI.log('🧪 統合テスト実行中...')
     
     // Test 1: VoidCoreUI基本機能
-    const uiTest = voidCoreUI.getUIState()
-    voidCoreUI.log(`✅ VoidCoreUI: Canvas=${!!uiTest.canvasAttached}`)
+    const uiTest = nyaCoreUI.getUIState()
+    nyaCoreUI.log(`✅ VoidCoreUI: Canvas=${!!uiTest.canvasAttached}`)
     
     // Test 2: メッセージアダプター
     const adapterTest = messageAdapter.getAdapterStats()
-    voidCoreUI.log(`✅ MessageAdapter: Version=${adapterTest.adapterVersion}`)
+    nyaCoreUI.log(`✅ MessageAdapter: Version=${adapterTest.adapterVersion}`)
     
     // Test 3: VoidCore v14.0 純粋アーキテクチャ
-    voidCoreUI.log(`✅ Pure Architecture: VoidCore v14.0 ready`)
+    nyaCoreUI.log(`✅ Pure Architecture: VoidCore v14.0 ready`)
     
-    voidCoreUI.log('🎉 統合テスト完了！')
+    nyaCoreUI.log('🎉 統合テスト完了！')
 }
 
 /**
@@ -581,33 +581,33 @@ async function performIntegrationTest() {
  */
 async function initializeMonacoEditor() {
     try {
-        voidCoreUI.log('🎨 Monaco Editor初期化確認中...')
+        nyaCoreUI.log('🎨 Monaco Editor初期化確認中...')
         
         // Monaco Plugin Editorインスタンス確認
         if (window.monacoPluginEditor) {
-            voidCoreUI.log('✅ Monaco Plugin Editor: Available')
+            nyaCoreUI.log('✅ Monaco Plugin Editor: Available')
         } else {
-            voidCoreUI.log('⚠️ Monaco Plugin Editor: Not found, creating instance...')
+            nyaCoreUI.log('⚠️ Monaco Plugin Editor: Not found, creating instance...')
             
             // 手動でインスタンス作成
             const { default: MonacoPluginEditor } = await import('./monaco-plugin-editor.js')
             window.monacoPluginEditor = new MonacoPluginEditor()
             
-            voidCoreUI.log('✅ Monaco Plugin Editor: Created manually')
+            nyaCoreUI.log('✅ Monaco Plugin Editor: Created manually')
         }
         
         // Monaco CDN確認
         if (typeof require !== 'undefined') {
-            voidCoreUI.log('✅ Monaco Editor CDN: Loaded')
+            nyaCoreUI.log('✅ Monaco Editor CDN: Loaded')
         } else {
-            voidCoreUI.log('⚠️ Monaco Editor CDN: Loading...')
+            nyaCoreUI.log('⚠️ Monaco Editor CDN: Loading...')
         }
         
-        voidCoreUI.log('🎨 Monaco Editor準備完了！')
-        voidCoreUI.log('💡 使い方: ノードをダブルクリックしてコード編集')
+        nyaCoreUI.log('🎨 Monaco Editor準備完了！')
+        nyaCoreUI.log('💡 使い方: ノードをダブルクリックしてコード編集')
         
     } catch (error) {
-        voidCoreUI.log(`❌ Monaco Editor初期化失敗: ${error.message}`)
+        nyaCoreUI.log(`❌ Monaco Editor初期化失敗: ${error.message}`)
         console.error('Monaco Editor initialization error:', error)
     }
 }
@@ -618,7 +618,7 @@ async function initializeMonacoEditor() {
 function initializeSVGMarkers() {
     const svg = document.getElementById('connectionSvg')
     if (!svg) {
-        voidCoreUI.log('⚠️ Connection SVG not found for marker initialization')
+        nyaCoreUI.log('⚠️ Connection SVG not found for marker initialization')
         return
     }
     
@@ -662,7 +662,7 @@ function initializeSVGMarkers() {
         defs.appendChild(marker)
     }
     
-    voidCoreUI.log('🎯 SVG arrow markers initialized')
+    nyaCoreUI.log('🎯 SVG arrow markers initialized')
 }
 
 /**
@@ -688,8 +688,8 @@ function initializeNodePalette() {
                 })
             } else {
                 // フォールバック
-                if (voidCoreUI) {
-                    voidCoreUI.log(`📦 ドラッグ開始: ${nodeType}`)
+                if (nyaCoreUI) {
+                    nyaCoreUI.log(`📦 ドラッグ開始: ${nodeType}`)
                 } else if (charmFlowEngine) {
                     charmFlowEngine.log(`📦 ドラッグ開始: ${nodeType}`)
                 }
@@ -715,9 +715,9 @@ function initializeNodePalette() {
                 // フォールバック - VoidCoreプラグイン作成
                 try {
                     const result = await createVoidCoreNode(nodeType, position)
-                    voidCoreUI.log(`🎯 ノード作成完了: ${nodeType}`)
+                    nyaCoreUI.log(`🎯 ノード作成完了: ${nodeType}`)
                 } catch (error) {
-                    voidCoreUI.log(`❌ ノード作成エラー: ${error.message}`)
+                    nyaCoreUI.log(`❌ ノード作成エラー: ${error.message}`)
                 }
             }
         })
@@ -771,20 +771,20 @@ function initializeCanvas() {
 // VoidCoreノード作成（VoidCoreUI統合版）
 async function createVoidCoreNode(nodeType, position) {
     try {
-        voidCoreUI.log(`🌟 VoidCoreノード作成開始: ${nodeType}`)
+        nyaCoreUI.log(`🌟 VoidCoreノード作成開始: ${nodeType}`)
         
-        if (!voidCoreUI) {
-            throw new Error('VoidCoreUI not initialized')
+        if (!nyaCoreUI) {
+            throw new Error('NyaCoreUI not initialized')
         }
         
         // VoidCoreUIの統合メソッドを使用
-        const pluginId = await voidCoreUI.createUIPlugin(nodeType, position)
+        const pluginId = await nyaCoreUI.createUIPlugin(nodeType, position)
         
-        voidCoreUI.log(`🎯 VoidCoreUIプラグイン作成完了: ${pluginId}`)
+        nyaCoreUI.log(`🎯 VoidCoreUIプラグイン作成完了: ${pluginId}`)
         return pluginId
         
     } catch (error) {
-        voidCoreUI.log(`❌ VoidCoreノード作成失敗: ${error.message}`)
+        nyaCoreUI.log(`❌ VoidCoreノード作成失敗: ${error.message}`)
         throw error
     }
 }
@@ -899,7 +899,7 @@ function createVoidCoreNodeContent(nodeType, pluginId) {
 // VoidCoreプラグイン登録
 async function registerVoidCorePlugin(nodeType, pluginId, element) {
     try {
-        voidCoreUI.log(`🔄 プラグイン登録開始: ${nodeType} (${pluginId})`)
+        nyaCoreUI.log(`🔄 プラグイン登録開始: ${nodeType} (${pluginId})`)
         
         // プラグインタイプに応じたVoidCoreプラグインクラス選択
         let PluginClass = null
@@ -919,7 +919,7 @@ async function registerVoidCorePlugin(nodeType, pluginId, element) {
                         const textInput = element?.querySelector('.node-input')
                         const textValue = textInput?.value || 'VoidCore Hello!'
                         
-                        voidCoreUI.log(`📝 Input Text実行: "${textValue}"`)
+                        nyaCoreUI.log(`📝 Input Text実行: "${textValue}"`)
                         
                         return {
                             type: 'text',
@@ -948,7 +948,7 @@ async function registerVoidCorePlugin(nodeType, pluginId, element) {
                     async executeNode(input) {
                         const inputValue = input?.value || input || '(空のデータ)'
                         console.log(`📊 Console Output:`, inputValue)
-                        voidCoreUI.log(`📊 Console出力: ${inputValue}`)
+                        nyaCoreUI.log(`📊 Console出力: ${inputValue}`)
                         
                         return {
                             type: 'output',
@@ -969,7 +969,7 @@ async function registerVoidCorePlugin(nodeType, pluginId, element) {
                     }
                     
                     async executeNode(input) {
-                        voidCoreUI.log(`🚀 Button Send実行開始`)
+                        nyaCoreUI.log(`🚀 Button Send実行開始`)
                         
                         const result = {
                             type: 'trigger',
@@ -980,8 +980,8 @@ async function registerVoidCorePlugin(nodeType, pluginId, element) {
                             timestamp: Date.now()
                         }
                         
-                        voidCoreUI.log(`🚀 Button Send結果:`, result)
-                        voidCoreUI.log(`🚀 Button Send完了 - データフロー開始予定`)
+                        nyaCoreUI.log(`🚀 Button Send結果:`, result)
+                        nyaCoreUI.log(`🚀 Button Send完了 - データフロー開始予定`)
                         
                         return result
                     }
@@ -997,7 +997,7 @@ async function registerVoidCorePlugin(nodeType, pluginId, element) {
                     }
                     
                     async executeNode(input) {
-                        voidCoreUI.log(`🔧 基本プラグイン実行: ${nodeType}`)
+                        nyaCoreUI.log(`🔧 基本プラグイン実行: ${nodeType}`)
                         
                         return {
                             type: 'basic',
@@ -1011,23 +1011,23 @@ async function registerVoidCorePlugin(nodeType, pluginId, element) {
         }
         
         // プラグインインスタンス作成
-        voidCoreUI.log(`🔧 プラグインインスタンス作成中: ${PluginClass.name}`)
+        nyaCoreUI.log(`🔧 プラグインインスタンス作成中: ${PluginClass.name}`)
         const plugin = new PluginClass({ id: pluginId })
-        voidCoreUI.log(`✅ プラグインインスタンス作成完了: ${plugin.id}`)
+        nyaCoreUI.log(`✅ プラグインインスタンス作成完了: ${plugin.id}`)
         
         // 要素に関連付け
         element._voidCorePlugin = plugin
-        voidCoreUI.log(`🔗 要素とプラグインの関連付け完了`)
+        nyaCoreUI.log(`🔗 要素とプラグインの関連付け完了`)
         
         // VoidCoreUIに登録
-        voidCoreUI.log(`📝 VoidCoreUIへの登録開始`)
-        await voidCoreUI.registerPlugin(plugin)
-        voidCoreUI.log(`✅ VoidCoreUIへの登録完了`)
+        nyaCoreUI.log(`📝 VoidCoreUIへの登録開始`)
+        await nyaCoreUI.registerPlugin(plugin)
+        nyaCoreUI.log(`✅ VoidCoreUIへの登録完了`)
         
-        voidCoreUI.log(`📦 VoidCoreプラグイン登録: ${nodeType} (${pluginId})`)
+        nyaCoreUI.log(`📦 VoidCoreプラグイン登録: ${nodeType} (${pluginId})`)
         
     } catch (error) {
-        voidCoreUI.log(`❌ VoidCoreプラグイン登録失敗: ${error.message}`)
+        nyaCoreUI.log(`❌ VoidCoreプラグイン登録失敗: ${error.message}`)
         console.error('VoidCoreプラグイン登録エラー:', error)
     }
 }
@@ -1105,15 +1105,15 @@ function createNodeOnCanvas(nodeType, position) {
             zenMessage.style.display = 'none'
         }
         
-        if (voidCoreUI) {
-            voidCoreUI.log(`✨ 従来ノード作成: ${nodeType} at (${position.x}, ${position.y})`)
+        if (nyaCoreUI) {
+            nyaCoreUI.log(`✨ 従来ノード作成: ${nodeType} at (${position.x}, ${position.y})`)
         } else {
             charmFlowEngine.log(`✨ ノード作成: ${nodeType} at (${position.x}, ${position.y})`)
         }
         
     } catch (error) {
-        if (voidCoreUI) {
-            voidCoreUI.log(`❌ 従来ノード作成失敗: ${error.message}`)
+        if (nyaCoreUI) {
+            nyaCoreUI.log(`❌ 従来ノード作成失敗: ${error.message}`)
         } else {
             charmFlowEngine.log(`❌ ノード作成失敗: ${error.message}`)
         }
@@ -1123,7 +1123,7 @@ function createNodeOnCanvas(nodeType, position) {
 // デバッグ用グローバル関数
 window.getVoidCoreDebugInfo = function() {
     return {
-        voidCoreUI: voidCoreUI ? voidCoreUI.getUIState() : null,
+        nyaCoreUI: nyaCoreUI ? nyaCoreUI.getUIState() : null,
         messageAdapter: messageAdapter ? messageAdapter.getDebugInfo() : null,
         pureArchitecture: true,
         voidCoreVersion: 'v14.0'
@@ -1184,8 +1184,8 @@ function createNodeElement(node) {
                 selectNode(node.id)
                 
                 // ハイブリッドモード: VoidCore統合処理も実行
-                if (voidCoreUI) {
-                    voidCoreUI.log(`🎯 ノード選択: ${node.type} (${node.id})`)
+                if (nyaCoreUI) {
+                    nyaCoreUI.log(`🎯 ノード選択: ${node.type} (${node.id})`)
                 }
             }
         }
@@ -1271,8 +1271,8 @@ function makeNodeDraggable(nodeElement) {
         }
         
         // VoidCoreUIにも位置更新通知
-        if (voidCoreUI && voidCoreUI.uiChannel) {
-            voidCoreUI.uiChannel.updatePosition.update({
+        if (nyaCoreUI && nyaCoreUI.uiChannel) {
+            nyaCoreUI.uiChannel.updatePosition.update({
                 elementId: nodeId,
                 x: newX,
                 y: newY
@@ -1375,8 +1375,8 @@ window.updateNodeProperty = function(nodeId, propertyName, value) {
             node.properties[propertyName] = value
             
             // 統合ログ
-            if (voidCoreUI) {
-                voidCoreUI.log(`⚙️ プロパティ更新: ${nodeId}.${propertyName} = "${value}"`)
+            if (nyaCoreUI) {
+                nyaCoreUI.log(`⚙️ プロパティ更新: ${nodeId}.${propertyName} = "${value}"`)
             } else {
                 charmFlowEngine.log(`⚙️ プロパティ更新: ${nodeId}.${propertyName} = "${value}"`)
             }
@@ -1387,8 +1387,8 @@ window.updateNodeProperty = function(nodeId, propertyName, value) {
 // 特定ノードから実行開始
 window.startFromNode = async function(nodeId) {
     try {
-        if (voidCoreUI) {
-            voidCoreUI.log(`🎯 手動開始: ${nodeId}`)
+        if (nyaCoreUI) {
+            nyaCoreUI.log(`🎯 手動開始: ${nodeId}`)
         }
         
         // VoidCore v14.0 純粋アーキテクチャ - FlowExecutor使用
@@ -1398,14 +1398,14 @@ window.startFromNode = async function(nodeId) {
             throw new Error('FlowExecutor が見つかりません')
         }
         
-        if (voidCoreUI) {
-            voidCoreUI.log('✨ 実行完了!')
+        if (nyaCoreUI) {
+            nyaCoreUI.log('✨ 実行完了!')
         }
         
     } catch (error) {
         const message = `❌ ノード実行失敗: ${error.message}`
-        if (voidCoreUI) {
-            voidCoreUI.log(message)
+        if (nyaCoreUI) {
+            nyaCoreUI.log(message)
         } else {
             console.error(message, error)
         }
@@ -1415,7 +1415,7 @@ window.startFromNode = async function(nodeId) {
 // VoidCoreプラグイン実行
 window.executeVoidCorePlugin = async function(pluginId) {
     console.log(`🎯🎯🎯 executeVoidCorePlugin 呼び出し確認: ${pluginId}`)
-    voidCoreUI.log(`🎯🎯🎯 executeVoidCorePlugin 呼び出し確認: ${pluginId}`)
+    nyaCoreUI.log(`🎯🎯🎯 executeVoidCorePlugin 呼び出し確認: ${pluginId}`)
     
     try {
         const actualFlowExecutor = window.flowExecutor || flowExecutor
@@ -1424,17 +1424,17 @@ window.executeVoidCorePlugin = async function(pluginId) {
             throw new Error('FlowExecutor not initialized')
         }
         
-        voidCoreUI.log(`🔧 Using flowExecutor: global=${!!window.flowExecutor}, local=${!!flowExecutor}`)
-        voidCoreUI.log(`🔧 Actual executor:`, actualFlowExecutor?.constructor?.name)
+        nyaCoreUI.log(`🔧 Using flowExecutor: global=${!!window.flowExecutor}, local=${!!flowExecutor}`)
+        nyaCoreUI.log(`🔧 Actual executor:`, actualFlowExecutor?.constructor?.name)
         
         // ConnectionManager参照を再確認・設定
         if (!actualFlowExecutor.connectionManager && window.connectionManager) {
             actualFlowExecutor.connectionManager = window.connectionManager
-            voidCoreUI.log(`🔗 ConnectionManager re-linked to FlowExecutor`)
+            nyaCoreUI.log(`🔗 ConnectionManager re-linked to FlowExecutor`)
         }
         
-        voidCoreUI.log(`🎯 VoidCoreプラグイン実行: ${pluginId}`)
-        voidCoreUI.log(`🔗 FlowExecutor.connectionManager: ${!!actualFlowExecutor.connectionManager}`)
+        nyaCoreUI.log(`🎯 VoidCoreプラグイン実行: ${pluginId}`)
+        nyaCoreUI.log(`🔗 FlowExecutor.connectionManager: ${!!actualFlowExecutor.connectionManager}`)
         
         // プラグイン要素のUI更新
         const element = document.querySelector(`[data-plugin-id="${pluginId}"]`)
@@ -1448,13 +1448,13 @@ window.executeVoidCorePlugin = async function(pluginId) {
             }
         }
         
-        voidCoreUI.log(`🔧 FlowExecutor.executePlugin 呼び出し開始`)
-        voidCoreUI.log(`🔧 flowExecutor:`, !!actualFlowExecutor)
-        voidCoreUI.log(`🔧 flowExecutor.executePlugin:`, typeof actualFlowExecutor?.executePlugin)
-        voidCoreUI.log(`🔧 flowExecutor constructor:`, actualFlowExecutor?.constructor?.name)
+        nyaCoreUI.log(`🔧 FlowExecutor.executePlugin 呼び出し開始`)
+        nyaCoreUI.log(`🔧 flowExecutor:`, !!actualFlowExecutor)
+        nyaCoreUI.log(`🔧 flowExecutor.executePlugin:`, typeof actualFlowExecutor?.executePlugin)
+        nyaCoreUI.log(`🔧 flowExecutor constructor:`, actualFlowExecutor?.constructor?.name)
         
         // FlowExecutorで実行
-        voidCoreUI.log(`🔧 flowExecutor.executePlugin 実際の呼び出し`)
+        nyaCoreUI.log(`🔧 flowExecutor.executePlugin 実際の呼び出し`)
         
         const executePromise = actualFlowExecutor.executePlugin({
             pluginId: pluginId,
@@ -1465,22 +1465,22 @@ window.executeVoidCorePlugin = async function(pluginId) {
             }
         })
         
-        voidCoreUI.log(`🔧 executePromise:`, executePromise)
-        voidCoreUI.log(`🔧 Promise type:`, typeof executePromise)
-        voidCoreUI.log(`🔧 Is Promise:`, executePromise instanceof Promise)
+        nyaCoreUI.log(`🔧 executePromise:`, executePromise)
+        nyaCoreUI.log(`🔧 Promise type:`, typeof executePromise)
+        nyaCoreUI.log(`🔧 Is Promise:`, executePromise instanceof Promise)
         
         const result = await executePromise
         
-        voidCoreUI.log(`🔧 flowExecutor.executePlugin 完了, result:`, result)
-        voidCoreUI.log(`✅ VoidCoreプラグイン実行完了: ${pluginId}`)
+        nyaCoreUI.log(`🔧 flowExecutor.executePlugin 完了, result:`, result)
+        nyaCoreUI.log(`✅ VoidCoreプラグイン実行完了: ${pluginId}`)
         
         return result
         
     } catch (error) {
         console.error(`🔴 ERROR in executeVoidCorePlugin:`, error)
-        voidCoreUI.log(`🔴 ERROR DETAILS: ${error.message}`)
-        voidCoreUI.log(`🔴 ERROR STACK: ${error.stack}`)
-        voidCoreUI.log(`❌ VoidCoreプラグイン実行失敗: ${pluginId} - ${error.message}`)
+        nyaCoreUI.log(`🔴 ERROR DETAILS: ${error.message}`)
+        nyaCoreUI.log(`🔴 ERROR STACK: ${error.stack}`)
+        nyaCoreUI.log(`❌ VoidCoreプラグイン実行失敗: ${pluginId} - ${error.message}`)
         console.error('VoidCoreプラグイン実行エラー:', error)
     }
 }
@@ -1511,7 +1511,7 @@ window.updateVoidCoreProperty = function(pluginId, propertyName, value) {
     const plugin = element._voidCorePlugin
     if (plugin.properties) {
         plugin.properties[propertyName] = value
-        voidCoreUI.log(`⚙️ VoidCoreプロパティ更新: ${pluginId}.${propertyName} = "${value}"`)
+        nyaCoreUI.log(`⚙️ VoidCoreプロパティ更新: ${pluginId}.${propertyName} = "${value}"`)
     }
 }
 
@@ -1522,7 +1522,7 @@ window.executeFlow = async function() {
             throw new Error('VoidFlowエンジンが初期化されていません')
         }
         
-        const logger = voidCoreUI || charmFlowEngine
+        const logger = nyaCoreUI || charmFlowEngine
         logger.log('🚀 従来フロー実行開始...')
         
         // Button.sendノードを探して実行
@@ -1543,8 +1543,8 @@ window.executeFlow = async function() {
         
     } catch (error) {
         const message = `❌ 従来フロー実行失敗: ${error.message}`
-        if (voidCoreUI) {
-            voidCoreUI.log(message)
+        if (nyaCoreUI) {
+            nyaCoreUI.log(message)
         } else {
             console.error(message, error)
         }
@@ -1581,14 +1581,14 @@ async function initializePluginPalette() {
         window.pluginPalette = pluginPalette
         
         console.log('✅ PluginPalette初期化完了！')
-        if (voidCoreUI) {
-            voidCoreUI.log('✅ PluginPalette初期化完了！')
+        if (nyaCoreUI) {
+            nyaCoreUI.log('✅ PluginPalette初期化完了！')
         }
         
     } catch (error) {
         console.error('❌ PluginPalette初期化失敗:', error)
-        if (voidCoreUI) {
-            voidCoreUI.log(`❌ PluginPalette初期化失敗: ${error.message}`)
+        if (nyaCoreUI) {
+            nyaCoreUI.log(`❌ PluginPalette初期化失敗: ${error.message}`)
         }
         throw error
     }
@@ -1659,26 +1659,26 @@ async function testCharmFlowCoreBasicOperation() {
 }
 
 /**
- * 🔗 Phase 1.5: VoidCoreUIとVoidFlowCoreの統合
+ * 🔗 Phase 1.5: NyaCoreUIとCharmFlowCoreの統合
  */
-async function connectVoidCoreUIWithCharmFlowCore() {
+async function connectNyaCoreUIWithCharmFlowCore() {
     try {
-        console.log('🔗 VoidCoreUIとVoidFlowCore統合開始...')
+        console.log('🔗 NyaCoreUIとCharmFlowCore統合開始...')
         
-        if (!voidCoreUI) {
-            throw new Error('VoidCoreUI not initialized')
+        if (!nyaCoreUI) {
+            throw new Error('NyaCoreUI not initialized')
         }
         
         if (!charmFlowCore) {
-            throw new Error('VoidFlowCore not initialized')
+            throw new Error('CharmFlowCore not initialized')
         }
         
-        // VoidCoreUIにVoidFlowCoreの参照を設定
-        voidCoreUI.charmFlowCore = charmFlowCore
-        console.log('✅ VoidCoreUI.charmFlowCore reference set')
+        // NyaCoreUIにCharmFlowCoreの参照を設定
+        nyaCoreUI.charmFlowCore = charmFlowCore
+        console.log('✅ NyaCoreUI.charmFlowCore reference set')
         
         // VoidFlowCoreにVoidCoreUIをUIManagerとして登録
-        charmFlowCore.registerUIManager(voidCoreUI)
+        charmFlowCore.registerUIManager(nyaCoreUI)
         console.log('✅ VoidCoreUI registered as UIManager in VoidFlowCore')
         
         // Phase 3: VoidFlowCoreにConnectionManagerを登録
@@ -1690,8 +1690,8 @@ async function connectVoidCoreUIWithCharmFlowCore() {
         }
         
         // Phase 2: ドラッグ&ドロップのIntent化有効化
-        if (voidCoreUI.dragDropManager) {
-            voidCoreUI.dragDropManager.enableIntentMode()
+        if (nyaCoreUI.dragDropManager) {
+            nyaCoreUI.dragDropManager.enableIntentMode()
             console.log('✅ DragDropManager Intent mode enabled')
         }
         
@@ -1729,14 +1729,14 @@ async function testVoidCoreUIIntegration() {
         console.log('📊 Integration Test Result:', testResult)
         
         // VoidCoreUIのVoidFlowCore参照確認
-        if (voidCoreUI.charmFlowCore === charmFlowCore) {
+        if (nyaCoreUI.charmFlowCore === charmFlowCore) {
             console.log('✅ VoidCoreUI → VoidFlowCore reference: OK')
         } else {
             console.log('⚠️ VoidCoreUI → VoidFlowCore reference: NG')
         }
         
         // VoidFlowCoreのUIManager登録確認
-        if (charmFlowCore.uiManager === voidCoreUI) {
+        if (charmFlowCore.uiManager === nyaCoreUI) {
             console.log('✅ VoidFlowCore → VoidCoreUI registration: OK')
         } else {
             console.log('⚠️ VoidFlowCore → VoidCoreUI registration: NG')
