@@ -408,6 +408,7 @@
                 <div class="monaco-editor-title">🐞 CharmFlowログセンター</div>
                 <div class="monaco-editor-controls">
                     <button class="monaco-editor-btn" onclick="refreshLogCenter()">🔄 更新</button>
+                    <button class="monaco-editor-btn" onclick="downloadSelectedLogs()">📦 選択DL</button>
                     <button class="monaco-editor-btn" onclick="clearAllLogs()">🗑️ 全クリア</button>
                     <button class="monaco-editor-btn" onclick="autoSaveAllLogs()">📤 全エクスポート</button>
                     <button class="monaco-editor-btn close" onclick="closeLogCenter()">✕ 閉じる</button>
@@ -694,19 +695,19 @@
                 const catStats = stats.categories?.[cat] || { totalCount: 0, storageSize: '0KB' }
                 return `
                     <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; border-left: 3px solid #4a90e2;">
-                        <div style="font-weight: bold; margin-bottom: 5px;">📁 ${cat}</div>
+                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                            <input type="checkbox" id="logcat-${cat}" class="log-category-checkbox" 
+                                   style="margin-right: 8px; transform: scale(1.2);" />
+                            <label for="logcat-${cat}" style="font-weight: bold; cursor: pointer;">📁 ${cat}</label>
+                        </div>
                         <div style="font-size: 12px; color: #aaa;">
                             ログ数: ${catStats.totalCount}<br>
                             サイズ: ${catStats.storageSize}<br>
                             バッファ: ${catStats.bufferSize || 0}
                         </div>
                         <div style="margin-top: 8px;">
-                            <button onclick="window.exportDebugLogs('${cat}')" 
-                                    style="background: #4a90e2; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">
-                                📤 DL
-                            </button>
                             <button onclick="window.clearDebugLogs('${cat}')" 
-                                    style="background: #ff4757; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; margin-left: 5px;">
+                                    style="background: #ff4757; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">
                                 🗑️ クリア
                             </button>
                         </div>
@@ -742,6 +743,41 @@
                 
             } catch (error) {
                 document.getElementById('logRealTimeStats').innerHTML = 'エラー: ' + error.message
+            }
+        }
+        
+        // 選択したカテゴリのログをダウンロード  
+        function downloadSelectedLogs() {
+            try {
+                // チェックされたカテゴリを取得
+                const checkboxes = document.querySelectorAll('.log-category-checkbox:checked')
+                const selectedCategories = Array.from(checkboxes).map(cb => cb.id.replace('logcat-', ''))
+                
+                if (selectedCategories.length === 0) {
+                    alert('📦 ダウンロードするカテゴリを選択してください')
+                    return
+                }
+                
+                console.log(`📦 選択されたカテゴリ: ${selectedCategories.join(', ')}`)
+                
+                // 複数カテゴリを個別にダウンロード
+                selectedCategories.forEach(category => {
+                    setTimeout(() => {
+                        try {
+                            window.exportDebugLogs(category)
+                            console.log(`✅ ${category} ログをダウンロードしました`)
+                        } catch (error) {
+                            console.error(`❌ ${category} ログダウンロード失敗:`, error)
+                        }
+                    }, 100) // 短い間隔でダウンロード
+                })
+                
+                // 成功メッセージ
+                alert(`📦 ${selectedCategories.length}個のカテゴリのログをダウンロード開始しました！`)
+                
+            } catch (error) {
+                console.error('❌ 選択ダウンロード失敗:', error)
+                alert('選択ダウンロードに失敗しました: ' + error.message)
             }
         }
         
@@ -814,6 +850,7 @@
         window.openLogCenter = openLogCenter
         window.closeLogCenter = closeLogCenter
         window.refreshLogCenter = refreshLogCenter
+        window.downloadSelectedLogs = downloadSelectedLogs
         window.clearAllLogs = clearAllLogs
         window.initializeLogCategoryControls = initializeLogCategoryControls
         window.toggleAllLogCategories = toggleAllLogCategories

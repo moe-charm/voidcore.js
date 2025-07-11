@@ -50,7 +50,7 @@ export class VoidCoreDebugPlugin {
     
     // 状態管理
     this.isInitialized = false
-    this.voidFlowCore = null
+    this.charmFlowCore = null
     this.intentListeners = new Map()
     this.pluginStates = new Map()
     this.performanceMetrics = new Map()
@@ -322,13 +322,19 @@ export class VoidCoreDebugPlugin {
    * 🎯 Intent監視開始
    */
   async enableIntentMonitoring() {
-    if (!this.voidFlowCore || !this.options.enabled) return
+    if (!this.charmFlowCore || !this.options.enabled) return
     
     try {
       // Intent監視登録
-      if (this.voidFlowCore.addIntentListener) {
-        this.voidFlowCore.addIntentListener('*', this.onIntentReceived)
-        this.log('system', 'info', '📡 Intent monitoring enabled')
+      if (this.charmFlowCore.addIntentListener) {
+        const success = this.charmFlowCore.addIntentListener('voidcore-debug-plugin', this.onIntentReceived.bind(this))
+        if (success) {
+          this.log('system', 'info', '📡 Intent monitoring enabled')
+        } else {
+          this.log('system', 'warn', '⚠️ Intent monitoring registration failed (production mode?)')
+        }
+      } else {
+        this.log('system', 'warn', '⚠️ CharmFlowCore.addIntentListener not available')
       }
     } catch (error) {
       this.logError('Failed to enable intent monitoring', error)
@@ -339,13 +345,15 @@ export class VoidCoreDebugPlugin {
    * 🛑 Intent監視停止
    */
   async disableIntentMonitoring() {
-    if (!this.voidFlowCore || !this.options.enabled) return
+    if (!this.charmFlowCore || !this.options.enabled) return
     
     try {
       // Intent監視解除
-      if (this.voidFlowCore.removeIntentListener) {
-        this.voidFlowCore.removeIntentListener('*', this.onIntentReceived)
-        this.log('system', 'info', '📡 Intent monitoring disabled')
+      if (this.charmFlowCore.removeIntentListener) {
+        const success = this.charmFlowCore.removeIntentListener('voidcore-debug-plugin')
+        if (success) {
+          this.log('system', 'info', '📡 Intent monitoring disabled')
+        }
       }
     } catch (error) {
       this.logError('Failed to disable intent monitoring', error)
@@ -388,8 +396,8 @@ export class VoidCoreDebugPlugin {
     this.stats.lastActivity = now
     
     // プラグイン状態更新
-    if (this.voidFlowCore && this.voidFlowCore.getAllPlugins) {
-      const plugins = this.voidFlowCore.getAllPlugins()
+    if (this.charmFlowCore && this.charmFlowCore.getAllPlugins) {
+      const plugins = this.charmFlowCore.getAllPlugins()
       this.stats.activePlugins = plugins.length
     }
   }

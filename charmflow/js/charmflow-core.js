@@ -32,6 +32,7 @@ export class CharmFlowCore {
       enableStats: true,
       messagePoolSize: 1000,
       intentTraceLevel: 'basic',
+      debugMode: true, // 追加: デバッグモード制御
       ...options
     }
     
@@ -49,6 +50,15 @@ export class CharmFlowCore {
     this.debugManager = null
     this.debugPlugin = null
     this.intentBridge = null
+    
+    // Intent監視システム（パフォーマンス対応）
+    this.debugMode = this.options.debugMode
+    this.intentListeners = this.debugMode ? new Map() : null
+    
+    // 本番モード時はno-op化
+    if (!this.debugMode) {
+      this.setupNoOpMethods()
+    }
     
     // VoidFlow コンポーネント参照
     this.uiManager = null
@@ -179,6 +189,9 @@ export class CharmFlowCore {
       
       this.log(`📤 Sending Intent: ${type}`)
       
+      // Intent監視リスナーに通知（デバッグモード時のみ）
+      this.notifyIntentListeners('sent', type, intentPayload)
+      
       // VoidCore経由でIntent送信（_processIntentで直接処理）
       const intentMessage = Message.intentRequest(type, type, intentPayload)
       this.log(`🔍 Created Intent message: ${JSON.stringify(intentMessage, null, 2)}`)
@@ -187,10 +200,18 @@ export class CharmFlowCore {
       
       this.log(`✅ Intent processed: ${type}`)
       this.log(`🔍 Intent result:`, result)
+      
+      // Intent処理完了をリスナーに通知（デバッグモード時のみ）
+      this.notifyIntentListeners('processed', type, { payload: intentPayload, result })
+      
       return result
       
     } catch (error) {
       this.logError(`❌ Intent failed: ${type}`, error)
+      
+      // Intent処理エラーをリスナーに通知（デバッグモード時のみ）
+      this.notifyIntentListeners('error', type, { payload: intentPayload, error })
+      
       throw error
     }
   }
@@ -728,6 +749,78 @@ export class CharmFlowCore {
     if (this.debugManager) {
       this.debugManager.recordError(message, error)
     }
+  }
+  
+  /**
+   * Intent監視リスナー追加（デバッグ専用）
+   * 本番モード時はno-op
+   */
+  addIntentListener(listenerName, callback) {
+    if (!this.debugMode || !this.intentListeners) {
+      return false // 本番モード時は何もしない
+    }
+    
+    if (typeof callback !== 'function') {
+      this.logError('Intent listener callback must be a function', new Error('Invalid callback'))
+      return false
+    }
+    
+    this.intentListeners.set(listenerName, callback)
+    this.log(`🎯 Intent listener registered: ${listenerName}`)
+    return true
+  }
+  
+  /**
+   * Intent監視リスナー削除（デバッグ専用）
+   * 本番モード時はno-op
+   */
+  removeIntentListener(listenerName) {
+    if (!this.debugMode || !this.intentListeners) {
+      return false // 本番モード時は何もしない
+    }
+    
+    const removed = this.intentListeners.delete(listenerName)
+    if (removed) {
+      this.log(`🎯 Intent listener removed: ${listenerName}`)
+    }
+    return removed
+  }
+  
+  /**
+   * Intent監視リスナーに通知（デバッグ専用）
+   * 本番モード時はno-op
+   */
+  notifyIntentListeners(eventType, intentType, data) {
+    if (!this.debugMode || !this.intentListeners) {
+      return // 本番モード時は何もしない
+    }
+    
+    const eventData = {
+      eventType,    // 'sent', 'processed', 'error'
+      intentType,
+      data,
+      timestamp: Date.now()
+    }
+    
+    this.intentListeners.forEach((callback, listenerName) => {
+      try {
+        callback(eventData)
+      } catch (error) {
+        this.logError(`Intent listener error: ${listenerName}`, error)
+      }
+    })
+  }
+  
+  /**
+   * 本番モード用no-opメソッド設定
+   */
+  setupNoOpMethods() {
+    // パフォーマンス最適化: 本番モードでは完全にno-op化
+    this.addIntentListener = () => false
+    this.removeIntentListener = () => false
+    this.notifyIntentListeners = () => {}
+    
+    this.log('🚀 Production mode: Intent monitoring disabled for performance')
   }
 }
 
