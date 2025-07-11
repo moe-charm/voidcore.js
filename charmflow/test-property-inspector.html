@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PropertyInspectorComponent 統合テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #005a9e;
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .mock-node {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mock-node:hover {
+            background: #bbdefb;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+        }
+        .mock-node.selected {
+            background: #1976d2;
+            color: white;
+        }
+        .results {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+        .success { color: #27ae60; }
+        .error { color: #e74c3c; }
+        .info { color: #3498db; }
+        .warning { color: #f39c12; }
+        .intent-log {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .property-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 PropertyInspectorComponent 統合テスト</h1>
+    
+    <div class="test-container" style="background: #fff3cd; border: 2px solid #ffc107;">
+        <h2>📝 テスト手順（必ずこの順番で！）</h2>
+        <ol style="font-size: 16px; line-height: 1.8;">
+            <li><strong>Step 1:</strong> 「Inspector作成」ボタンをクリック</li>
+            <li><strong>Step 2:</strong> 「マウント」ボタンをクリック</li>
+            <li><strong>Step 3:</strong> 「表示」ボタンをクリック → <em>PropertyInspectorが画面左上に表示されます</em></li>
+            <li><strong>Step 4:</strong> 上の青いモックノードをクリック → <em>PropertyInspectorにプロパティが表示されます</em></li>
+            <li><strong>Step 5:</strong> PropertyInspector内でプロパティを編集してみてください</li>
+            <li><strong>Step 6:</strong> 各種テストボタンで機能確認</li>
+        </ol>
+    </div>
+    
+    <div class="test-container">
+        <h2>📊 テスト対象ノード</h2>
+        <div id="mock-node-1" class="mock-node" data-node-type="input.text">
+            🔤 InputTextPlugin
+            <div style="font-size: 11px; color: #666;">ID: input-text-001 | Type: input.text</div>
+        </div>
+        <div id="mock-node-2" class="mock-node" data-node-type="button.send">
+            🔘 ButtonSendPlugin  
+            <div style="font-size: 11px; color: #666;">ID: button-send-002 | Type: button.send</div>
+        </div>
+        <div id="mock-node-3" class="mock-node" data-node-type="string.uppercase">
+            🔠 StringUppercasePlugin
+            <div style="font-size: 11px; color: #666;">ID: string-upper-003 | Type: string.uppercase</div>
+        </div>
+        <div id="mock-node-4" class="mock-node" data-node-type="output.console">
+            📺 OutputConsolePlugin
+            <div style="font-size: 11px; color: #666;">ID: output-console-004 | Type: output.console</div>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🔧 PropertyInspector制御</h2>
+        <button class="test-button" id="test-create">Inspector作成</button>
+        <button class="test-button" id="test-mount">マウント</button>
+        <button class="test-button" id="test-show">表示</button>
+        <button class="test-button" id="test-hide">非表示</button>
+        <button class="test-button" id="test-destroy">破棄</button>
+        <button class="test-button" id="test-clear">選択解除</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>📡 Intent通信テスト</h2>
+        <button class="test-button" id="test-intent-flow">完全Intent通信フロー</button>
+        <button class="test-button" id="test-property-update">プロパティ更新シミュレート</button>
+        <button class="test-button" id="test-undo-redo">Undo/Redo機能</button>
+        <button class="test-button" id="test-validation">バリデーション機能</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>🎨 UI機能テスト</h2>
+        <button class="test-button" id="test-drag">ドラッグ機能</button>
+        <button class="test-button" id="test-resize">リサイズ機能</button>
+        <button class="test-button" id="test-focus">フォーカス機能</button>
+        <button class="test-button" id="test-advanced-mode">詳細モード切替</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>📋 現在の選択状態</h2>
+        <div id="current-selection" class="property-preview">
+            選択なし
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>📋 テスト結果</h2>
+        <div id="test-results" class="results">
+            <div class="info">📝 PropertyInspectorComponent統合テスト準備完了。</div>
+            <div class="info">👆 上記のモックノードをクリックして選択→Inspectorでプロパティ表示を確認してください。</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { PropertyInspectorComponent } from './js/ui-components/PropertyInspectorComponent.js'
+        import { INTENT_TYPES } from './js/intent-definitions.js'
+        
+        // ==========================================
+        // テスト環境セットアップ
+        // ==========================================
+        
+        let propertyInspector = null
+        let selectedNode = null
+        const results = document.getElementById('test-results')
+        const selectionDisplay = document.getElementById('current-selection')
+        
+        // Intent通信ログ
+        const intentLogs = []
+        
+        function logResult(message, type = 'info', data = null) {
+            const timestamp = new Date().toLocaleTimeString()
+            const resultDiv = document.createElement('div')
+            resultDiv.className = type
+            resultDiv.innerHTML = `[${timestamp}] ${message}`
+            
+            if (data) {
+                const dataDiv = document.createElement('div')
+                dataDiv.style.marginLeft = '20px'
+                dataDiv.style.color = '#666'
+                dataDiv.innerHTML = JSON.stringify(data, null, 2)
+                resultDiv.appendChild(dataDiv)
+            }
+            
+            results.appendChild(resultDiv)
+            results.scrollTop = results.scrollHeight
+        }
+        
+        function logIntent(direction, type, data) {
+            const timestamp = new Date().toLocaleTimeString()
+            const intentDiv = document.createElement('div')
+            intentDiv.className = 'intent-log'
+            intentDiv.innerHTML = `
+                <strong>[${timestamp}] ${direction === 'send' ? '📤' : '📥'} Intent: ${type}</strong><br>
+                ${JSON.stringify(data, null, 2)}
+            `
+            results.appendChild(intentDiv)
+            results.scrollTop = results.scrollHeight
+            
+            // Intent履歴保存
+            intentLogs.push({ timestamp, direction, type, data })
+        }
+        
+        // ==========================================
+        // モックシステム構築
+        // ==========================================
+        
+        // モックノードデータ定義
+        const mockNodeData = {
+            'input-text-001': {
+                id: 'input-text-001',
+                type: 'input.text',
+                name: 'InputTextPlugin',
+                properties: {
+                    placeholder: { type: 'string', value: 'テキストを入力してください', label: 'プレースホルダー' },
+                    maxLength: { type: 'number', value: 100, label: '最大文字数', min: 1, max: 1000 },
+                    required: { type: 'boolean', value: false, label: '必須入力' },
+                    multiline: { type: 'boolean', value: false, label: '複数行' },
+                    defaultValue: { type: 'string', value: '', label: 'デフォルト値' },
+                    validation: { type: 'string', value: 'none', label: 'バリデーション', options: ['none', 'email', 'url', 'number'] }
+                },
+                position: { x: 100, y: 200 },
+                size: { width: 120, height: 60 }
+            },
+            'button-send-002': {
+                id: 'button-send-002',
+                type: 'button.send',
+                name: 'ButtonSendPlugin',
+                properties: {
+                    label: { type: 'string', value: 'Send', label: 'ボタンテキスト' },
+                    color: { type: 'color', value: '#007acc', label: 'ボタンカラー' },
+                    size: { type: 'string', value: 'medium', label: 'サイズ', options: ['small', 'medium', 'large'] },
+                    disabled: { type: 'boolean', value: false, label: '無効状態' },
+                    icon: { type: 'string', value: 'send', label: 'アイコン' },
+                    confirmMessage: { type: 'string', value: '', label: '確認メッセージ' }
+                },
+                position: { x: 300, y: 200 },
+                size: { width: 100, height: 40 }
+            },
+            'string-upper-003': {
+                id: 'string-upper-003', 
+                type: 'string.uppercase',
+                name: 'StringUppercasePlugin',
+                properties: {
+                    preserveSpaces: { type: 'boolean', value: true, label: 'スペース保持' },
+                    locale: { type: 'string', value: 'ja-JP', label: 'ロケール' },
+                    trimWhitespace: { type: 'boolean', value: false, label: '空白削除' }
+                },
+                position: { x: 200, y: 300 },
+                size: { width: 140, height: 50 }
+            },
+            'output-console-004': {
+                id: 'output-console-004',
+                type: 'output.console',
+                name: 'OutputConsolePlugin',
+                properties: {
+                    timestamp: { type: 'boolean', value: true, label: 'タイムスタンプ表示' },
+                    logLevel: { type: 'string', value: 'info', label: 'ログレベル', options: ['debug', 'info', 'warn', 'error'] },
+                    maxLines: { type: 'number', value: 100, label: '最大行数', min: 10, max: 1000 },
+                    fontSize: { type: 'number', value: 12, label: 'フォントサイズ', min: 8, max: 24 },
+                    backgroundColor: { type: 'color', value: '#1e1e1e', label: '背景色' },
+                    textColor: { type: 'color', value: '#ffffff', label: '文字色' }
+                },
+                position: { x: 400, y: 100 },
+                size: { width: 200, height: 150 }
+            }
+        }
+        
+        // モックIntentHandler
+        const mockIntentHandler = {
+            intentHandlers: new Map(),
+            
+            sendIntent: function(type, data) {
+                logIntent('send', type, data)
+                
+                // PropertyInspector関連Intentを自動処理
+                if (type === INTENT_TYPES.UI.PROPERTY_INSPECTOR.UPDATE_NODE_PROPERTY) {
+                    // プロパティ更新を元ノードに反映（モック）
+                    if (selectedNode && mockNodeData[selectedNode.id]) {
+                        const nodeData = mockNodeData[selectedNode.id]
+                        if (nodeData.properties[data.propertyName]) {
+                            nodeData.properties[data.propertyName].value = data.newValue
+                            updateSelectionDisplay()
+                            logResult('✅ プロパティ更新が元ノードに反映されました', 'success', {
+                                nodeId: selectedNode.id,
+                                property: data.propertyName,
+                                newValue: data.newValue
+                            })
+                        }
+                    }
+                }
+            },
+            
+            addIntentListener: function(type, handler) {
+                this.intentHandlers.set(type, handler)
+                const listenerId = `listener-${type}-${Date.now()}`
+                logResult(`👂 Intent listener追加: ${type}`, 'info', { listenerId })
+                return listenerId
+            },
+            
+            removeIntentListener: function(listenerId) {
+                logResult(`🗑️ Intent listener削除: ${listenerId}`, 'info')
+            },
+            
+            // Intent手動トリガー（テスト用）
+            triggerIntent: function(type, data) {
+                logIntent('receive', type, data)
+                const handler = this.intentHandlers.get(type)
+                if (handler) {
+                    handler(data)
+                } else {
+                    logResult(`⚠️ Intent handler not found: ${type}`, 'warning')
+                }
+            }
+        }
+        
+        // モックPluginNode
+        const mockPluginNode = {
+            id: 'property-inspector-test-node',
+            intentHandler: mockIntentHandler
+        }
+        
+        // 選択状態表示更新
+        function updateSelectionDisplay() {
+            if (selectedNode) {
+                const nodeData = mockNodeData[selectedNode.id]
+                selectionDisplay.innerHTML = `
+                    <strong>${nodeData.name}</strong> (${nodeData.id})<br>
+                    <strong>Properties:</strong><br>
+                    ${Object.entries(nodeData.properties).map(([key, prop]) => 
+                        `• ${prop.label}: ${JSON.stringify(prop.value)} (${prop.type})`
+                    ).join('<br>')}
+                `
+            } else {
+                selectionDisplay.innerHTML = '選択なし'
+            }
+        }
+        
+        // ==========================================
+        // モックノード選択機能
+        // ==========================================
+        
+        // ノードクリック処理
+        document.querySelectorAll('.mock-node').forEach(node => {
+            node.addEventListener('click', () => {
+                // 前の選択解除
+                document.querySelectorAll('.mock-node').forEach(n => n.classList.remove('selected'))
+                
+                // 新しい選択
+                node.classList.add('selected')
+                // IDマッピング修正
+                const nodeId = node.id.replace('mock-node-1', 'input-text-001')
+                    .replace('mock-node-2', 'button-send-002')
+                    .replace('mock-node-3', 'string-upper-003')
+                    .replace('mock-node-4', 'output-console-004')
+                selectedNode = { id: nodeId }
+                
+                // 選択表示更新
+                updateSelectionDisplay()
+                
+                // PropertyInspectorにNODE_SELECTED Intent送信
+                if (propertyInspector) {
+                    const nodeData = mockNodeData[nodeId]
+                    mockIntentHandler.triggerIntent(
+                        INTENT_TYPES.UI.PROPERTY_INSPECTOR.NODE_SELECTED,
+                        {
+                            nodeId: nodeData.id,
+                            nodeType: nodeData.type,
+                            properties: nodeData.properties,
+                            position: nodeData.position,
+                            metadata: {
+                                name: nodeData.name,
+                                size: nodeData.size
+                            }
+                        }
+                    )
+                } else {
+                    logResult('⚠️ PropertyInspectorがまだ作成されていません', 'warning')
+                }
+            })
+        })
+        
+        // ==========================================
+        // テストケース実装
+        // ==========================================
+        
+        // PropertyInspector制御
+        document.getElementById('test-create').onclick = () => {
+            try {
+                propertyInspector = new PropertyInspectorComponent(mockPluginNode, {
+                    position: { x: 50, y: 50 },
+                    size: { width: 350, height: 500 },
+                    autoSave: true,
+                    showAdvanced: false,
+                    enableUndo: true
+                })
+                
+                logResult('✅ PropertyInspectorComponent作成成功', 'success', {
+                    id: propertyInspector.id,
+                    type: propertyInspector.type
+                })
+            } catch (error) {
+                logResult('❌ PropertyInspectorComponent作成失敗', 'error', { error: error.message })
+            }
+        }
+        
+        document.getElementById('test-mount').onclick = () => {
+            if (!propertyInspector) {
+                logResult('⚠️ 先にPropertyInspectorを作成してください', 'error')
+                return
+            }
+            
+            try {
+                const mountedElement = propertyInspector.mount()
+                logResult('✅ マウント成功', 'success', {
+                    elementId: mountedElement.id,
+                    isMounted: propertyInspector.state.isMounted
+                })
+            } catch (error) {
+                logResult('❌ マウント失敗', 'error', { error: error.message })
+            }
+        }
+        
+        document.getElementById('test-show').onclick = () => {
+            if (!propertyInspector) {
+                logResult('⚠️ 先にPropertyInspectorを作成してください', 'error')
+                return
+            }
+            
+            propertyInspector.show()
+            logResult('👁️ PropertyInspector表示実行', 'success', { isVisible: propertyInspector.state.isVisible })
+        }
+        
+        document.getElementById('test-hide').onclick = () => {
+            if (!propertyInspector) {
+                logResult('⚠️ 先にPropertyInspectorを作成してください', 'error')
+                return
+            }
+            
+            propertyInspector.hide()
+            logResult('🙈 PropertyInspector非表示実行', 'success', { isVisible: propertyInspector.state.isVisible })
+        }
+        
+        document.getElementById('test-destroy').onclick = () => {
+            if (!propertyInspector) {
+                logResult('⚠️ 先にPropertyInspectorを作成してください', 'error')
+                return
+            }
+            
+            propertyInspector.destroy()
+            logResult('💥 PropertyInspector破棄実行', 'success', { isDestroyed: propertyInspector.isDestroyed })
+            propertyInspector = null
+        }
+        
+        document.getElementById('test-clear').onclick = () => {
+            // 選択解除
+            document.querySelectorAll('.mock-node').forEach(n => n.classList.remove('selected'))
+            selectedNode = null
+            updateSelectionDisplay()
+            
+            // PropertyInspectorにNODE_DESELECTED Intent送信
+            if (propertyInspector) {
+                mockIntentHandler.triggerIntent(
+                    INTENT_TYPES.UI.PROPERTY_INSPECTOR.NODE_DESELECTED,
+                    { reason: 'manual-clear' }
+                )
+            }
+            
+            logResult('🔄 選択解除・Inspector クリア', 'success')
+        }
+        
+        // Intent通信テスト
+        document.getElementById('test-intent-flow').onclick = () => {
+            if (!propertyInspector) {
+                logResult('⚠️ 先にPropertyInspectorを作成・表示してください', 'error')
+                return
+            }
+            
+            logResult('🚀 完全Intent通信フローテスト開始', 'info')
+            
+            // 1. ノード選択シミュレート
+            setTimeout(() => {
+                const testNodeData = mockNodeData['button-send-002']
+                mockIntentHandler.triggerIntent(
+                    INTENT_TYPES.UI.PROPERTY_INSPECTOR.NODE_SELECTED,
+                    {
+                        nodeId: testNodeData.id,
+                        nodeType: testNodeData.type,
+                        properties: testNodeData.properties,
+                        position: testNodeData.position,
+                        metadata: { name: testNodeData.name, size: testNodeData.size }
+                    }
+                )
+                logResult('📋 Phase 1: ノード選択Intent送信完了', 'success')
+            }, 500)
+            
+            // 2. プロパティ変更シミュレート
+            setTimeout(() => {
+                // PropertyInspectorの内部メソッドを直接呼び出してプロパティ変更をシミュレート
+                if (propertyInspector.currentNodeData) {
+                    logResult('📋 Phase 2: プロパティ変更シミュレート実行', 'info')
+                    
+                    // UPDATE_NODE_PROPERTY Intent送信をシミュレート
+                    mockIntentHandler.sendIntent(
+                        INTENT_TYPES.UI.PROPERTY_INSPECTOR.UPDATE_NODE_PROPERTY,
+                        {
+                            nodeId: 'button-send-002',
+                            propertyName: 'label',
+                            newValue: 'Updated Send Button',
+                            oldValue: 'Send',
+                            propertyType: 'string'
+                        }
+                    )
+                    
+                    logResult('📋 Phase 2: プロパティ更新Intent送信完了', 'success')
+                } else {
+                    logResult('⚠️ Phase 2: ノードデータが設定されていません', 'warning')
+                }
+            }, 1500)
+            
+            setTimeout(() => {
+                logResult('🎉 完全Intent通信フローテスト完了', 'success')
+            }, 2000)
+        }
+        
+        document.getElementById('test-property-update').onclick = () => {
+            if (!propertyInspector || !selectedNode) {
+                logResult('⚠️ PropertyInspectorを作成し、ノードを選択してください', 'error')
+                return
+            }
+            
+            // ランダムなプロパティ更新をシミュレート
+            const nodeData = mockNodeData[selectedNode.id]
+            const properties = Object.keys(nodeData.properties)
+            const randomProperty = properties[Math.floor(Math.random() * properties.length)]
+            const prop = nodeData.properties[randomProperty]
+            
+            let newValue
+            switch (prop.type) {
+                case 'string':
+                    newValue = `Updated_${Date.now()}`
+                    break
+                case 'number':
+                    newValue = Math.floor(Math.random() * 100) + 1
+                    break
+                case 'boolean':
+                    newValue = !prop.value
+                    break
+                case 'color':
+                    newValue = `#${Math.floor(Math.random()*16777215).toString(16)}`
+                    break
+                default:
+                    newValue = 'test_value'
+            }
+            
+            mockIntentHandler.sendIntent(
+                INTENT_TYPES.UI.PROPERTY_INSPECTOR.UPDATE_NODE_PROPERTY,
+                {
+                    nodeId: selectedNode.id,
+                    propertyName: randomProperty,
+                    newValue: newValue,
+                    oldValue: prop.value,
+                    propertyType: prop.type
+                }
+            )
+            
+            logResult('🔄 ランダムプロパティ更新テスト実行', 'success', {
+                property: randomProperty,
+                oldValue: prop.value,
+                newValue: newValue
+            })
+        }
+        
+        document.getElementById('test-undo-redo').onclick = () => {
+            if (!propertyInspector) {
+                logResult('⚠️ 先にPropertyInspectorを作成してください', 'error')
+                return
+            }
+            
+            logResult('↩️ Undo/Redo機能テスト（PropertyInspector内部機能）', 'info')
+            logResult('💡 実際のUndo/Redoは、PropertyInspector内のボタンで操作できます', 'info')
+        }
+        
+        document.getElementById('test-validation').onclick = () => {
+            if (!propertyInspector || !selectedNode) {
+                logResult('⚠️ PropertyInspectorを作成し、ノードを選択してください', 'error')
+                return
+            }
+            
+            // 無効な値でバリデーションテスト
+            mockIntentHandler.sendIntent(
+                INTENT_TYPES.UI.PROPERTY_INSPECTOR.UPDATE_NODE_PROPERTY,
+                {
+                    nodeId: selectedNode.id,
+                    propertyName: 'maxLength',
+                    newValue: -10, // 無効な値
+                    oldValue: 100,
+                    propertyType: 'number'
+                }
+            )
+            
+            logResult('⚠️ バリデーションテスト: 無効値（-10）でmaxLength更新試行', 'warning')
+        }
+        
+        // UI機能テスト
+        document.getElementById('test-drag').onclick = () => {
+            if (!propertyInspector || !propertyInspector.element) {
+                logResult('⚠️ 先にPropertyInspectorを作成・マウントしてください', 'error')
+                return
+            }
+            
+            logResult('🖱️ ドラッグ機能は既に有効です。ヘッダー部分をドラッグしてみてください', 'info')
+        }
+        
+        document.getElementById('test-resize').onclick = () => {
+            if (!propertyInspector || !propertyInspector.element) {
+                logResult('⚠️ 先にPropertyInspectorを作成・マウントしてください', 'error')
+                return
+            }
+            
+            logResult('📏 リサイズ機能は既に有効です。右下角をドラッグしてみてください', 'info')
+        }
+        
+        document.getElementById('test-focus').onclick = () => {
+            if (!propertyInspector) {
+                logResult('⚠️ 先にPropertyInspectorを作成してください', 'error')
+                return
+            }
+            
+            propertyInspector.focus()
+            logResult('🎯 PropertyInspectorフォーカス実行', 'success')
+        }
+        
+        document.getElementById('test-advanced-mode').onclick = () => {
+            if (!propertyInspector) {
+                logResult('⚠️ 先にPropertyInspectorを作成してください', 'error')
+                return
+            }
+            
+            // 詳細モード切替（PropertyInspector内部機能）
+            logResult('⚙️ 詳細モード切替（PropertyInspector内部の設定ボタンで操作可能）', 'info')
+        }
+        
+        // ==========================================
+        // 初期化
+        // ==========================================
+        
+        logResult('🚀 PropertyInspectorComponent統合テスト環境初期化完了', 'success')
+        logResult('📝 テスト手順:', 'info')
+        logResult('  1. "Inspector作成" → "マウント" → "表示"', 'info')
+        logResult('  2. 上記のモックノードをクリックしてプロパティ表示確認', 'info')
+        logResult('  3. Intent通信テスト・UI機能テストを実行', 'info')
+        logResult('  4. PropertyInspector内でプロパティを変更して更新Intent確認', 'info')
+        
+    </script>
+</body>
+</html>

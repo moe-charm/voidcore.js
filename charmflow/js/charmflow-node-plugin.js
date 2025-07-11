@@ -36,6 +36,11 @@ export class CharmFlowNodePlugin extends IPlugin {
     this.lastResult = null
     this.executionHistory = []
     
+    // 🎨 UI拡張状態（Gemini戦略: ハイブリッドモデル）
+    this.isExpanded = false
+    this.richUIComponent = null
+    this.uiComponentType = config.uiComponentType || null
+    
     // ノードタイプ別設定
     this.setupNodeTypeDefaults()
   }
@@ -380,6 +385,78 @@ export class CharmFlowNodePlugin extends IPlugin {
       nodeId: this.id,
       position: this.position
     })
+  }
+  
+  /**
+   * 🎨 UI拡張切り替え（Gemini戦略: ハイブリッドモデル）
+   * アイコン状態 ⇔ リッチUI展開の革命的切り替え
+   */
+  async toggleExpand() {
+    this.isExpanded = !this.isExpanded
+    
+    this.log(`🎨 Toggle expand: ${this.isExpanded ? 'EXPANDED' : 'COLLAPSED'}`)
+    
+    if (this.isExpanded) {
+      // リッチUIコンポーネントが未作成なら動的ロード
+      if (!this.richUIComponent && this.uiComponentType) {
+        try {
+          // UIコンポーネントを動的インポート
+          const componentPath = `/charmflow/js/ui-components/${this.uiComponentType}.js`
+          const module = await import(componentPath)
+          const ComponentClass = module[this.uiComponentType] || module.default
+          
+          // UIコンポーネント作成
+          this.richUIComponent = new ComponentClass(this, {
+            position: { 
+              x: this.position.x + 150, // アイコンの右側に表示
+              y: this.position.y 
+            }
+          })
+          
+          // 自動マウント
+          this.richUIComponent.mount()
+          
+          this.log(`✅ Rich UI component created: ${this.uiComponentType}`)
+        } catch (error) {
+          this.log(`❌ Failed to load UI component: ${error.message}`)
+          this.isExpanded = false
+          return
+        }
+      }
+      
+      // UIコンポーネント表示
+      if (this.richUIComponent) {
+        this.richUIComponent.show()
+        
+        // 展開Intent送信
+        await this.sendIntent('charmflow.ui.component.expand', {
+          nodeId: this.id,
+          componentId: this.richUIComponent.id,
+          componentType: this.uiComponentType
+        })
+      }
+    } else {
+      // UIコンポーネント非表示
+      if (this.richUIComponent) {
+        this.richUIComponent.hide()
+        
+        // 縮小Intent送信
+        await this.sendIntent('charmflow.ui.component.collapse', {
+          nodeId: this.id,
+          componentId: this.richUIComponent.id,
+          componentType: this.uiComponentType
+        })
+      }
+    }
+    
+    // 状態変更通知
+    await this.sendIntent('charmflow.node.expand.toggled', {
+      nodeId: this.id,
+      isExpanded: this.isExpanded,
+      hasRichUI: !!this.richUIComponent
+    })
+    
+    return this.isExpanded
   }
 
   /**

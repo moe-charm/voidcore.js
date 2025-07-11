@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BaseUIComponent 動作確認テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #005a9e;
+        }
+        .results {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+        .success { color: #27ae60; }
+        .error { color: #e74c3c; }
+        .info { color: #3498db; }
+    </style>
+</head>
+<body>
+    <h1>🏗️ BaseUIComponent 動作確認テスト</h1>
+    
+    <div class="test-container">
+        <h2>📊 基本機能テスト</h2>
+        <button class="test-button" id="test-creation">コンポーネント作成</button>
+        <button class="test-button" id="test-mount">マウント</button>
+        <button class="test-button" id="test-show">表示</button>
+        <button class="test-button" id="test-hide">非表示</button>
+        <button class="test-button" id="test-expand">展開</button>
+        <button class="test-button" id="test-collapse">縮小</button>
+        <button class="test-button" id="test-destroy">破棄</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>🎯 Intent通信テスト</h2>
+        <button class="test-button" id="test-intent-send">Intent送信</button>
+        <button class="test-button" id="test-intent-receive">Intent受信テスト</button>
+        <button class="test-button" id="test-state-sync">状態同期</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>🖱️ UI操作テスト</h2>
+        <button class="test-button" id="test-drag">ドラッグ有効化</button>
+        <button class="test-button" id="test-resize">リサイズ有効化</button>
+        <button class="test-button" id="test-focus">フォーカス</button>
+        <button class="test-button" id="test-move">位置変更</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>📋 テスト結果</h2>
+        <div id="test-results" class="results">
+            <div class="info">📝 テスト開始準備完了。ボタンをクリックしてテストを実行してください。</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { BaseUIComponent } from './js/ui-components/BaseUIComponent.js'
+        
+        // ==========================================
+        // テスト環境セットアップ
+        // ==========================================
+        
+        let testComponent = null
+        const results = document.getElementById('test-results')
+        
+        function logResult(message, type = 'info', data = null) {
+            const timestamp = new Date().toLocaleTimeString()
+            const resultDiv = document.createElement('div')
+            resultDiv.className = type
+            resultDiv.innerHTML = `[${timestamp}] ${message}`
+            
+            if (data) {
+                const dataDiv = document.createElement('div')
+                dataDiv.style.marginLeft = '20px'
+                dataDiv.style.color = '#666'
+                dataDiv.innerHTML = JSON.stringify(data, null, 2)
+                resultDiv.appendChild(dataDiv)
+            }
+            
+            results.appendChild(resultDiv)
+            results.scrollTop = results.scrollHeight
+        }
+        
+        // モックPluginNode作成
+        const mockPluginNode = {
+            id: 'test-plugin-node',
+            intentHandler: {
+                sendIntent: (type, data) => {
+                    logResult(`📤 Intent送信: ${type}`, 'info', data)
+                },
+                addIntentListener: (type, handler) => {
+                    logResult(`👂 Intent listener追加: ${type}`, 'info')
+                    return `listener-${Date.now()}`
+                },
+                removeIntentListener: (listenerId) => {
+                    logResult(`🗑️ Intent listener削除: ${listenerId}`, 'info')
+                }
+            }
+        }
+        
+        // ==========================================
+        // テストケース実装
+        // ==========================================
+        
+        // 基本機能テスト
+        document.getElementById('test-creation').onclick = () => {
+            try {
+                testComponent = new BaseUIComponent(mockPluginNode, {
+                    type: 'test-component',
+                    initialState: { testValue: 'hello' },
+                    position: { x: 200, y: 150 },
+                    size: { width: 400, height: 300 }
+                })
+                
+                logResult('✅ BaseUIComponent作成成功', 'success', {
+                    id: testComponent.id,
+                    type: testComponent.type,
+                    state: testComponent.state
+                })
+            } catch (error) {
+                logResult('❌ BaseUIComponent作成失敗', 'error', { error: error.message })
+            }
+        }
+        
+        document.getElementById('test-mount').onclick = () => {
+            if (!testComponent) {
+                logResult('⚠️ 先にコンポーネントを作成してください', 'error')
+                return
+            }
+            
+            try {
+                // 基本的なテスト用DOM構造作成
+                testComponent.render = function() {
+                    const element = this.createBaseElement()
+                    element.innerHTML = `
+                        <div style="padding: 15px; height: 100%;">
+                            <h3 style="margin: 0 0 10px 0; color: #333;">🧪 テストコンポーネント</h3>
+                            <p style="color: #666; margin: 10px 0;">
+                                ID: ${this.id}<br>
+                                Type: ${this.type}<br>
+                                State: ${JSON.stringify(this.state)}
+                            </p>
+                            <div style="position: absolute; bottom: 10px; left: 15px; right: 15px;">
+                                <button onclick="this.closest('.charm-ui-component').testComponent.log('テストボタンクリック')" 
+                                        style="background: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">
+                                    📝 ログテスト
+                                </button>
+                            </div>
+                        </div>
+                    `
+                    
+                    // テスト用参照追加
+                    element.testComponent = this
+                    
+                    // ドラッグ機能設定
+                    this.setupDragging(element.querySelector('h3'))
+                    
+                    // リサイズ機能設定
+                    this.setupResizing()
+                    
+                    return element
+                }
+                
+                const mountedElement = testComponent.mount()
+                logResult('✅ マウント成功', 'success', {
+                    elementId: mountedElement.id,
+                    isMounted: testComponent.state.isMounted
+                })
+            } catch (error) {
+                logResult('❌ マウント失敗', 'error', { error: error.message })
+            }
+        }
+        
+        document.getElementById('test-show').onclick = () => {
+            if (!testComponent) {
+                logResult('⚠️ 先にコンポーネントを作成してください', 'error')
+                return
+            }
+            
+            testComponent.show()
+            logResult('👁️ 表示実行', 'success', { isVisible: testComponent.state.isVisible })
+        }
+        
+        document.getElementById('test-hide').onclick = () => {
+            if (!testComponent) {
+                logResult('⚠️ 先にコンポーネントを作成してください', 'error')
+                return
+            }
+            
+            testComponent.hide()
+            logResult('🙈 非表示実行', 'success', { isVisible: testComponent.state.isVisible })
+        }
+        
+        document.getElementById('test-expand').onclick = () => {
+            if (!testComponent) {
+                logResult('⚠️ 先にコンポーネントを作成してください', 'error')
+                return
+            }
+            
+            testComponent.expand()
+            logResult('📈 展開実行', 'success', { isExpanded: testComponent.state.isExpanded })
+        }
+        
+        document.getElementById('test-collapse').onclick = () => {
+            if (!testComponent) {
+                logResult('⚠️ 先にコンポーネントを作成してください', 'error')
+                return
+            }
+            
+            testComponent.collapse()
+            logResult('📉 縮小実行', 'success', { isExpanded: testComponent.state.isExpanded })
+        }
+        
+        document.getElementById('test-destroy').onclick = () => {
+            if (!testComponent) {
+                logResult('⚠️ 先にコンポーネントを作成してください', 'error')
+                return
+            }
+            
+            testComponent.destroy()
+            logResult('💥 破棄実行', 'success', { isDestroyed: testComponent.isDestroyed })
+            testComponent = null
+        }
+        
+        // Intent通信テスト
+        document.getElementById('test-intent-send').onclick = () => {
+            if (!testComponent) {
+                logResult('⚠️ 先にコンポーネントを作成してください', 'error')
+                return
+            }
+            
+            testComponent.sendIntent('test.intent.example', {
+                message: 'Hello from BaseUIComponent!',
+                timestamp: Date.now()
+            })
+            logResult('📤 Intent送信テスト実行', 'success')
+        }
+        
+        document.getElementById('test-intent-receive').onclick = () => {
+            if (!testComponent) {
+                logResult('⚠️ 先にコンポーネントを作成してください', 'error')
+                return
+            }
+            
+            testComponent.addIntentListener('test.intent.receive', (data) => {
+                logResult('📨 Intent受信テスト成功', 'success', data)
+            })
+            
+            // 受信テスト用Intent送信
+            setTimeout(() => {
+                mockPluginNode.intentHandler.triggerIntent = mockPluginNode.intentHandler.triggerIntent || (() => {})
+                testComponent.sendIntent('test.intent.receive', {
+                    testMessage: 'Intent受信テスト用データ'
+                })
+            }, 100)
+            
+            logResult('👂 Intent受信リスナー設定', 'success')
+        }
+        
+        document.getElementById('test-state-sync').onclick = () => {
+            if (!testComponent) {
+                logResult('⚠️ 先にコンポーネントを作成してください', 'error')
+                return
+            }
+            
+            const newState = {
+                testValue: 'updated value',
+                timestamp: Date.now(),
+                updateCount: (testComponent.state.updateCount || 0) + 1
+            }
+            
+            testComponent.updateState(newState)
+            logResult('🔄 状態同期テスト実行', 'success', testComponent.state)
+        }
+        
+        // UI操作テスト
+        document.getElementById('test-drag').onclick = () => {
+            if (!testComponent || !testComponent.element) {
+                logResult('⚠️ 先にコンポーネントを作成・マウントしてください', 'error')
+                return
+            }
+            
+            logResult('🖱️ ドラッグ機能は既に有効です。h3部分をドラッグしてみてください', 'info')
+        }
+        
+        document.getElementById('test-resize').onclick = () => {
+            if (!testComponent || !testComponent.element) {
+                logResult('⚠️ 先にコンポーネントを作成・マウントしてください', 'error')
+                return
+            }
+            
+            logResult('📏 リサイズ機能は既に有効です。右下角をドラッグしてみてください', 'info')
+        }
+        
+        document.getElementById('test-focus').onclick = () => {
+            if (!testComponent) {
+                logResult('⚠️ 先にコンポーネントを作成してください', 'error')
+                return
+            }
+            
+            testComponent.focus()
+            logResult('🎯 フォーカス実行', 'success')
+        }
+        
+        document.getElementById('test-move').onclick = () => {
+            if (!testComponent) {
+                logResult('⚠️ 先にコンポーネントを作成してください', 'error')
+                return
+            }
+            
+            const randomX = Math.floor(Math.random() * 400) + 100
+            const randomY = Math.floor(Math.random() * 300) + 100
+            
+            testComponent.move({ x: randomX, y: randomY })
+            logResult('📍 位置変更実行', 'success', { x: randomX, y: randomY })
+        }
+        
+        // ==========================================
+        // 初期化
+        // ==========================================
+        
+        logResult('🚀 BaseUIComponent テスト環境初期化完了', 'success')
+        logResult('📝 手順: 1.コンポーネント作成 → 2.マウント → 3.表示 → 各種テスト実行', 'info')
+        
+    </script>
+</body>
+</html>

@@ -46,6 +46,26 @@ export const INTENT_TYPES = {
       CONFIGURE: 'charmflow.ui.plugin.configure',
       ENABLE: 'charmflow.ui.plugin.enable',
       DISABLE: 'charmflow.ui.plugin.disable'
+    },
+    
+    // 🔍 PropertyInspector専用Intent（Phase 1実装）
+    PROPERTY_INSPECTOR: {
+      NODE_SELECTED: 'charmflow.ui.property.node.selected',
+      NODE_DESELECTED: 'charmflow.ui.property.node.deselected',
+      UPDATE_NODE_PROPERTY: 'charmflow.ui.property.node.update',
+      SHOW_INSPECTOR: 'charmflow.ui.property.inspector.show',
+      HIDE_INSPECTOR: 'charmflow.ui.property.inspector.hide'
+    },
+    
+    // 🎨 UIComponent汎用Intent（Phase 1実装）
+    COMPONENT: {
+      EXPAND: 'charmflow.ui.component.expand',
+      COLLAPSE: 'charmflow.ui.component.collapse',
+      STATE_SYNC: 'charmflow.ui.component.state.sync',
+      DESTROY: 'charmflow.ui.component.destroy',
+      FOCUS: 'charmflow.ui.component.focus',
+      EXPANDED: 'charmflow.ui.component.expanded',
+      COLLAPSED: 'charmflow.ui.component.collapsed'
     }
   },
   
@@ -153,6 +173,59 @@ export const INTENT_SCHEMAS = {
     pluginId: 'string',      // プラグインID
     newConfig: 'object',     // 新設定
     oldConfig: 'object?'     // 旧設定（undo用、オプショナル）
+  },
+  
+  // 🔍 PropertyInspector Intent スキーマ（Phase 1実装）
+  [INTENT_TYPES.UI.PROPERTY_INSPECTOR.NODE_SELECTED]: {
+    nodeId: 'string',        // 選択されたノードID
+    nodeType: 'string',      // ノードタイプ（button.send等）
+    properties: 'object',    // ノードプロパティ
+    position: 'object?',     // ノード位置（オプショナル）
+    metadata: 'object?'      // 追加メタデータ（オプショナル）
+  },
+  
+  [INTENT_TYPES.UI.PROPERTY_INSPECTOR.NODE_DESELECTED]: {
+    nodeId: 'string?',       // 解除されたノードID（オプショナル）
+    reason: 'string?'        // 解除理由（オプショナル）
+  },
+  
+  [INTENT_TYPES.UI.PROPERTY_INSPECTOR.UPDATE_NODE_PROPERTY]: {
+    nodeId: 'string',        // 対象ノードID
+    propertyName: 'string',  // プロパティ名
+    newValue: 'any',         // 新しい値
+    oldValue: 'any?',        // 古い値（undo用、オプショナル）
+    propertyType: 'string?'  // プロパティタイプ（オプショナル）
+  },
+  
+  [INTENT_TYPES.UI.PROPERTY_INSPECTOR.SHOW_INSPECTOR]: {
+    nodeId: 'string?',       // 表示対象ノードID（オプショナル）
+    position: 'object?'      // 表示位置（オプショナル）
+  },
+  
+  [INTENT_TYPES.UI.PROPERTY_INSPECTOR.HIDE_INSPECTOR]: {
+    reason: 'string?'        // 非表示理由（オプショナル）
+  },
+  
+  // 🎨 UIComponent Intent スキーマ（Phase 1実装）
+  [INTENT_TYPES.UI.COMPONENT.EXPAND]: {
+    componentId: 'string',   // 対象コンポーネントID
+    componentType: 'string?' // コンポーネントタイプ（オプショナル）
+  },
+  
+  [INTENT_TYPES.UI.COMPONENT.COLLAPSE]: {
+    componentId: 'string',   // 対象コンポーネントID
+    componentType: 'string?' // コンポーネントタイプ（オプショナル）
+  },
+  
+  [INTENT_TYPES.UI.COMPONENT.STATE_SYNC]: {
+    componentId: 'string',   // 対象コンポーネントID
+    newState: 'object',      // 新しい状態
+    oldState: 'object?'      // 古い状態（オプショナル）
+  },
+  
+  [INTENT_TYPES.UI.COMPONENT.DESTROY]: {
+    componentId: 'string',   // 対象コンポーネントID
+    reason: 'string?'        // 破棄理由（オプショナル）
   },
   
   // デバッグIntent（Phase 4で詳細実装）

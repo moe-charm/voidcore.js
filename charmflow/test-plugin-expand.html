@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PluginNode toggleExpand テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #005a9e;
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .plugin-node {
+            display: inline-block;
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .plugin-node:hover {
+            background: #bbdefb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+        .plugin-node.expanded {
+            background: #1976d2;
+            color: white;
+            border-color: #0d47a1;
+        }
+        .node-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .node-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .node-status {
+            font-size: 11px;
+            color: #666;
+        }
+        .plugin-node.expanded .node-status {
+            color: #e3f2fd;
+        }
+        .expand-indicator {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 12px;
+            background: rgba(0,0,0,0.2);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .results {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+        .success { color: #27ae60; }
+        .error { color: #e74c3c; }
+        .info { color: #3498db; }
+        .warning { color: #f39c12; }
+    </style>
+</head>
+<body>
+    <h1>🎨 PluginNode toggleExpand() テスト</h1>
+    
+    <div class="test-container" style="background: #fff3cd; border: 2px solid #ffc107;">
+        <h2>📝 Gemini戦略: ハイブリッドモデル実装テスト</h2>
+        <p><strong>目的:</strong> PluginNodeのアイコン状態 ⇔ リッチUI展開の切り替え機能確認</p>
+        <ol>
+            <li>下記のPluginNodeアイコンをダブルクリックして展開</li>
+            <li>SimpleButtonComponentが右側に表示される</li>
+            <li>もう一度ダブルクリックで縮小</li>
+        </ol>
+    </div>
+    
+    <div class="test-container">
+        <h2>📊 テスト用PluginNode</h2>
+        <div id="plugin-nodes-container">
+            <!-- PluginNodeがここに追加される -->
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🔧 制御ボタン</h2>
+        <button class="test-button" id="create-button-node">ButtonSendPlugin作成</button>
+        <button class="test-button" id="toggle-expand-all">全て展開/縮小</button>
+        <button class="test-button" id="reset-all">全てリセット</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>📋 テスト結果</h2>
+        <div id="test-results" class="results">
+            <div class="info">📝 PluginNode toggleExpand()テスト準備完了。</div>
+        </div>
+    </div>
+
+    <script type="module">
+        // モジュールインポート
+        import { ButtonSendPlugin } from './js/nodes/button-send-plugin.js'
+        import { VoidCore } from '../src/core/nyacore.js'
+        
+        // ==========================================
+        // テスト環境セットアップ
+        // ==========================================
+        
+        const pluginNodes = []
+        const results = document.getElementById('test-results')
+        const container = document.getElementById('plugin-nodes-container')
+        
+        // モックVoidCore（簡易版）
+        const mockVoidCore = {
+            sendIntent: async (type, data) => {
+                logResult(`📤 Intent送信: ${type}`, 'info', data)
+            },
+            publish: async (message) => {
+                logResult(`📨 Message発行: ${message.type}`, 'info', message)
+            }
+        }
+        
+        function logResult(message, type = 'info', data = null) {
+            const timestamp = new Date().toLocaleTimeString()
+            const resultDiv = document.createElement('div')
+            resultDiv.className = type
+            resultDiv.innerHTML = `[${timestamp}] ${message}`
+            
+            if (data) {
+                const dataDiv = document.createElement('div')
+                dataDiv.style.marginLeft = '20px'
+                dataDiv.style.color = '#666'
+                dataDiv.innerHTML = JSON.stringify(data, null, 2)
+                resultDiv.appendChild(dataDiv)
+            }
+            
+            results.appendChild(resultDiv)
+            results.scrollTop = results.scrollHeight
+        }
+        
+        // ==========================================
+        // PluginNode UI作成
+        // ==========================================
+        
+        function createPluginNodeUI(plugin) {
+            const nodeDiv = document.createElement('div')
+            nodeDiv.className = 'plugin-node'
+            nodeDiv.id = `node-${plugin.id}`
+            
+            nodeDiv.innerHTML = `
+                <div class="expand-indicator">${plugin.isExpanded ? '展開中' : 'ダブルクリックで展開'}</div>
+                <div class="node-icon">🔘</div>
+                <div class="node-label">${plugin.properties.label}</div>
+                <div class="node-status">
+                    ID: ${plugin.id.slice(-8)}<br>
+                    Type: ${plugin.nodeType}
+                </div>
+            `
+            
+            // ダブルクリックで展開/縮小
+            nodeDiv.addEventListener('dblclick', async () => {
+                logResult(`🖱️ ダブルクリック検出: ${plugin.displayName}`, 'info')
+                
+                try {
+                    const newState = await plugin.toggleExpand()
+                    
+                    // UI更新
+                    if (newState) {
+                        nodeDiv.classList.add('expanded')
+                        nodeDiv.querySelector('.expand-indicator').textContent = '展開中'
+                    } else {
+                        nodeDiv.classList.remove('expanded')
+                        nodeDiv.querySelector('.expand-indicator').textContent = 'ダブルクリックで展開'
+                    }
+                    
+                    logResult(`✅ toggleExpand成功: ${newState ? 'EXPANDED' : 'COLLAPSED'}`, 'success')
+                } catch (error) {
+                    logResult(`❌ toggleExpand失敗: ${error.message}`, 'error')
+                }
+            })
+            
+            // シングルクリックで情報表示
+            nodeDiv.addEventListener('click', (e) => {
+                if (e.detail === 1) { // シングルクリックのみ
+                    logResult(`📊 ノード情報:`, 'info', plugin.getNodeState())
+                }
+            })
+            
+            return nodeDiv
+        }
+        
+        // ==========================================
+        // テストケース実装
+        // ==========================================
+        
+        // ButtonSendPlugin作成
+        document.getElementById('create-button-node').onclick = () => {
+            try {
+                const config = {
+                    id: `button-${Date.now()}`,
+                    position: { x: 100 + pluginNodes.length * 150, y: 100 },
+                    properties: {
+                        label: `Button ${pluginNodes.length + 1}`,
+                        buttonColor: '#007acc',
+                        textColor: '#ffffff'
+                    }
+                }
+                
+                const plugin = new ButtonSendPlugin(config)
+                
+                // VoidCore設定（モック）
+                plugin.voidCore = mockVoidCore
+                plugin.sendIntent = mockVoidCore.sendIntent
+                plugin.log = (message, data) => logResult(`[${plugin.nodeType}] ${message}`, 'info', data)
+                
+                // UI作成・追加
+                const nodeUI = createPluginNodeUI(plugin)
+                container.appendChild(nodeUI)
+                
+                pluginNodes.push(plugin)
+                
+                logResult(`✅ ButtonSendPlugin作成成功`, 'success', {
+                    id: plugin.id,
+                    type: plugin.nodeType,
+                    uiComponentType: plugin.uiComponentType
+                })
+            } catch (error) {
+                logResult(`❌ ButtonSendPlugin作成失敗: ${error.message}`, 'error')
+            }
+        }
+        
+        // 全て展開/縮小
+        document.getElementById('toggle-expand-all').onclick = async () => {
+            if (pluginNodes.length === 0) {
+                logResult('⚠️ PluginNodeが作成されていません', 'warning')
+                return
+            }
+            
+            // 現在の状態確認（全て展開されているか）
+            const allExpanded = pluginNodes.every(node => node.isExpanded)
+            
+            logResult(`🔄 全ノード${allExpanded ? '縮小' : '展開'}開始`, 'info')
+            
+            // 並列処理
+            const promises = pluginNodes.map(async (plugin) => {
+                if (plugin.isExpanded === allExpanded) {
+                    const newState = await plugin.toggleExpand()
+                    
+                    // UI更新
+                    const nodeDiv = document.getElementById(`node-${plugin.id}`)
+                    if (nodeDiv) {
+                        if (newState) {
+                            nodeDiv.classList.add('expanded')
+                            nodeDiv.querySelector('.expand-indicator').textContent = '展開中'
+                        } else {
+                            nodeDiv.classList.remove('expanded')
+                            nodeDiv.querySelector('.expand-indicator').textContent = 'ダブルクリックで展開'
+                        }
+                    }
+                }
+            })
+            
+            await Promise.all(promises)
+            logResult(`✅ 全ノード${allExpanded ? '縮小' : '展開'}完了`, 'success')
+        }
+        
+        // 全てリセット
+        document.getElementById('reset-all').onclick = () => {
+            pluginNodes.forEach(plugin => {
+                // UIコンポーネント破棄
+                if (plugin.richUIComponent) {
+                    plugin.richUIComponent.destroy()
+                    plugin.richUIComponent = null
+                }
+                plugin.isExpanded = false
+            })
+            
+            // UI削除
+            container.innerHTML = ''
+            pluginNodes.length = 0
+            
+            logResult('🔄 全てリセット完了', 'success')
+        }
+        
+        // ==========================================
+        // 初期化
+        // ==========================================
+        
+        logResult('🚀 PluginNode toggleExpand()テスト環境初期化完了', 'success')
+        logResult('📝 手順: ButtonSendPlugin作成 → ノードをダブルクリックで展開/縮小', 'info')
+        
+        // 初期ノード作成
+        setTimeout(() => {
+            document.getElementById('create-button-node').click()
+            logResult('💡 ヒント: 作成されたノードをダブルクリックしてみてください！', 'info')
+        }, 500)
+        
+    </script>
+</body>
+</html>
