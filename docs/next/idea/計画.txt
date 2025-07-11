@@ -1,0 +1,39 @@
+🎯「プラグインがアイコンで終わらず、そのまま機能を表示するUI部品として居座れるようにする」
+
+今のプラグインと別にUI表示のプラグイン
+
+✅ charmFlow拡張ビジョン：
+🧱 「プラグイン = UIコンポーネント」化計画
+プラグインタイプ	表現	使い道
+📝 テキストエディタプラグイン	その場でリッチに編集UI展開	スクリプト編集・AIプロンプト
+🧩 ロジックノードプラグイン	小さなアイコン + 詳細UI展開可能	if/loop/trigger 等
+🎨 Canvasプラグイン	requestAnimationFrameで描画	ゲーム・シミュレーション
+🧠 本当にゲーム作れる理由
+
+VoidFlowの構造がすでに：
+
+PluginNode
+  ├─ Intent送信/受信
+  ├─ 状態保持
+  ├─ 他ノードとの通信
+  └─ UIと連動
+
+つまり、
+
+    💬 メッセージでゲームの状態変更
+
+    🎨 Canvasで表示・描画制御
+
+    🕹️ テキストエディタでスクリプト修正
+
+    🧠 AIで提案 or 修正まで可能
+
+✨ 構成イメージにゃ！
+
+[GameScriptEditor]──┬──▶（Intent: script.updated）
+                     │
+[GameLogicEngine]◀──┘──▶（Intent: frame.tick）
+                     │
+[GameCanvasRenderer]──▶（Intent: draw.frame）
+
+    これ全部 VoidFlow 上で「ノード＝部品＝GUI」として表示にゃ！！

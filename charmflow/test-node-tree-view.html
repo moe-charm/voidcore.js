@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NodeTreeViewComponent テスト</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .test-container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+        .test-button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .test-button:hover {
+            background: #005a9e;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .test-button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .test-button.secondary {
+            background: #6c757d;
+        }
+        .test-button.secondary:hover {
+            background: #5a6268;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.success:hover {
+            background: #218838;
+        }
+        .test-button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .test-button.warning:hover {
+            background: #e0a800;
+        }
+        .test-button.danger {
+            background: #dc3545;
+        }
+        .test-button.danger:hover {
+            background: #c82333;
+        }
+        .info-text {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        h1, h2 {
+            color: #212529;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .feature-list {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .feature-list li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌳 NodeTreeViewComponent テスト</h1>
+    
+    <div class="test-container" style="background: #fff3cd; border: 2px solid #ffc107;">
+        <h2>📝 テスト手順（これを見てにゃ！）</h2>
+        <ol style="font-size: 16px; line-height: 1.8;">
+            <li><strong>Step 1:</strong> 「NodeTreeView作成・表示」ボタンをクリック</li>
+            <li><strong>Step 2:</strong> 左側にツリービューが表示されます → <em>デモノードが階層表示</em></li>
+            <li><strong>Step 3:</strong> ▶/▼ アイコンクリックで展開/折りたたみ</li>
+            <li><strong>Step 4:</strong> ノードクリックで選択（Ctrl+クリックで複数選択）</li>
+            <li><strong>Step 5:</strong> 「ノード追加」ボタンでダイナミックに追加</li>
+            <li><strong>Step 6:</strong> 検索ボックスでフィルタリング</li>
+            <li><strong>Step 7:</strong> ドラッグ&ドロップで階層変更（試してみて！）</li>
+        </ol>
+        <p style="margin-top: 15px;">💡 <strong>ヒント:</strong> 「全て展開」「全て折りたたむ」ボタンで一括操作！</p>
+    </div>
+    
+    <div class="test-container">
+        <h2>🎯 機能概要</h2>
+        <div class="feature-list">
+            <ul>
+                <li>🌳 <strong>階層表示</strong> - ノードの親子関係を視覚的に表現</li>
+                <li>🔍 <strong>検索フィルター</strong> - リアルタイム検索で素早く見つける</li>
+                <li>📂 <strong>展開/折りたたみ</strong> - 大規模な階層も見やすく管理</li>
+                <li>🖱️ <strong>ドラッグ&ドロップ</strong> - 直感的な階層変更</li>
+                <li>✅ <strong>複数選択</strong> - Ctrl+クリックで効率的な操作</li>
+                <li>💾 <strong>エクスポート/インポート</strong> - ツリー構造の保存・復元</li>
+                <li>🎨 <strong>ノードタイプ別アイコン</strong> - 視覚的な識別性向上</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🔧 基本制御</h2>
+        <button class="test-button" id="create-tree">NodeTreeView作成・表示</button>
+        <button class="test-button" id="hide-tree">非表示</button>
+        <button class="test-button" id="show-tree">表示</button>
+        <button class="test-button secondary" id="destroy-tree">破棄</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>🌲 ノード操作</h2>
+        <div class="test-grid">
+            <button class="test-button success" id="add-node">ノード追加</button>
+            <button class="test-button success" id="add-child-node">子ノード追加</button>
+            <button class="test-button danger" id="remove-node">選択ノード削除</button>
+            <button class="test-button warning" id="update-node">ノード更新</button>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🔗 接続シミュレーション</h2>
+        <button class="test-button" id="add-connection">接続追加</button>
+        <button class="test-button" id="remove-connection">接続削除</button>
+        <button class="test-button" id="simulate-complex">複雑な構造生成</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>🎯 ツリー操作</h2>
+        <div class="test-grid">
+            <button class="test-button" id="expand-all">全て展開</button>
+            <button class="test-button" id="collapse-all">全て折りたたむ</button>
+            <button class="test-button" id="select-all">全選択</button>
+            <button class="test-button" id="clear-selection">選択解除</button>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>💾 データ管理</h2>
+        <button class="test-button" id="export-tree">ツリーエクスポート</button>
+        <button class="test-button" id="import-tree">ツリーインポート</button>
+        <button class="test-button" id="refresh-tree">ツリー更新</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>📊 現在の状態</h2>
+        <div id="current-status" class="info-text">
+            NodeTreeView未作成
+        </div>
+    </div>
+
+    <script type="module">
+        import { NodeTreeViewComponent } from './js/ui-components/NodeTreeViewComponent.js'
+        import { INTENT_TYPES } from './js/intent-definitions.js'
+        
+        // ==========================================
+        // テスト環境セットアップ
+        // ==========================================
+        
+        let nodeTreeView = null
+        let nodeCounter = 100
+        const statusElement = document.getElementById('current-status')
+        
+        function updateStatus() {
+            if (!nodeTreeView) {
+                statusElement.textContent = 'NodeTreeView未作成'
+            } else {
+                statusElement.innerHTML = `NodeTreeView状態:
+- ID: ${nodeTreeView.id}
+- 表示: ${nodeTreeView.state.isVisible ? '✅' : '❌'}
+- マウント: ${nodeTreeView.state.isMounted ? '✅' : '❌'}
+- ノード数: ${nodeTreeView.nodes.size}
+- 展開ノード: ${nodeTreeView.expandedNodes.size}
+- 選択ノード: ${nodeTreeView.selectedNodes.size}
+- フィルター: "${nodeTreeView.searchQuery || 'なし'}"
+- ドラッグ&ドロップ: ${nodeTreeView.treeConfig.enableDragDrop ? '✅' : '❌'}`
+            }
+        }
+        
+        // モックIntentHandler
+        const mockIntentHandler = {
+            sendIntent: function(type, data) {
+                console.log('📤 Intent送信:', type, data)
+            },
+            
+            addIntentListener: function(type, handler) {
+                console.log(`👂 Intent listener追加: ${type}`)
+                return `listener-${type}-${Date.now()}`
+            },
+            
+            removeIntentListener: function(listenerId) {
+                console.log(`🗑️ Intent listener削除: ${listenerId}`)
+            }
+        }
+        
+        // モックPluginNode
+        const mockPluginNode = {
+            id: 'node-tree-test-node',
+            intentHandler: mockIntentHandler
+        }
+        
+        // ==========================================
+        // 基本制御
+        // ==========================================
+        
+        document.getElementById('create-tree').onclick = () => {
+            try {
+                nodeTreeView = new NodeTreeViewComponent(mockPluginNode, {
+                    position: { x: 50, y: 50 },
+                    size: { width: 350, height: 600 },
+                    showConnections: true,
+                    showNodeTypes: true,
+                    enableDragDrop: true,
+                    enableMultiSelect: true,
+                    enableSearch: true,
+                    autoExpand: false
+                })
+                
+                // マウント・表示
+                nodeTreeView.mount()
+                nodeTreeView.show()
+                
+                console.log('✅ NodeTreeView作成・表示成功')
+                updateStatus()
+            } catch (error) {
+                console.error('❌ NodeTreeView作成失敗:', error)
+            }
+        }
+        
+        document.getElementById('show-tree').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            nodeTreeView.show()
+            console.log('✅ 表示')
+            updateStatus()
+        }
+        
+        document.getElementById('hide-tree').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            nodeTreeView.hide()
+            console.log('✅ 非表示')
+            updateStatus()
+        }
+        
+        document.getElementById('destroy-tree').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            nodeTreeView.destroy()
+            nodeTreeView = null
+            console.log('✅ 破棄完了')
+            updateStatus()
+        }
+        
+        // ==========================================
+        // ノード操作
+        // ==========================================
+        
+        document.getElementById('add-node').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            const nodeId = `node-${++nodeCounter}`
+            const nodeTypes = ['button.send', 'input.text', 'output.console', 'logic.condition', 'data.variable']
+            const nodeType = nodeTypes[Math.floor(Math.random() * nodeTypes.length)]
+            
+            nodeTreeView.addNode({
+                id: nodeId,
+                type: nodeType,
+                name: `New ${nodeType.split('.')[1]} Node`,
+                position: { x: 100 + nodeCounter * 10, y: 100 + nodeCounter * 10 },
+                parent: null
+            })
+            
+            console.log(`✅ ノード追加: ${nodeId}`)
+            updateStatus()
+        }
+        
+        document.getElementById('add-child-node').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            if (nodeTreeView.selectedNodes.size === 0) {
+                alert('親ノードを選択してください')
+                return
+            }
+            
+            const parentId = Array.from(nodeTreeView.selectedNodes)[0]
+            const nodeId = `child-${++nodeCounter}`
+            
+            nodeTreeView.addNode({
+                id: nodeId,
+                type: 'string.uppercase',
+                name: `Child of ${parentId}`,
+                position: { x: 150, y: 250 },
+                parent: parentId
+            })
+            
+            console.log(`✅ 子ノード追加: ${nodeId} (親: ${parentId})`)
+            updateStatus()
+        }
+        
+        document.getElementById('remove-node').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            if (nodeTreeView.selectedNodes.size === 0) {
+                alert('削除するノードを選択してください')
+                return
+            }
+            
+            nodeTreeView.selectedNodes.forEach(nodeId => {
+                nodeTreeView.removeNode(nodeId)
+                console.log(`✅ ノード削除: ${nodeId}`)
+            })
+            
+            updateStatus()
+        }
+        
+        document.getElementById('update-node').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            if (nodeTreeView.selectedNodes.size === 0) {
+                alert('更新するノードを選択してください')
+                return
+            }
+            
+            const nodeId = Array.from(nodeTreeView.selectedNodes)[0]
+            nodeTreeView.updateNode(nodeId, {
+                name: `Updated at ${new Date().toLocaleTimeString()}`,
+                data: { updated: true, timestamp: Date.now() }
+            })
+            
+            console.log(`✅ ノード更新: ${nodeId}`)
+            updateStatus()
+        }
+        
+        // ==========================================
+        // 接続シミュレーション
+        // ==========================================
+        
+        document.getElementById('add-connection').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            const nodes = Array.from(nodeTreeView.nodes.keys())
+            if (nodes.length < 2) {
+                alert('接続するには2つ以上のノードが必要です')
+                return
+            }
+            
+            const source = nodes[Math.floor(Math.random() * nodes.length)]
+            let target = nodes[Math.floor(Math.random() * nodes.length)]
+            while (target === source) {
+                target = nodes[Math.floor(Math.random() * nodes.length)]
+            }
+            
+            nodeTreeView.updateConnection(source, target, 'create')
+            console.log(`✅ 接続追加: ${source} → ${target}`)
+            updateStatus()
+        }
+        
+        document.getElementById('remove-connection').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            // 接続を持つノードを探す
+            let connectionFound = false
+            for (const [nodeId, node] of nodeTreeView.nodes) {
+                if (node.connections.outputs.length > 0) {
+                    const targetId = node.connections.outputs[0]
+                    nodeTreeView.updateConnection(nodeId, targetId, 'delete')
+                    console.log(`✅ 接続削除: ${nodeId} → ${targetId}`)
+                    connectionFound = true
+                    break
+                }
+            }
+            
+            if (!connectionFound) {
+                alert('削除する接続がありません')
+            }
+            
+            updateStatus()
+        }
+        
+        document.getElementById('simulate-complex').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            // 複雑な構造を生成
+            const rootId = `complex-root-${++nodeCounter}`
+            nodeTreeView.addNode({
+                id: rootId,
+                type: 'flow.start',
+                name: 'Complex Flow Start',
+                parent: null
+            })
+            
+            // 3層の階層構造を作成
+            for (let i = 0; i < 3; i++) {
+                const branchId = `branch-${nodeCounter}-${i}`
+                nodeTreeView.addNode({
+                    id: branchId,
+                    type: 'logic.condition',
+                    name: `Branch ${i + 1}`,
+                    parent: rootId
+                })
+                
+                // 各ブランチに子ノード追加
+                for (let j = 0; j < 2; j++) {
+                    const leafId = `leaf-${nodeCounter}-${i}-${j}`
+                    nodeTreeView.addNode({
+                        id: leafId,
+                        type: 'output.console',
+                        name: `Output ${i + 1}-${j + 1}`,
+                        parent: branchId
+                    })
+                }
+                
+                // 接続も追加
+                if (i > 0) {
+                    nodeTreeView.updateConnection(`branch-${nodeCounter}-${i-1}`, branchId, 'create')
+                }
+            }
+            
+            console.log('✅ 複雑な構造生成完了')
+            updateStatus()
+        }
+        
+        // ==========================================
+        // ツリー操作
+        // ==========================================
+        
+        document.getElementById('expand-all').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            nodeTreeView.expandAll()
+            console.log('✅ 全て展開')
+            updateStatus()
+        }
+        
+        document.getElementById('collapse-all').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            nodeTreeView.collapseAll()
+            console.log('✅ 全て折りたたみ')
+            updateStatus()
+        }
+        
+        document.getElementById('select-all').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            nodeTreeView.selectAll()
+            console.log('✅ 全選択')
+            updateStatus()
+        }
+        
+        document.getElementById('clear-selection').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            nodeTreeView.clearSelection()
+            console.log('✅ 選択解除')
+            updateStatus()
+        }
+        
+        // ==========================================
+        // データ管理
+        // ==========================================
+        
+        document.getElementById('export-tree').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            nodeTreeView.exportTree()
+            console.log('✅ ツリーエクスポート')
+        }
+        
+        document.getElementById('import-tree').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            nodeTreeView.importTree()
+            console.log('✅ ツリーインポート待機')
+        }
+        
+        document.getElementById('refresh-tree').onclick = () => {
+            if (!nodeTreeView) {
+                alert('先にNodeTreeViewを作成してください')
+                return
+            }
+            
+            nodeTreeView.refreshTree()
+            console.log('✅ ツリー更新')
+            updateStatus()
+        }
+        
+        // ==========================================
+        // 初期化
+        // ==========================================
+        
+        console.log('🚀 NodeTreeViewComponent テスト環境初期化完了')
+        updateStatus()
+        
+        // 使い方ヒント
+        console.log('%c💡 ヒント: ノードをドラッグ&ドロップして階層を変更できます！', 'color: #007acc; font-size: 14px;')
+        
+    </script>
+</body>
+</html>

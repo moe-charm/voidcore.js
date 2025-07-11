@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MessageLogPanel テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #2d2d30;
+            color: #cccccc;
+        }
+        .test-container {
+            background: #252526;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            border: 1px solid #3e3e42;
+        }
+        .test-button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #1177bb;
+        }
+        .test-button:active {
+            background: #005a9e;
+        }
+        .test-button.secondary {
+            background: #3c3c3c;
+            border: 1px solid #5a5a5a;
+        }
+        .test-button.secondary:hover {
+            background: #4a4a4a;
+        }
+        .test-button.error {
+            background: #f14c4c;
+        }
+        .test-button.error:hover {
+            background: #f36969;
+        }
+        .test-button.warning {
+            background: #cca700;
+        }
+        .test-button.warning:hover {
+            background: #ddb71a;
+        }
+        .info-text {
+            background: #1e1e1e;
+            border: 1px solid #464647;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        h1, h2 {
+            color: #e1e1e1;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>📜 MessageLogPanel テスト</h1>
+    
+    <div class="test-container" style="background: #fff3cd; border: 2px solid #ffc107;">
+        <h2>📝 テスト手順（おすすめ順番）</h2>
+        <ol style="font-size: 16px; line-height: 1.8;">
+            <li><strong>自動で起動済み！</strong> → <em>画面右側にMessageLogPanelが表示されています</em></li>
+            <li><strong>基本メッセージ送信:</strong> 「Message送信」ボタンをクリック → <em>ログに表示確認</em></li>
+            <li><strong>エラー・警告テスト:</strong> 「Errorログ」「Warningログ」ボタン → <em>色分け表示確認</em></li>
+            <li><strong>フィルター機能:</strong> パネル右上の「🔍」ボタン → <em>フィルターバー表示</em></li>
+            <li><strong>ストレステスト:</strong> 「100メッセージ連続送信」 → <em>パフォーマンス確認</em></li>
+            <li><strong>連続送信モード:</strong> 「連続送信開始/停止」 → <em>リアルタイム更新確認</em></li>
+            <li><strong>Intent通信:</strong> 「ノードイベントシミュレート」 → <em>Intent監視確認</em></li>
+            <li><strong>エクスポート:</strong> パネル右上の「💾」ボタン → <em>ログをJSON保存</em></li>
+        </ol>
+        <p style="margin-top: 15px;">💡 <strong>ヒント:</strong> メッセージをダブルクリックすると詳細表示！</p>
+    </div>
+    
+    <div class="test-container" style="background: #1e3a5f; border-color: #2d5a8f;">
+        <h2>📝 テスト概要</h2>
+        <p><strong>MessageLogPanel</strong>は、リアルタイムでIntent/Messageを監視・表示するログビューアです。</p>
+        <ul>
+            <li>🔍 高度なフィルタリング機能</li>
+            <li>📊 メッセージ統計表示</li>
+            <li>💾 ログエクスポート機能</li>
+            <li>🎨 カラーコード表示</li>
+            <li>🚀 高パフォーマンス（仮想スクロール）</li>
+        </ul>
+    </div>
+    
+    <div class="test-container">
+        <h2>🔧 基本制御</h2>
+        <button class="test-button" id="create-panel">MessageLogPanel作成</button>
+        <button class="test-button" id="mount-panel">マウント</button>
+        <button class="test-button" id="show-panel">表示</button>
+        <button class="test-button" id="hide-panel">非表示</button>
+        <button class="test-button secondary" id="destroy-panel">破棄</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>📨 メッセージ送信テスト</h2>
+        <div class="test-grid">
+            <button class="test-button" id="send-intent">Intent送信</button>
+            <button class="test-button" id="send-message">Message送信</button>
+            <button class="test-button error" id="send-error">Errorログ</button>
+            <button class="test-button warning" id="send-warning">Warningログ</button>
+            <button class="test-button secondary" id="send-debug">Debugログ</button>
+            <button class="test-button" id="send-system">Systemログ</button>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🔥 ストレステスト</h2>
+        <button class="test-button" id="send-burst">100メッセージ連続送信</button>
+        <button class="test-button" id="send-continuous">連続送信開始/停止</button>
+        <button class="test-button" id="send-mixed">混合メッセージ送信</button>
+        <button class="test-button" id="send-large">巨大メッセージ送信</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>🎯 Intent通信テスト</h2>
+        <button class="test-button" id="simulate-node-event">ノードイベントシミュレート</button>
+        <button class="test-button" id="simulate-connection">接続イベントシミュレート</button>
+        <button class="test-button" id="simulate-property">プロパティ変更シミュレート</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>📊 現在の状態</h2>
+        <div id="current-status" class="info-text">
+            MessageLogPanel未作成
+        </div>
+    </div>
+
+    <script type="module">
+        import { MessageLogPanel } from './js/ui-components/MessageLogPanel.js'
+        import { INTENT_TYPES } from './js/intent-definitions.js'
+        
+        // ==========================================
+        // テスト環境セットアップ
+        // ==========================================
+        
+        let messageLogPanel = null
+        let continuousSending = false
+        let continuousTimer = null
+        let messageCounter = 0
+        
+        const statusElement = document.getElementById('current-status')
+        
+        function updateStatus() {
+            if (!messageLogPanel) {
+                statusElement.textContent = 'MessageLogPanel未作成'
+            } else {
+                statusElement.innerHTML = `
+MessageLogPanel状態:
+- ID: ${messageLogPanel.id}
+- 表示: ${messageLogPanel.state.isVisible ? '✅' : '❌'}
+- マウント: ${messageLogPanel.state.isMounted ? '✅' : '❌'}
+- メッセージ数: ${messageLogPanel.messages.length}
+- フィルター済み: ${messageLogPanel.filteredMessages.length}
+- 自動スクロール: ${messageLogPanel.autoScroll ? '✅' : '❌'}
+                `
+            }
+        }
+        
+        // モックIntentHandler
+        const mockIntentHandler = {
+            listeners: new Map(),
+            
+            sendIntent: function(type, data) {
+                console.log('📤 Intent送信:', type, data)
+                // 自分自身にも配信（ループバック）
+                this.triggerIntent(type, data)
+            },
+            
+            addIntentListener: function(type, handler) {
+                if (!this.listeners.has(type)) {
+                    this.listeners.set(type, [])
+                }
+                this.listeners.get(type).push(handler)
+                console.log(`👂 Intent listener追加: ${type}`)
+                return `listener-${type}-${Date.now()}`
+            },
+            
+            removeIntentListener: function(listenerId) {
+                console.log(`🗑️ Intent listener削除: ${listenerId}`)
+            },
+            
+            triggerIntent: function(type, data) {
+                // ワイルドカードマッチング
+                this.listeners.forEach((handlers, listenerType) => {
+                    if (listenerType === '*' || type.startsWith(listenerType.replace('*', ''))) {
+                        handlers.forEach(handler => handler(data, type))
+                    }
+                })
+            }
+        }
+        
+        // モックPluginNode
+        const mockPluginNode = {
+            id: 'message-log-test-node',
+            intentHandler: mockIntentHandler
+        }
+        
+        // ==========================================
+        // 基本制御
+        // ==========================================
+        
+        document.getElementById('create-panel').onclick = () => {
+            try {
+                messageLogPanel = new MessageLogPanel(mockPluginNode, {
+                    position: { x: 800, y: 50 },  // もっと右に配置
+                    size: { width: 600, height: 500 },
+                    maxMessages: 500,
+                    autoScroll: true,
+                    showTimestamp: true
+                })
+                
+                console.log('✅ MessageLogPanel作成成功')
+                updateStatus()
+            } catch (error) {
+                console.error('❌ MessageLogPanel作成失敗:', error)
+            }
+        }
+        
+        document.getElementById('mount-panel').onclick = () => {
+            if (!messageLogPanel) {
+                alert('先にMessageLogPanelを作成してください')
+                return
+            }
+            
+            messageLogPanel.mount()
+            console.log('✅ マウント完了')
+            updateStatus()
+        }
+        
+        document.getElementById('show-panel').onclick = () => {
+            if (!messageLogPanel) {
+                alert('先にMessageLogPanelを作成してください')
+                return
+            }
+            
+            messageLogPanel.show()
+            console.log('✅ 表示')
+            updateStatus()
+        }
+        
+        document.getElementById('hide-panel').onclick = () => {
+            if (!messageLogPanel) {
+                alert('先にMessageLogPanelを作成してください')
+                return
+            }
+            
+            messageLogPanel.hide()
+            console.log('✅ 非表示')
+            updateStatus()
+        }
+        
+        document.getElementById('destroy-panel').onclick = () => {
+            if (!messageLogPanel) {
+                alert('先にMessageLogPanelを作成してください')
+                return
+            }
+            
+            messageLogPanel.destroy()
+            messageLogPanel = null
+            console.log('✅ 破棄完了')
+            updateStatus()
+        }
+        
+        // ==========================================
+        // メッセージ送信テスト
+        // ==========================================
+        
+        document.getElementById('send-intent').onclick = () => {
+            mockIntentHandler.triggerIntent('charmflow.test.intent', {
+                action: 'test',
+                timestamp: Date.now(),
+                data: { value: Math.random() }
+            })
+        }
+        
+        document.getElementById('send-message').onclick = () => {
+            mockIntentHandler.triggerIntent('charmflow.log.message', {
+                level: 'message',
+                message: `テストメッセージ #${++messageCounter}`,
+                source: 'test-button',
+                data: { 
+                    counter: messageCounter,
+                    timestamp: new Date().toISOString()
+                }
+            })
+        }
+        
+        document.getElementById('send-error').onclick = () => {
+            mockIntentHandler.triggerIntent('charmflow.log.message', {
+                level: 'error',
+                message: `エラーが発生しました: ${new Error('テストエラー').message}`,
+                source: 'error-test',
+                data: {
+                    stack: new Error().stack,
+                    code: 'TEST_ERROR_001'
+                }
+            })
+        }
+        
+        document.getElementById('send-warning').onclick = () => {
+            mockIntentHandler.triggerIntent('charmflow.log.message', {
+                level: 'warning',
+                message: '⚠️ 警告: メモリ使用量が閾値を超えています',
+                source: 'monitoring',
+                data: {
+                    memory: Math.floor(Math.random() * 1000) + 500,
+                    threshold: 1000
+                }
+            })
+        }
+        
+        document.getElementById('send-debug').onclick = () => {
+            mockIntentHandler.triggerIntent('charmflow.log.message', {
+                level: 'debug',
+                message: `[DEBUG] 処理時間: ${Math.floor(Math.random() * 100)}ms`,
+                source: 'performance',
+                data: {
+                    function: 'processData',
+                    args: ['param1', 'param2'],
+                    result: 'success'
+                }
+            })
+        }
+        
+        document.getElementById('send-system').onclick = () => {
+            mockIntentHandler.triggerIntent('charmflow.log.message', {
+                level: 'system',
+                message: 'システム: 新しいプラグインが登録されました',
+                source: 'plugin-manager',
+                data: {
+                    pluginId: `plugin-${Date.now()}`,
+                    pluginType: 'ui-component',
+                    version: '1.0.0'
+                }
+            })
+        }
+        
+        // ==========================================
+        // ストレステスト
+        // ==========================================
+        
+        document.getElementById('send-burst').onclick = () => {
+            console.log('🔥 100メッセージ連続送信開始')
+            
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const types = ['message', 'error', 'warning', 'debug', 'system']
+                    const type = types[Math.floor(Math.random() * types.length)]
+                    
+                    mockIntentHandler.triggerIntent('charmflow.log.message', {
+                        level: type,
+                        message: `Burst message ${i + 1}/100 - ${type.toUpperCase()}`,
+                        source: 'burst-test',
+                        data: {
+                            index: i,
+                            batchId: Date.now(),
+                            random: Math.random()
+                        }
+                    })
+                }, i * 10) // 10ms間隔
+            }
+        }
+        
+        document.getElementById('send-continuous').onclick = () => {
+            if (continuousSending) {
+                // 停止
+                clearInterval(continuousTimer)
+                continuousSending = false
+                document.getElementById('send-continuous').textContent = '連続送信開始/停止'
+                console.log('⏹️ 連続送信停止')
+            } else {
+                // 開始
+                continuousSending = true
+                document.getElementById('send-continuous').textContent = '連続送信停止'
+                console.log('▶️ 連続送信開始')
+                
+                continuousTimer = setInterval(() => {
+                    const messages = [
+                        'データ処理中...',
+                        'ネットワーク通信完了',
+                        'ファイル読み込み成功',
+                        'キャッシュ更新',
+                        'バックグラウンドタスク実行'
+                    ]
+                    
+                    mockIntentHandler.triggerIntent('charmflow.log.message', {
+                        level: Math.random() > 0.8 ? 'warning' : 'message',
+                        message: messages[Math.floor(Math.random() * messages.length)],
+                        source: 'continuous-test',
+                        data: { rate: '200ms' }
+                    })
+                }, 200)
+            }
+        }
+        
+        document.getElementById('send-mixed').onclick = () => {
+            // 様々なタイプのメッセージを混在させて送信
+            const mixedMessages = [
+                { type: 'intent', intentType: 'ui.button.click', data: { buttonId: 'btn-123' } },
+                { type: 'intent', intentType: 'node.connection.create', data: { source: 'node-1', target: 'node-2' } },
+                { type: 'message', content: 'ユーザーがログインしました', source: 'auth' },
+                { type: 'error', content: new Error('接続タイムアウト'), source: 'network' },
+                { type: 'warning', content: 'ディスク容量が残り少なくなっています', source: 'storage' },
+                { type: 'debug', content: { function: 'calculate', input: [1, 2, 3], output: 6 }, source: 'math' },
+                { type: 'system', content: 'システムアップデートが利用可能です', source: 'updater' }
+            ]
+            
+            mixedMessages.forEach((msg, index) => {
+                setTimeout(() => {
+                    if (msg.type === 'intent') {
+                        mockIntentHandler.triggerIntent(msg.intentType, msg.data)
+                    } else {
+                        mockIntentHandler.triggerIntent('charmflow.log.message', {
+                            level: msg.type,
+                            message: msg.content,
+                            source: msg.source
+                        })
+                    }
+                }, index * 100)
+            })
+        }
+        
+        document.getElementById('send-large').onclick = () => {
+            // 巨大なデータ構造を含むメッセージ
+            const largeData = {
+                id: 'large-data-001',
+                timestamp: Date.now(),
+                metadata: {
+                    version: '1.0.0',
+                    author: 'test-system',
+                    tags: ['large', 'test', 'performance']
+                },
+                payload: Array(50).fill(null).map((_, i) => ({
+                    index: i,
+                    data: {
+                        value: Math.random(),
+                        nested: {
+                            deep: {
+                                structure: {
+                                    with: {
+                                        many: {
+                                            levels: `Level ${i}`
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    array: Array(10).fill(null).map(() => Math.floor(Math.random() * 100))
+                }))
+            }
+            
+            mockIntentHandler.triggerIntent('charmflow.log.message', {
+                level: 'message',
+                message: '巨大なデータ構造を含むメッセージ',
+                source: 'large-data-test',
+                data: largeData
+            })
+        }
+        
+        // ==========================================
+        // Intent通信テスト
+        // ==========================================
+        
+        document.getElementById('simulate-node-event').onclick = () => {
+            // ノード関連イベントをシミュレート
+            const nodeEvents = [
+                {
+                    type: INTENT_TYPES.UI.ELEMENT.CREATE,
+                    data: {
+                        nodeType: 'button.send',
+                        position: { x: 100, y: 200 },
+                        pluginId: `plugin-${Date.now()}`
+                    }
+                },
+                {
+                    type: INTENT_TYPES.UI.ELEMENT.MOVE,
+                    data: {
+                        elementId: 'node-123',
+                        newPosition: { x: 150, y: 250 },
+                        delta: { dx: 50, dy: 50 }
+                    }
+                },
+                {
+                    type: INTENT_TYPES.UI.ELEMENT.DELETE,
+                    data: {
+                        elementId: 'node-456',
+                        cascade: true
+                    }
+                }
+            ]
+            
+            nodeEvents.forEach((event, index) => {
+                setTimeout(() => {
+                    mockIntentHandler.triggerIntent(event.type, event.data)
+                }, index * 200)
+            })
+        }
+        
+        document.getElementById('simulate-connection').onclick = () => {
+            // 接続イベントをシミュレート
+            mockIntentHandler.triggerIntent(INTENT_TYPES.UI.CONNECTION.START, {
+                sourceId: 'node-001',
+                cursor: { x: 300, y: 400 }
+            })
+            
+            setTimeout(() => {
+                mockIntentHandler.triggerIntent(INTENT_TYPES.UI.CONNECTION.COMPLETE, {
+                    sourceId: 'node-001',
+                    targetId: 'node-002',
+                    connectionType: 'data-flow'
+                })
+            }, 1000)
+        }
+        
+        document.getElementById('simulate-property').onclick = () => {
+            // プロパティ変更イベントをシミュレート
+            mockIntentHandler.triggerIntent(INTENT_TYPES.UI.PROPERTY_INSPECTOR.NODE_SELECTED, {
+                nodeId: 'test-node-789',
+                nodeType: 'input.text',
+                properties: {
+                    placeholder: 'テキストを入力',
+                    maxLength: 100,
+                    required: true
+                }
+            })
+            
+            setTimeout(() => {
+                mockIntentHandler.triggerIntent(INTENT_TYPES.UI.PROPERTY_INSPECTOR.UPDATE_NODE_PROPERTY, {
+                    nodeId: 'test-node-789',
+                    propertyName: 'maxLength',
+                    newValue: 200,
+                    oldValue: 100
+                })
+            }, 1500)
+        }
+        
+        // ==========================================
+        // 初期化
+        // ==========================================
+        
+        console.log('🚀 MessageLogPanel テスト環境初期化完了')
+        updateStatus()
+        
+        // デモ用：自動でパネル作成・表示
+        setTimeout(() => {
+            document.getElementById('create-panel').click()
+            setTimeout(() => {
+                document.getElementById('mount-panel').click()
+                setTimeout(() => {
+                    document.getElementById('show-panel').click()
+                    console.log('💡 MessageLogPanelが表示されました。各種テストボタンを試してください！')
+                }, 100)
+            }, 100)
+        }, 500)
+        
+    </script>
+</body>
+</html>

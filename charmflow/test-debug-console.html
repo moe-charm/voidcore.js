@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DebugConsoleComponent テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #2d2d30;
+            color: #cccccc;
+        }
+        .test-container {
+            background: #252526;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            border: 1px solid #3e3e42;
+        }
+        .test-button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #1177bb;
+        }
+        .test-button:active {
+            background: #005a9e;
+        }
+        .test-button.secondary {
+            background: #3c3c3c;
+            border: 1px solid #5a5a5a;
+        }
+        .test-button.secondary:hover {
+            background: #4a4a4a;
+        }
+        .info-text {
+            background: #1e1e1e;
+            border: 1px solid #464647;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .command-example {
+            background: #1e1e1e;
+            border: 1px solid #0e639c;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .command-example:hover {
+            background: #264f78;
+            transform: translateX(5px);
+        }
+        .command-example code {
+            color: #9cdcfe;
+        }
+        h1, h2 {
+            color: #e1e1e1;
+        }
+    </style>
+</head>
+<body>
+    <h1>🖥️ DebugConsoleComponent テスト</h1>
+    
+    <div class="test-container" style="background: #fff3cd; border: 2px solid #ffc107; color: #000;">
+        <h2 style="color: #000;">📝 テスト手順（超重要！）</h2>
+        <ol style="font-size: 16px; line-height: 1.8;">
+            <li><strong>Step 1:</strong> 「DebugConsole作成」ボタンをクリック</li>
+            <li><strong>Step 2:</strong> 「表示」ボタンをクリック → <em>コンソールが表示されます</em></li>
+            <li><strong>Step 3:</strong> コンソールに「help」と入力してEnter → <em>利用可能コマンド一覧</em></li>
+            <li><strong>Step 4:</strong> 下記のサンプルコマンドを試してみてください</li>
+            <li><strong>Step 5:</strong> JavaScriptコードを直接実行できます！</li>
+        </ol>
+        <p style="margin-top: 15px;">💡 <strong>ヒント:</strong> ↑↓キーで履歴、Tabで自動補完！</p>
+    </div>
+    
+    <div class="test-container">
+        <h2>🔧 基本制御</h2>
+        <button class="test-button" id="create-console">DebugConsole作成</button>
+        <button class="test-button" id="show-console">表示</button>
+        <button class="test-button" id="hide-console">非表示</button>
+        <button class="test-button secondary" id="destroy-console">破棄</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>🎯 コマンドサンプル（クリックでコピー）</h2>
+        <div class="command-example" onclick="copyCommand('help')">
+            <code>help</code> - 利用可能コマンド一覧
+        </div>
+        <div class="command-example" onclick="copyCommand('clear')">
+            <code>clear</code> - コンソールクリア
+        </div>
+        <div class="command-example" onclick="copyCommand('history')">
+            <code>history</code> - コマンド履歴表示
+        </div>
+        <div class="command-example" onclick="copyCommand('theme')">
+            <code>theme</code> - ライト/ダークテーマ切替
+        </div>
+        <div class="command-example" onclick="copyCommand('api')">
+            <code>api</code> - CharmFlow API一覧
+        </div>
+        <div class="command-example" onclick="copyCommand('1 + 1')">
+            <code>1 + 1</code> - 計算実行
+        </div>
+        <div class="command-example" onclick="copyCommand('console.log(\"Hello CharmFlow!\")')">
+            <code>console.log("Hello CharmFlow!")</code> - ログ出力
+        </div>
+        <div class="command-example" onclick="copyCommand('new Date().toLocaleString()')">
+            <code>new Date().toLocaleString()</code> - 現在時刻
+        </div>
+        <div class="command-example" onclick="copyCommand('[...Array(10)].map((_, i) => i * i)')">
+            <code>[...Array(10)].map((_, i) => i * i)</code> - 配列操作
+        </div>
+        <div class="command-example" onclick="copyCommand('window.navigator.userAgent')">
+            <code>window.navigator.userAgent</code> - ブラウザ情報
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🔥 高度な使い方</h2>
+        <div class="command-example" onclick="copyCommand('const fib = n => n <= 1 ? n : fib(n-1) + fib(n-2); fib(10)')">
+            <code>const fib = n => n <= 1 ? n : fib(n-1) + fib(n-2); fib(10)</code> - フィボナッチ数列
+        </div>
+        <div class="command-example" onclick="copyCommand('intent charmflow.test.message {\"data\": \"Hello from console!\"]}')">
+            <code>intent charmflow.test.message {"data": "Hello from console!"}</code> - Intent送信
+        </div>
+        <div class="command-example" onclick="copyCommand('Object.keys(window).filter(k => k.includes(\"CharmFlow\"))')">
+            <code>Object.keys(window).filter(k => k.includes("CharmFlow"))</code> - CharmFlow関連検索
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>📊 現在の状態</h2>
+        <div id="current-status" class="info-text">
+            DebugConsole未作成
+        </div>
+    </div>
+
+    <script type="module">
+        import { DebugConsoleComponent } from './js/ui-components/DebugConsoleComponent.js'
+        
+        // ==========================================
+        // テスト環境セットアップ
+        // ==========================================
+        
+        let debugConsole = null
+        const statusElement = document.getElementById('current-status')
+        
+        function updateStatus() {
+            if (!debugConsole) {
+                statusElement.textContent = 'DebugConsole未作成'
+            } else {
+                statusElement.innerHTML = `
+DebugConsole状態:
+- ID: ${debugConsole.id}
+- 表示: ${debugConsole.state.isVisible ? '✅' : '❌'}
+- マウント: ${debugConsole.state.isMounted ? '✅' : '❌'}
+- テーマ: ${debugConsole.currentTheme}
+- コマンド履歴: ${debugConsole.commandHistory.length}件
+- 出力履歴: ${debugConsole.outputHistory.length}件
+                `
+            }
+        }
+        
+        // コマンドコピー機能
+        window.copyCommand = function(command) {
+            if (debugConsole && debugConsole.inputElement) {
+                debugConsole.inputElement.value = command
+                debugConsole.inputElement.focus()
+                
+                // ビジュアルフィードバック
+                const elem = event.currentTarget
+                const originalBg = elem.style.background
+                elem.style.background = '#0e639c'
+                setTimeout(() => {
+                    elem.style.background = originalBg
+                }, 200)
+            } else {
+                alert('先にDebugConsoleを作成・表示してください')
+            }
+        }
+        
+        // モックIntentHandler
+        const mockIntentHandler = {
+            sendIntent: function(type, data) {
+                console.log('📤 Intent送信:', type, data)
+            },
+            
+            addIntentListener: function(type, handler) {
+                console.log(`👂 Intent listener追加: ${type}`)
+                return `listener-${type}-${Date.now()}`
+            },
+            
+            removeIntentListener: function(listenerId) {
+                console.log(`🗑️ Intent listener削除: ${listenerId}`)
+            }
+        }
+        
+        // モックPluginNode
+        const mockPluginNode = {
+            id: 'debug-console-test-node',
+            intentHandler: mockIntentHandler
+        }
+        
+        // ==========================================
+        // テスト用グローバル変数設定
+        // ==========================================
+        
+        // CharmFlow APIモック
+        window.charmFlowCore = {
+            version: '1.0.0',
+            sendIntent: mockIntentHandler.sendIntent,
+            nodes: ['node-1', 'node-2', 'node-3'],
+            getStatus: () => ({ running: true, uptime: Date.now() })
+        }
+        
+        window.VoidCore = {
+            version: 'nyacore v14.0',
+            name: 'nyacore',
+            author: 'にゃー'
+        }
+        
+        window.debugLogger = {
+            log: (category, level, message, data) => {
+                console.log(`[${category}/${level}] ${message}`, data)
+            }
+        }
+        
+        // ==========================================
+        // 基本制御
+        // ==========================================
+        
+        document.getElementById('create-console').onclick = () => {
+            try {
+                debugConsole = new DebugConsoleComponent(mockPluginNode, {
+                    position: { x: 400, y: 100 },
+                    size: { width: 700, height: 500 },
+                    welcomeMessage: '🖥️ CharmFlow Debug Console v1.0\n💡 Type "help" for available commands\n🚀 You can execute any JavaScript code!\n',
+                    prompt: 'CharmFlow> ',
+                    enableAutocomplete: true,
+                    syntaxHighlight: true
+                })
+                
+                // マウント
+                debugConsole.mount()
+                
+                console.log('✅ DebugConsole作成・マウント成功')
+                updateStatus()
+            } catch (error) {
+                console.error('❌ DebugConsole作成失敗:', error)
+            }
+        }
+        
+        document.getElementById('show-console').onclick = () => {
+            if (!debugConsole) {
+                alert('先にDebugConsoleを作成してください')
+                return
+            }
+            
+            debugConsole.show()
+            console.log('✅ 表示')
+            updateStatus()
+        }
+        
+        document.getElementById('hide-console').onclick = () => {
+            if (!debugConsole) {
+                alert('先にDebugConsoleを作成してください')
+                return
+            }
+            
+            debugConsole.hide()
+            console.log('✅ 非表示')
+            updateStatus()
+        }
+        
+        document.getElementById('destroy-console').onclick = () => {
+            if (!debugConsole) {
+                alert('先にDebugConsoleを作成してください')
+                return
+            }
+            
+            debugConsole.destroy()
+            debugConsole = null
+            console.log('✅ 破棄完了')
+            updateStatus()
+        }
+        
+        // ==========================================
+        // 初期化
+        // ==========================================
+        
+        console.log('🚀 DebugConsoleComponent テスト環境初期化完了')
+        updateStatus()
+        
+        // 使い方ヒント
+        console.log('%c💡 ヒント: コマンドサンプルをクリックすると、コンソールに自動入力されます！', 'color: #ffc107; font-size: 14px;')
+        
+    </script>
+</body>
+</html>
