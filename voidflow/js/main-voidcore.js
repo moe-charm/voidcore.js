@@ -3,10 +3,10 @@
 
 import { VoidFlowEngine } from './voidflow-engine.js'
 import { ExecuteEngine } from './execute-engine.js'
-import { VoidCoreUI } from './voidcore-ui.js'
+import { VoidCoreUI } from './nyacore-ui.js'
 import { VoidFlowMessageAdapter } from './voidflow-message-adapter.js'
 import { VoidFlowBootManager } from './voidflow-boot-manager.js'
-import { VoidCoreConnectionManager } from './voidcore-connection-manager.js'
+import { VoidCoreConnectionManager } from './nyacore-connection-manager.js'
 import { PluginFlowExecutor } from './plugin-flow-executor.js'
 import MonacoPluginEditor from './monaco-plugin-editor.js'
 import { PluginPalettePlugin } from './plugin-palette-plugin.js'
@@ -18,7 +18,7 @@ import { ConnectionLineRenderer } from './connection-line-renderer.js'
 // Phase 1: デバッグファイルロガー
 import { debugLogger } from './debug-file-logger.js'
 // Phase 1.5: VoidCoreデバッグプラグイン
-import { voidCoreDebugPlugin } from './voidcore-debug-plugin.js'
+import { voidCoreDebugPlugin } from './nyacore-debug-plugin.js'
 // import { ConnectionManager } from './main.js' // 重複初期化を防ぐため無効化
 
 // グローバル変数
