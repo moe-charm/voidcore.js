@@ -1,23 +1,23 @@
-// voidflow-node-plugin.js - VoidFlowノードのVoidCoreプラグイン基底クラス
+// charmflow-node-plugin.js - CharmFlowノードのVoidCoreプラグイン基底クラス
 
 import { IPlugin } from '../../src/interfaces/plugin-interface.js'
 import { Message } from '../../src/messaging/message.js'
 
 /**
- * 🧩 VoidFlowNodePlugin - VoidFlowノードのVoidCoreプラグイン基底クラス
+ * 🧩 CharmFlowNodePlugin - CharmFlowノードのVoidCoreプラグイン基底クラス
  * 
  * 設計原則:
- * - IPluginを継承してVoidFlow専用機能を追加
+ * - IPluginを継承してCharmFlow専用機能を追加
  * - ノード間通信をVoidCoreメッセージで実現
  * - UI操作とロジック処理の分離
  * - 非同期実行による真の並列処理
  */
-export class VoidFlowNodePlugin extends IPlugin {
+export class CharmFlowNodePlugin extends IPlugin {
   constructor(nodeType, config = {}) {
     super({
-      id: config.id || `voidflow.${nodeType}.${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type: `voidflow.node.${nodeType}`,
-      displayName: config.displayName || VoidFlowNodePlugin.getDisplayName(nodeType),
+      id: config.id || `charmflow.${nodeType}.${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: `charmflow.node.${nodeType}`,
+      displayName: config.displayName || CharmFlowNodePlugin.getDisplayName(nodeType),
       isCore: false
     })
     
@@ -405,4 +405,4 @@ export class VoidFlowNodePlugin extends IPlugin {
   }
 }
 
-export default VoidFlowNodePlugin
+export default CharmFlowNodePlugin

@@ -1,24 +1,24 @@
-// voidflow-boot-manager.js - VoidFlow専用起動管理プラグイン
-// VoidFlowのコンポーネント起動を管理する自己完結型プラグイン
+// charmflow-boot-manager.js - CharmFlow専用起動管理プラグイン
+// CharmFlowのコンポーネント起動を管理する自己完結型プラグイン
 
 import { IPlugin } from '../../src/interfaces/plugin-interface.js'
 import { Message } from '../../src/messaging/message.js'
 
 /**
- * 🚀 VoidFlowBootManager - VoidFlow専用起動管理プラグイン
+ * 🚀 CharmFlowBootManager - CharmFlow専用起動管理プラグイン
  * 
  * 設計原則（にゃー仕様準拠）:
- * - VoidFlow専用の起動管理に特化
+ * - CharmFlow専用の起動管理に特化
  * - Intent経由でコンポーネント間を調整
  * - ステータス監視による非同期連携
  * - 将来の共通化に備えた設計
  */
-export class VoidFlowBootManager extends IPlugin {
+export class CharmFlowBootManager extends IPlugin {
   constructor() {
     super({
-      id: 'VoidFlow.BootManager',
-      type: 'voidflow.boot',
-      displayName: 'VoidFlow Boot Manager',
+      id: 'CharmFlow.BootManager',
+      type: 'charmflow.boot',
+      displayName: 'CharmFlow Boot Manager',
       isCore: true
     })
     
@@ -363,4 +363,4 @@ export class VoidFlowBootManager extends IPlugin {
   }
 }
 
-export default VoidFlowBootManager
+export default CharmFlowBootManager

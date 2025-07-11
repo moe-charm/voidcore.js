@@ -1,6 +1,6 @@
 // input-text-plugin.js - Input Text ノードのVoidCoreプラグイン実装
 
-import { VoidFlowNodePlugin } from '../voidflow-node-plugin.js'
+import { CharmFlowNodePlugin } from '../charmflow-node-plugin.js'
 
 /**
  * 📝 InputTextPlugin - テキスト入力ノードのVoidCoreプラグイン実装
@@ -10,7 +10,7 @@ import { VoidFlowNodePlugin } from '../voidflow-node-plugin.js'
  * - 入力値の検証・変換
  * - テキストデータの出力
  */
-export class InputTextPlugin extends VoidFlowNodePlugin {
+export class InputTextPlugin extends CharmFlowNodePlugin {
   constructor(config = {}) {
     super('input.text', {
       ...config,

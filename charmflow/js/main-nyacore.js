@@ -1,18 +1,18 @@
 // VoidFlow Constellation Zero - VoidCore統合版メインエントリーポイント
 // Stage 2: メッセージ統一移行実装
 
-import { VoidFlowEngine } from './charmflow-engine.js'
+import { CharmFlowEngine } from './charmflow-engine.js'
 import { ExecuteEngine } from './execute-engine.js'
 import { VoidCoreUI } from './nyacore-ui.js'
-import { VoidFlowMessageAdapter } from './charmflow-message-adapter.js'
-import { VoidFlowBootManager } from './charmflow-boot-manager.js'
+import { CharmFlowMessageAdapter } from './charmflow-message-adapter.js'
+import { CharmFlowBootManager } from './charmflow-boot-manager.js'
 import { VoidCoreConnectionManager } from './nyacore-connection-manager.js'
 import { PluginFlowExecutor } from './plugin-flow-executor.js'
 import MonacoPluginEditor from './monaco-plugin-editor.js'
 import { PluginPalettePlugin } from './plugin-palette-plugin.js'
 // Phase 1: VoidFlow-VoidCore統合アーキテクチャ
 import { CharmFlowCore } from './charmflow-core.js'
-import { VoidFlowIntentBridge } from './intent-bridge.js'
+import { CharmFlowIntentBridge } from './intent-bridge.js'
 // Phase 1: 高度接続GUI
 import { ConnectionLineRenderer } from './connection-line-renderer.js'
 // Phase 1: デバッグファイルロガー
@@ -22,17 +22,17 @@ import { voidCoreDebugPlugin } from './nyacore-debug-plugin.js'
 // import { ConnectionManager } from './main.js' // 重複初期化を防ぐため無効化
 
 // グローバル変数
-let voidFlowEngine = null
+let charmFlowEngine = null
 let executeEngine = null
 let voidCoreUI = null
 let messageAdapter = null
-let voidFlowBootManager = null
+let charmFlowBootManager = null
 let connectionManager = null
 let flowExecutor = null
 let pluginPalette = null
 
 // Phase 1: VoidFlow-VoidCore統合変数
-let voidFlowCore = null
+let charmFlowCore = null
 let intentBridge = null
 
 // Phase 1.5: VoidCoreデバッグプラグイン変数
@@ -42,35 +42,35 @@ let debugPlugin = null
 
 // 初期化
 document.addEventListener('DOMContentLoaded', function() {
-    initializeVoidFlowVoidCore()
+    initializeCharmFlowVoidCore()
 })
 
 // VoidFlow + VoidCore 統合初期化
-async function initializeVoidFlowVoidCore() {
+async function initializeCharmFlowVoidCore() {
     try {
-        console.log('🌟 VoidFlow VoidCore統合版 初期化開始...')
+        console.log('🌟 CharmFlow VoidCore統合版 初期化開始...')
         
         // Phase 1: デバッグファイルロガー初期化（最優先）
         await debugLogger.initialize()
-        debugLogger.log('system', 'info', '🎬 VoidFlow session start', {
+        debugLogger.log('system', 'info', '🎬 CharmFlow session start', {
             userAgent: navigator.userAgent,
             url: window.location.href
         })
         
         // Phase 0: VoidFlow-VoidCore統合アーキテクチャ初期化
-        await initializeVoidFlowCoreArchitecture()
+        await initializeCharmFlowCoreArchitecture()
         
         // Phase 1: VoidCoreUI初期化
         await initializeVoidCoreUI()
         
         // Phase 1.5: VoidCoreUIとVoidFlowCoreの統合
-        await connectVoidCoreUIWithVoidFlowCore()
+        await connectVoidCoreUIWithCharmFlowCore()
         
         // Phase 2: メッセージアダプター初期化  
         await initializeMessageAdapter()
         
-        // Phase 3: VoidFlowBootManager初期化
-        await initializeVoidFlowBootManager()
+        // Phase 3: CharmFlowBootManager初期化
+        await initializeCharmFlowBootManager()
         
         // Phase 3.5: Stage 3コンポーネント初期化
         await initializeStage3Components()
@@ -98,11 +98,11 @@ async function initializeVoidFlowVoidCore() {
         // Phase 7: Monaco Editor初期化確認
         await initializeMonacoEditor()
         
-        voidCoreUI.log('🎉 VoidFlow VoidCore v14.0 純粋アーキテクチャ 初期化完了！')
+        voidCoreUI.log('🎉 CharmFlow VoidCore v14.0 純粋アーキテクチャ 初期化完了！')
         voidCoreUI.log('💎 完全なる純粋メッセージベースシステム - レガシー依存なし')
         
     } catch (error) {
-        console.error('❌ VoidFlow VoidCore統合版初期化失敗:', error)
+        console.error('❌ CharmFlow VoidCore統合版初期化失敗:', error)
         
         // VoidCore v14.0 純粋アーキテクチャ - フォールバック除去済み
         // システムの健全性を保つため、エラーログを出力して続行
@@ -173,7 +173,7 @@ async function initializeVoidCoreUI() {
  * 🔄 Phase 2: メッセージアダプター初期化
  */
 async function initializeMessageAdapter() {
-    messageAdapter = new VoidFlowMessageAdapter(voidCoreUI)
+    messageAdapter = new CharmFlowMessageAdapter(voidCoreUI)
     
     // 互換性モード設定
     messageAdapter.setCompatibilityMode('hybrid')
@@ -181,22 +181,22 @@ async function initializeMessageAdapter() {
     // グローバル参照設定
     window.messageAdapter = messageAdapter
     
-    voidCoreUI.log('🔄 VoidFlowMessageAdapter initialized')
+    voidCoreUI.log('🔄 CharmFlowMessageAdapter initialized')
 }
 
 /**
- * 🚀 Phase 3: VoidFlowBootManager初期化
+ * 🚀 Phase 3: CharmFlowBootManager初期化
  */
-async function initializeVoidFlowBootManager() {
-    voidFlowBootManager = new VoidFlowBootManager()
+async function initializeCharmFlowBootManager() {
+    charmFlowBootManager = new CharmFlowBootManager()
     
     // VoidCoreUIにプラグイン登録
-    // await voidCoreUI.registerPlugin(voidFlowBootManager)
+    // await voidCoreUI.registerPlugin(charmFlowBootManager)
     
     // グローバル参照設定
-    window.voidFlowBootManager = voidFlowBootManager
+    window.charmFlowBootManager = charmFlowBootManager
     
-    voidCoreUI.log('🚀 VoidFlowBootManager initialized')
+    voidCoreUI.log('🚀 CharmFlowBootManager initialized')
 }
 
 /**
@@ -242,32 +242,32 @@ async function initializePhase4DebugSystem() {
     try {
         console.log('🐛 Phase 4: デバッグシステム初期化開始...')
         
-        // VoidFlowCoreに各種コンポーネントを登録
+        // CharmFlowCoreに各種コンポーネントを登録
         if (voidCoreUI) {
-            voidFlowCore.registerUIManager(voidCoreUI)
-            console.log('📝 UIManager registered with VoidFlowCore')
+            charmFlowCore.registerUIManager(voidCoreUI)
+            console.log('📝 UIManager registered with CharmFlowCore')
         }
         
         if (connectionManager) {
-            voidFlowCore.registerConnectionManager(connectionManager)
+            charmFlowCore.registerConnectionManager(connectionManager)
             // ConnectionManagerにVoidFlowCoreを設定
-            connectionManager.voidFlowCore = voidFlowCore
+            connectionManager.charmFlowCore = charmFlowCore
             // Phase 3: Intent化モード有効化
             connectionManager.enableIntentMode()
             console.log('🔗 ConnectionManager registered with VoidFlowCore')
         }
         
         // デバッグコンソール用グローバル関数追加
-        window.debugVoidFlow = {
-            core: () => voidFlowCore,
-            debugManager: () => voidFlowCore.debugManager,
-            debugPlugin: () => voidFlowCore.debugPlugin,
-            startTrace: (patterns, level) => voidFlowCore.sendIntent('voidflow.debug.trace.start', { patterns, level }),
-            stopTrace: () => voidFlowCore.sendIntent('voidflow.debug.trace.stop'),
-            dumpState: (format) => voidFlowCore.sendIntent('voidflow.debug.state.dump', { format }),
-            getStats: () => voidFlowCore.sendIntent('voidflow.debug.stats.get'),
-            reset: () => voidFlowCore.sendIntent('voidflow.debug.reset'),
-            export: () => voidFlowCore.sendIntent('voidflow.debug.export')
+        window.debugCharmFlow = {
+            core: () => charmFlowCore,
+            debugManager: () => charmFlowCore.debugManager,
+            debugPlugin: () => charmFlowCore.debugPlugin,
+            startTrace: (patterns, level) => charmFlowCore.sendIntent('voidflow.debug.trace.start', { patterns, level }),
+            stopTrace: () => charmFlowCore.sendIntent('voidflow.debug.trace.stop'),
+            dumpState: (format) => charmFlowCore.sendIntent('voidflow.debug.state.dump', { format }),
+            getStats: () => charmFlowCore.sendIntent('voidflow.debug.stats.get'),
+            reset: () => charmFlowCore.sendIntent('voidflow.debug.reset'),
+            export: () => charmFlowCore.sendIntent('voidflow.debug.export')
         }
         
         // システム状態テスト
@@ -294,12 +294,12 @@ async function initializeVoidCoreDebugPlugin() {
         debugPlugin = voidCoreDebugPlugin
         
         // VoidFlowCoreにデバッグプラグインを登録
-        if (voidFlowCore) {
-            debugPlugin.voidFlowCore = voidFlowCore
+        if (charmFlowCore) {
+            debugPlugin.charmFlowCore = charmFlowCore
             
             // プラグインとして登録（registerPluginメソッドの存在確認）
-            if (typeof voidFlowCore.registerPlugin === 'function') {
-                await voidFlowCore.registerPlugin(debugPlugin)
+            if (typeof charmFlowCore.registerPlugin === 'function') {
+                await charmFlowCore.registerPlugin(debugPlugin)
                 console.log('✅ VoidCoreDebugPlugin registered via VoidFlowCore')
             } else {
                 // 代替方法: 直接参照設定
@@ -317,10 +317,10 @@ async function initializeVoidCoreDebugPlugin() {
         window.debugPlugin = debugPlugin
         
         // 既存のdebugVoidFlowに統合
-        if (window.debugVoidFlow) {
-            window.debugVoidFlow.voidCorePlugin = () => debugPlugin
-            window.debugVoidFlow.pluginStats = () => debugPlugin.getStats()
-            window.debugVoidFlow.exportPluginData = () => debugPlugin.exportDebugData()
+        if (window.debugCharmFlow) {
+            window.debugCharmFlow.voidCorePlugin = () => debugPlugin
+            window.debugCharmFlow.pluginStats = () => debugPlugin.getStats()
+            window.debugCharmFlow.exportPluginData = () => debugPlugin.exportDebugData()
         }
         
         console.log('✅ Phase 4.5: VoidCoreデバッグプラグイン初期化完了！')
@@ -340,27 +340,27 @@ async function testPhase4DebugSystem() {
         console.log('🧪 Phase 4デバッグシステムテスト開始...')
         
         // デバッグ機能利用可能性確認
-        const features = voidFlowCore.getAvailableFeatures()
+        const features = charmFlowCore.getAvailableFeatures()
         const debugFeatures = features.filter(f => f.startsWith('debug'))
         console.log('🐛 利用可能デバッグ機能:', debugFeatures)
         
         // デバッグシステム確認
-        if (voidFlowCore.debugPlugin) {
+        if (charmFlowCore.debugPlugin) {
             console.log('✅ VoidFlowDebugPlugin (VoidCore準拠) 利用可能')
-            console.log('🔧 プラグインID:', voidFlowCore.debugPlugin.id)
-            console.log('🔧 プラグインステータス:', voidFlowCore.debugPlugin.status)
+            console.log('🔧 プラグインID:', charmFlowCore.debugPlugin.id)
+            console.log('🔧 プラグインステータス:', charmFlowCore.debugPlugin.status)
         }
         
-        if (voidFlowCore.debugManager) {
+        if (charmFlowCore.debugManager) {
             console.log('✅ VoidFlowDebugManager (レガシー互換) 利用可能')
         }
         
-        if (window.voidflowDebug) {
+        if (window.charmflowDebug) {
             console.log('✅ グローバルデバッグ関数 利用可能')
         }
         
         // 基本デバッグIntent送信テスト
-        const statsResult = await voidFlowCore.sendIntent('voidflow.debug.stats.get')
+        const statsResult = await charmFlowCore.sendIntent('voidflow.debug.stats.get')
         console.log('📊 デバッグ統計取得テスト:', statsResult)
         
         console.log('🎉 Phase 4デバッグシステムテスト完了！')
@@ -498,7 +498,7 @@ async function executeFlowHybrid() {
     voidCoreUI.log('🔄 ハイブリッドモード実行')
     
     // 1. 従来VoidFlowの状態を取得
-    const legacyNodes = Array.from(voidFlowEngine.nodes.values())
+    const legacyNodes = Array.from(charmFlowEngine.nodes.values())
     voidCoreUI.log(`📋 従来ノード数: ${legacyNodes.length}`)
     
     // 2. VoidCoreメッセージとして実行
@@ -680,8 +680,8 @@ function initializeNodePalette() {
             const nodeType = item.getAttribute('data-node-type')
             e.dataTransfer.setData('text/plain', nodeType)
             
-            if (voidFlowCore) {
-                await voidFlowCore.sendIntent('voidflow.ui.element.drag.start', {
+            if (charmFlowCore) {
+                await charmFlowCore.sendIntent('voidflow.ui.element.drag.start', {
                     nodeType,
                     elementId: item.id,
                     timestamp: Date.now()
@@ -690,8 +690,8 @@ function initializeNodePalette() {
                 // フォールバック
                 if (voidCoreUI) {
                     voidCoreUI.log(`📦 ドラッグ開始: ${nodeType}`)
-                } else if (voidFlowEngine) {
-                    voidFlowEngine.log(`📦 ドラッグ開始: ${nodeType}`)
+                } else if (charmFlowEngine) {
+                    charmFlowEngine.log(`📦 ドラッグ開始: ${nodeType}`)
                 }
             }
         })
@@ -704,8 +704,8 @@ function initializeNodePalette() {
                 y: Math.random() * 300 + 100
             }
             
-            if (voidFlowCore) {
-                await voidFlowCore.sendIntent('voidflow.ui.element.create', {
+            if (charmFlowCore) {
+                await charmFlowCore.sendIntent('voidflow.ui.element.create', {
                     nodeType,
                     position,
                     source: 'palette_click',
@@ -733,8 +733,8 @@ function initializeCanvas() {
     canvasArea.addEventListener('dragover', async (e) => {
         e.preventDefault()
         
-        if (voidFlowCore) {
-            await voidFlowCore.sendIntent('voidflow.ui.canvas.dragover', {
+        if (charmFlowCore) {
+            await charmFlowCore.sendIntent('voidflow.ui.canvas.dragover', {
                 position: { x: e.clientX, y: e.clientY },
                 timestamp: Date.now()
             })
@@ -751,8 +751,8 @@ function initializeCanvas() {
             y: e.clientY - rect.top
         }
         
-        if (voidFlowCore) {
-            await voidFlowCore.sendIntent('voidflow.ui.element.create', {
+        if (charmFlowCore) {
+            await charmFlowCore.sendIntent('voidflow.ui.element.create', {
                 nodeType,
                 position,
                 source: 'canvas_drop',
@@ -1046,8 +1046,8 @@ function makeVoidCorePluginDraggable(element) {
         dragStartX = e.clientX - element.offsetLeft
         dragStartY = e.clientY - element.offsetTop
         
-        if (voidFlowCore) {
-            await voidFlowCore.sendIntent('voidflow.ui.element.drag.start', {
+        if (charmFlowCore) {
+            await charmFlowCore.sendIntent('voidflow.ui.element.drag.start', {
                 elementId: element.id,
                 startPosition: { x: e.clientX, y: e.clientY },
                 timestamp: Date.now()
@@ -1077,8 +1077,8 @@ function makeVoidCorePluginDraggable(element) {
     }
     
     async function onMouseUp() {
-        if (voidFlowCore && isDragging) {
-            await voidFlowCore.sendIntent('voidflow.ui.element.drag.end', {
+        if (charmFlowCore && isDragging) {
+            await charmFlowCore.sendIntent('voidflow.ui.element.drag.end', {
                 elementId: element.id,
                 endPosition: { x: element.offsetLeft, y: element.offsetTop },
                 timestamp: Date.now()
@@ -1094,7 +1094,7 @@ function makeVoidCorePluginDraggable(element) {
 // 従来ノード作成（ハイブリッドモード用）
 function createNodeOnCanvas(nodeType, position) {
     try {
-        const node = voidFlowEngine.createNode(nodeType, position)
+        const node = charmFlowEngine.createNode(nodeType, position)
         const nodeElement = createNodeElement(node)
         
         document.querySelector('.canvas-area').appendChild(nodeElement)
@@ -1108,14 +1108,14 @@ function createNodeOnCanvas(nodeType, position) {
         if (voidCoreUI) {
             voidCoreUI.log(`✨ 従来ノード作成: ${nodeType} at (${position.x}, ${position.y})`)
         } else {
-            voidFlowEngine.log(`✨ ノード作成: ${nodeType} at (${position.x}, ${position.y})`)
+            charmFlowEngine.log(`✨ ノード作成: ${nodeType} at (${position.x}, ${position.y})`)
         }
         
     } catch (error) {
         if (voidCoreUI) {
             voidCoreUI.log(`❌ 従来ノード作成失敗: ${error.message}`)
         } else {
-            voidFlowEngine.log(`❌ ノード作成失敗: ${error.message}`)
+            charmFlowEngine.log(`❌ ノード作成失敗: ${error.message}`)
         }
     }
 }
@@ -1172,8 +1172,8 @@ function createNodeElement(node) {
     // クリック選択機能
     nodeDiv.addEventListener('click', async (e) => {
         if (!e.target.classList.contains('connection-port')) {
-            if (voidFlowCore) {
-                await voidFlowCore.sendIntent('voidflow.ui.element.select', {
+            if (charmFlowCore) {
+                await charmFlowCore.sendIntent('voidflow.ui.element.select', {
                     elementId: node.id,
                     nodeType: node.type,
                     position: { x: e.clientX, y: e.clientY },
@@ -1236,8 +1236,8 @@ function makeNodeDraggable(nodeElement) {
         dragStartX = e.clientX - nodeElement.offsetLeft
         dragStartY = e.clientY - nodeElement.offsetTop
         
-        if (voidFlowCore) {
-            await voidFlowCore.sendIntent('voidflow.ui.element.drag.start', {
+        if (charmFlowCore) {
+            await charmFlowCore.sendIntent('voidflow.ui.element.drag.start', {
                 elementId: nodeElement.id,
                 nodeType: 'legacy_node',
                 startPosition: { x: e.clientX, y: e.clientY },
@@ -1260,10 +1260,10 @@ function makeNodeDraggable(nodeElement) {
         nodeElement.style.left = `${newX}px`
         nodeElement.style.top = `${newY}px`
         
-        // VoidFlowEngineのノード位置も更新
+        // CharmFlowEngineのノード位置も更新
         const nodeId = nodeElement.id.replace('voidflow-node-', '')
-        if (voidFlowEngine && voidFlowEngine.nodes) {
-            const node = voidFlowEngine.nodes.get(nodeId)
+        if (charmFlowEngine && charmFlowEngine.nodes) {
+            const node = charmFlowEngine.nodes.get(nodeId)
             if (node) {
                 node.position.x = newX
                 node.position.y = newY
@@ -1281,8 +1281,8 @@ function makeNodeDraggable(nodeElement) {
     }
     
     async function onMouseUp() {
-        if (voidFlowCore && isDragging) {
-            await voidFlowCore.sendIntent('voidflow.ui.element.drag.end', {
+        if (charmFlowCore && isDragging) {
+            await charmFlowCore.sendIntent('voidflow.ui.element.drag.end', {
                 elementId: nodeElement.id,
                 nodeType: 'legacy_node',
                 endPosition: { x: nodeElement.offsetLeft, y: nodeElement.offsetTop },
@@ -1307,8 +1307,8 @@ function selectNode(nodeId) {
     const nodeElement = document.getElementById(`voidflow-node-${nodeId}`)
     if (nodeElement) {
         nodeElement.classList.add('selected')
-        if (voidFlowEngine) {
-            voidFlowEngine.selectedNode = nodeId
+        if (charmFlowEngine) {
+            charmFlowEngine.selectedNode = nodeId
         }
         
         // プロパティパネル更新
@@ -1318,9 +1318,9 @@ function selectNode(nodeId) {
 
 // プロパティパネル更新
 function updatePropertiesPanel(nodeId) {
-    if (!voidFlowEngine || !voidFlowEngine.nodes) return
+    if (!charmFlowEngine || !charmFlowEngine.nodes) return
     
-    const node = voidFlowEngine.nodes.get(nodeId)
+    const node = charmFlowEngine.nodes.get(nodeId)
     if (!node) return
     
     const propertiesContent = document.getElementById('propertiesContent')
@@ -1369,8 +1369,8 @@ function createNodePropertyEditor(node) {
 
 // ノードプロパティ更新
 window.updateNodeProperty = function(nodeId, propertyName, value) {
-    if (voidFlowEngine && voidFlowEngine.nodes) {
-        const node = voidFlowEngine.nodes.get(nodeId)
+    if (charmFlowEngine && charmFlowEngine.nodes) {
+        const node = charmFlowEngine.nodes.get(nodeId)
         if (node) {
             node.properties[propertyName] = value
             
@@ -1378,7 +1378,7 @@ window.updateNodeProperty = function(nodeId, propertyName, value) {
             if (voidCoreUI) {
                 voidCoreUI.log(`⚙️ プロパティ更新: ${nodeId}.${propertyName} = "${value}"`)
             } else {
-                voidFlowEngine.log(`⚙️ プロパティ更新: ${nodeId}.${propertyName} = "${value}"`)
+                charmFlowEngine.log(`⚙️ プロパティ更新: ${nodeId}.${propertyName} = "${value}"`)
             }
         }
     }
@@ -1518,15 +1518,15 @@ window.updateVoidCoreProperty = function(pluginId, propertyName, value) {
 // 従来のフロー実行（executeFlow）
 window.executeFlow = async function() {
     try {
-        if (!voidFlowEngine || !executeEngine) {
+        if (!charmFlowEngine || !executeEngine) {
             throw new Error('VoidFlowエンジンが初期化されていません')
         }
         
-        const logger = voidCoreUI || voidFlowEngine
+        const logger = voidCoreUI || charmFlowEngine
         logger.log('🚀 従来フロー実行開始...')
         
         // Button.sendノードを探して実行
-        const allNodes = Array.from(voidFlowEngine.nodes.values())
+        const allNodes = Array.from(charmFlowEngine.nodes.values())
         const buttonNodes = allNodes.filter(node => node.type === 'button.send')
         
         if (buttonNodes.length === 0) {
@@ -1597,12 +1597,12 @@ async function initializePluginPalette() {
 /**
  * 🌟 Phase 0: VoidFlow-VoidCore統合アーキテクチャ初期化
  */
-async function initializeVoidFlowCoreArchitecture() {
+async function initializeCharmFlowCoreArchitecture() {
     try {
         console.log('🌟 VoidFlow-VoidCore統合アーキテクチャ初期化開始...')
         
         // CharmFlowCore初期化
-        voidFlowCore = new CharmFlowCore({
+        charmFlowCore = new CharmFlowCore({
             enableDebug: true,
             enableStats: true,
             messagePoolSize: 1000,
@@ -1610,18 +1610,18 @@ async function initializeVoidFlowCoreArchitecture() {
         })
         
         // グローバル参照設定（デバッグ用）
-        window.voidFlowCore = voidFlowCore
+        window.charmFlowCore = charmFlowCore
         
         console.log('✅ VoidFlowCore初期化完了！')
         
         // Intent Bridge初期化（Phase 2で有効化予定）
-        intentBridge = new VoidFlowIntentBridge(voidFlowCore)
-        window.voidFlowIntentBridge = intentBridge
+        intentBridge = new CharmFlowIntentBridge(charmFlowCore)
+        window.charmFlowIntentBridge = intentBridge
         
         console.log('✅ Intent Bridge初期化完了（Phase 2で有効化予定）')
         
         // Phase 1基本動作テスト
-        await testVoidFlowCoreBasicOperation()
+        await testCharmFlowCoreBasicOperation()
         
         console.log('🎉 VoidFlow-VoidCore統合アーキテクチャ初期化完了！')
         
@@ -1634,20 +1634,20 @@ async function initializeVoidFlowCoreArchitecture() {
 /**
  * 🧪 VoidFlowCore基本動作テスト
  */
-async function testVoidFlowCoreBasicOperation() {
+async function testCharmFlowCoreBasicOperation() {
     try {
         console.log('🧪 VoidFlowCore基本動作テスト開始...')
         
         // システム状態確認
-        const systemStatus = voidFlowCore.getSystemStatus()
+        const systemStatus = charmFlowCore.getSystemStatus()
         console.log('📊 System Status:', systemStatus)
         
         // 基本Intent送信テスト
-        const testResult = await voidFlowCore.sendIntent('voidflow.system.status')
+        const testResult = await charmFlowCore.sendIntent('voidflow.system.status')
         console.log('📤 Intent Test Result:', testResult)
         
         // 利用可能機能確認
-        const features = voidFlowCore.getAvailableFeatures()
+        const features = charmFlowCore.getAvailableFeatures()
         console.log('🔧 Available Features:', features)
         
         console.log('✅ VoidFlowCore基本動作テスト完了！')
@@ -1661,7 +1661,7 @@ async function testVoidFlowCoreBasicOperation() {
 /**
  * 🔗 Phase 1.5: VoidCoreUIとVoidFlowCoreの統合
  */
-async function connectVoidCoreUIWithVoidFlowCore() {
+async function connectVoidCoreUIWithCharmFlowCore() {
     try {
         console.log('🔗 VoidCoreUIとVoidFlowCore統合開始...')
         
@@ -1669,22 +1669,22 @@ async function connectVoidCoreUIWithVoidFlowCore() {
             throw new Error('VoidCoreUI not initialized')
         }
         
-        if (!voidFlowCore) {
+        if (!charmFlowCore) {
             throw new Error('VoidFlowCore not initialized')
         }
         
         // VoidCoreUIにVoidFlowCoreの参照を設定
-        voidCoreUI.voidFlowCore = voidFlowCore
-        console.log('✅ VoidCoreUI.voidFlowCore reference set')
+        voidCoreUI.charmFlowCore = charmFlowCore
+        console.log('✅ VoidCoreUI.charmFlowCore reference set')
         
         // VoidFlowCoreにVoidCoreUIをUIManagerとして登録
-        voidFlowCore.registerUIManager(voidCoreUI)
+        charmFlowCore.registerUIManager(voidCoreUI)
         console.log('✅ VoidCoreUI registered as UIManager in VoidFlowCore')
         
         // Phase 3: VoidFlowCoreにConnectionManagerを登録
         if (connectionManager) {
-            voidFlowCore.registerConnectionManager(connectionManager)
-            connectionManager.voidFlowCore = voidFlowCore
+            charmFlowCore.registerConnectionManager(connectionManager)
+            connectionManager.charmFlowCore = charmFlowCore
             connectionManager.enableIntentMode()
             console.log('✅ ConnectionManager registered and Intent mode enabled')
         }
@@ -1720,7 +1720,7 @@ async function testVoidCoreUIIntegration() {
         console.log('🧪 VoidCoreUI統合テスト開始...')
         
         // Intent経由でのUI要素作成テスト
-        const testResult = await voidFlowCore.sendIntent('voidflow.ui.element.create', {
+        const testResult = await charmFlowCore.sendIntent('voidflow.ui.element.create', {
             nodeType: 'test-button',
             position: { x: 50, y: 50 },
             pluginId: 'integration-test-element'
@@ -1729,14 +1729,14 @@ async function testVoidCoreUIIntegration() {
         console.log('📊 Integration Test Result:', testResult)
         
         // VoidCoreUIのVoidFlowCore参照確認
-        if (voidCoreUI.voidFlowCore === voidFlowCore) {
+        if (voidCoreUI.charmFlowCore === charmFlowCore) {
             console.log('✅ VoidCoreUI → VoidFlowCore reference: OK')
         } else {
             console.log('⚠️ VoidCoreUI → VoidFlowCore reference: NG')
         }
         
         // VoidFlowCoreのUIManager登録確認
-        if (voidFlowCore.uiManager === voidCoreUI) {
+        if (charmFlowCore.uiManager === voidCoreUI) {
             console.log('✅ VoidFlowCore → VoidCoreUI registration: OK')
         } else {
             console.log('⚠️ VoidFlowCore → VoidCoreUI registration: NG')

@@ -1,7 +1,7 @@
-// VoidFlow Engine - ヘッドレス型フロー実行エンジン
+// CharmFlow Engine - ヘッドレス型フロー実行エンジン
 import { VoidCore, Message } from '../../src/index.js';
 
-export class VoidFlowEngine {
+export class CharmFlowEngine {
     constructor() {
         this.nodes = new Map();
         this.edges = new Map();

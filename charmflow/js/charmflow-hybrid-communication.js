@@ -1,11 +1,11 @@
-// voidflow-hybrid-communication.js - VoidFlow ハイブリッド通信システム統合
-// Phase 3: VoidCore通信システムとVoidFlow高速通信の統合
+// charmflow-hybrid-communication.js - CharmFlow ハイブリッド通信システム統合
+// Phase 3: VoidCore通信システムとCharmFlow高速通信の統合
 
 import { Message } from '/src/messaging/message.js'
 import { CoreMessageBus } from '/src/core/core-communication.js'
 
 /**
- * 🌐 VoidFlowHybridCommunication - VoidFlow専用ハイブリッド通信システム
+ * 🌐 CharmFlowHybridCommunication - CharmFlow専用ハイブリッド通信システム
  * 
  * 統合機能:
  * - CoreMessageBus統合（標準メッセージング）
@@ -13,10 +13,10 @@ import { CoreMessageBus } from '/src/core/core-communication.js'
  * - VoidPacket↔VoidCoreMessage変換
  * - プラグイン間データフロー管理
  */
-export class VoidFlowHybridCommunication {
+export class CharmFlowHybridCommunication {
   constructor(voidCore) {
     this.voidCore = voidCore
-    this.coreId = 'voidflow-main'
+    this.coreId = 'charmflow-main'
     
     // 通信システム初期化
     this.messageBus = new CoreMessageBus()
@@ -442,21 +442,21 @@ export class VoidFlowHybridCommunication {
 }
 
 // グローバルインスタンス
-export let voidFlowHybridComm = null
+export let charmFlowHybridComm = null
 
 /**
- * 🚀 VoidFlowハイブリッド通信システム初期化
+ * 🚀 CharmFlowハイブリッド通信システム初期化
  */
-export async function initializeVoidFlowHybridCommunication(voidCore) {
-  if (!voidFlowHybridComm) {
-    voidFlowHybridComm = new VoidFlowHybridCommunication(voidCore)
-    await voidFlowHybridComm.start()
+export async function initializeCharmFlowHybridCommunication(voidCore) {
+  if (!charmFlowHybridComm) {
+    charmFlowHybridComm = new CharmFlowHybridCommunication(voidCore)
+    await charmFlowHybridComm.start()
     
     // グローバルアクセス
-    window.voidFlowHybridComm = voidFlowHybridComm
+    window.charmFlowHybridComm = charmFlowHybridComm
   }
   
-  return voidFlowHybridComm
+  return charmFlowHybridComm
 }
 
-export default VoidFlowHybridCommunication
+export default CharmFlowHybridCommunication

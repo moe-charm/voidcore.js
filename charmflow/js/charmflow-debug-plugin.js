@@ -1,5 +1,5 @@
 /**
- * 🐛 VoidFlowDebugPlugin - VoidFlow専用統合デバッグプラグイン
+ * 🐛 CharmFlowDebugPlugin - CharmFlow専用統合デバッグプラグイン
  * 
  * 🎯 設計哲学:
  * - VoidCore v14.0 IPlugin準拠の美しい単一ファイル実装
@@ -26,9 +26,9 @@ import { IPlugin } from '../../src/interfaces/plugin-interface.js'
 import { Message } from '../../src/messaging/message.js'
 
 /**
- * 🐛 VoidFlowDebugPlugin - 統合デバッグシステム
+ * 🐛 CharmFlowDebugPlugin - 統合デバッグシステム
  */
-export class VoidFlowDebugPlugin extends IPlugin {
+export class CharmFlowDebugPlugin extends IPlugin {
   constructor(config = {}) {
     super({
       id: 'VoidFlow.DebugPlugin',
@@ -216,7 +216,7 @@ export class VoidFlowDebugPlugin extends IPlugin {
    */
   setupGlobalDebugFunctions() {
     // グローバルデバッグ関数
-    window.voidflowDebug = {
+    window.charmflowDebug = {
       // トレース機能
       trace: (pattern) => this.enableTrace(pattern),
       stopTrace: () => this.disableTrace(),
@@ -248,7 +248,7 @@ export class VoidFlowDebugPlugin extends IPlugin {
     }
     
     // VoidFlow専用デバッグ関数
-    window.debugVoidFlow = {
+    window.debugCharmFlow = {
       core: () => this.voidFlowCore,
       debugManager: () => this,
       startTrace: (patterns, level) => this.enableTrace(patterns, level),
@@ -902,11 +902,11 @@ export class VoidFlowDebugPlugin extends IPlugin {
    */
   cleanup() {
     // グローバル関数削除
-    if (window.voidflowDebug) {
-      delete window.voidflowDebug
+    if (window.charmflowDebug) {
+      delete window.charmflowDebug
     }
-    if (window.debugVoidFlow) {
-      delete window.debugVoidFlow
+    if (window.debugCharmFlow) {
+      delete window.debugCharmFlow
     }
     
     // データクリア
@@ -926,4 +926,4 @@ export class VoidFlowDebugPlugin extends IPlugin {
 }
 
 // グローバル公開（デバッグ用）
-window.VoidFlowDebugPlugin = VoidFlowDebugPlugin
+window.CharmFlowDebugPlugin = CharmFlowDebugPlugin

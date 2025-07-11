@@ -3,7 +3,7 @@
 
 import { VoidCore } from '/src/core/nyacore.js'
 import { Message } from '/src/messaging/message.js'
-import { initializeVoidFlowHybridCommunication } from './voidflow-hybrid-communication.js'
+import { initializeCharmFlowHybridCommunication } from './charmflow-hybrid-communication.js'
 import { debugLogger } from './debug-file-logger.js'
 import { ButtonSendUI } from './ui-nodes/button-send-ui.js'
 import { InputTextUI } from './ui-nodes/input-text-ui.js'
@@ -168,7 +168,7 @@ export class VoidCoreUI {
    */
   async _initializeHybridCommunication() {
     try {
-      this.hybridComm = await initializeVoidFlowHybridCommunication(this)
+      this.hybridComm = await initializeCharmFlowHybridCommunication(this)
       this.log('🌐 Hybrid communication system integrated')
     } catch (error) {
       this.log(`❌ Hybrid communication initialization failed: ${error.message}`)

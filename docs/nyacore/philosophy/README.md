@@ -1,9 +1,12 @@
-# 🧠 VoidCore理念忘却防止システム
+# 🧠 nyacore (旧VoidCore) 理念忘却防止システム
 
-**目的**: Claude Codeが作業中にVoidCore理念を忘れない仕組みの構築  
-**重要性**: VoidCore準拠開発の品質向上・一貫性確保
+**目的**: Claude Codeが作業中にnyacore理念を忘れない仕組みの構築  
+**重要性**: nyacore準拠開発の品質向上・一貫性確保
 
-## 🎯 **VoidCore三大原則（絶対忘れてはいけない）**
+> **📍 重要**: VoidCore → nyacore 名前移行完了 (2025-07-11)  
+> コア理念は変わらず、Pure Message-Based Systemとして継続
+
+## 🎯 **nyacore三大原則（絶対忘れてはいけない）**
 
 ### **1. すべてはメッセージパッシング**
 ```

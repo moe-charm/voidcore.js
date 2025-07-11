@@ -1,5 +1,5 @@
 /**
- * 🐛 VoidFlowDebugManager - 統合デバッグシステム
+ * 🐛 CharmFlowDebugManager - 統合デバッグシステム
  * 
  * 🎯 機能:
  * - リアルタイムIntent監視・トレース
@@ -13,11 +13,11 @@
  */
 
 /**
- * VoidFlow専用デバッグマネージャー
+ * CharmFlow専用デバッグマネージャー
  */
-export class VoidFlowDebugManager {
-  constructor(voidFlowCore) {
-    this.voidFlowCore = voidFlowCore
+export class CharmFlowDebugManager {
+  constructor(charmFlowCore) {
+    this.charmFlowCore = charmFlowCore
     
     // トレース設定
     this.traceEnabled = false
@@ -54,7 +54,7 @@ export class VoidFlowDebugManager {
    */
   setupDebugConsole() {
     // グローバルデバッグ関数
-    window.voidflowDebug = {
+    window.charmflowDebug = {
       // トレース機能
       trace: (pattern) => this.enableTrace(pattern),
       stopTrace: () => this.disableTrace(),
@@ -679,8 +679,8 @@ export class VoidFlowDebugManager {
     this.log('🔄 VoidFlowDebugManager shutting down...')
     
     // グローバル関数削除
-    if (window.voidflowDebug) {
-      delete window.voidflowDebug
+    if (window.charmflowDebug) {
+      delete window.charmflowDebug
     }
     
     // データクリア
@@ -698,4 +698,4 @@ export class VoidFlowDebugManager {
 }
 
 // グローバル公開（デバッグ用）
-window.VoidFlowDebugManager = VoidFlowDebugManager
+window.CharmFlowDebugManager = CharmFlowDebugManager

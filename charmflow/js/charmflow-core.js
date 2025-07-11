@@ -19,8 +19,8 @@
 import { VoidCore } from '../../src/core/nyacore.js'
 import { Message } from '../../src/messaging/message.js'
 import { DefaultTransport } from '../../src/messaging/transport.js'
-import { VoidFlowDebugManager } from './debug-manager.js'
-import { VoidFlowDebugPlugin } from './charmflow-debug-plugin.js'
+import { CharmFlowDebugManager } from './debug-manager.js'
+import { CharmFlowDebugPlugin } from './charmflow-debug-plugin.js'
 
 /**
  * CharmFlowとnyacoreの統合管理クラス
@@ -70,7 +70,7 @@ export class CharmFlowCore {
       // デバッグ機能初期化（Phase 4実装完了）
       if (this.options.enableDebug) {
         // VoidCoreルール準拠のDebugPlugin初期化
-        this.debugPlugin = new VoidFlowDebugPlugin({
+        this.debugPlugin = new CharmFlowDebugPlugin({
           options: {
             enableDebug: this.options.enableDebug,
             enableStats: this.options.enableStats,
@@ -87,7 +87,7 @@ export class CharmFlowCore {
         this.debugPlugin.setTargetSystem(this)
         
         // レガシーDebugManager（互換性のため）
-        this.debugManager = new VoidFlowDebugManager(this)
+        this.debugManager = new CharmFlowDebugManager(this)
         
         this.log('🐛 VoidFlowDebugPlugin (VoidCore準拠) + DebugManager initialized')
         

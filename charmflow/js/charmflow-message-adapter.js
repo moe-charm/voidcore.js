@@ -1,23 +1,23 @@
-// voidflow-message-adapter.js - VoidPacket ↔ VoidCore Message 変換アダプター
+// charmflow-message-adapter.js - VoidPacket ↔ VoidCore Message 変換アダプター
 
 import { Message } from '/src/messaging/message.js'
 
 /**
- * 🔄 VoidFlowMessageAdapter - VoidPacketとVoidCore Messageの双方向変換
+ * 🔄 CharmFlowMessageAdapter - VoidPacketとVoidCore Messageの双方向変換
  * 
  * 目的:
- * - 既存VoidFlow（VoidPacket）と新VoidCore（Message）の橋渡し
+ * - 既存CharmFlow（VoidPacket）と新VoidCore（Message）の橋渡し
  * - 段階的移行の支援
  * - 互換性レイヤーの提供
  */
-export class VoidFlowMessageAdapter {
+export class CharmFlowMessageAdapter {
   constructor(voidCoreUI) {
     this.voidCoreUI = voidCoreUI
     this.flowIdCounter = 0
     this.activeFlows = new Map() // flowId → flow metadata
     this.messageHistory = []
     
-    this.log('🔄 VoidFlowMessageAdapter initialized')
+    this.log('🔄 CharmFlowMessageAdapter initialized')
   }
 
   /**
@@ -25,7 +25,7 @@ export class VoidFlowMessageAdapter {
    */
   log(message) {
     if (this.voidCoreUI && this.voidCoreUI.debugMode) {
-      console.log(`[VoidFlowMessageAdapter] ${message}`)
+      console.log(`[CharmFlowMessageAdapter] ${message}`)
     }
   }
 
@@ -298,4 +298,4 @@ export class VoidFlowMessageAdapter {
   }
 }
 
-export default VoidFlowMessageAdapter
+export default CharmFlowMessageAdapter

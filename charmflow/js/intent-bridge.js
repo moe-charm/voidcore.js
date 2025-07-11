@@ -1,5 +1,5 @@
 /**
- * 🌉 VoidFlow Intent Bridge
+ * 🌉 CharmFlow Intent Bridge
  * 
  * 既存のDOMイベントをIntentに変換するブリッジ
  * Phase 2以降でUI操作のIntent化を支援
@@ -19,9 +19,9 @@ import { INTENT_TYPES, IntentHelper, IntentShortcuts } from './intent-definition
 /**
  * Intent Bridge - DOMイベントをIntentに変換
  */
-export class VoidFlowIntentBridge {
-  constructor(voidFlowCore) {
-    this.voidFlowCore = voidFlowCore
+export class CharmFlowIntentBridge {
+  constructor(charmFlowCore) {
+    this.charmFlowCore = charmFlowCore
     this.isEnabled = false
     
     // イベント→Intent変換マップ
@@ -518,5 +518,5 @@ export class BridgeUtils {
 }
 
 // グローバル公開（デバッグ用）
-window.VoidFlowIntentBridge = VoidFlowIntentBridge
+window.CharmFlowIntentBridge = CharmFlowIntentBridge
 window.BridgeUtils = BridgeUtils

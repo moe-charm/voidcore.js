@@ -1,6 +1,6 @@
 // string-uppercase-plugin.js - String UpperCase ノードのVoidCoreプラグイン実装
 
-import { VoidFlowNodePlugin } from '../voidflow-node-plugin.js'
+import { CharmFlowNodePlugin } from '../charmflow-node-plugin.js'
 
 /**
  * 🔤 StringUppercasePlugin - 文字列大文字変換ノードのVoidCoreプラグイン実装
@@ -10,7 +10,7 @@ import { VoidFlowNodePlugin } from '../voidflow-node-plugin.js'
  * - 文字列処理オプション
  * - 処理統計の記録
  */
-export class StringUppercasePlugin extends VoidFlowNodePlugin {
+export class StringUppercasePlugin extends CharmFlowNodePlugin {
   constructor(config = {}) {
     super('string.uppercase', {
       ...config,

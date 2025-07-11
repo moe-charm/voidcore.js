@@ -1,8 +1,11 @@
-# 🏗️ VoidFlowアーキテクチャドキュメンテーションシステム
+# 🏗️ CharmFlow (旧VoidFlow) アーキテクチャドキュメンテーションシステム
 
-**目的**: Claude Codeの効率的VoidFlow理解・修正支援  
+**目的**: Claude Codeの効率的CharmFlow理解・修正支援  
 **原則**: 概要→詳細→実装の3段階情報提供  
 **更新**: 修正時の説明同期更新必須
+
+> **📍 重要**: VoidFlow → CharmFlow 名前移行完了 (2025-07-11)  
+> アーキテクチャ構造は変わらず、nyacore統合システムとして継続
 
 ## 🎯 **Claude Code調査プロトコル**
 
