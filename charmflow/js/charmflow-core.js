@@ -20,12 +20,12 @@ import { VoidCore } from '../../src/core/nyacore.js'
 import { Message } from '../../src/messaging/message.js'
 import { DefaultTransport } from '../../src/messaging/transport.js'
 import { VoidFlowDebugManager } from './debug-manager.js'
-import { VoidFlowDebugPlugin } from './voidflow-debug-plugin.js'
+import { VoidFlowDebugPlugin } from './charmflow-debug-plugin.js'
 
 /**
- * VoidFlowとVoidCoreの統合管理クラス
+ * CharmFlowとnyacoreの統合管理クラス
  */
-export class VoidFlowCore {
+export class CharmFlowCore {
   constructor(options = {}) {
     this.options = {
       enableDebug: true,
@@ -732,4 +732,4 @@ export class VoidFlowCore {
 }
 
 // グローバルインスタンス（デバッグ用）
-window.VoidFlowCore = VoidFlowCore
+window.CharmFlowCore = CharmFlowCore

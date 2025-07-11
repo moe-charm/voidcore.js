@@ -1,17 +1,17 @@
 // VoidFlow Constellation Zero - VoidCore統合版メインエントリーポイント
 // Stage 2: メッセージ統一移行実装
 
-import { VoidFlowEngine } from './voidflow-engine.js'
+import { VoidFlowEngine } from './charmflow-engine.js'
 import { ExecuteEngine } from './execute-engine.js'
 import { VoidCoreUI } from './nyacore-ui.js'
-import { VoidFlowMessageAdapter } from './voidflow-message-adapter.js'
-import { VoidFlowBootManager } from './voidflow-boot-manager.js'
+import { VoidFlowMessageAdapter } from './charmflow-message-adapter.js'
+import { VoidFlowBootManager } from './charmflow-boot-manager.js'
 import { VoidCoreConnectionManager } from './nyacore-connection-manager.js'
 import { PluginFlowExecutor } from './plugin-flow-executor.js'
 import MonacoPluginEditor from './monaco-plugin-editor.js'
 import { PluginPalettePlugin } from './plugin-palette-plugin.js'
 // Phase 1: VoidFlow-VoidCore統合アーキテクチャ
-import { VoidFlowCore } from './voidflow-core.js'
+import { CharmFlowCore } from './charmflow-core.js'
 import { VoidFlowIntentBridge } from './intent-bridge.js'
 // Phase 1: 高度接続GUI
 import { ConnectionLineRenderer } from './connection-line-renderer.js'
@@ -1601,8 +1601,8 @@ async function initializeVoidFlowCoreArchitecture() {
     try {
         console.log('🌟 VoidFlow-VoidCore統合アーキテクチャ初期化開始...')
         
-        // VoidFlowCore初期化
-        voidFlowCore = new VoidFlowCore({
+        // CharmFlowCore初期化
+        voidFlowCore = new CharmFlowCore({
             enableDebug: true,
             enableStats: true,
             messagePoolSize: 1000,
