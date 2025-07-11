@@ -230,7 +230,7 @@
 <body>
     <div class="voidflow-container">
         <header class="header">
-            <h1>🌟 VoidFlow nyacore統合版 - Constellation Zero | 創造性の永久機関</h1>
+            <h1>🌟 CharmFlow nyacore統合版 - Constellation Zero | 創造性の永久機関</h1>
         </header>
 
         <!-- nyacore統合ステータス表示 -->
@@ -299,7 +299,7 @@
             
             <div class="panel-title">📊 実行ログ</div>
             <div id="executionLog" style="background: rgba(0,0,0,0.5); border-radius: 6px; padding: 10px; font-size: 11px; color: #80c0ff; max-height: 150px; overflow-y: auto; font-family: 'Monaco', monospace;">
-                VoidFlow VoidCore統合版 起動中...<br>
+                CharmFlow nyacore統合版 起動中...<br>
                 SystemBootManager初期化中...<br>
                 VoidCoreUI初期化中...<br>
             </div>
@@ -380,7 +380,7 @@
         </div>
 
         <footer class="footer">
-            <span>🌟 nyacore v14.0 + VoidFlow統合版 - Intent Message System | 創造性の永久機関 × 自己構造操作宇宙</span>
+            <span>🌟 nyacore v14.0 + CharmFlow統合版 - Intent Message System | 創造性の永久機関 × 自己構造操作宇宙</span>
         </footer>
     </div>
 
@@ -405,7 +405,7 @@
     <div id="logCenterModal" class="monaco-editor-modal" style="display: none;">
         <div class="monaco-editor-container" style="width: 90%; height: 80%;">
             <div class="monaco-editor-header">
-                <div class="monaco-editor-title">🐞 VoidFlowログセンター</div>
+                <div class="monaco-editor-title">🐞 CharmFlowログセンター</div>
                 <div class="monaco-editor-controls">
                     <button class="monaco-editor-btn" onclick="refreshLogCenter()">🔄 更新</button>
                     <button class="monaco-editor-btn" onclick="clearAllLogs()">🗑️ 全クリア</button>
@@ -471,8 +471,8 @@
         
         // Phase 4: デバッグ状態更新
         function updateDebugStatus() {
-            if (window.debugVoidFlow) {
-                const debugPlugin = window.debugVoidFlow.debugPlugin()
+            if (window.debugCharmFlow) {
+                const debugPlugin = window.debugCharmFlow.debugPlugin()
                 if (debugPlugin) {
                     document.getElementById('debugPluginStatus').textContent = debugPlugin.status
                     
@@ -529,22 +529,22 @@
         
         // Phase 4: デバッグコンソール表示
         function openDebugConsole() {
-            if (window.debugVoidFlow) {
-                console.log('🐛 VoidFlow Phase 4 デバッグコンソール')
+            if (window.debugCharmFlow) {
+                console.log('🐛 CharmFlow Phase 4 デバッグコンソール')
                 console.log('=================================')
                 console.log('🌟 利用可能コマンド:')
-                console.log('debugVoidFlow.core()              // VoidFlowCore取得')
-                console.log('debugVoidFlow.debugPlugin()       // DebugPlugin取得')
-                console.log('debugVoidFlow.getStats()          // システム統計')
-                console.log('debugVoidFlow.startTrace(["*"])   // トレース開始')
-                console.log('debugVoidFlow.stopTrace()         // トレース停止')
-                console.log('debugVoidFlow.dumpState("json")   // 状態ダンプ')
-                console.log('debugVoidFlow.export()            // データエクスポート')
+                console.log('debugCharmFlow.core()              // CharmFlowCore取得')
+                console.log('debugCharmFlow.debugPlugin()       // DebugPlugin取得')
+                console.log('debugCharmFlow.getStats()          // システム統計')
+                console.log('debugCharmFlow.startTrace(["*"])   // トレース開始')
+                console.log('debugCharmFlow.stopTrace()         // トレース停止')
+                console.log('debugCharmFlow.dumpState("json")   // 状態ダンプ')
+                console.log('debugCharmFlow.export()            // データエクスポート')
                 console.log('')
                 console.log('🔧 VoidCoreデバッグプラグイン:')
-                console.log('debugVoidFlow.voidCorePlugin()    // VoidCoreデバッグプラグイン取得')
-                console.log('debugVoidFlow.pluginStats()      // プラグイン統計')
-                console.log('debugVoidFlow.exportPluginData() // プラグインデータエクスポート')
+                console.log('debugCharmFlow.nyaCorePlugin()    // nyacoreデバッグプラグイン取得')
+                console.log('debugCharmFlow.pluginStats()      // プラグイン統計')
+                console.log('debugCharmFlow.exportPluginData() // プラグインデータエクスポート')
                 console.log('window.debugPlugin.getStats()    // プラグイン詳細統計')
                 console.log('window.toggleVoidCoreDebug(true) // デバッグON/OFF')
                 console.log('')
