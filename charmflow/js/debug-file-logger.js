@@ -29,6 +29,9 @@ export class DebugFileLogger {
       ...options
     }
     
+    // 🖥️ コンソール出力制御の永続化
+    this.loadConsoleOutputSetting()
+    
     this.logBuffers = new Map() // カテゴリ別バッファ
     this.logCounts = new Map()  // カテゴリ別カウント
     this.sessionStartTime = Date.now()
@@ -583,6 +586,59 @@ export class DebugFileLogger {
       console.error(`❌ Failed to download ${filename}:`, error)
     }
   }
+  
+  /**
+   * 🖥️ コンソール出力設定を読み込み
+   */
+  loadConsoleOutputSetting() {
+    const stored = localStorage.getItem('charmflow-console-output')
+    if (stored !== null) {
+      this.options.enableConsoleOutput = stored === 'true'
+    }
+  }
+  
+  /**
+   * 🖥️ コンソール出力ON/OFF制御
+   */
+  setConsoleOutput(enabled) {
+    this.options.enableConsoleOutput = enabled
+    localStorage.setItem('charmflow-console-output', enabled.toString())
+    
+    const status = enabled ? 'ON' : 'OFF'
+    const logMethod = enabled ? console.log : () => {} // コンソール出力状態に応じて制御
+    logMethod(`🖥️ Console output ${status}`)
+    
+    return enabled
+  }
+  
+  /**
+   * 🖥️ コンソール出力状態取得
+   */
+  getConsoleOutputStatus() {
+    return this.options.enableConsoleOutput
+  }
+  
+  /**
+   * 🖥️ コンソール出力切り替え
+   */
+  toggleConsoleOutput() {
+    const newState = !this.options.enableConsoleOutput
+    return this.setConsoleOutput(newState)
+  }
+  
+  /**
+   * 🧩 統一ログメソッド（プラグイン用）
+   * プラグインは this.log = debugLogger.createPluginLogger(this.id) で使用
+   */
+  createPluginLogger(pluginId) {
+    return {
+      log: (message, data = null) => this.log('system', 'info', `[${pluginId}] ${message}`, data),
+      warn: (message, data = null) => this.log('system', 'warn', `[${pluginId}] ${message}`, data),
+      error: (message, data = null) => this.log('error', 'error', `[${pluginId}] ${message}`, data),
+      debug: (message, data = null) => this.log('system', 'debug', `[${pluginId}] ${message}`, data),
+      info: (message, data = null) => this.log('system', 'info', `[${pluginId}] ${message}`, data)
+    }
+  }
 }
 
 // グローバルインスタンス
@@ -601,3 +657,8 @@ window.clearCurrentLogs = () => debugLogger.clearCurrentSessionLogs()
 // ログカテゴリ制御用グローバル関数
 window.setCategoryEnabled = (category, enabled) => debugLogger.setCategoryEnabled(category, enabled)
 window.getEnabledCategories = () => debugLogger.getEnabledCategories()
+
+// 🖥️ コンソール出力制御用グローバル関数
+window.setConsoleOutput = (enabled) => debugLogger.setConsoleOutput(enabled)
+window.toggleConsoleOutput = () => debugLogger.toggleConsoleOutput()
+window.getConsoleOutputStatus = () => debugLogger.getConsoleOutputStatus()

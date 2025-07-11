@@ -48,13 +48,11 @@ export class VoidCoreConnectionManager {
     }
   }
   
-  // 🔧 Phase3対応: logメソッド追加（ファイル出力対応）
+  // 🔧 Phase3対応: logメソッド統一（debugLogger使用）
   log(message, data = null) {
-    console.log(`[${this.id}] ${message}`)
-    
-    // Phase 1: ファイル出力デバッグログ
+    // DebugLogger統一ログシステム使用（コンソール出力制御対応）
     if (debugLogger) {
-      debugLogger.log('connection', 'debug', message, {
+      debugLogger.log('connection', 'debug', `[${this.id}] ${message}`, {
         source: this.id,
         data: data,
         timestamp: Date.now()

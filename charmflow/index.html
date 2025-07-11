@@ -411,6 +411,7 @@
                     <button class="monaco-editor-btn" onclick="downloadSelectedLogs()">📦 選択DL</button>
                     <button class="monaco-editor-btn" onclick="clearAllLogs()">🗑️ 全クリア</button>
                     <button class="monaco-editor-btn" onclick="autoSaveAllLogs()">📤 全エクスポート</button>
+                    <button class="monaco-editor-btn" id="console-output-toggle" onclick="toggleConsoleOutputUI()">🖥️ Console: ON</button>
                     <button class="monaco-editor-btn close" onclick="closeLogCenter()">✕ 閉じる</button>
                 </div>
             </div>
@@ -648,6 +649,7 @@
             if (logCenter) {
                 logCenter.style.display = 'block'
                 refreshLogCenter() // 開く時に最新情報を更新
+                initializeConsoleOutputButton() // コンソール出力ボタン状態初期化
             }
         }
         
@@ -743,6 +745,44 @@
                 
             } catch (error) {
                 document.getElementById('logRealTimeStats').innerHTML = 'エラー: ' + error.message
+            }
+        }
+        
+        // 🖥️ コンソール出力トグル
+        function toggleConsoleOutputUI() {
+            try {
+                const newState = window.toggleConsoleOutput()
+                const button = document.getElementById('console-output-toggle')
+                if (button) {
+                    const status = newState ? 'ON' : 'OFF'
+                    const color = newState ? '#4a90e2' : '#666'
+                    button.textContent = `🖥️ Console: ${status}`
+                    button.style.background = color
+                }
+                
+                // 状態表示
+                const statusText = newState ? 'コンソール出力を有効にしました' : 'コンソール出力を無効にしました'
+                console.log(`🖥️ ${statusText}`)
+                
+            } catch (error) {
+                console.error('❌ コンソール出力切り替え失敗:', error)
+                alert('コンソール出力切り替えに失敗しました: ' + error.message)
+            }
+        }
+        
+        // 🖥️ コンソール出力ボタン状態を初期化
+        function initializeConsoleOutputButton() {
+            try {
+                const button = document.getElementById('console-output-toggle')
+                if (button && window.getConsoleOutputStatus) {
+                    const isEnabled = window.getConsoleOutputStatus()
+                    const status = isEnabled ? 'ON' : 'OFF'
+                    const color = isEnabled ? '#4a90e2' : '#666'
+                    button.textContent = `🖥️ Console: ${status}`
+                    button.style.background = color
+                }
+            } catch (error) {
+                console.error('❌ コンソール出力ボタン初期化失敗:', error)
             }
         }
         
@@ -854,6 +894,8 @@
         window.clearAllLogs = clearAllLogs
         window.initializeLogCategoryControls = initializeLogCategoryControls
         window.toggleAllLogCategories = toggleAllLogCategories
+        window.toggleConsoleOutputUI = toggleConsoleOutputUI
+        window.initializeConsoleOutputButton = initializeConsoleOutputButton
         
         // デバッグ用
         window.debugVoidCore = function() {
